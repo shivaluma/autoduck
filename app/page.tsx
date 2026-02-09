@@ -68,8 +68,8 @@ export default function Dashboard() {
           {[
             { label: 'DRIVERS', value: players.length.toString(), accent: false },
             { label: 'RACES', value: totalRaces.toString(), accent: false },
-            { label: 'TOTAL PENALTIES', value: totalKhaos.toString(), accent: true },
-            { label: 'MOST PENALIZED', value: mostKhaos?.name?.replace('Zịt ', '') || '—', accent: true },
+            { label: 'LÀM DZỊT', value: totalKhaos.toString(), accent: true },
+            { label: 'DZỊT NHẤT', value: mostKhaos?.name?.replace('Zịt ', '') || '—', accent: true },
           ].map((stat, i) => (
             <div
               key={stat.label}
@@ -109,7 +109,7 @@ export default function Dashboard() {
                 <div className="font-data text-[10px] tracking-wider uppercase text-white/30 text-center">SCARS</div>
                 <div className="font-data text-[10px] tracking-wider uppercase text-white/30 text-center">SHIELD</div>
                 <div className="font-data text-[10px] tracking-wider uppercase text-white/30 text-center">USED</div>
-                <div className="font-data text-[10px] tracking-wider uppercase text-white/30 text-right">PENALTIES</div>
+                <div className="font-data text-[10px] tracking-wider uppercase text-white/30 text-right">DZỊT</div>
               </div>
 
               {/* Driver Rows */}
@@ -157,7 +157,7 @@ export default function Dashboard() {
                           </div>
                           {idx === 0 && (
                             <div className="font-data text-[9px] tracking-[0.15em] text-[var(--color-f1-red)] uppercase mt-0.5">
-                              MOST PENALIZED
+                              CON DZỊT SỐ 1
                             </div>
                           )}
                         </div>
@@ -268,11 +268,11 @@ export default function Dashboard() {
               <div className="space-y-2.5 font-body text-xs text-white/50">
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-[var(--color-f1-red)] rounded-full flex-shrink-0" />
-                  <span>2 người cuối bảng bị phạt <span className="text-[var(--color-f1-red)] font-semibold">+1 Sẹo</span></span>
+                  <span>2 người cuối bảng sẽ là <span className="text-[var(--color-f1-red)] font-semibold">con dzịt</span> tuần đó (+1 Sẹo)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-[var(--color-f1-cyan)] rounded-full flex-shrink-0" />
-                  <span>Dùng <span className="text-[var(--color-f1-cyan)] font-semibold">Khiên</span> để miễn phạt 1 lần</span>
+                  <span>Dùng <span className="text-[var(--color-f1-cyan)] font-semibold">Khiên</span> để thoát kiếp dzịt 1 lần</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-[var(--color-f1-gold)] rounded-full flex-shrink-0" />
@@ -280,7 +280,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-white/30 rounded-full flex-shrink-0" />
-                  <span>Người bị phạt phải <span className="text-white font-semibold">khao nước</span> cho team</span>
+                  <span>Con dzịt phải <span className="text-white font-semibold">làm dzịt</span> cho cả team</span>
                 </div>
               </div>
             </div>

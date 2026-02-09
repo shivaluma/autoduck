@@ -323,7 +323,7 @@ export default function NewRacePage() {
                 ))}
             </div>
             <p className="font-body text-xs text-white/30 mt-2">
-              Protected drivers skip penalty if they finish in the bottom 2. Penalty transfers to the next unshielded driver.
+              Driver có khiên sẽ thoát kiếp dzịt nếu về cuối. Phận dzịt chuyển cho người kế tiếp không có khiên.
             </p>
           </div>
         )}

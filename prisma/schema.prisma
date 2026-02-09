@@ -14,7 +14,7 @@ model User {
   scars     Int      @default(0)
   shields   Int      @default(0)
   shieldsUsed Int    @default(0) // Tổng số khiên đã dùng
-  totalKhaos Int     @default(0) // Tổng số lần phải khao nước
+  totalKhaos Int     @default(0) // Tổng số lần làm dzịt
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -25,7 +25,7 @@ model Race {
   id           Int      @id @default(autoincrement())
   status       String   @default("pending") // pending, running, finished, failed
   videoUrl     String?
-  finalVerdict String?  // Câu chốt "Ai khao nước"
+  finalVerdict String?  // Câu chốt "Ai là con dzịt"
   createdAt    DateTime @default(now())
   finishedAt   DateTime?
 

@@ -148,13 +148,13 @@ export default function RaceDetailPage({
               </div>
 
               <div className="font-display text-[10px] tracking-[0.4em] uppercase text-[var(--color-f1-gold)] mb-3">
-                Official Race Result
+                Kết quả chính thức
               </div>
               <h2 className="font-display text-3xl md:text-4xl font-black tracking-wider uppercase text-white leading-tight">
                 {race.finalVerdict}
               </h2>
               <div className="font-data text-xs text-white/30 tracking-wider uppercase mt-4">
-                Luật Rừng Applied &bull; Results are final
+                Luật Rừng &bull; 2 con dzịt đã lộ diện
               </div>
             </div>
           </div>
@@ -244,7 +244,7 @@ export default function RaceDetailPage({
                       <div className="text-right">
                         {p.gotScar ? (
                           <span className="font-display text-xs font-bold tracking-wider uppercase text-[var(--color-f1-red)]">
-                            +1 PENALTY
+                            CON DZỊT 🦆
                           </span>
                         ) : p.usedShield && (p.initialRank ?? 0) >= sortedParticipants.length - 1 ? (
                           <span className="font-display text-xs font-bold tracking-wider uppercase text-[var(--color-f1-cyan)]">

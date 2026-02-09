@@ -26,11 +26,11 @@ async function simulateRace(players: PlayerInput[]): Promise<RaceWorkerResult> {
   
   // Simulate commentary
   const comments = [
-    `Cuộc đua bắt đầu! Các chú vịt đang chen nhau ở vạch xuất phát!`,
-    `${shuffled[0]?.name} đang dẫn đầu một cách bất ngờ! ${shuffled[shuffled.length - 1]?.name} đang tụt lại phía sau.`,
-    `Cuộc đua đang rất gay cấn! ${shuffled[1]?.name} đang cố vượt lên!`,
+    `LIGHTS OUT! Các con dzịt lao ra khỏi vạch xuất phát!`,
+    `${shuffled[0]?.name} đang dẫn đầu! ${shuffled[shuffled.length - 1]?.name} có nguy cơ thành con dzịt tuần này.`,
+    `Gay cấn quá! ${shuffled[1]?.name} đang cố thoát kiếp dzịt!`,
     `Gần tới đích rồi! ${shuffled[0]?.name} vẫn giữ vững phong độ!`,
-    `KẾT THÚC! Cuộc đua vừa kết thúc với kết quả đầy bất ngờ!`,
+    `CHEQUERED FLAG! 2 con dzịt tuần này đã lộ diện!`,
   ]
 
   for (let i = 0; i < comments.length; i++) {

@@ -74,9 +74,9 @@ export function calculatePenalties(results: RaceResultInput[]): PenaltyResult {
   // Tạo câu chốt hạ
   const victimNames = victims.map(v => v.name)
   const finalVerdict = victimNames.length === 2
-    ? `Hôm nay ${victimNames[0]} và ${victimNames[1]} khao nước! 🧃`
+    ? `${victimNames[0]} và ${victimNames[1]} là 2 con dzịt tuần này! 🦆`
     : victimNames.length === 1
-    ? `Hôm nay ${victimNames[0]} khao nước! 🧃`
+    ? `${victimNames[0]} là con dzịt tuần này! 🦆`
     : 'Không ai bị phạt hôm nay!'
 
   return {
