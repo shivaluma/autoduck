@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  autoduck:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=file:./prisma/dev.db
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - SIMULATE_RACE=false
+      - NODE_ENV=production
+      - DISPLAY=:99
+    volumes:
+      - ./prisma/dev.db:/app/prisma/dev.db
+      - video-storage:/app/tmp/videos
+    restart: unless-stopped
+
+volumes:
+  video-storage:

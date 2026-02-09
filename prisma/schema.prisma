@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client"
+  output   = "./generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  avatarUrl String?
+  scars     Int      @default(0)
+  shields   Int      @default(0)
+  shieldsUsed Int    @default(0) // Tổng số khiên đã dùng
+  totalKhaos Int     @default(0) // Tổng số lần phải khao nước
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  raceParticipations RaceParticipant[]
+}
+
+model Race {
+  id           Int      @id @default(autoincrement())
+  status       String   @default("pending") // pending, running, finished, failed
+  videoUrl     String?
+  finalVerdict String?  // Câu chốt "Ai khao nước"
+  createdAt    DateTime @default(now())
+  finishedAt   DateTime?
+
+  participants RaceParticipant[]
+  commentaries CommentaryLog[]
+}
+
+model RaceParticipant {
+  id          Int     @id @default(autoincrement())
+  raceId      Int
+  userId      Int
+  usedShield  Boolean @default(false)
+  initialRank Int?    // Thứ hạng gốc AI đọc được
+  gotScar     Boolean @default(false) // Kết quả cuối: có bị sẹo không?
+
+  race Race @relation(fields: [raceId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([raceId, userId])
+}
+
+model CommentaryLog {
+  id        Int    @id @default(autoincrement())
+  raceId    Int
+  timestamp Int    // Giây thứ bao nhiêu trong video
+  content   String // Nội dung AI bình luận
+
+  race Race @relation(fields: [raceId], references: [id], onDelete: Cascade)
+}

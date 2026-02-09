@@ -39,3 +39,29 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# database
+prisma/dev.db
+prisma/dev.db-journal
+
+# generated
+prisma/generated/
+
+# videos
+tmp/
+
+# build approvals
+.pnpm-build-approvals.json
+
+# database
+prisma/dev.db
+prisma/dev.db-journal
+
+# prisma generated
+prisma/generated/
+
+# videos
+tmp/
+
+# build approvals
+.pnpm-build-approvals.json
