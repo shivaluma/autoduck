@@ -3,19 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Switch } from '@/components/ui/switch'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import type { PlayerData } from '@/lib/types'
 
 interface ParticipantSetup {
@@ -24,6 +11,7 @@ interface ParticipantSetup {
   selected: boolean
   useShield: boolean
   availableShields: number
+  scars: number
 }
 
 export default function NewRacePage() {
@@ -32,6 +20,7 @@ export default function NewRacePage() {
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [countdown, setCountdown] = useState<number | null>(null)
 
   useEffect(() => {
     fetch('/api/users')
@@ -44,6 +33,7 @@ export default function NewRacePage() {
             selected: true,
             useShield: false,
             availableShields: p.shields,
+            scars: p.scars,
           }))
         )
         setLoading(false)
@@ -72,18 +62,15 @@ export default function NewRacePage() {
     )
   }
 
-  const handleSelectAll = () => {
-    const allSelected = players.every((p) => p.selected)
-    setPlayers((prev) =>
-      prev.map((p) => ({
-        ...p,
-        selected: !allSelected,
-        useShield: !allSelected ? p.useShield : false,
-      }))
-    )
-  }
-
   const handleStartRace = async () => {
+    // Countdown animation
+    setCountdown(5)
+    for (let i = 4; i >= 0; i--) {
+      await new Promise(r => setTimeout(r, 600))
+      setCountdown(i)
+    }
+    await new Promise(r => setTimeout(r, 400))
+    setCountdown(null)
     setStarting(true)
     setError(null)
 
@@ -100,16 +87,12 @@ export default function NewRacePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ participants }),
       })
-
       const data = await res.json()
-
       if (!res.ok) {
         setError(data.error || 'Có lỗi xảy ra')
         setStarting(false)
         return
       }
-
-      // Navigate to race status page
       router.push(`/race/${data.raceId}`)
     } catch {
       setError('Không thể kết nối server')
@@ -117,196 +100,269 @@ export default function NewRacePage() {
     }
   }
 
+  // Countdown overlay
+  if (countdown !== null) {
+    return (
+      <div className="min-h-screen bg-[var(--color-f1-dark)] flex items-center justify-center">
+        <div className="text-center">
+          {countdown > 0 ? (
+            <>
+              {/* Red lights */}
+              <div className="flex gap-4 mb-12 justify-center">
+                {[5, 4, 3, 2, 1].map((n) => (
+                  <div
+                    key={n}
+                    className={`w-12 h-12 rounded-full transition-all duration-300 ${
+                      countdown <= n
+                        ? 'bg-[var(--color-f1-red)] shadow-[0_0_30px_rgba(225,6,0,0.6)]'
+                        : 'bg-white/5'
+                    }`}
+                  />
+                ))}
+              </div>
+              <div className="font-display text-[120px] font-black text-[var(--color-f1-red)] leading-none animate-pulse">
+                {countdown}
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Green lights - GO! */}
+              <div className="flex gap-4 mb-12 justify-center">
+                {[5, 4, 3, 2, 1].map((n) => (
+                  <div
+                    key={n}
+                    className="w-12 h-12 rounded-full bg-green-500 shadow-[0_0_30px_rgba(0,255,0,0.6)]"
+                  />
+                ))}
+              </div>
+              <div className="font-display text-[80px] font-black text-green-400 leading-none tracking-[0.2em]">
+                LIGHTS OUT!
+              </div>
+              <div className="font-body text-xl text-white/60 mt-4 tracking-[0.3em] uppercase">
+                And away we go
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[var(--color-f1-dark)] noise-overlay grid-lines">
+      <div className="h-1 bg-gradient-to-r from-[var(--color-f1-red)] via-[var(--color-f1-red)] to-transparent" />
+
       {/* Header */}
-      <header className="border-b border-border/40 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">
-              ← Quay lại
-            </Link>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">🦆</span>
-            <h1 className="text-xl font-bold tracking-tight">Thiết lập cuộc đua</h1>
+      <header className="border-b border-white/5">
+        <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
+          <Link href="/" className="font-data text-xs tracking-[0.15em] uppercase text-white/30 hover:text-white transition-colors">
+            ← PADDOCK
+          </Link>
+          <div className="flex items-center gap-3 animate-slide-right">
+            <div className="font-display text-lg font-bold tracking-[0.15em] uppercase text-white">
+              GRID <span className="text-[var(--color-f1-red)]">FORMATION</span>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-8 space-y-6">
-        {/* Info Banner */}
-        <Card className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 border-amber-500/20">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-4">
-              <span className="text-4xl">🏁</span>
-              <div>
-                <h2 className="font-bold text-lg">Chuẩn bị cuộc đua mới</h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Chọn người chơi tham gia và ai sẽ sử dụng khiên. 
-                  Nhớ: 2 người cuối bảng sẽ phải khao nước!
-                </p>
-                <div className="flex gap-4 mt-3 text-xs text-muted-foreground">
-                  <span>🩸 Sẹo = Bị phạt</span>
-                  <span>🛡️ Khiên = Miễn phạt 1 lần</span>
-                  <span>📏 2 Sẹo → 1 Khiên</span>
-                </div>
-              </div>
+      <main className="max-w-6xl mx-auto px-6 py-8 space-y-6">
+        {/* Grid Formation */}
+        <div className="bg-[var(--color-f1-surface)] border border-white/5 overflow-hidden animate-slide-up opacity-0" style={{ animationDelay: '0.1s' }}>
+          {/* Header bar */}
+          <div className="flex items-center justify-between px-5 py-3 bg-white/[0.02] border-b border-white/5">
+            <div className="flex items-center gap-4">
+              <span className="font-display text-xs font-bold tracking-[0.15em] uppercase text-white/60">
+                Drivers
+              </span>
+              <span className="font-data text-[10px] tracking-wider text-[var(--color-f1-cyan)]">
+                {selectedCount} SELECTED
+              </span>
+              {shieldsInUse > 0 && (
+                <span className="font-data text-[10px] tracking-wider text-[var(--color-f1-cyan)]">
+                  &bull; {shieldsInUse} SHIELD{shieldsInUse > 1 ? 'S' : ''} ACTIVE
+                </span>
+              )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Player Selection */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-lg">Chọn người chơi</CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {selectedCount} người được chọn • {shieldsInUse} khiên được dùng
-                </p>
-              </div>
-              <Button variant="outline" size="sm" onClick={handleSelectAll}>
-                {players.every((p) => p.selected) ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
-              </Button>
+          {/* Driver Grid */}
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="text-4xl animate-spin">🦆</div>
             </div>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin text-4xl">🦆</div>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12">Chọn</TableHead>
-                    <TableHead>Người chơi</TableHead>
-                    <TableHead className="text-center">🩸 Sẹo</TableHead>
-                    <TableHead className="text-center">🛡️ Khiên có</TableHead>
-                    <TableHead className="text-center">Dùng Khiên?</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {players.map((player) => (
-                    <TableRow
-                      key={player.userId}
-                      className={
-                        player.selected
-                          ? player.useShield
-                            ? 'bg-blue-500/5'
-                            : ''
-                          : 'opacity-50'
-                      }
-                    >
-                      <TableCell>
-                        <Checkbox
-                          checked={player.selected}
-                          onCheckedChange={() => handleTogglePlayer(player.userId)}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg">🦆</span>
-                          <span className="font-semibold">{player.name}</span>
-                          {player.useShield && (
-                            <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
-                              🛡️ Đang dùng khiên
-                            </Badge>
+          ) : (
+            <div className="divide-y divide-white/[0.03]">
+              {players.map((player, idx) => (
+                <div
+                  key={player.userId}
+                  onClick={() => handleTogglePlayer(player.userId)}
+                  className={`
+                    grid grid-cols-[50px_1fr_100px_120px_140px] gap-0 items-center
+                    px-5 py-4 cursor-pointer transition-all duration-200
+                    timing-row speed-lines
+                    ${player.selected ? '' : 'opacity-30'}
+                    ${player.useShield ? 'shield-active' : ''}
+                    animate-slide-right opacity-0
+                  `}
+                  style={{ animationDelay: `${0.15 + idx * 0.05}s` }}
+                >
+                  {/* Grid Position */}
+                  <div className="flex items-center">
+                    <div className={`w-8 h-8 flex items-center justify-center border-2 transition-colors ${
+                      player.selected
+                        ? 'border-[var(--color-f1-red)] bg-[var(--color-f1-red)]/20'
+                        : 'border-white/10'
+                    }`}>
+                      {player.selected && (
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                          <path d="M2 7L5.5 10.5L12 3.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Driver Info */}
+                  <div className="flex items-center gap-3">
+                    <div className={`w-1 h-10 rounded-full ${
+                      player.useShield ? 'bg-[var(--color-f1-cyan)]' :
+                      player.selected ? 'bg-[var(--color-f1-red)]' : 'bg-white/10'
+                    }`} />
+                    <div>
+                      <div className="font-body text-sm font-semibold text-white tracking-wide uppercase">
+                        {player.name}
+                      </div>
+                      <div className="flex items-center gap-3 mt-0.5">
+                        <span className="font-data text-[10px] text-white/30">
+                          {player.scars > 0 ? (
+                            <span className="text-[var(--color-f1-red)]">{player.scars} SCAR{player.scars > 1 ? 'S' : ''}</span>
+                          ) : (
+                            'CLEAN'
                           )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Badge
-                          variant={player.availableShields > 0 ? 'secondary' : 'destructive'}
-                          className="font-mono"
-                        >
-                          {/* Show current scars based on available data */}
-                          —
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Badge
-                          variant={player.availableShields > 0 ? 'default' : 'secondary'}
-                          className="font-mono"
-                        >
-                          {player.availableShields}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Switch
-                          checked={player.useShield}
-                          onCheckedChange={() => handleToggleShield(player.userId)}
-                          disabled={
-                            !player.selected || player.availableShields <= 0
-                          }
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+                        </span>
+                        <span className="font-data text-[10px] text-white/30">
+                          {player.availableShields > 0 ? (
+                            <span className="text-[var(--color-f1-cyan)]">{player.availableShields} SHIELD{player.availableShields > 1 ? 'S' : ''}</span>
+                          ) : (
+                            'NO SHIELDS'
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Scars */}
+                  <div className="text-center">
+                    <span className={`font-data text-lg font-bold ${
+                      player.scars > 0 ? 'text-[var(--color-f1-red)]' : 'text-white/15'
+                    }`}>
+                      {player.scars}
+                    </span>
+                    <div className="font-data text-[9px] text-white/20 uppercase mt-0.5">Scars</div>
+                  </div>
+
+                  {/* Available Shields */}
+                  <div className="text-center">
+                    <span className={`font-data text-lg font-bold ${
+                      player.availableShields > 0 ? 'text-[var(--color-f1-cyan)]' : 'text-white/15'
+                    }`}>
+                      {player.availableShields}
+                    </span>
+                    <div className="font-data text-[9px] text-white/20 uppercase mt-0.5">Available</div>
+                  </div>
+
+                  {/* Shield Toggle */}
+                  <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={() => handleToggleShield(player.userId)}
+                      disabled={!player.selected || player.availableShields <= 0}
+                      className={`
+                        font-display text-[10px] font-bold tracking-[0.15em] uppercase
+                        px-4 py-2 transition-all duration-200
+                        disabled:opacity-20 disabled:cursor-not-allowed
+                        ${player.useShield
+                          ? 'bg-[var(--color-f1-cyan)] text-black shadow-[0_0_20px_rgba(0,210,255,0.3)]'
+                          : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white/60'
+                        }
+                      `}
+                    >
+                      {player.useShield ? 'SHIELD ON' : 'ACTIVATE'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Error */}
         {error && (
-          <Card className="border-destructive bg-destructive/10">
-            <CardContent className="pt-6">
-              <p className="text-destructive font-medium">⚠️ {error}</p>
-            </CardContent>
-          </Card>
+          <div className="bg-[var(--color-f1-red)]/10 border border-[var(--color-f1-red)]/30 px-5 py-3">
+            <span className="font-data text-xs text-[var(--color-f1-red)] tracking-wider uppercase">
+              ERROR: {error}
+            </span>
+          </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="flex items-center justify-between">
+        {/* Active Shields Banner */}
+        {shieldsInUse > 0 && (
+          <div className="bg-[var(--color-f1-cyan)]/5 border border-[var(--color-f1-cyan)]/20 px-5 py-4 animate-slide-up opacity-0" style={{ animationDelay: '0.5s' }}>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-2 h-2 bg-[var(--color-f1-cyan)] rounded-full animate-pulse" />
+              <span className="font-display text-[10px] font-bold tracking-[0.2em] uppercase text-[var(--color-f1-cyan)]">
+                Shield Defense Active
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {players
+                .filter((p) => p.selected && p.useShield)
+                .map((p) => (
+                  <span key={p.userId} className="font-data text-xs bg-[var(--color-f1-cyan)]/10 text-[var(--color-f1-cyan)] px-3 py-1 tracking-wider uppercase">
+                    {p.name}
+                  </span>
+                ))}
+            </div>
+            <p className="font-body text-xs text-white/30 mt-2">
+              Protected drivers skip penalty if they finish in the bottom 2. Penalty transfers to the next unshielded driver.
+            </p>
+          </div>
+        )}
+
+        {/* Action Bar */}
+        <div className="flex items-center justify-between pt-2 animate-slide-up opacity-0" style={{ animationDelay: '0.4s' }}>
           <Link href="/">
-            <Button variant="outline" size="lg">
-              ← Hủy
-            </Button>
+            <button className="font-display text-xs font-bold tracking-[0.15em] uppercase text-white/30 hover:text-white transition-colors px-4 py-3">
+              ← ABORT
+            </button>
           </Link>
-          <Button
-            size="lg"
-            className="font-bold text-lg gap-2 px-8"
+          <button
             onClick={handleStartRace}
             disabled={selectedCount < 2 || starting}
+            className={`
+              group relative overflow-hidden font-display text-sm font-bold tracking-[0.15em] uppercase
+              px-10 py-4 transition-all duration-300 diagonal-cut
+              disabled:opacity-30 disabled:cursor-not-allowed
+              ${starting
+                ? 'bg-[var(--color-f1-gold)] text-black'
+                : 'bg-[var(--color-f1-red)] hover:bg-[#ff1a1a] text-white hover:shadow-[0_0_40px_rgba(225,6,0,0.3)]'
+              }
+            `}
           >
-            {starting ? (
-              <>
-                <span className="animate-spin">🦆</span> Đang khởi tạo...
-              </>
-            ) : (
-              <>
-                🏁 BẮT ĐẦU ĐUA ({selectedCount} vịt)
-              </>
-            )}
-          </Button>
+            <span className="relative z-10 flex items-center gap-3">
+              {starting ? (
+                <>
+                  <span className="animate-spin">⏳</span>
+                  LAUNCHING...
+                </>
+              ) : (
+                <>
+                  LIGHTS OUT — {selectedCount} DRIVERS
+                </>
+              )}
+            </span>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+          </button>
         </div>
-
-        {/* Shield Usage Summary */}
-        {shieldsInUse > 0 && (
-          <Card className="bg-blue-500/5 border-blue-500/20">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xl">🛡️</span>
-                <h3 className="font-semibold">Khiên đang được dùng</h3>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {players
-                  .filter((p) => p.selected && p.useShield)
-                  .map((p) => (
-                    <Badge key={p.userId} className="bg-blue-500/20 text-blue-400 border-blue-500/30">
-                      {p.name}
-                    </Badge>
-                  ))}
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Nếu những người này về cuối bảng, họ sẽ được miễn phạt. Phạt sẽ chuyển cho người kế tiếp.
-              </p>
-            </CardContent>
-          </Card>
-        )}
       </main>
     </div>
   )

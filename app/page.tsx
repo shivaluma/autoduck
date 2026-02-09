@@ -2,18 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import type { PlayerData } from '@/lib/types'
 
 export default function Dashboard() {
@@ -34,250 +22,279 @@ export default function Dashboard() {
 
   const totalRaces = races.length
   const totalKhaos = players.reduce((sum, p) => sum + p.totalKhaos, 0)
-  const mostKhaos = players.length > 0
-    ? [...players].sort((a, b) => b.totalKhaos - a.totalKhaos)[0]
-    : null
+  const sortedPlayers = [...players].sort((a, b) => b.totalKhaos - a.totalKhaos)
+  const mostKhaos = sortedPlayers[0] ?? null
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[var(--color-f1-dark)] noise-overlay grid-lines">
+      {/* Top Red Accent Bar */}
+      <div className="h-1 bg-gradient-to-r from-[var(--color-f1-red)] via-[var(--color-f1-red)] to-transparent" />
+
       {/* Header */}
-      <header className="border-b border-border/40 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">🦆</span>
+      <header className="relative border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
+          <div className="flex items-center gap-5 animate-slide-left">
+            <div className="relative">
+              <div className="text-5xl filter drop-shadow-[0_0_15px_rgba(225,6,0,0.3)]">🦆</div>
+            </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight">AutoDuck</h1>
-              <p className="text-xs text-muted-foreground">Zero-Touch Duck Racing</p>
+              <h1 className="font-display text-2xl font-black tracking-[0.15em] uppercase text-white">
+                AUTO<span className="text-[var(--color-f1-red)]">DUCK</span>
+              </h1>
+              <div className="flex items-center gap-2 mt-0.5">
+                <div className="w-2 h-2 bg-[var(--color-f1-red)] rounded-full animate-pulse" />
+                <p className="font-data text-[10px] tracking-[0.3em] uppercase text-white/40">
+                  Grand Prix Championship
+                </p>
+              </div>
             </div>
           </div>
-          <Link href="/race/new">
-            <Button size="lg" className="font-semibold gap-2">
-              <span>🏁</span> Bắt đầu cuộc đua
-            </Button>
+
+          <Link href="/race/new" className="animate-slide-right">
+            <button className="group relative overflow-hidden bg-[var(--color-f1-red)] hover:bg-[#ff1a1a] text-white font-display font-bold text-sm tracking-[0.1em] uppercase px-8 py-4 transition-all duration-300 diagonal-cut">
+              <span className="relative z-10 flex items-center gap-3">
+                <span className="text-lg">🏁</span>
+                RACE START
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+            </button>
           </Link>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-8 space-y-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-amber-500/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Tổng người chơi
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{players.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">Zịt team members</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Tổng cuộc đua
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{totalRaces}</div>
-              <p className="text-xs text-muted-foreground mt-1">Sáng thứ 2 hàng tuần</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-red-500/10 to-pink-500/10 border-red-500/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Tổng lượt khao nước
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{totalKhaos}</div>
-              <p className="text-xs text-muted-foreground mt-1">Bao nhiêu ly nước rồi</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-purple-500/10 to-violet-500/10 border-purple-500/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Vua khao nước
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{mostKhaos?.name?.replace('Zịt ', '') || '—'}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {mostKhaos ? `${mostKhaos.totalKhaos} lần khao` : 'Chưa có ai'}
-              </p>
-            </CardContent>
-          </Card>
+      <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+        {/* Stats Strip - F1 Race Info Bar style */}
+        <div className="grid grid-cols-4 gap-[1px] bg-white/5 animate-slide-up opacity-0" style={{ animationDelay: '0.1s' }}>
+          {[
+            { label: 'DRIVERS', value: players.length.toString(), accent: false },
+            { label: 'RACES', value: totalRaces.toString(), accent: false },
+            { label: 'TOTAL PENALTIES', value: totalKhaos.toString(), accent: true },
+            { label: 'MOST PENALIZED', value: mostKhaos?.name?.replace('Zịt ', '') || '—', accent: true },
+          ].map((stat, i) => (
+            <div
+              key={stat.label}
+              className={`relative bg-[var(--color-f1-surface)] p-5 ${i === 0 ? 'border-l-2 border-[var(--color-f1-red)]' : ''}`}
+            >
+              <div className="font-data text-[10px] tracking-[0.2em] uppercase text-white/30 mb-2">
+                {stat.label}
+              </div>
+              <div className={`font-display text-3xl font-black ${stat.accent ? 'text-[var(--color-f1-gold)]' : 'text-white'}`}>
+                {stat.value}
+              </div>
+            </div>
+          ))}
         </div>
 
-        {/* Player Leaderboard */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-lg">Bảng xếp hạng Team Zịt</CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Sẹo, Khiên và lịch sử khao nước
-                </p>
+        {/* Main Content: Timing Tower + Season Stats */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Timing Tower - Left 2 Columns */}
+          <div className="lg:col-span-2 animate-slide-up opacity-0" style={{ animationDelay: '0.2s' }}>
+            <div className="bg-[var(--color-f1-surface)] border border-white/5 overflow-hidden">
+              {/* Tower Header */}
+              <div className="flex items-center justify-between px-5 py-3 bg-[var(--color-f1-red)]">
+                <div className="flex items-center gap-3">
+                  <span className="font-display text-xs font-bold tracking-[0.2em] uppercase text-white">
+                    Championship Standings
+                  </span>
+                </div>
+                <span className="font-data text-[10px] tracking-[0.15em] text-white/70 uppercase">
+                  2 Sẹo = 1 Khiên
+                </span>
               </div>
-              <Badge variant="outline" className="font-mono">
-                Quy tắc: 2 Sẹo = 1 Khiên
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin text-4xl">🦆</div>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12">#</TableHead>
-                    <TableHead>Tên</TableHead>
-                    <TableHead className="text-center">
-                      <span title="Sẹo hiện tại">🩸 Sẹo</span>
-                    </TableHead>
-                    <TableHead className="text-center">
-                      <span title="Khiên hiện có">🛡️ Khiên</span>
-                    </TableHead>
-                    <TableHead className="text-center">
-                      <span title="Khiên đã sử dụng">⚔️ Khiên đã dùng</span>
-                    </TableHead>
-                    <TableHead className="text-center">
-                      <span title="Tổng lần khao nước">🧃 Khao nước</span>
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {[...players]
-                    .sort((a, b) => b.totalKhaos - a.totalKhaos)
-                    .map((player, idx) => (
-                      <TableRow
-                        key={player.id}
-                        className={
-                          idx === 0
-                            ? 'bg-red-500/5 hover:bg-red-500/10'
-                            : undefined
-                        }
-                      >
-                        <TableCell className="font-mono text-muted-foreground">
-                          {idx + 1}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">
-                              {idx === 0 ? '👑' : '🦆'}
-                            </span>
-                            <span className="font-semibold">{player.name}</span>
-                            {idx === 0 && (
-                              <Badge variant="destructive" className="text-[10px]">
-                                Vua khao
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Badge
-                            variant={player.scars > 0 ? 'destructive' : 'secondary'}
-                            className="font-mono min-w-[2rem]"
-                          >
-                            {player.scars}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Badge
-                            variant={player.shields > 0 ? 'default' : 'secondary'}
-                            className="font-mono min-w-[2rem]"
-                          >
-                            {player.shields}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <span className="font-mono text-muted-foreground">
-                            {player.shieldsUsed}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <span className="font-mono font-bold text-lg">
-                            {player.totalKhaos}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
 
-        {/* Recent Races */}
-        {races.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Lịch sử cuộc đua</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {races.slice(0, 10).map((race) => (
-                  <Link
-                    key={race.id}
-                    href={`/race/${race.id}`}
-                    className="flex items-center justify-between p-3 rounded-lg border border-border/50 hover:bg-accent/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg">
-                        {race.status === 'finished' ? '✅' : race.status === 'running' ? '🏃' : race.status === 'failed' ? '❌' : '⏳'}
-                      </span>
-                      <div>
-                        <p className="font-medium text-sm">Cuộc đua #{race.id}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(race.createdAt).toLocaleDateString('vi-VN', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </p>
+              {/* Column Headers */}
+              <div className="grid grid-cols-[60px_1fr_80px_80px_80px_100px] gap-0 px-5 py-2 border-b border-white/5 bg-white/[0.02]">
+                <div className="font-data text-[10px] tracking-wider uppercase text-white/30">POS</div>
+                <div className="font-data text-[10px] tracking-wider uppercase text-white/30">DRIVER</div>
+                <div className="font-data text-[10px] tracking-wider uppercase text-white/30 text-center">SCARS</div>
+                <div className="font-data text-[10px] tracking-wider uppercase text-white/30 text-center">SHIELD</div>
+                <div className="font-data text-[10px] tracking-wider uppercase text-white/30 text-center">USED</div>
+                <div className="font-data text-[10px] tracking-wider uppercase text-white/30 text-right">PENALTIES</div>
+              </div>
+
+              {/* Driver Rows */}
+              {loading ? (
+                <div className="flex items-center justify-center py-20">
+                  <div className="text-4xl animate-spin">🦆</div>
+                </div>
+              ) : (
+                <div>
+                  {sortedPlayers.map((player, idx) => (
+                    <div
+                      key={player.id}
+                      className={`
+                        grid grid-cols-[60px_1fr_80px_80px_80px_100px] gap-0 items-center
+                        px-5 py-3 border-b border-white/[0.03]
+                        timing-row speed-lines
+                        ${idx === 0 ? 'penalty' : ''}
+                        animate-slide-right opacity-0
+                      `}
+                      style={{ animationDelay: `${0.3 + idx * 0.06}s` }}
+                    >
+                      {/* Position */}
+                      <div className="flex items-center gap-2">
+                        <span className={`position-number text-2xl ${
+                          idx === 0 ? 'text-[var(--color-f1-red)]' :
+                          idx === 1 ? 'text-[var(--color-f1-gold)]' :
+                          idx === 2 ? 'text-[var(--color-f1-cyan)]' :
+                          'text-white/30'
+                        }`}>
+                          {String(idx + 1).padStart(2, '0')}
+                        </span>
+                      </div>
+
+                      {/* Driver Name */}
+                      <div className="flex items-center gap-3">
+                        <div className={`w-1 h-8 rounded-full ${
+                          idx === 0 ? 'bg-[var(--color-f1-red)]' :
+                          idx === 1 ? 'bg-[var(--color-f1-gold)]' :
+                          idx === 2 ? 'bg-[var(--color-f1-cyan)]' :
+                          'bg-white/10'
+                        }`} />
+                        <div>
+                          <div className="font-body text-sm font-semibold text-white tracking-wide uppercase">
+                            {player.name}
+                          </div>
+                          {idx === 0 && (
+                            <div className="font-data text-[9px] tracking-[0.15em] text-[var(--color-f1-red)] uppercase mt-0.5">
+                              MOST PENALIZED
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Scars */}
+                      <div className="text-center">
+                        <span className={`font-data text-sm font-bold ${
+                          player.scars > 0 ? 'text-[var(--color-f1-red)]' : 'text-white/20'
+                        }`}>
+                          {player.scars}
+                        </span>
+                      </div>
+
+                      {/* Shields */}
+                      <div className="text-center">
+                        <span className={`font-data text-sm font-bold ${
+                          player.shields > 0 ? 'text-[var(--color-f1-cyan)]' : 'text-white/20'
+                        }`}>
+                          {player.shields}
+                        </span>
+                      </div>
+
+                      {/* Shields Used */}
+                      <div className="text-center">
+                        <span className="font-data text-sm text-white/40">
+                          {player.shieldsUsed}
+                        </span>
+                      </div>
+
+                      {/* Total Penalties */}
+                      <div className="text-right">
+                        <span className="font-display text-xl font-black text-white">
+                          {player.totalKhaos}
+                        </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {race.finalVerdict && (
-                        <Badge variant="outline" className="text-xs max-w-[300px] truncate">
-                          {race.finalVerdict}
-                        </Badge>
-                      )}
-                      <Badge
-                        variant={
-                          race.status === 'finished'
-                            ? 'default'
-                            : race.status === 'running'
-                            ? 'secondary'
-                            : race.status === 'failed'
-                            ? 'destructive'
-                            : 'outline'
-                        }
-                      >
-                        {race.status}
-                      </Badge>
-                    </div>
-                  </Link>
-                ))}
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Column: Race History */}
+          <div className="animate-slide-up opacity-0" style={{ animationDelay: '0.35s' }}>
+            {/* Race History */}
+            <div className="bg-[var(--color-f1-surface)] border border-white/5 overflow-hidden">
+              <div className="px-5 py-3 border-b border-white/5 bg-white/[0.02]">
+                <span className="font-display text-xs font-bold tracking-[0.15em] uppercase text-white/60">
+                  Race Log
+                </span>
               </div>
-            </CardContent>
-          </Card>
-        )}
+
+              {races.length > 0 ? (
+                <div className="divide-y divide-white/[0.03]">
+                  {races.slice(0, 8).map((race, i) => (
+                    <Link
+                      key={race.id}
+                      href={`/race/${race.id}`}
+                      className="block px-5 py-4 hover:bg-white/[0.02] transition-colors speed-lines animate-slide-right opacity-0"
+                      style={{ animationDelay: `${0.4 + i * 0.05}s` }}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-display text-xs font-bold tracking-wider uppercase text-white">
+                          GP #{race.id}
+                        </span>
+                        <span className={`font-data text-[10px] px-2 py-0.5 tracking-wider uppercase ${
+                          race.status === 'finished' ? 'bg-green-500/10 text-green-400' :
+                          race.status === 'running' ? 'bg-[var(--color-f1-gold)]/10 text-[var(--color-f1-gold)]' :
+                          race.status === 'failed' ? 'bg-[var(--color-f1-red)]/10 text-[var(--color-f1-red)]' :
+                          'bg-white/5 text-white/40'
+                        }`}>
+                          {race.status}
+                        </span>
+                      </div>
+                      {race.finalVerdict && (
+                        <p className="font-body text-xs text-white/50 truncate">
+                          {race.finalVerdict}
+                        </p>
+                      )}
+                      <p className="font-data text-[10px] text-white/20 mt-1">
+                        {new Date(race.createdAt).toLocaleDateString('vi-VN', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="px-5 py-12 text-center">
+                  <div className="text-3xl mb-3 opacity-30">🏁</div>
+                  <p className="font-data text-xs text-white/20 tracking-wider uppercase">
+                    No races yet
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Quick Rules Card */}
+            <div className="mt-4 bg-[var(--color-f1-surface)] border border-white/5 p-5 animate-slide-up opacity-0" style={{ animationDelay: '0.5s' }}>
+              <div className="font-display text-[10px] tracking-[0.2em] uppercase text-[var(--color-f1-red)] mb-3">
+                Race Regulations
+              </div>
+              <div className="space-y-2.5 font-body text-xs text-white/50">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-[var(--color-f1-red)] rounded-full flex-shrink-0" />
+                  <span>2 người cuối bảng bị phạt <span className="text-[var(--color-f1-red)] font-semibold">+1 Sẹo</span></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-[var(--color-f1-cyan)] rounded-full flex-shrink-0" />
+                  <span>Dùng <span className="text-[var(--color-f1-cyan)] font-semibold">Khiên</span> để miễn phạt 1 lần</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-[var(--color-f1-gold)] rounded-full flex-shrink-0" />
+                  <span>Tích <span className="text-[var(--color-f1-gold)] font-semibold">2 Sẹo</span> tự động quy đổi thành 1 Khiên</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-white/30 rounded-full flex-shrink-0" />
+                  <span>Người bị phạt phải <span className="text-white font-semibold">khao nước</span> cho team</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Footer */}
-        <Separator />
-        <footer className="text-center text-sm text-muted-foreground py-4">
-          <p>AutoDuck v1.0 - Zero-Touch Duck Racing System</p>
-          <p className="text-xs mt-1">Powered by Team Web 🦆 | Sáng thứ 2 hàng tuần</p>
+        <footer className="border-t border-white/5 pt-6 pb-4 flex items-center justify-between animate-fade-in opacity-0" style={{ animationDelay: '0.6s' }}>
+          <div className="font-data text-[10px] tracking-[0.2em] uppercase text-white/15">
+            AUTODUCK v1.0 &mdash; Zero-Touch Racing System
+          </div>
+          <div className="font-data text-[10px] tracking-[0.2em] uppercase text-white/15">
+            Team Web &bull; Sáng thứ 2 hàng tuần
+          </div>
         </footer>
       </main>
     </div>
