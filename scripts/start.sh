@@ -14,6 +14,10 @@ echo "🗄️  Running Prisma DB push..."
 npx prisma db push
 echo "✅ Database ready!"
 
+# 3. Seed data (only if DB is empty)
+echo "🌱 Checking seed data..."
+node --import tsx prisma/seed.ts
+
 # 3. Start commentary worker in background
 echo "🎙️  Starting commentary worker..."
 node --import tsx scripts/commentary-worker.ts &
