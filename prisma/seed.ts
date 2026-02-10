@@ -19,18 +19,20 @@ const players = [
 ]
 
 async function main() {
-  // Chỉ seed khi DB chưa có user nào
-  const existingCount = await prisma.user.count()
-  if (existingCount > 0) {
-    console.log(`🦆 Database already has ${existingCount} users, skipping seed.`)
-    return
-  }
-
-  console.log('🦆 Seeding database (first run)...')
+  console.log('🦆 Seeding database...')
 
   for (const player of players) {
-    await prisma.user.create({ data: player })
-    console.log(`  ✓ ${player.name} (Sẹo: ${player.scars}, Khiên: ${player.shields})`)
+    await prisma.user.upsert({
+      where: { name: player.name },
+      update: {
+        scars: player.scars,
+        shields: player.shields,
+        shieldsUsed: player.shieldsUsed,
+        totalKhaos: player.totalKhaos,
+      },
+      create: player,
+    })
+    console.log(`  ✓ ${player.name} (Sẹo: ${player.scars}, Khiên: ${player.shields}, Khaos: ${player.totalKhaos})`)
   }
 
   console.log('\n🎉 Seed completed! 🦆')
