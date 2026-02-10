@@ -1,14 +1,13 @@
-import { Suspense } from 'react'
 import { NewRaceContent } from './content'
 
-export default function NewRacePage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-[var(--color-f1-dark)] flex items-center justify-center">
-        <div className="text-4xl animate-spin text-white">🦆</div>
-      </div>
-    }>
-      <NewRaceContent />
-    </Suspense>
-  )
+interface PageProps {
+  searchParams: Promise<{ test?: string; secret?: string }>
+}
+
+export default async function NewRacePage({ searchParams }: PageProps) {
+  const params = await searchParams
+  const testMode = params.test === 'true'
+  const secretKey = params.secret
+
+  return <NewRaceContent testMode={testMode} secretKey={secretKey} />
 }

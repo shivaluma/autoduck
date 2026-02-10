@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 interface User {
@@ -20,10 +20,14 @@ interface Race {
   finalVerdict?: string
 }
 
-export function AdminDashboardContent() {
+interface AdminDashboardContentProps {
+  secret?: string
+}
+
+export function AdminDashboardContent({ secret }: AdminDashboardContentProps) {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const secret = searchParams.get('secret')
+  // const searchParams = useSearchParams() <- Removed
+  // const secret = searchParams.get('secret') <- Passed via props
 
   const [users, setUsers] = useState<User[]>([])
   const [races, setRaces] = useState<Race[]>([])

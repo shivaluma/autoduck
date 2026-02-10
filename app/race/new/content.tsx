@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { PlayerData } from '@/lib/types'
 
@@ -14,11 +14,15 @@ interface ParticipantSetup {
   scars: number
 }
 
-export function NewRaceContent() {
+interface NewRaceContentProps {
+  testMode: boolean
+  secretKey?: string
+}
+
+export function NewRaceContent({ testMode, secretKey }: NewRaceContentProps) {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const testMode = searchParams.get('test') === 'true'
-  const secretKey = searchParams.get('secret')
+  // const searchParams = useSearchParams() <- Removed
+  // testMode and secretKey passed as props
 
   const [players, setPlayers] = useState<ParticipantSetup[]>([])
   const [loading, setLoading] = useState(true)

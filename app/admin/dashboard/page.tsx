@@ -1,10 +1,12 @@
-import { Suspense } from 'react'
 import { AdminDashboardContent } from './content'
 
-export default function AdminDashboardPage() {
-  return (
-    <Suspense fallback={<div className="min-h-screen bg-zinc-900 text-white p-8">Loading Admin Dashboard...</div>}>
-      <AdminDashboardContent />
-    </Suspense>
-  )
+interface PageProps {
+  searchParams: Promise<{ secret?: string }>
+}
+
+export default async function AdminDashboardPage({ searchParams }: PageProps) {
+  const params = await searchParams
+  const secret = params.secret
+
+  return <AdminDashboardContent secret={secret} />
 }
