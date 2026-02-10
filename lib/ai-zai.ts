@@ -1,6 +1,6 @@
 /**
  * Z.AI GLM-4.6v Integration for Race Commentary
- * Using pure fetch API (no SDK)
+ * STATEFUL: Receives commentary history for continuity & anti-repetition
  * Endpoint: https://api.z.ai/api/coding/paas/v4/chat/completions
  */
 
@@ -8,10 +8,14 @@ const ZAI_API_KEY = process.env.Z_AI_API_KEY || ''
 const ZAI_ENDPOINT = 'https://api.z.ai/api/coding/paas/v4/chat/completions'
 const MODEL = 'glm-4.6v'
 
-// Timestamps to capture during the race (seconds) - 8 key moments across 36s race
 export const COMMENTARY_TIMESTAMPS = [0, 5, 10, 15, 20, 25, 30, 33]
 
 const RACE_DURATION = 36
+
+export interface CommentaryHistory {
+  timestamp: number
+  text: string
+}
 
 const SYSTEM_PROMPT = `Bạn là một bình luận viên đua vịt huyền thoại tại Việt Nam. 
 Phong cách: Hòa trộn giữa sự bay bổng, dùng từ cực "đắt" của Tạ Biên Cương và sự "chặt chém", thực dụng, hài hước của các streamer 90p. 
@@ -21,31 +25,60 @@ NGUYÊN TẮC BÌNH LUẬN:
 2. Phép so sánh: Phải cực đoan và phi logic (So sánh vịt với giá vàng, người yêu cũ, chủ nợ, hay một định luật vật lý bị bỏ quên).
 3. Thái độ: Phải có sự phân biệt đối xử rõ ràng. Vịt dẫn đầu là "Vị vua", vịt cuối bảng là "Tội đồ" hoặc "Kẻ đang tìm kiếm ý nghĩa cuộc sống".
 4. Độ dài: TUYỆT ĐỐI dưới 100 ký tự. Phải súc tích nhưng "đâm bang".
+5. TÍNH LIÊN KẾT: Nếu được cung cấp bình luận trước đó, PHẢI tạo liên kết. Ví dụ: "Vẫn là con vịt báo thủ đó...", "Ai ngờ cú quay xe thế kỷ...". KHÔNG lặp lại từ lóng hoặc phép so sánh đã dùng.
 
 CẤM CÁC TỪ NHÀM CHÁN: "vô địch", "đội sổ", "tên bắn", "vấp cỏ", "tấu hài", "dưỡng sinh", "phả hơi nóng", "gáy", "cháy".`
 
-function getPromptForTimestamp(timestampSeconds: number, isRaceEnd: boolean, participantNames?: string): string {
-  const styles = ["Chiêm tinh học", "Kinh tế tài chính", "Văn học hiện thực phê phán", "Tâm linh huyền bí", "Giang hồ mõm"]
-  const randomStyle = styles[Math.floor(Math.random() * styles.length)]
+function getPromptForTimestamp(
+  timestampSeconds: number,
+  isRaceEnd: boolean,
+  participantNames?: string,
+  history?: CommentaryHistory[]
+): string {
+  const contexts = [
+    "Đang nợ lương/deadline dí",
+    "Người yêu cũ đi lấy chồng",
+    "Vừa trúng coin/chứng khoán",
+    "Đi casting Rap Việt nhưng bị loại",
+    "Hệ điều hành Windows đang Update",
+    "Mở app ngân hàng thấy số dư",
+    "Check điểm thi đại học",
+    "Bị tag vào ảnh thời trung học"
+  ]
+  const randomContext = contexts[Math.floor(Math.random() * contexts.length)]
 
   const namesContext = participantNames
     ? `\n🦆 DANH SÁCH VỊT ĐANG ĐUA: ${participantNames}\nHãy gọi tên vịt theo đúng danh sách trên.`
     : ''
 
+  const historyContext = history && history.length > 0
+    ? `\n📜 BÌNH LUẬN TRƯỚC ĐÓ (để tránh lặp và tạo liên kết):
+${history.map(h => `- Giây ${h.timestamp}s: "${h.text}"`).join('\n')}
+⚠️ KHÔNG được lặp lại bất kỳ phép so sánh, từ lóng, hoặc cấu trúc câu nào ở trên. Hãy "quay xe" hoặc "nối điêu" sáng tạo.`
+    : ''
+
   if (isRaceEnd) {
-    return `KẾT THÚC! Phong cách: ${randomStyle}.${namesContext}
+    return `${SYSTEM_PROMPT}
+
+KẾT THÚC! Bối cảnh cảm xúc: ${randomContext}.${namesContext}${historyContext}
 Nhiệm vụ: Vinh danh kẻ thắng như một vị thần, mỉa mai kẻ thua như một "báo thủ" chính hiệu.
-Dùng từ ngữ cực gắt: 'cook', 'về vườn', 'out trình', 'tư duy'.
+Dùng từ ngữ cực gắt: 'cook', 'về vườn', 'out trình', 'tới công chuyện', 'xu cà na'.
+Nếu có bình luận trước, hãy tạo "plot twist" hoặc callback bất ngờ.
 Chỉ trả về 1 câu < 100 ký tự.`
   }
 
-  return `⏱️ GIÂY THỨ: ${timestampSeconds}/${RACE_DURATION}. Phong cách: ${randomStyle}.${namesContext}
+  return `${SYSTEM_PROMPT}
+
+⏱️ GIÂY THỨ: ${timestampSeconds}/${RACE_DURATION}. Bối cảnh cảm xúc: ${randomContext}.${namesContext}${historyContext}
 Dựa vào vị trí các vịt trong ảnh:
 - Xuất phát: Ví như đi xin việc, gặp chủ nợ, hay đi casting idol.
 - Giữa trận: So sánh khoảng cách như "ví tiền cuối tháng" và "giá nhà quận 1".
 - Nước rút: Như cách người yêu cũ quay xe hoặc cách deadline dí.
 
-Yêu cầu: Phải có tính sát thương cao, dùng từ ngữ trendy của giới trẻ Việt Nam năm 2026.
+Yêu cầu: 
+- Phải có tính sát thương cao, dùng từ ngữ trendy 2026.
+- Thử dùng: 'cà khịa', 'xu cà na', 'tới công chuyện', 'nội tại', 'vô tri', 'kiếp nạn'.
+- Tránh tuyệt đối 'flex', 'trúng số', 'ý nghĩa cuộc đời' (quá phổ biến).
 Chỉ 1 câu duy nhất < 100 ký tự.`
 }
 
@@ -59,12 +92,14 @@ interface ZaiResponse {
 
 /**
  * Generate race commentary using Z.AI GLM-4.6v via pure fetch API
+ * STATEFUL: accepts history for continuity
  */
 export async function generateZaiCommentary(
   screenshotBase64: string,
   timestampSeconds: number,
   isRaceEnd: boolean = false,
-  participantNames?: string
+  participantNames?: string,
+  history?: CommentaryHistory[]
 ): Promise<string> {
   if (!ZAI_API_KEY) {
     console.warn('Z_AI_API_KEY not set, using fallback commentary')
@@ -72,7 +107,7 @@ export async function generateZaiCommentary(
   }
 
   try {
-    const prompt = getPromptForTimestamp(timestampSeconds, isRaceEnd, participantNames)
+    const prompt = getPromptForTimestamp(timestampSeconds, isRaceEnd, participantNames, history)
 
     // Ensure we have a valid data URI
     const imageUrl = screenshotBase64.startsWith('data:')
@@ -88,8 +123,8 @@ export async function generateZaiCommentary(
       },
       body: JSON.stringify({
         model: MODEL,
-        temperature: 1.2,  // Cao hơn để sáng tạo hơn
-        top_p: 0.95,       // Randomness cao
+        temperature: 1.0,
+        top_p: 0.95,
         messages: [
           {
             role: 'user',
@@ -118,7 +153,7 @@ export async function generateZaiCommentary(
     const data: ZaiResponse = await response.json()
     const text = data.choices?.[0]?.message?.content || ''
 
-    console.log(`[${timestampSeconds}s] Generated commentary:`, text.substring(0, 50))
+    console.log(`[ZAI][${timestampSeconds}s] Generated commentary:`, text.substring(0, 50))
 
     return text.trim() || getFallbackCommentary(timestampSeconds, isRaceEnd)
   } catch (error) {
@@ -145,7 +180,6 @@ export function shouldCaptureAt(
   capturedSet: Set<number>
 ): number | null {
   for (const target of timestamps) {
-    // Allow 0.5s tolerance
     if (Math.abs(elapsedSeconds - target) < 0.5 && !capturedSet.has(target)) {
       capturedSet.add(target)
       return target

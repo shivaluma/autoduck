@@ -1,10 +1,11 @@
 /**
  * Commentary Job Queue
  * SQLite-based async queue for AI commentary generation
+ * STATEFUL: fetches race history before generating to ensure continuity
  */
 
 import { prisma } from './db'
-import { generateZaiCommentary } from './ai-zai'
+import { generateZaiCommentary, type CommentaryHistory } from './ai-zai'
 import { generateClaudeCommentary } from './ai-claude'
 
 // AI Provider switching via env var: 'zai' (default) or 'claude'
@@ -14,12 +15,13 @@ async function generateCommentary(
   screenshotB64: string,
   timestamp: number,
   isRaceEnd: boolean,
-  participantNames?: string
+  participantNames?: string,
+  history?: CommentaryHistory[]
 ): Promise<string> {
   if (AI_PROVIDER === 'claude') {
-    return generateClaudeCommentary(screenshotB64, timestamp, isRaceEnd, participantNames)
+    return generateClaudeCommentary(screenshotB64, timestamp, isRaceEnd, participantNames, history)
   }
-  return generateZaiCommentary(screenshotB64, timestamp, isRaceEnd, participantNames)
+  return generateZaiCommentary(screenshotB64, timestamp, isRaceEnd, participantNames, history)
 }
 
 export type JobStatus = 'pending' | 'processing' | 'completed' | 'failed'
@@ -49,6 +51,21 @@ export async function queueCommentary(
 }
 
 /**
+ * Fetch completed commentary history for a race (for stateful generation)
+ */
+async function getCommentaryHistory(raceId: number): Promise<CommentaryHistory[]> {
+  const logs = await prisma.commentaryLog.findMany({
+    where: { raceId },
+    orderBy: { timestamp: 'asc' },
+    select: { timestamp: true, content: true },
+  })
+  return logs.map(log => ({
+    timestamp: log.timestamp,
+    text: log.content,
+  }))
+}
+
+/**
  * Process the next pending job
  * Returns true if a job was processed, false if queue is empty
  */
@@ -72,12 +89,19 @@ export async function processNextJob(): Promise<boolean> {
   })
 
   try {
-    // Generate commentary using selected provider
+    // Fetch commentary history for this race (stateful generation)
+    const history = await getCommentaryHistory(job.raceId)
+    if (history.length > 0) {
+      console.log(`  📜 Found ${history.length} previous commentaries for context`)
+    }
+
+    // Generate commentary using selected provider WITH history
     const commentary = await generateCommentary(
       job.screenshotB64,
       job.timestamp,
       job.isRaceEnd,
-      job.participantNames ?? undefined
+      job.participantNames ?? undefined,
+      history
     )
 
     // Mark as completed and store result
