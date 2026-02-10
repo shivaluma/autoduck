@@ -12,7 +12,56 @@ interface ParticipantInput {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { participants } = body as { participants: ParticipantInput[] }
+    const { participants, test, secret } = body as { participants: ParticipantInput[], test?: boolean, secret?: string }
+
+    // Security & Scheduling Check
+    const secretKey = process.env.RACE_SECRET_KEY
+    const isTestMode = test === true && secret === secretKey
+
+    if (!isTestMode) {
+      // Check Time (Monday GMT+7)
+      const now = new Date()
+      // Convert to Vietnam Time (UTC+7)
+      const vnOffset = 7 * 60 * 60 * 1000
+      const vnTime = new Date(now.getTime() + vnOffset)
+      const day = vnTime.getUTCDay() // getUTCDay because vnTime is "shifted" to VN time, but we use UTC methods on the shifted value to get the components
+      // Actually: vnTime is a Date object. If I added offset to milliseconds, I created a new instant.
+      // If I confirm 10:00 UTC. +7h = 17:00 UTC.
+      // getUTCDay() of 17:00 UTC will indeed give the day of week in VN.
+
+      if (day !== 1) { // 1 = Monday
+        return NextResponse.json(
+          { error: 'Giải đua chỉ mở cửa vào THỨ HAI hàng tuần (Giờ VN)! 🦆' },
+          { status: 403 }
+        )
+      }
+
+      // Check for existing race today (GMT+7)
+      // Start of day in VN time: 00:00:00
+      const startOfVNDay = new Date(vnTime)
+      startOfVNDay.setUTCHours(0, 0, 0, 0) // Set to 00:00:00 of the "shifted" time
+
+      // Convert back to real UTC by subtracting offset
+      const startOfVNDayUTC = new Date(startOfVNDay.getTime() - vnOffset)
+      const endOfVNDayUTC = new Date(startOfVNDayUTC.getTime() + 24 * 60 * 60 * 1000 - 1)
+
+      const todayRaces = await prisma.race.count({
+        where: {
+          createdAt: {
+            gte: startOfVNDayUTC,
+            lte: endOfVNDayUTC
+          },
+          status: { not: 'failed' }
+        }
+      })
+
+      if (todayRaces > 0) {
+        return NextResponse.json(
+          { error: 'Mỗi tuần chỉ đua 1 lần thôi! Đợi tuần sau nhé. 🛑' },
+          { status: 403 }
+        )
+      }
+    }
 
     if (!participants || participants.length < 2) {
       return NextResponse.json(

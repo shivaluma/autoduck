@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import type { PlayerData } from '@/lib/types'
 
@@ -16,6 +16,10 @@ interface ParticipantSetup {
 
 export default function NewRacePage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const testMode = searchParams.get('test') === 'true'
+  const secretKey = searchParams.get('secret')
+
   const [players, setPlayers] = useState<ParticipantSetup[]>([])
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState(false)
@@ -85,7 +89,11 @@ export default function NewRacePage() {
       const res = await fetch('/api/races/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ participants }),
+        body: JSON.stringify({
+          participants,
+          test: testMode,
+          secret: secretKey
+        }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -161,6 +169,11 @@ export default function NewRacePage() {
             <div className="font-display text-lg font-bold tracking-[0.15em] uppercase text-white">
               GRID <span className="text-[var(--color-f1-red)]">FORMATION</span>
             </div>
+            {testMode && (
+              <div className="bg-yellow-500/20 border border-yellow-500/50 text-yellow-500 px-2 py-0.5 text-[10px] font-bold tracking-wider rounded uppercase animate-pulse">
+                TEST MODE
+              </div>
+            )}
           </div>
         </div>
       </header>
