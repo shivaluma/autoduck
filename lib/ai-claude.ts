@@ -6,7 +6,7 @@
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || ''
 const ANTHROPIC_ENDPOINT = 'https://api.anthropic.com/v1/messages'
-const MODEL = 'claude-haiku-4-5-20241022'
+const MODEL = 'claude-haiku-4-5'
 
 // Timestamps to capture during the race (seconds) - 8 key moments across 36s race
 export const COMMENTARY_TIMESTAMPS = [0, 5, 10, 15, 20, 25, 30, 33]
