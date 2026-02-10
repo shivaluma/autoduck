@@ -237,7 +237,7 @@ async function executeRace(
     raceEventBus.emit(RACE_EVENTS.FINISHED, {
       raceId,
       winner: winnerDetails ? { name: winnerDetails.name, avatarUrl: winnerDetails.avatarUrl } : null,
-      victims: victimDetails.map(v => ({ name: v.name, avatarUrl: v.avatarUrl })),
+      victims: victimDetails.map((v: any) => ({ name: v.name, avatarUrl: v.avatarUrl })),
       verdict: penalties.finalVerdict
     })
 
