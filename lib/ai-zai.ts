@@ -1,6 +1,6 @@
 /**
  * Z.AI GLM-4.6v Integration for Race Commentary
- * V5: "Viral Punchline" Style - High density of wit, metaphors, and memes. No filler words.
+ * V6: Narrative Flow + Viral Wit (Fixing disjointed commentary)
  * Endpoint: https://api.z.ai/api/coding/paas/v4/chat/completions
  */
 
@@ -17,18 +17,24 @@ export interface CommentaryHistory {
   text: string
 }
 
-const SYSTEM_PROMPT = `Bạn là BLV Đua Vịt với "cái mồm" của Tạ Biên Cương và tư duy của một Rapper.
-MỤC TIÊU: Mỗi câu bình luận phải là một "Punchline" có thể viral trên TikTok.
+const SYSTEM_PROMPT = `Bạn là BLV Đua Vịt với phong cách: Tạ Biên Cương (hoa mỹ) + Rapper (vần điệu) + Táo Quân (cà khịa).
+MỤC TIÊU: Kể một CÂU CHUYỆN kịch tính, xuyên suốt từ đầu đến cuối.
 
-CẤM TUYỆT ĐỐI:
-❌ KHÔNG dùng từ đệm vô nghĩa: "Ơi", "À", "Ừ", "Mẹ kiếp", "Chết tiệt", "Ê", "Ấy". 
-❌ KHÔNG mô tả tẻ nhạt ("Zịt A đang bơi", "Zịt B nhanh quá").
-❌ KHÔNG chào hỏi, không mở bài, không kết bài sáo rỗng.
+QUY TẮC VÀNG:
+1. TÍNH LIÊN KẾT (QUAN TRỌNG NHẤT):
+   - KHÔNG bình luận rời rạc từng con.
+   - PHẢI nhắc lại diễn biến trước đó (Ví dụ: "Vừa bị chê giây trước, giờ Zịt A đã...")
+   - Luôn so sánh Kẻ Dẫn Đầu vs Kẻ Bám Đuổi.
 
-YÊU CẦU BẮT BUỘC:
-✅ Dùng các biện pháp tu từ: So sánh phi lý, Nhân hóa, Chơi chữ (Wordplay).
-✅ Văn phong: "Thơ ca lai căng", "Triết lý vỉa hè", "Cà khịa thâm sâu".
-✅ Độ dài: Ngắn gọn, súc tích (1 câu duy nhất, 2 vế đối lập).`
+2. PHONG CÁCH:
+   - Dùng từ ngữ bóng bẩy, ẩn dụ, so sánh bất ngờ (vũ trụ, thần thoại, showbiz, kinh tế...).
+   - KHÔNG dùng từ đệm nhạt nhẽo ("ơi", "à", "ừ").
+   - Giọng điệu: Gấp gáp, kịch tính, như đang hét vào mic.
+
+3. CẤU TRÚC:
+   - Một câu duy nhất.
+   - Vế 1: Diễn biến thực tế (Ai vượt ai? Ai tụt?).
+   - Vế 2: So sánh/Bình luận thâm thúy.`
 
 function buildPrompt(
   timestampSeconds: number,
@@ -42,8 +48,8 @@ function buildPrompt(
     : ''
 
   const historyInfo = history && history.length > 0
-    ? `\nDIỄN BIẾN ĐÃ QUA:\n${history.map(h => `[${h.timestamp}s] ${h.text}`).join('\n')}\n(Hãy nối tiếp mood này, nhưng đừng lặp từ)`
-    : ''
+    ? `\nDIỄN BIẾN ĐÃ QUA (Hãy nối tiếp mạch này):\n${history.map(h => `[${h.timestamp}s] ${h.text}`).join('\n')}`
+    : '\n(Chưa có diễn biến, hãy mở đầu thật bùng nổ)'
 
   if (isRaceEnd) {
     let resultsInfo = ''
@@ -52,41 +58,44 @@ function buildPrompt(
         const ranking = JSON.parse(raceResults) as Array<{ rank: number; name: string }>
         const winner = ranking[0]?.name || 'không rõ'
         const loser = ranking[ranking.length - 1]?.name || 'không rõ'
-        resultsInfo = `\nKẾT QUẢ: 👑 VÔ ĐỊCH: ${winner} | 🥀 ĐỘI SỔ: ${loser}.`
+        resultsInfo = `\nKẾT QUẢ CHUNG CUỘC: 👑 VÔ ĐỊCH: ${winner} | 🥀 ĐỘI SỔ: ${loser}.`
       } catch { /* ignore */ }
     }
 
     return `${SYSTEM_PROMPT}
 
-Tình huống: Cuộc đua đã hạ màn.${namesInfo}${resultsInfo}${historyInfo}
+THỜI KHẮC QUYẾT ĐỊNH: Cuộc đua đã kết thúc!${namesInfo}${resultsInfo}${historyInfo}
 
-Nhiệm vụ: Viết 1 câu chốt hạ cực "chất".
-- Đối với nhà vô địch: Tâng bốc lên mây xanh bằng một hình ảnh vĩ mô (vũ trụ, thần thoại).
-- Đối với kẻ thua cuộc: Cà khịa thâm thúy (ví dụ: đang bận ngắm san hô, đi tìm kho báu đáy sông).
-- Yêu cầu: "Sắc lẹm" như dao cạo.
+NHIỆM VỤ: Viết 1 câu chốt hạ (max 200 ký tự).
+- Kết nối lại với các sự kiện trong quá khứ (callback).
+- Tôn vinh nhà vô địch bằng hình ảnh vĩ đại.
+- "An ủi" kẻ thua cuộc bằng sự mỉa mai thâm thúy.
 
-Ví dụ mẫu: "Vương miện đã có chủ! Zit Tuân đăng quang trong sự ngỡ ngàng của vũ trụ! Còn Zit Lợi, có lẽ cậu ấy đang bận... ngắm san hô ở đáy bảng xếp hạng."`
+Ví dụ: "Vương miện đã chọn Zịt Tuấn làm chủ nhân của vũ trụ, trong khi Zịt Lợi vẫn đang loay hoay tìm định nghĩa của từ 'tốc độ' dưới đáy bảng xếp hạng!"`
   }
 
-  const moodPrompt = timestampSeconds <= 2
-    ? 'Giai đoạn XUẤT PHÁT. Hãy so sánh tốc độ với những thứ chậm chạp/nhanh khủng khiếp (người yêu cũ trở mặt, tin nhắn lương về...).'
-    : timestampSeconds <= 12
-      ? 'Giai đoạn LÀM QUEN. Hãy tìm một "nghệ sĩ hài" trên đường đua (vịt bơi loạn, đi lùi, vấp cỏ).'
-      : timestampSeconds <= 22
-        ? 'Giai đoạn GIỮA TRẬN. So sánh sự chênh lệch đẳng cấp. Kẻ dẫn đầu vs Kẻ hít khói.'
-        : 'Giai đoạn NƯỚC RÚT. Kịch tính, cháy bỏng, văn thơ lai láng (Sóng bắt đầu từ gió...)'
+  // Dynamic context generation
+  let contextPrompt = ''
+  if (timestampSeconds <= 2) {
+    contextPrompt = 'Giai đoạn XUẤT PHÁT: Ai là kẻ "nổ máy" nhanh nhất? Ai đang ngủ mơ? So sánh khí thế như đi đòi nợ vs đi dạo mát.'
+  } else if (timestampSeconds <= 12) {
+    contextPrompt = 'Giai đoạn BỨT TỐC: Cuộc chiến bắt đầu rõ rệt. Hãy so sánh kẻ dẫn đầu và kẻ bám đuổi (Khoảng cách ntn? Như mặt trăng với mặt trời?).'
+  } else if (timestampSeconds <= 22) {
+    contextPrompt = 'Giai đoạn CAO TRÀO: Có ai đang âm thầm vươn lên không? Hay kẻ dẫn đầu đang "hết xăng"? Hãy tạo drama kịch tính.'
+  } else {
+    contextPrompt = 'Giai đoạn NƯỚC RÚT: Sống còn! Dùng những từ ngữ mạnh nhất (cháy, nổ, hủy diệt, nuốt chửng). Ai sẽ là người chiến thắng?'
+  }
 
   return `${SYSTEM_PROMPT}
 
-Thời điểm: Giây ${timestampSeconds}/${RACE_DURATION}. ${moodPrompt}
-Dữ liệu hình ảnh: Nhìn screenshot để biết ai dẫn, ai bét.${namesInfo}${historyInfo}
+THỜI GIAN: Giây ${timestampSeconds}/${RACE_DURATION}. ${contextPrompt}
+HÌNH ẢNH: Nhìn screenshot để xác định ai dẫn đầu, ai bét bảng.${namesInfo}${historyInfo}
 
-Nhiệm vụ: Viết 1 câu bình luận "sát thương" cao.
-- Cấu trúc: [Vế 1: Thực tế cú shock] + [Vế 2: So sánh hình tượng/Meme].
-- Ví dụ: "Zit Tân đang vấp cỏ, nhưng đó là cái vấp cỏ của một thiên tài!"
-- Ví dụ: "Sóng bắt đầu từ gió, còn Zit Thanh bắt đầu phả hơi nóng vào gáy đối thủ!"
+NHIỆM VỤ: Viết 1 câu bình luận kịch tính (max 180 ký tự).
+- PHẢI SO SÁNH: Đừng chỉ nói về 1 con. Hãy nói "Zịt A đang bay, TRONG KHI Zịt B đang bò".
+- Dùng từ ngữ "đắt": Xi măng, cốt thép, tên lửa, đi bộ, dưỡng sinh...
 
-VIẾT NGAY (Không rào đón):`
+VIẾT NGAY:`
 }
 
 interface ZaiResponse {
@@ -125,8 +134,8 @@ export async function generateZaiCommentary(
       },
       body: JSON.stringify({
         model: MODEL,
-        temperature: 1.0, // Creativity
-        top_p: 0.95,
+        temperature: 0.9,
+        top_p: 0.9,
         messages: [
           {
             role: 'user',
@@ -150,7 +159,7 @@ export async function generateZaiCommentary(
     const data: ZaiResponse = await response.json()
     let text = data.choices?.[0]?.message?.content || ''
 
-    // Aggressive cleanup
+    // Clean up
     text = text
       .replace(/^["']|["']$/g, '')
       .replace(/^(Giây \d+|Phút \d+).*?:/i, '')
@@ -166,9 +175,9 @@ export async function generateZaiCommentary(
 }
 
 function getFallbackCommentary(timestampSeconds: number, isRaceEnd: boolean): string {
-  if (isRaceEnd) return 'Vương miện đã có chủ! Một kết thúc không thể tin nổi!'
-  if (timestampSeconds <= 5) return 'Tiếng còi vang lên và các chiến thần đã lao đi như tên bắn!'
-  return 'Cuộc đua đang nóng hơn cả mùa hè Hà Nội!'
+  if (isRaceEnd) return 'Cuộc đua đã khép lại với những cảm xúc vỡ òa!'
+  if (timestampSeconds <= 5) return 'Các chiến binh vịt đã lao ra đường đua như những mũi tên!'
+  return 'Cuộc đua đang diễn ra vô cùng kịch tính và khó lường!'
 }
 
 export function shouldCaptureAt(
@@ -176,7 +185,6 @@ export function shouldCaptureAt(
   timestamps: number[],
   capturedSet: Set<number>
 ): number | null {
-  // ... keep existing logic
   for (const target of timestamps) {
     if (Math.abs(elapsedSeconds - target) < 0.5 && !capturedSet.has(target)) {
       capturedSet.add(target)
