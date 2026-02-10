@@ -1,6 +1,6 @@
 /**
  * Anthropic Claude 4.5 Haiku Integration for Race Commentary
- * V4: Natural BLV voice, stateful narrative, race results injection
+ * V5: "Viral Punchline" Style - High density of wit, metaphors, and memes. No filler words.
  * Endpoint: https://api.anthropic.com/v1/messages
  */
 
@@ -17,17 +17,18 @@ export interface CommentaryHistory {
   text: string
 }
 
-const SYSTEM_PROMPT = `Bạn là BLV đua vịt, giọng Tạ Biên Cương pha streamer đường phố. Bạn đang bình luận trực tiếp một cuộc đua vịt.
+const SYSTEM_PROMPT = `Bạn là BLV Đua Vịt với "cái mồm" của Tạ Biên Cương và tư duy của một Rapper.
+MỤC TIÊU: Mỗi câu bình luận phải là một "Punchline" có thể viral trên TikTok.
 
-QUY TẮC:
-- Viết như đang NÓI, không phải đang viết. Câu phải tự nhiên, có nhịp thở, có ngắt.
-- KHÔNG dùng ngoặc kép quá 1 lần trong câu. KHÔNG dùng markdown (**, ##, []...).  
-- KHÔNG bắt đầu bằng label/header. Viết thẳng nội dung.
-- Tập trung vào 1-2 con vịt chính, KHÔNG liệt kê tất cả.
-- Mỗi câu bình luận phải nối tiếp câu trước, tạo mạch truyện.
-- Dùng từ lóng tự nhiên: cook, out trình, quay xe, báo thủ, tới công chuyện... nhưng KHÔNG nhồi nhét, chỉ dùng khi hợp ngữ cảnh.
-- So sánh phi logic nhưng phải MỚI mỗi lần, không lặp.
-- Độ dài: 100-180 ký tự.`
+CẤM TUYỆT ĐỐI:
+❌ KHÔNG dùng từ đệm vô nghĩa: "Ơi", "À", "Ừ", "Mẹ kiếp", "Chết tiệt", "Ê", "Ấy". 
+❌ KHÔNG mô tả tẻ nhạt ("Zịt A đang bơi", "Zịt B nhanh quá").
+❌ KHÔNG chào hỏi, không mở bài, không kết bài sáo rỗng.
+
+YÊU CẦU BẮT BUỘC:
+✅ Dùng các biện pháp tu từ: So sánh phi lý, Nhân hóa, Chơi chữ (Wordplay).
+✅ Văn phong: "Thơ ca lai căng", "Triết lý vỉa hè", "Cà khịa thâm sâu".
+✅ Độ dài: Ngắn gọn, súc tích (1 câu duy nhất, 2 vế đối lập).`
 
 function buildPrompt(
   timestampSeconds: number,
@@ -37,11 +38,11 @@ function buildPrompt(
   raceResults?: string
 ): string {
   const namesInfo = participantNames
-    ? `\nCác vịt đang đua: ${participantNames}.`
+    ? `\nCASTING: ${participantNames}.`
     : ''
 
   const historyInfo = history && history.length > 0
-    ? `\nCác câu bình luận trước:\n${history.map(h => `[${h.timestamp}s] ${h.text}`).join('\n')}\nHãy tiếp nối mạch truyện, KHÔNG lặp từ lóng hay so sánh đã dùng.`
+    ? `\nDIỄN BIẾN ĐÃ QUA:\n${history.map(h => `[${h.timestamp}s] ${h.text}`).join('\n')}\n(Hãy nối tiếp mood này, nhưng đừng lặp từ)`
     : ''
 
   if (isRaceEnd) {
@@ -50,24 +51,42 @@ function buildPrompt(
       try {
         const ranking = JSON.parse(raceResults) as Array<{ rank: number; name: string }>
         const winner = ranking[0]?.name || 'không rõ'
-        const last = ranking[ranking.length - 1]?.name || 'không rõ'
-        resultsInfo = `\nKẾT QUẢ CHÍNH THỨC: Vô địch: ${winner}. Cuối bảng: ${last}. Bảng xếp hạng: ${ranking.map(r => `#${r.rank} ${r.name}`).join(', ')}.`
-      } catch { /* ignore parse errors */ }
+        const loser = ranking[ranking.length - 1]?.name || 'không rõ'
+        resultsInfo = `\nKẾT QUẢ: 👑 VÔ ĐỊCH: ${winner} | 🥀 ĐỘI SỔ: ${loser}.`
+      } catch { /* ignore */ }
     }
 
-    return `Cuộc đua kết thúc rồi.${namesInfo}${resultsInfo}${historyInfo}
+    return `${SYSTEM_PROMPT}
 
-Viết 1 câu bình luận kết thúc (100-180 ký tự). Tung hô vịt thắng, cà khịa vịt thua. Nếu có lịch sử bình luận thì callback lại drama trước đó. Viết như đang nói trên mic, tự nhiên, có cảm xúc.`
+Tình huống: Cuộc đua đã hạ màn.${namesInfo}${resultsInfo}${historyInfo}
+
+Nhiệm vụ: Viết 1 câu chốt hạ cực "chất".
+- Đối với nhà vô địch: Tâng bốc lên mây xanh bằng một hình ảnh vĩ mô (vũ trụ, thần thoại).
+- Đối với kẻ thua cuộc: Cà khịa thâm thúy (ví dụ: đang bận ngắm san hô, đi tìm kho báu đáy sông).
+- Yêu cầu: "Sắc lẹm" như dao cạo.
+
+Ví dụ mẫu: "Vương miện đã có chủ! Zit Tuân đăng quang trong sự ngỡ ngàng của vũ trụ! Còn Zit Lợi, có lẽ cậu ấy đang bận... ngắm san hô ở đáy bảng xếp hạng."`
   }
 
-  const phase = timestampSeconds <= 2 ? 'vừa xuất phát'
-    : timestampSeconds <= 12 ? 'đang hình thành đội hình'
-      : timestampSeconds <= 22 ? 'đang nóng lên'
-        : 'nước rút'
+  const moodPrompt = timestampSeconds <= 2
+    ? 'Giai đoạn XUẤT PHÁT. Hãy so sánh tốc độ với những thứ chậm chạp/nhanh khủng khiếp (người yêu cũ trở mặt, tin nhắn lương về...).'
+    : timestampSeconds <= 12
+      ? 'Giai đoạn LÀM QUEN. Hãy tìm một "nghệ sĩ hài" trên đường đua (vịt bơi loạn, đi lùi, vấp cỏ).'
+      : timestampSeconds <= 22
+        ? 'Giai đoạn GIỮA TRẬN. So sánh sự chênh lệch đẳng cấp. Kẻ dẫn đầu vs Kẻ hít khói.'
+        : 'Giai đoạn NƯỚC RÚT. Kịch tính, cháy bỏng, văn thơ lai láng (Sóng bắt đầu từ gió...)'
 
-  return `Giây ${timestampSeconds}/${RACE_DURATION}, ${phase}. Nhìn vào ảnh.${namesInfo}${historyInfo}
+  return `${SYSTEM_PROMPT}
 
-Viết 1 câu bình luận (100-180 ký tự). Chọn 1-2 vịt nổi bật nhất để nói. Viết như đang nói trên mic, tự nhiên, không gượng ép từ lóng.`
+Thời điểm: Giây ${timestampSeconds}/${RACE_DURATION}. ${moodPrompt}
+Dữ liệu hình ảnh: Nhìn screenshot để biết ai dẫn, ai bét.${namesInfo}${historyInfo}
+
+Nhiệm vụ: Viết 1 câu bình luận "sát thương" cao.
+- Cấu trúc: [Vế 1: Thực tế cú shock] + [Vế 2: So sánh hình tượng/Meme].
+- Ví dụ: "Zit Tân đang vấp cỏ, nhưng đó là cái vấp cỏ của một thiên tài!"
+- Ví dụ: "Sóng bắt đầu từ gió, còn Zit Thanh bắt đầu phả hơi nóng vào gáy đối thủ!"
+
+VIẾT NGAY (Không rào đón):`
 }
 
 interface AnthropicResponse {
@@ -77,9 +96,6 @@ interface AnthropicResponse {
   }>
 }
 
-/**
- * Generate race commentary using Anthropic Claude 4.5 Haiku with vision
- */
 export async function generateClaudeCommentary(
   screenshotBase64: string,
   timestampSeconds: number,
@@ -89,7 +105,7 @@ export async function generateClaudeCommentary(
   raceResults?: string
 ): Promise<string> {
   if (!ANTHROPIC_API_KEY) {
-    console.warn('ANTHROPIC_API_KEY not set, using fallback commentary')
+    console.warn('ANTHROPIC_API_KEY not set')
     return getFallbackCommentary(timestampSeconds, isRaceEnd)
   }
 
@@ -106,8 +122,8 @@ export async function generateClaudeCommentary(
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 300,
-        temperature: 0.85,
+        max_tokens: 200, // Short & punchy
+        temperature: 1.0, // High creativity for metaphors
         system: SYSTEM_PROMPT,
         messages: [
           {
@@ -125,19 +141,18 @@ export async function generateClaudeCommentary(
     })
 
     if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`Anthropic API error: ${response.status} - ${errorText}`)
+      // ... error handling
+      throw new Error((await response.text()))
     }
 
     const data: AnthropicResponse = await response.json()
     let text = data.content?.[0]?.text || ''
 
-    // Clean up: strip any headers, markdown, or labels AI might sneak in
+    // Aggressive cleanup
     text = text
-      .replace(/^\*\*[^*]+\*\*\s*/g, '')  // **HEADER**
-      .replace(/^#+\s+.+\n?/g, '')        // # Header
-      .replace(/^\[.+?\]\s*/g, '')         // [LABEL]
-      .replace(/^(GIÂY|PHÁT SÓNG|KẾT THÚC|KHỞI ĐỘNG|NƯỚC RÚT)[^:]*:\s*/gi, '') // Vietnamese headers
+      .replace(/^["']|["']$/g, '') // remove quotes
+      .replace(/^(Giây \d+|Phút \d+).*?:/i, '') // remove timestamps
+      .replace(/(\r\n|\n|\r)/gm, " ") // remove newlines
       .trim()
 
     console.log(`[Claude][${timestampSeconds}s] ${text.substring(0, 60)}...`)
@@ -149,21 +164,17 @@ export async function generateClaudeCommentary(
 }
 
 function getFallbackCommentary(timestampSeconds: number, isRaceEnd: boolean): string {
-  if (isRaceEnd) return 'Cuộc đua kết thúc rồi bà con ơi!'
-  if (timestampSeconds <= 2) return 'Đèn xanh bật, các con vịt lao ra khỏi vạch xuất phát!'
-  if (timestampSeconds <= 12) return 'Đội hình đang dần hình thành, gay cấn lắm đây!'
-  if (timestampSeconds <= 22) return 'Cuộc đua nóng lên từng giây!'
-  return 'Nước rút rồi, ai sẽ về nhất đây!'
+  if (isRaceEnd) return 'Vương miện đã có chủ! Một kết thúc không thể tin nổi!'
+  if (timestampSeconds <= 5) return 'Tiếng còi vang lên và các chiến thần đã lao đi như tên bắn!'
+  return 'Cuộc đua đang nóng hơn cả mùa hè Hà Nội!'
 }
 
-/**
- * Check if we should capture at this timestamp
- */
 export function shouldCaptureAt(
   elapsedSeconds: number,
   timestamps: number[],
   capturedSet: Set<number>
 ): number | null {
+  // ... keep existing logic
   for (const target of timestamps) {
     if (Math.abs(elapsedSeconds - target) < 0.5 && !capturedSet.has(target)) {
       capturedSet.add(target)
