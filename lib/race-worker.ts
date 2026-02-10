@@ -3,6 +3,7 @@ import { generateCommentary } from './ai'
 import { generateZaiCommentary } from './ai-zai'
 import { queueCommentary } from './commentary-queue'
 import { uploadVideoToR2 } from './r2-upload'
+import { raceEventBus, RACE_EVENTS } from './event-bus'
 import * as fs from 'fs'
 import * as path from 'path'
 
@@ -283,6 +284,37 @@ export async function runRaceWorker(players: PlayerInput[], raceId?: number): Pr
     })
 
     page = await context.newPage()
+
+    // Start Live Stream via CDP (if raceId is present)
+    if (raceId) {
+      try {
+        const client = await context.newCDPSession(page)
+        console.log('🎥 Starting live stream CDP session...')
+
+        await client.send('Page.startScreencast', {
+          format: 'jpeg',
+          quality: 80,
+          maxWidth: 1280,
+          maxHeight: 720,
+          everyNthFrame: 1 // Capture every frame
+        })
+
+        client.on('Page.screencastFrame', async (payload) => {
+          const { sessionId, data, metadata } = payload
+          // Ack the frame to receive the next one
+          await client.send('Page.screencastFrameAck', { sessionId })
+
+          // Broadcast to event bus
+          raceEventBus.emit(RACE_EVENTS.FRAME, {
+            raceId,
+            data,
+            timestamp: metadata.timestamp
+          })
+        })
+      } catch (e) {
+        console.error('❌ Failed to start live stream:', e)
+      }
+    }
 
     // Navigate to duck race - use direct URL without iframe wrapper
     const numPlayers = players.length

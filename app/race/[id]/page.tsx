@@ -3,6 +3,7 @@
 import { useEffect, useState, use } from 'react'
 import Link from 'next/link'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { LivePlayer } from './live-player'
 import type { RaceStatus } from '@/lib/types'
 
 export default function RaceDetailPage({
@@ -107,26 +108,33 @@ export default function RaceDetailPage({
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-6">
-        {/* Running State */}
+        {/* Running State & Live Stream */}
         {isRunning && (
-          <div className="relative overflow-hidden bg-[var(--color-f1-surface)] border border-green-500/20 p-8 animate-pulse">
-            <div className="flex items-center justify-center gap-6">
-              <div className="text-5xl animate-bounce">🦆</div>
-              <div className="text-center">
-                <div className="font-display text-2xl font-black tracking-[0.2em] uppercase text-green-400">
-                  RACE IN PROGRESS
+          <div className="space-y-6">
+            <div className="relative overflow-hidden bg-[var(--color-f1-surface)] border border-green-500/20 p-8 animate-pulse">
+              <div className="flex items-center justify-center gap-6">
+                <div className="text-5xl animate-bounce">🦆</div>
+                <div className="text-center">
+                  <div className="font-display text-2xl font-black tracking-[0.2em] uppercase text-green-400">
+                    RACE IN PROGRESS
+                  </div>
+                  <div className="font-data text-xs text-white/50 tracking-wider uppercase mt-1">
+                    Live Stream Connected via CDP
+                  </div>
                 </div>
-                <div className="font-data text-xs text-white/50 tracking-wider uppercase mt-1">
-                  Live timing updating automatically
-                </div>
+                <div className="text-5xl animate-bounce" style={{ animationDelay: '0.15s' }}>🦆</div>
               </div>
-              <div className="text-5xl animate-bounce" style={{ animationDelay: '0.15s' }}>🦆</div>
+              <div className="absolute top-0 left-0 w-full h-1 bg-green-500" />
             </div>
-            <div className="absolute top-0 left-0 w-full h-1 bg-green-500" />
+
+            {/* LIVE PLAYER */}
+            <div className="animate-slide-up">
+              <LivePlayer raceId={parseInt(raceId)} isFinished={isFinished} />
+            </div>
           </div>
         )}
 
-        {/* VERDICT BANNER */}
+        {/* VERDICT BANNER (only if finished) */}
         {isFinished && race.finalVerdict && (
           <div className="relative overflow-hidden animate-slide-up opacity-0" style={{ animationDelay: '0.1s' }}>
             {/* Background */}
