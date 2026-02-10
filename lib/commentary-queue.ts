@@ -5,6 +5,21 @@
 
 import { prisma } from './db'
 import { generateZaiCommentary } from './ai-zai'
+import { generateClaudeCommentary } from './ai-claude'
+
+// AI Provider switching via env var: 'zai' (default) or 'claude'
+const AI_PROVIDER = process.env.AI_PROVIDER || 'zai'
+
+async function generateCommentary(
+  screenshotB64: string,
+  timestamp: number,
+  isRaceEnd: boolean
+): Promise<string> {
+  if (AI_PROVIDER === 'claude') {
+    return generateClaudeCommentary(screenshotB64, timestamp, isRaceEnd)
+  }
+  return generateZaiCommentary(screenshotB64, timestamp, isRaceEnd)
+}
 
 export type JobStatus = 'pending' | 'processing' | 'completed' | 'failed'
 
@@ -45,7 +60,7 @@ export async function processNextJob(): Promise<boolean> {
     return false
   }
 
-  console.log(`🎙️ Processing job #${job.id} for race ${job.raceId} at ${job.timestamp}s`)
+  console.log(`🎙️ [${AI_PROVIDER.toUpperCase()}] Processing job #${job.id} for race ${job.raceId} at ${job.timestamp}s`)
 
   // Mark as processing
   await prisma.commentaryJob.update({
@@ -54,8 +69,8 @@ export async function processNextJob(): Promise<boolean> {
   })
 
   try {
-    // Generate commentary using z.ai
-    const commentary = await generateZaiCommentary(
+    // Generate commentary using selected provider
+    const commentary = await generateCommentary(
       job.screenshotB64,
       job.timestamp,
       job.isRaceEnd
