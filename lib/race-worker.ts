@@ -470,7 +470,7 @@ export async function runRaceWorker(players: PlayerInput[], raceId?: number): Pr
       const screenshotBuf = await page.screenshot({ type: 'jpeg', quality: 70 })
       const base64 = screenshotBuf.toString('base64')
       if (raceId) {
-        await queueCommentary(raceId, 0, base64, false)
+        await queueCommentary(raceId, 0, base64, false, playerNames.join(', '))
         commentaryJobsQueued++
         capturedTimestamps.add(0)
         console.log('  [0s] 📝 Queued for AI commentary')
@@ -503,7 +503,7 @@ export async function runRaceWorker(players: PlayerInput[], raceId?: number): Pr
 
           // Queue for async AI commentary generation
           if (raceId) {
-            await queueCommentary(raceId, targetTimestamp, base64, false)
+            await queueCommentary(raceId, targetTimestamp, base64, false, playerNames.join(', '))
             commentaryJobsQueued++
             console.log(`  [${targetTimestamp}s] 📝 Queued for AI commentary`)
           } else {
@@ -536,7 +536,7 @@ export async function runRaceWorker(players: PlayerInput[], raceId?: number): Pr
         const elapsed = (Date.now() - startTime) / 1000
 
         if (raceId) {
-          await queueCommentary(raceId, Math.round(elapsed), base64, true)
+          await queueCommentary(raceId, Math.round(elapsed), base64, true, playerNames.join(', '))
           commentaryJobsQueued++
           console.log(`  [End] 📝 Queued for AI commentary`)
         }
