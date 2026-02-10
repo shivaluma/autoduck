@@ -34,7 +34,7 @@ RUN npx prisma generate
 RUN pnpm build
 
 # --- Stage 3: Runner (Playwright for browser automation) ---
-FROM mcr.microsoft.com/playwright:v1.49.0-noble AS runner
+FROM mcr.microsoft.com/playwright:v1.58.2-noble AS runner
 
 # Install Xvfb + build tools for native module rebuild
 RUN apt-get update && apt-get install -y \
