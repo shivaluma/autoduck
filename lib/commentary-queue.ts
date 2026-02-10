@@ -59,7 +59,7 @@ async function getCommentaryHistory(raceId: number): Promise<CommentaryHistory[]
     orderBy: { timestamp: 'asc' },
     select: { timestamp: true, content: true },
   })
-  return logs.map(log => ({
+  return logs.map((log: { timestamp: number; content: string }) => ({
     timestamp: log.timestamp,
     text: log.content,
   }))
