@@ -11,8 +11,7 @@ sleep 1
 
 # 2. Run Prisma DB push (auto-create/migrate tables)
 echo "🗄️  Running Prisma DB push..."
-node --experimental-require-module ./node_modules/.bin/prisma db push --skip-generate 2>/dev/null || \
-  npx prisma db push --skip-generate
+npx prisma db push
 echo "✅ Database ready!"
 
 # 3. Start commentary worker in background
