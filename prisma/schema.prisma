@@ -64,6 +64,7 @@ model CommentaryJob {
   timestamp     Int       // Giây thứ bao nhiêu trong cuộc đua
   screenshotB64 String    // Base64 encoded screenshot (JPEG)
   isRaceEnd     Boolean   @default(false)
+  participantNames String? // Comma-separated duck names for AI prompt
   status        String    @default("pending") // pending, processing, completed, failed
   result        String?   // Generated commentary
   error         String?

@@ -13,12 +13,13 @@ const AI_PROVIDER = process.env.AI_PROVIDER || 'zai'
 async function generateCommentary(
   screenshotB64: string,
   timestamp: number,
-  isRaceEnd: boolean
+  isRaceEnd: boolean,
+  participantNames?: string
 ): Promise<string> {
   if (AI_PROVIDER === 'claude') {
-    return generateClaudeCommentary(screenshotB64, timestamp, isRaceEnd)
+    return generateClaudeCommentary(screenshotB64, timestamp, isRaceEnd, participantNames)
   }
-  return generateZaiCommentary(screenshotB64, timestamp, isRaceEnd)
+  return generateZaiCommentary(screenshotB64, timestamp, isRaceEnd, participantNames)
 }
 
 export type JobStatus = 'pending' | 'processing' | 'completed' | 'failed'
@@ -30,7 +31,8 @@ export async function queueCommentary(
   raceId: number,
   timestamp: number,
   screenshotB64: string,
-  isRaceEnd: boolean = false
+  isRaceEnd: boolean = false,
+  participantNames?: string
 ): Promise<number> {
   const job = await prisma.commentaryJob.create({
     data: {
@@ -38,6 +40,7 @@ export async function queueCommentary(
       timestamp,
       screenshotB64,
       isRaceEnd,
+      participantNames,
       status: 'pending',
     },
   })
@@ -73,7 +76,8 @@ export async function processNextJob(): Promise<boolean> {
     const commentary = await generateCommentary(
       job.screenshotB64,
       job.timestamp,
-      job.isRaceEnd
+      job.isRaceEnd,
+      job.participantNames ?? undefined
     )
 
     // Mark as completed and store result
