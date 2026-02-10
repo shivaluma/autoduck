@@ -3,8 +3,9 @@
 # Multi-stage Dockerfile for Dokploy deployment
 # ============================================
 
-# --- Stage 1: Dependencies ---
-FROM node:20-slim AS deps
+# --- Stage 1: Install deps on Playwright image (same as runner) ---
+# This ensures native modules (better-sqlite3) compile for the correct platform
+FROM mcr.microsoft.com/playwright:v1.49.0-noble AS deps
 
 RUN npm install -g pnpm
 
@@ -14,14 +15,11 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 RUN pnpm install --frozen-lockfile
 
-# --- Stage 2: Builder ---
-FROM node:20-slim AS builder
-
-RUN npm install -g pnpm
+# --- Stage 2: Build Next.js ---
+FROM deps AS builder
 
 WORKDIR /app
 
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Generate Prisma client
@@ -33,7 +31,7 @@ RUN pnpm build
 # --- Stage 3: Runner ---
 FROM mcr.microsoft.com/playwright:v1.49.0-noble AS runner
 
-# Install Xvfb + pnpm + tsx
+# Install Xvfb + tsx
 RUN apt-get update && apt-get install -y \
     xvfb \
     && rm -rf /var/lib/apt/lists/*
