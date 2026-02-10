@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     })
 
     // Build player list for the worker - map userId to name
-    const playerInputs: { name: string; useShield: boolean; userId: number }[] = 
+    const playerInputs: { name: string; useShield: boolean; userId: number }[] =
       race.participants.map((p: { user: { name: string }; usedShield: boolean; userId: number }) => ({
         name: p.user.name,
         useShield: p.usedShield,
@@ -104,18 +104,12 @@ async function executeRace(
     })
 
     // Run the Playwright worker (or simulation in dev)
-    const result = await runRaceWorker(playerInputs)
+    // Pass raceId so screenshots can be queued for async commentary generation
+    const result = await runRaceWorker(playerInputs, raceId)
 
-    // Save commentaries
-    if (result.commentaries.length > 0) {
-      await prisma.commentaryLog.createMany({
-        data: result.commentaries.map((c: { timestamp: number; content: string }) => ({
-          raceId,
-          timestamp: c.timestamp,
-          content: c.content,
-        })),
-      })
-    }
+    // Commentaries are now queued for async processing by the commentary worker
+    // No need to save them here - the worker will create CommentaryLog entries
+    console.log(`Race ${raceId}: ${result.commentaryJobsQueued} commentary jobs queued`)
 
     // Map ranking results to participants using name matching
     const raceResults = result.rawRanking.map((r: { rank: number; name: string }) => {

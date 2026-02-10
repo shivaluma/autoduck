@@ -29,8 +29,9 @@ model Race {
   createdAt    DateTime @default(now())
   finishedAt   DateTime?
 
-  participants RaceParticipant[]
-  commentaries CommentaryLog[]
+  participants   RaceParticipant[]
+  commentaries   CommentaryLog[]
+  commentaryJobs CommentaryJob[]
 }
 
 model RaceParticipant {
@@ -55,3 +56,20 @@ model CommentaryLog {
 
   race Race @relation(fields: [raceId], references: [id], onDelete: Cascade)
 }
+
+// Job queue for async commentary generation
+model CommentaryJob {
+  id            Int       @id @default(autoincrement())
+  raceId        Int
+  timestamp     Int       // Giây thứ bao nhiêu trong cuộc đua
+  screenshotB64 String    // Base64 encoded screenshot (JPEG)
+  isRaceEnd     Boolean   @default(false)
+  status        String    @default("pending") // pending, processing, completed, failed
+  result        String?   // Generated commentary
+  error         String?
+  createdAt     DateTime  @default(now())
+  processedAt   DateTime?
+
+  race Race @relation(fields: [raceId], references: [id], onDelete: Cascade)
+}
+
