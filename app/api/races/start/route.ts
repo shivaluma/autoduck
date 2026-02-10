@@ -101,6 +101,7 @@ export async function POST(request: Request) {
     const race = await prisma.race.create({
       data: {
         status: 'pending',
+        isTest: isTestMode,
         participants: {
           create: participants.map((p: ParticipantInput) => ({
             userId: p.userId,
@@ -175,6 +176,10 @@ async function executeRace(
     // Calculate penalties using shield logic
     const penalties = calculatePenalties(raceResults)
 
+    // Verify race isTest status first (fetch fresh or pass it down)
+    const race = await prisma.race.findUnique({ where: { id: raceId } })
+    const isTest = race?.isTest ?? false
+
     // Update race participants with results
     for (const rr of raceResults) {
       const isVictim = penalties.victims.some((v) => v.userId === rr.userId)
@@ -187,25 +192,27 @@ async function executeRace(
         },
       })
 
-      // Update user stats
-      const user = await prisma.user.findUnique({ where: { id: rr.userId } })
-      if (user) {
-        const { newScars, newShields } = calculateNewStats(
-          user.scars,
-          user.shields,
-          isVictim,
-          rr.usedShield
-        )
+      // Update user stats ONLY if NOT test mode
+      if (!isTest) {
+        const user = await prisma.user.findUnique({ where: { id: rr.userId } })
+        if (user) {
+          const { newScars, newShields } = calculateNewStats(
+            user.scars,
+            user.shields,
+            isVictim,
+            rr.usedShield
+          )
 
-        await prisma.user.update({
-          where: { id: rr.userId },
-          data: {
-            scars: newScars,
-            shields: newShields,
-            shieldsUsed: rr.usedShield ? user.shieldsUsed + 1 : user.shieldsUsed,
-            totalKhaos: isVictim ? user.totalKhaos + 1 : user.totalKhaos,
-          },
-        })
+          await prisma.user.update({
+            where: { id: rr.userId },
+            data: {
+              scars: newScars,
+              shields: newShields,
+              shieldsUsed: rr.usedShield ? user.shieldsUsed + 1 : user.shieldsUsed,
+              totalKhaos: isVictim ? user.totalKhaos + 1 : user.totalKhaos,
+            },
+          })
+        }
       }
     }
 

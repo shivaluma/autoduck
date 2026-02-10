@@ -7,7 +7,7 @@ import type { PlayerData } from '@/lib/types'
 export default function Dashboard() {
   const [players, setPlayers] = useState<PlayerData[]>([])
   const [loading, setLoading] = useState(true)
-  const [races, setRaces] = useState<{ id: number; status: string; finalVerdict: string | null; createdAt: string }[]>([])
+  const [races, setRaces] = useState<{ id: number; status: string; finalVerdict: string | null; createdAt: string; isTest?: boolean }[]>([])
 
   useEffect(() => {
     Promise.all([
@@ -217,8 +217,13 @@ export default function Dashboard() {
                       style={{ animationDelay: `${0.4 + i * 0.05}s` }}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-display text-xs font-bold tracking-wider uppercase text-white">
+                        <span className="font-display text-xs font-bold tracking-wider uppercase text-white flex items-center gap-2">
                           GP #{race.id}
+                          {race.isTest && (
+                            <span className="text-[var(--color-f1-cyan)] border border-[var(--color-f1-cyan)]/50 px-1.5 py-0.5 rounded-[2px] text-[9px] font-mono tracking-widest bg-[var(--color-f1-cyan)]/10">
+                              TEST
+                            </span>
+                          )}
                         </span>
                         <span className={`font-data text-[11px] px-2 py-0.5 tracking-wider uppercase ${race.status === 'finished' ? 'bg-green-500/10 text-green-400' :
                           race.status === 'running' ? 'bg-[var(--color-f1-gold)]/10 text-[var(--color-f1-gold)]' :

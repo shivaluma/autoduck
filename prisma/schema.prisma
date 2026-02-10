@@ -28,6 +28,7 @@ model Race {
   finalVerdict String?  // Câu chốt "Ai là con dzịt"
   createdAt    DateTime @default(now())
   finishedAt   DateTime?
+  isTest       Boolean  @default(false)
 
   participants   RaceParticipant[]
   commentaries   CommentaryLog[]
