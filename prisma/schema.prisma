@@ -65,6 +65,7 @@ model CommentaryJob {
   screenshotB64 String    // Base64 encoded screenshot (JPEG)
   isRaceEnd     Boolean   @default(false)
   participantNames String? // Comma-separated duck names for AI prompt
+  raceResults     String?  // JSON race results for end-of-race commentary
   status        String    @default("pending") // pending, processing, completed, failed
   result        String?   // Generated commentary
   error         String?

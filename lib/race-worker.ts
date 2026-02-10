@@ -527,22 +527,6 @@ export async function runRaceWorker(players: PlayerInput[], raceId?: number): Pr
 
     if (raceFinished) {
       console.log('🏁 Race finished detected!')
-
-      // Capture final race end screenshot for commentary
-      try {
-        console.log('📸 Capturing final race screenshot...')
-        const screenshotBuf = await page.screenshot({ type: 'jpeg', quality: 70 })
-        const base64 = screenshotBuf.toString('base64')
-        const elapsed = (Date.now() - startTime) / 1000
-
-        if (raceId) {
-          await queueCommentary(raceId, Math.round(elapsed), base64, true, playerNames.join(', '))
-          commentaryJobsQueued++
-          console.log(`  [End] 📝 Queued for AI commentary`)
-        }
-      } catch (error) {
-        console.error('Final screenshot failed:', error)
-      }
     }
 
     if (!raceFinished) {
@@ -591,6 +575,23 @@ export async function runRaceWorker(players: PlayerInput[], raceId?: number): Pr
       console.log('  DOM extraction failed, using random order:', extractError)
       const shuffled = [...players].sort(() => Math.random() - 0.5)
       rawRanking = shuffled.map((p, idx) => ({ rank: idx + 1, name: p.name }))
+    }
+
+    // Queue FINAL commentary AFTER we have actual results
+    try {
+      console.log('📸 Capturing results screenshot for final commentary...')
+      const resultsScreenshot = await page.screenshot({ type: 'jpeg', quality: 70 })
+      const resultsBase64 = resultsScreenshot.toString('base64')
+      const elapsed = (Date.now() - startTime) / 1000
+
+      if (raceId) {
+        const resultsJson = JSON.stringify(rawRanking)
+        await queueCommentary(raceId, Math.round(elapsed), resultsBase64, true, playerNames.join(', '), resultsJson)
+        commentaryJobsQueued++
+        console.log(`  [End] 📝 Queued final commentary with actual results: ${rawRanking.map(r => `#${r.rank} ${r.name}`).join(', ')}`)
+      }
+    } catch (error) {
+      console.error('Final results commentary queue failed:', error)
     }
 
     // === STEP 5: CLEANUP & RETURN ===

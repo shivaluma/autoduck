@@ -1,6 +1,6 @@
 /**
  * Anthropic Claude 4.5 Haiku Integration for Race Commentary
- * STATEFUL NARRATIVE MODE: BLV kể chuyện có đầu có đuôi
+ * V4: Natural BLV voice, stateful narrative, race results injection
  * Endpoint: https://api.anthropic.com/v1/messages
  */
 
@@ -17,55 +17,57 @@ export interface CommentaryHistory {
   text: string
 }
 
-const SYSTEM_PROMPT = `Bạn là một BLV Đua Vịt huyền thoại. Nhiệm vụ của bạn là dẫn dắt người xem qua một hành trình cảm xúc từ lúc "khởi nghiệp" đến khi "vỡ nợ" hoặc "lên đỉnh".
+const SYSTEM_PROMPT = `Bạn là BLV đua vịt, giọng Tạ Biên Cương pha streamer đường phố. Bạn đang bình luận trực tiếp một cuộc đua vịt.
 
-NGUYÊN TẮC VÀNG:
-1. TÍNH LIÊN KẾT: Mỗi câu bình luận phải dựa trên câu trước. Nếu giây trước vịt A dẫn, giây sau bị vượt, phải dùng từ như: "Bất ngờ chưa bà già!", "Quay xe khét lẹt!", "Vết xe đổ của...".
-2. TIÊU ĐIỂM DRAMA: KHÔNG liệt kê tất cả vịt. Hãy chọn ra 1 "Ngôi sao" và 1 "Báo thủ" để đối đầu. Tập trung vào câu chuyện giữa 2 nhân vật chính.
-3. CẤU TRÚC CÂU: 1 vế mô tả thực tế + 1 vế so sánh "đâm bang" + 1 vế dự đoán/cà khịa.
-4. ĐỘ DÀI: 150-200 ký tự. Đủ độ mặn nhưng vẫn súc tích.
-5. KHÔNG BAO GIỜ bắt đầu bằng header như "GIÂY THỨ X", "PHÁT SÓNG", "KẾT THÚC" hay bất kỳ label nào. Chỉ viết nội dung bình luận thuần túy.
+QUY TẮC:
+- Viết như đang NÓI, không phải đang viết. Câu phải tự nhiên, có nhịp thở, có ngắt.
+- KHÔNG dùng ngoặc kép quá 1 lần trong câu. KHÔNG dùng markdown (**, ##, []...).  
+- KHÔNG bắt đầu bằng label/header. Viết thẳng nội dung.
+- Tập trung vào 1-2 con vịt chính, KHÔNG liệt kê tất cả.
+- Mỗi câu bình luận phải nối tiếp câu trước, tạo mạch truyện.
+- Dùng từ lóng tự nhiên: cook, out trình, quay xe, báo thủ, tới công chuyện... nhưng KHÔNG nhồi nhét, chỉ dùng khi hợp ngữ cảnh.
+- So sánh phi logic nhưng phải MỚI mỗi lần, không lặp.
+- Độ dài: 100-180 ký tự.`
 
-PHONG CÁCH: Dùng từ lóng Gen Z tự nhiên (cook, out trình, tới công chuyện, vô tri, kiếp nạn, check VAR, quay xe, báo thủ, nội tại, xu cà na, trầm cảm, hệ điều hành...). Phép so sánh phi logic (giá vàng, người yêu cũ, chủ nợ, deadline, app ngân hàng...).
-
-CẤM: "vô địch", "đội sổ", "tên bắn", "vấp cỏ", "tấu hài", "dưỡng sinh", "phả hơi nóng", "gáy", "cháy", "flex", "trúng số", "ý nghĩa cuộc đời". KHÔNG được bắt đầu câu bằng ** hoặc markdown formatting.`
-
-function getPromptForTimestamp(
+function buildPrompt(
   timestampSeconds: number,
   isRaceEnd: boolean,
   participantNames?: string,
-  history?: CommentaryHistory[]
+  history?: CommentaryHistory[],
+  raceResults?: string
 ): string {
-  const namesContext = participantNames
-    ? `\n🦆 DANH SÁCH VỊT ĐANG ĐUA: ${participantNames}\nHãy gọi tên vịt theo đúng danh sách trên, KHÔNG bịa tên.`
+  const namesInfo = participantNames
+    ? `\nCác vịt đang đua: ${participantNames}.`
     : ''
 
-  const historyContext = history && history.length > 0
-    ? `\n📜 CÂU CHUYỆN ĐẾN GIỜ:\n${history.map(h => `[${h.timestamp}s] ${h.text}`).join('\n')}\n\n⚠️ Dựa vào mạch truyện ở trên, hãy TIẾP NỐI câu chuyện. KHÔNG lặp so sánh hoặc từ lóng đã dùng. Nếu có vịt đổi vị trí, hãy tạo drama "quay xe". Nếu vẫn giữ nguyên, hãy tăng tension.`
+  const historyInfo = history && history.length > 0
+    ? `\nCác câu bình luận trước:\n${history.map(h => `[${h.timestamp}s] ${h.text}`).join('\n')}\nHãy tiếp nối mạch truyện, KHÔNG lặp từ lóng hay so sánh đã dùng.`
     : ''
 
   if (isRaceEnd) {
-    return `Cuộc đua đã kết thúc. Nhìn vào kết quả cuối cùng trong ảnh.${namesContext}${historyContext}
+    let resultsInfo = ''
+    if (raceResults) {
+      try {
+        const ranking = JSON.parse(raceResults) as Array<{ rank: number; name: string }>
+        const winner = ranking[0]?.name || 'không rõ'
+        const last = ranking[ranking.length - 1]?.name || 'không rõ'
+        resultsInfo = `\nKẾT QUẢ CHÍNH THỨC: Vô địch: ${winner}. Cuối bảng: ${last}. Bảng xếp hạng: ${ranking.map(r => `#${r.rank} ${r.name}`).join(', ')}.`
+      } catch { /* ignore parse errors */ }
+    }
 
-Viết 1 câu bình luận kết thúc (150-200 ký tự):
-- Callback lại các drama đã xảy ra trong lịch sử bình luận (nếu có)
-- Vinh danh kẻ thắng + "chia buồn" kẻ thua theo kiểu cà khịa
-- Tạo cảm giác "plot twist" hoặc "kết thúc mãn nhãn"
-- KHÔNG bắt đầu bằng header hay label. Chỉ viết nội dung thuần.`
+    return `Cuộc đua kết thúc rồi.${namesInfo}${resultsInfo}${historyInfo}
+
+Viết 1 câu bình luận kết thúc (100-180 ký tự). Tung hô vịt thắng, cà khịa vịt thua. Nếu có lịch sử bình luận thì callback lại drama trước đó. Viết như đang nói trên mic, tự nhiên, có cảm xúc.`
   }
 
-  const phase = timestampSeconds <= 2 ? 'khởi động'
-    : timestampSeconds <= 12 ? 'drama mở màn'
-      : timestampSeconds <= 22 ? 'giữa trận nóng bỏng'
-        : 'nước rút sinh tử'
+  const phase = timestampSeconds <= 2 ? 'vừa xuất phát'
+    : timestampSeconds <= 12 ? 'đang hình thành đội hình'
+      : timestampSeconds <= 22 ? 'đang nóng lên'
+        : 'nước rút'
 
-  return `Đây là giây thứ ${timestampSeconds}/${RACE_DURATION}, giai đoạn: ${phase}. Nhìn vào ảnh screenshot.${namesContext}${historyContext}
+  return `Giây ${timestampSeconds}/${RACE_DURATION}, ${phase}. Nhìn vào ảnh.${namesInfo}${historyInfo}
 
-Viết 1 câu bình luận (150-200 ký tự):
-- Chọn 1 "ngôi sao" (dẫn đầu) và 1 "báo thủ" (chậm nhất) để tạo drama
-- Cấu trúc: mô tả thực tế + so sánh phi logic + dự đoán/cà khịa
-- Tiếp nối mạch truyện từ các câu trước (nếu có)
-- KHÔNG bắt đầu bằng header, label, hay markdown. Chỉ viết nội dung thuần.`
+Viết 1 câu bình luận (100-180 ký tự). Chọn 1-2 vịt nổi bật nhất để nói. Viết như đang nói trên mic, tự nhiên, không gượng ép từ lóng.`
 }
 
 interface AnthropicResponse {
@@ -77,14 +79,14 @@ interface AnthropicResponse {
 
 /**
  * Generate race commentary using Anthropic Claude 4.5 Haiku with vision
- * STATEFUL NARRATIVE MODE
  */
 export async function generateClaudeCommentary(
   screenshotBase64: string,
   timestampSeconds: number,
   isRaceEnd: boolean = false,
   participantNames?: string,
-  history?: CommentaryHistory[]
+  history?: CommentaryHistory[],
+  raceResults?: string
 ): Promise<string> {
   if (!ANTHROPIC_API_KEY) {
     console.warn('ANTHROPIC_API_KEY not set, using fallback commentary')
@@ -92,9 +94,7 @@ export async function generateClaudeCommentary(
   }
 
   try {
-    const prompt = getPromptForTimestamp(timestampSeconds, isRaceEnd, participantNames, history)
-
-    // Strip data URI prefix if present — Anthropic expects raw base64
+    const prompt = buildPrompt(timestampSeconds, isRaceEnd, participantNames, history, raceResults)
     const rawBase64 = screenshotBase64.replace(/^data:image\/\w+;base64,/, '')
 
     const response = await fetch(ANTHROPIC_ENDPOINT, {
@@ -107,7 +107,7 @@ export async function generateClaudeCommentary(
       body: JSON.stringify({
         model: MODEL,
         max_tokens: 300,
-        temperature: 0.9,
+        temperature: 0.85,
         system: SYSTEM_PROMPT,
         messages: [
           {
@@ -115,16 +115,9 @@ export async function generateClaudeCommentary(
             content: [
               {
                 type: 'image',
-                source: {
-                  type: 'base64',
-                  media_type: 'image/jpeg',
-                  data: rawBase64,
-                },
+                source: { type: 'base64', media_type: 'image/jpeg', data: rawBase64 },
               },
-              {
-                type: 'text',
-                text: prompt,
-              },
+              { type: 'text', text: prompt },
             ],
           },
         ],
@@ -139,11 +132,15 @@ export async function generateClaudeCommentary(
     const data: AnthropicResponse = await response.json()
     let text = data.content?.[0]?.text || ''
 
-    // Strip any markdown formatting or headers the AI might add
-    text = text.replace(/^\*\*.*?\*\*\s*/g, '').replace(/^#+\s*/g, '').replace(/^\[.*?\]\s*/g, '').trim()
+    // Clean up: strip any headers, markdown, or labels AI might sneak in
+    text = text
+      .replace(/^\*\*[^*]+\*\*\s*/g, '')  // **HEADER**
+      .replace(/^#+\s+.+\n?/g, '')        // # Header
+      .replace(/^\[.+?\]\s*/g, '')         // [LABEL]
+      .replace(/^(GIÂY|PHÁT SÓNG|KẾT THÚC|KHỞI ĐỘNG|NƯỚC RÚT)[^:]*:\s*/gi, '') // Vietnamese headers
+      .trim()
 
-    console.log(`[Claude][${timestampSeconds}s] Generated commentary:`, text.substring(0, 60))
-
+    console.log(`[Claude][${timestampSeconds}s] ${text.substring(0, 60)}...`)
     return text || getFallbackCommentary(timestampSeconds, isRaceEnd)
   } catch (error) {
     console.error('Anthropic API Error:', error)
@@ -152,12 +149,11 @@ export async function generateClaudeCommentary(
 }
 
 function getFallbackCommentary(timestampSeconds: number, isRaceEnd: boolean): string {
-  if (isRaceEnd) return 'CHEQUERED FLAG! Cuộc đua đã kết thúc!'
-  if (timestampSeconds <= 1) return 'LIGHTS OUT! Các con dzịt lao ra khỏi vạch xuất phát!'
-  if (timestampSeconds <= 3) return 'Cuộc đua đang diễn ra sôi nổi!'
-  if (timestampSeconds <= 5) return 'Gay cấn quá! Các con dzịt đang cố vượt lên!'
-  if (timestampSeconds <= 7) return 'Gần tới đích rồi! Ai sẽ về nhất?'
-  return 'Nước rút cuối cùng! Hồi hộp quá!'
+  if (isRaceEnd) return 'Cuộc đua kết thúc rồi bà con ơi!'
+  if (timestampSeconds <= 2) return 'Đèn xanh bật, các con vịt lao ra khỏi vạch xuất phát!'
+  if (timestampSeconds <= 12) return 'Đội hình đang dần hình thành, gay cấn lắm đây!'
+  if (timestampSeconds <= 22) return 'Cuộc đua nóng lên từng giây!'
+  return 'Nước rút rồi, ai sẽ về nhất đây!'
 }
 
 /**

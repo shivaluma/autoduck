@@ -16,12 +16,13 @@ async function generateCommentary(
   timestamp: number,
   isRaceEnd: boolean,
   participantNames?: string,
-  history?: CommentaryHistory[]
+  history?: CommentaryHistory[],
+  raceResults?: string
 ): Promise<string> {
   if (AI_PROVIDER === 'claude') {
-    return generateClaudeCommentary(screenshotB64, timestamp, isRaceEnd, participantNames, history)
+    return generateClaudeCommentary(screenshotB64, timestamp, isRaceEnd, participantNames, history, raceResults)
   }
-  return generateZaiCommentary(screenshotB64, timestamp, isRaceEnd, participantNames, history)
+  return generateZaiCommentary(screenshotB64, timestamp, isRaceEnd, participantNames, history, raceResults)
 }
 
 export type JobStatus = 'pending' | 'processing' | 'completed' | 'failed'
@@ -34,7 +35,8 @@ export async function queueCommentary(
   timestamp: number,
   screenshotB64: string,
   isRaceEnd: boolean = false,
-  participantNames?: string
+  participantNames?: string,
+  raceResults?: string
 ): Promise<number> {
   const job = await prisma.commentaryJob.create({
     data: {
@@ -43,10 +45,11 @@ export async function queueCommentary(
       screenshotB64,
       isRaceEnd,
       participantNames,
+      raceResults,
       status: 'pending',
     },
   })
-  console.log(`📝 Queued commentary job #${job.id} for race ${raceId} at ${timestamp}s`)
+  console.log(`📝 Queued commentary job #${job.id} for race ${raceId} at ${timestamp}s${isRaceEnd ? ' (RACE END)' : ''}`)
   return job.id
 }
 
@@ -80,7 +83,7 @@ export async function processNextJob(): Promise<boolean> {
     return false
   }
 
-  console.log(`🎙️ [${AI_PROVIDER.toUpperCase()}] Processing job #${job.id} for race ${job.raceId} at ${job.timestamp}s`)
+  console.log(`🎙️ [${AI_PROVIDER.toUpperCase()}] Processing job #${job.id} for race ${job.raceId} at ${job.timestamp}s${job.isRaceEnd ? ' (END)' : ''}`)
 
   // Mark as processing
   await prisma.commentaryJob.update({
@@ -95,13 +98,14 @@ export async function processNextJob(): Promise<boolean> {
       console.log(`  📜 Found ${history.length} previous commentaries for context`)
     }
 
-    // Generate commentary using selected provider WITH history
+    // Generate commentary using selected provider WITH history + race results
     const commentary = await generateCommentary(
       job.screenshotB64,
       job.timestamp,
       job.isRaceEnd,
       job.participantNames ?? undefined,
-      history
+      history,
+      job.raceResults ?? undefined
     )
 
     // Mark as completed and store result
@@ -123,7 +127,7 @@ export async function processNextJob(): Promise<boolean> {
       },
     })
 
-    console.log(`✅ Job #${job.id} completed: "${commentary.substring(0, 50)}..."`)
+    console.log(`✅ Job #${job.id} completed: "${commentary.substring(0, 60)}..."`)
     return true
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
@@ -167,7 +171,7 @@ export async function processAllPendingJobs(): Promise<number> {
   let processed = 0
   while (await processNextJob()) {
     processed++
-    // Small delay between jobs to avoid rate limiting (reduced for faster processing)
+    // Small delay between jobs to avoid rate limiting
     await new Promise((resolve) => setTimeout(resolve, 100))
   }
   return processed
