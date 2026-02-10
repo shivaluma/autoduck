@@ -7,6 +7,7 @@ import Link from 'next/link'
 interface User {
   id: number
   name: string
+  avatarUrl?: string // Added avatarUrl
   scars: number
   shields: number
   shieldsUsed: number
@@ -124,6 +125,7 @@ export function AdminDashboardContent({ secret }: AdminDashboardContentProps) {
                   <tr>
                     <th className="p-2">ID</th>
                     <th className="p-2">Name</th>
+                    <th className="p-2">Avatar URL</th>
                     <th className="p-2">Scars</th>
                     <th className="p-2">Shields (Avail)</th>
                     <th className="p-2">Shields (Used)</th>
@@ -135,7 +137,49 @@ export function AdminDashboardContent({ secret }: AdminDashboardContentProps) {
                   {users.map(u => (
                     <tr key={u.id} className="hover:bg-zinc-800/50">
                       <td className="p-2 text-zinc-500">{u.id}</td>
-                      <td className="p-2 font-bold text-white">{u.name}</td>
+                      <td className="p-2 font-bold text-white flex items-center gap-2">
+                        {u.avatarUrl && <img src={u.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover border border-zinc-600" />}
+                        {u.name}
+                      </td>
+                      <td className="p-2">
+                        <div className="flex flex-col gap-1">
+                          <input
+                            className="bg-transparent w-full min-w-[150px] border-b border-zinc-700 focus:border-yellow-500 text-xs text-zinc-300"
+                            placeholder="https://..."
+                            value={u.avatarUrl || ''}
+                            onChange={e => handleChange(u.id, 'avatarUrl', e.target.value)}
+                          />
+                          <input
+                            type="file"
+                            className="text-[10px] text-zinc-500 file:mr-2 file:py-0 file:px-2 file:rounded-full file:border-0 file:text-[10px] file:bg-zinc-700 file:text-zinc-300 hover:file:bg-zinc-600 cursor-pointer"
+                            accept="image/*"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0]
+                              if (!file) return
+
+                              const formData = new FormData()
+                              formData.append('file', file)
+
+                              setMsg(`Uploading avatar for ${u.name}...`)
+                              try {
+                                const res = await fetch(`/api/upload?secret=${secret}`, {
+                                  method: 'POST',
+                                  body: formData
+                                })
+                                const data = await res.json()
+                                if (data.url) {
+                                  handleChange(u.id, 'avatarUrl', data.url)
+                                  setMsg('Avatar uploaded!')
+                                } else {
+                                  setMsg('Upload failed: ' + data.error)
+                                }
+                              } catch (err) {
+                                setMsg('Upload error')
+                              }
+                            }}
+                          />
+                        </div>
+                      </td>
                       <td className="p-2"><input className="bg-transparent w-16 border-b border-zinc-700 focus:border-yellow-500" value={u.scars} onChange={e => handleChange(u.id, 'scars', e.target.value)} /></td>
                       <td className="p-2"><input className="bg-transparent w-16 border-b border-zinc-700 focus:border-yellow-500" value={u.shields} onChange={e => handleChange(u.id, 'shields', e.target.value)} /></td>
                       <td className="p-2"><input className="bg-transparent w-16 border-b border-zinc-700 focus:border-yellow-500" value={u.shieldsUsed} onChange={e => handleChange(u.id, 'shieldsUsed', e.target.value)} /></td>

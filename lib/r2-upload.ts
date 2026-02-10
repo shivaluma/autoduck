@@ -87,34 +87,31 @@ export async function uploadVideoToR2(
 }
 
 /**
- * Upload a video buffer directly to R2 (no file needed)
+ * Upload a buffer to R2
  */
-export async function uploadVideoBufferToR2(
+export async function uploadBufferToR2(
   buffer: Buffer,
-  raceId: number,
-  ext: string = '.webm'
+  key: string,
+  contentType: string
 ): Promise<string | null> {
   if (!isR2Configured()) {
-    console.warn('⚠️ R2 not configured, skipping video upload')
+    console.warn('⚠️ R2 not configured, skipping upload')
     return null
   }
 
   try {
-    const timestamp = Date.now()
-    const key = `races/race-${raceId}-${timestamp}${ext}`
-
-    console.log(`📤 Uploading video buffer to R2: ${key}`)
+    console.log(`📤 Uploading to R2: ${key}`)
 
     await r2Client.send(
       new PutObjectCommand({
         Bucket: R2_BUCKET_NAME,
         Key: key,
         Body: buffer,
-        ContentType: getContentType(ext),
+        ContentType: contentType,
       })
     )
 
-    console.log(`✅ Video uploaded successfully: ${key}`)
+    console.log(`✅ Uploaded successfully: ${key}`)
 
     const publicUrl = R2_PUBLIC_URL
       ? `${R2_PUBLIC_URL}/${key}`
@@ -125,6 +122,20 @@ export async function uploadVideoBufferToR2(
     console.error('❌ R2 upload failed:', error)
     return null
   }
+}
+
+/**
+ * Upload a video buffer directly to R2 (no file needed)
+ * Wrapper for backward compatibility or convenience
+ */
+export async function uploadVideoBufferToR2(
+  buffer: Buffer,
+  raceId: number,
+  ext: string = '.webm'
+): Promise<string | null> {
+  const timestamp = Date.now()
+  const key = `races/race-${raceId}-${timestamp}${ext}`
+  return uploadBufferToR2(buffer, key, getContentType(ext))
 }
 
 /**
@@ -155,6 +166,11 @@ function getContentType(ext: string): string {
     '.mp4': 'video/mp4',
     '.avi': 'video/x-msvideo',
     '.mov': 'video/quicktime',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.gif': 'image/gif',
+    '.webp': 'image/webp',
   }
-  return types[ext.toLowerCase()] || 'video/webm'
+  return types[ext.toLowerCase()] || 'application/octet-stream'
 }

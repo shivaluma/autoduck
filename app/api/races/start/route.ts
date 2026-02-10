@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { runRaceWorker } from '@/lib/race-worker'
 import { calculatePenalties, calculateNewStats } from '@/lib/shield-logic'
+import { raceEventBus, RACE_EVENTS } from '@/lib/event-bus'
 
 interface ParticipantInput {
   userId: number
@@ -217,6 +218,27 @@ async function executeRace(
         finalVerdict: penalties.finalVerdict,
         finishedAt: new Date(),
       },
+    })
+
+    // Find winner (Rank 1)
+    const winner = raceResults.find((r: { initialRank: number }) => r.initialRank === 1)
+
+    // Emit FINISHED event with results
+    // Iterate raceResults to get user info if needed, but we have userId. 
+    // We need names/avatars. We have names in raceResults.
+    // We need avatars? `raceResults` doesn't have it.
+    // We should fetch avatars or pass them through.
+    // Let's fetch winner and victims details to be sure.
+    const winnerDetails = winner ? await prisma.user.findUnique({ where: { id: winner.userId } }) : null
+    const victimDetails = await prisma.user.findMany({
+      where: { id: { in: penalties.victims.map((v) => v.userId) } }
+    })
+
+    raceEventBus.emit(RACE_EVENTS.FINISHED, {
+      raceId,
+      winner: winnerDetails ? { name: winnerDetails.name, avatarUrl: winnerDetails.avatarUrl } : null,
+      victims: victimDetails.map(v => ({ name: v.name, avatarUrl: v.avatarUrl })),
+      verdict: penalties.finalVerdict
     })
 
     console.log(`Race ${raceId} completed! ${penalties.finalVerdict}`)

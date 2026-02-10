@@ -78,7 +78,21 @@ export async function GET(
         }
       }
 
+      const onCommentary = (payload: { raceId: number; text: string; timestamp: number }) => {
+        if (payload.raceId === raceId) {
+          sendEvent('commentary', { text: payload.text, timestamp: payload.timestamp })
+        }
+      }
+
+      const onFinished = (payload: { raceId: number; winner: any; victims: any[]; verdict: string }) => {
+        if (payload.raceId === raceId) {
+          sendEvent('finished', payload)
+        }
+      }
+
       raceEventBus.on(RACE_EVENTS.FRAME, onFrame)
+      raceEventBus.on(RACE_EVENTS.COMMENTARY, onCommentary)
+      raceEventBus.on(RACE_EVENTS.FINISHED, onFinished)
 
       const heartbeat = setInterval(() => {
         sendEvent('ping', { time: Date.now() })
@@ -87,6 +101,8 @@ export async function GET(
       cleanup = () => {
         clearInterval(heartbeat)
         raceEventBus.off(RACE_EVENTS.FRAME, onFrame)
+        raceEventBus.off(RACE_EVENTS.COMMENTARY, onCommentary)
+        raceEventBus.off(RACE_EVENTS.FINISHED, onFinished)
       }
     },
     cancel() {
