@@ -3,7 +3,7 @@
 import { useEffect, useState, use } from 'react'
 import Link from 'next/link'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { LivePlayer } from './live-player'
+import { RaceLiveView } from './race-live-view'
 import type { RaceStatus } from '@/lib/types'
 
 export default function RaceDetailPage({
@@ -127,9 +127,9 @@ export default function RaceDetailPage({
               <div className="absolute top-0 left-0 w-full h-1 bg-green-500" />
             </div>
 
-            {/* LIVE PLAYER */}
+            {/* LIVE STREAM & COMMENTARY VIEW */}
             <div className="animate-slide-up">
-              <LivePlayer raceId={parseInt(raceId)} isFinished={isFinished} />
+              <RaceLiveView raceId={parseInt(raceId)} />
             </div>
           </div>
         )}
