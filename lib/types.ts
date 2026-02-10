@@ -24,6 +24,7 @@ export interface RaceStatus {
   participants: {
     userId: number
     name: string
+    avatarUrl?: string | null
     usedShield: boolean
     initialRank: number | null
     gotScar: boolean

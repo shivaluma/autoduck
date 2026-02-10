@@ -4,6 +4,7 @@ import { useEffect, useState, use } from 'react'
 import Link from 'next/link'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { RaceLiveView } from './race-live-view'
+import { RaceCelebration } from '@/components/race-celebration'
 import type { RaceStatus } from '@/lib/types'
 
 export default function RaceDetailPage({
@@ -135,35 +136,46 @@ export default function RaceDetailPage({
         )}
 
         {/* VERDICT BANNER (only if finished) */}
-        {isFinished && race.finalVerdict && (
-          <div className="relative overflow-hidden animate-slide-up opacity-0" style={{ animationDelay: '0.1s' }}>
-            {/* Background */}
-            <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-f1-red)]/20 via-[var(--color-f1-dark)] to-[var(--color-f1-red)]/20" />
-            <div className="absolute inset-0 checkered-bg opacity-50" />
+        {isFinished && (
+          <>
+            <RaceCelebration
+              winner={sortedParticipants[0] ? { name: sortedParticipants[0].name, avatarUrl: sortedParticipants[0].avatarUrl } : null}
+              victims={sortedParticipants.filter(p => p.gotScar).map(p => ({ name: p.name, avatarUrl: p.avatarUrl }))}
+              verdict={race.finalVerdict}
+              duration={4000}
+            />
 
-            <div className="relative px-8 py-10 text-center">
-              {/* Podium decoration */}
-              <div className="flex justify-center gap-2 mb-6">
-                {[...Array(5)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-3 h-3 bg-[var(--color-f1-gold)] rounded-full shadow-[0_0_10px_rgba(255,215,0,0.5)]"
-                    style={{ animationDelay: `${i * 0.1}s` }}
-                  />
-                ))}
-              </div>
+            {race.finalVerdict && (
+              <div className="relative overflow-hidden animate-slide-up opacity-0" style={{ animationDelay: '0.1s' }}>
+                {/* Background */}
+                <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-f1-red)]/20 via-[var(--color-f1-dark)] to-[var(--color-f1-red)]/20" />
+                <div className="absolute inset-0 checkered-bg opacity-50" />
 
-              <div className="font-display text-[11px] tracking-[0.4em] uppercase text-[var(--color-f1-gold)] glow-gold mb-3">
-                Kết quả chính thức
+                <div className="relative px-8 py-10 text-center">
+                  {/* Podium decoration */}
+                  <div className="flex justify-center gap-2 mb-6">
+                    {[...Array(5)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="w-3 h-3 bg-[var(--color-f1-gold)] rounded-full shadow-[0_0_10px_rgba(255,215,0,0.5)]"
+                        style={{ animationDelay: `${i * 0.1}s` }}
+                      />
+                    ))}
+                  </div>
+
+                  <div className="font-display text-[11px] tracking-[0.4em] uppercase text-[var(--color-f1-gold)] glow-gold mb-3">
+                    Kết quả chính thức
+                  </div>
+                  <h2 className="font-display text-3xl md:text-4xl font-black tracking-wider uppercase text-white leading-tight glow-gold">
+                    {race.finalVerdict}
+                  </h2>
+                  <div className="font-data text-xs text-white/40 tracking-wider uppercase mt-4">
+                    Luật Rừng &bull; 2 con dzịt đã lộ diện
+                  </div>
+                </div>
               </div>
-              <h2 className="font-display text-3xl md:text-4xl font-black tracking-wider uppercase text-white leading-tight glow-gold">
-                {race.finalVerdict}
-              </h2>
-              <div className="font-data text-xs text-white/40 tracking-wider uppercase mt-4">
-                Luật Rừng &bull; 2 con dzịt đã lộ diện
-              </div>
-            </div>
-          </div>
+            )}
+          </>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

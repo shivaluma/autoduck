@@ -44,9 +44,10 @@ export async function GET(
       finalVerdict: race.finalVerdict,
       createdAt: race.createdAt,
       finishedAt: race.finishedAt,
-      participants: race.participants.map((p: { userId: number; user: { name: string }; usedShield: boolean; initialRank: number | null; gotScar: boolean }) => ({
+      participants: race.participants.map((p: { userId: number; user: { name: string; avatarUrl?: string | null }; usedShield: boolean; initialRank: number | null; gotScar: boolean }) => ({
         userId: p.userId,
         name: p.user.name,
+        avatarUrl: p.user.avatarUrl,
         usedShield: p.usedShield,
         initialRank: p.initialRank,
         gotScar: p.gotScar,
