@@ -145,7 +145,7 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
                     <div className="absolute inset-0 bg-noise opacity-30 mix-blend-overlay rounded-full" />
                   </div>
                   <div className="mt-2 text-red-700 font-creepster font-bold uppercase tracking-widest text-sm bg-black px-2 rounded">
-                    💀 VICTIM: {v.name}
+                    🦆 VICTIM: {v.name}
                   </div>
                 </div>
               ))}
@@ -202,7 +202,7 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
           {/* Header */}
           <div className="px-5 py-3 border-b border-white/10 bg-white/[0.04] flex items-center justify-between">
             <span className="font-display text-xs font-bold tracking-[0.15em] uppercase text-white/80">
-              Live Commentary
+              Race Director
             </span>
             {status === 'live' && !result && <span className="w-2 h-2 bg-[var(--color-f1-cyan)] rounded-full animate-ping" />}
           </div>

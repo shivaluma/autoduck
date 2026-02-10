@@ -44,7 +44,8 @@ export async function PUT(request: Request) {
           scars: Number(data.scars),
           shields: Number(data.shields),
           shieldsUsed: Number(data.shieldsUsed),
-          totalKhaos: Number(data.totalKhaos) // Allow manual override too
+          totalKhaos: Number(data.totalKhaos), // Allow manual override too
+          avatarUrl: data.avatarUrl
         }
       })
       return NextResponse.json({ success: true, user: updatedUser })

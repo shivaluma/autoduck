@@ -179,8 +179,8 @@ export default function RaceDetailPage({
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Classification - Left 2 cols */}
-          <div className="lg:col-span-2 animate-slide-up opacity-0" style={{ animationDelay: '0.2s' }}>
+          {/* Classification - Left 2 cols (Expand to 3 if running) */}
+          <div className={`${isRunning ? 'lg:col-span-3' : 'lg:col-span-2'} animate-slide-up opacity-0`} style={{ animationDelay: '0.2s' }}>
             <div className="bg-[var(--color-f1-surface)] border border-white/10 overflow-hidden">
               {/* Header */}
               <div className="flex items-center justify-between px-5 py-3 bg-[var(--color-f1-red)]">
@@ -304,55 +304,57 @@ export default function RaceDetailPage({
             )}
           </div>
 
-          {/* Right Column: Race Commentary */}
-          <div className="animate-slide-up opacity-0" style={{ animationDelay: '0.35s' }}>
-            <div className="bg-[var(--color-f1-surface)] border border-white/10 overflow-hidden">
-              {/* Header */}
-              <div className="flex items-center justify-between px-5 py-3 border-b border-white/10 bg-white/[0.04]">
-                <div className="flex items-center gap-2">
-                  <span className="font-display text-xs font-bold tracking-[0.15em] uppercase text-white/80">
-                    Race Director
-                  </span>
-                  {isRunning && (
-                    <span className="font-data text-[10px] px-2 py-0.5 bg-[var(--color-f1-red)] text-white tracking-wider uppercase animate-pulse">
-                      LIVE
+          {/* Right Column: Race Commentary (Hide if running) */}
+          {!isRunning && (
+            <div className="animate-slide-up opacity-0" style={{ animationDelay: '0.35s' }}>
+              <div className="bg-[var(--color-f1-surface)] border border-white/10 overflow-hidden">
+                {/* Header */}
+                <div className="flex items-center justify-between px-5 py-3 border-b border-white/10 bg-white/[0.04]">
+                  <div className="flex items-center gap-2">
+                    <span className="font-display text-xs font-bold tracking-[0.15em] uppercase text-white/80">
+                      Race Director
                     </span>
-                  )}
+                    {isRunning && (
+                      <span className="font-data text-[10px] px-2 py-0.5 bg-[var(--color-f1-red)] text-white tracking-wider uppercase animate-pulse">
+                        LIVE
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <ScrollArea className="h-[520px]">
-                {race.commentaries.length > 0 ? (
-                  <div className="divide-y divide-white/[0.06]">
-                    {race.commentaries.map((c, idx) => (
-                      <div
-                        key={idx}
-                        className="px-5 py-4 hover:bg-white/[0.04] transition-colors animate-slide-right opacity-0"
-                        style={{ animationDelay: `${0.4 + idx * 0.05}s` }}
-                      >
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <span className="font-data text-[10px] px-2 py-0.5 bg-white/5 text-[var(--color-f1-cyan)] tracking-wider">
-                            {formatTime(c.timestamp)}
-                          </span>
-                          <div className="flex-1 h-px bg-white/5" />
+                <ScrollArea className="h-[520px]">
+                  {race.commentaries.length > 0 ? (
+                    <div className="divide-y divide-white/[0.06]">
+                      {race.commentaries.map((c, idx) => (
+                        <div
+                          key={idx}
+                          className="px-5 py-4 hover:bg-white/[0.04] transition-colors animate-slide-right opacity-0"
+                          style={{ animationDelay: `${0.4 + idx * 0.05}s` }}
+                        >
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span className="font-data text-[10px] px-2 py-0.5 bg-white/5 text-[var(--color-f1-cyan)] tracking-wider">
+                              {formatTime(c.timestamp)}
+                            </span>
+                            <div className="flex-1 h-px bg-white/5" />
+                          </div>
+                          <p className="font-readable text-sm text-white/85 leading-relaxed">
+                            {c.content}
+                          </p>
                         </div>
-                        <p className="font-readable text-sm text-white/85 leading-relaxed">
-                          {c.content}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="px-5 py-16 text-center">
-                    <div className="text-2xl mb-3 opacity-30">🎙️</div>
-                    <p className="font-data text-xs text-white/30 tracking-wider uppercase">
-                      {isRunning ? 'Awaiting commentary...' : 'No commentary recorded'}
-                    </p>
-                  </div>
-                )}
-              </ScrollArea>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="px-5 py-16 text-center">
+                      <div className="text-2xl mb-3 opacity-30">🎙️</div>
+                      <p className="font-data text-xs text-white/30 tracking-wider uppercase">
+                        {isRunning ? 'Awaiting commentary...' : 'No commentary recorded'}
+                      </p>
+                    </div>
+                  )}
+                </ScrollArea>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Action Bar */}
