@@ -1,40 +1,86 @@
-# AutoDuck - Zero-Touch Duck Racing System
-# Docker image with Playwright + Xvfb for headless browser automation
+# ============================================
+# AutoDuck - Duck Racing System
+# Multi-stage Dockerfile for Dokploy deployment
+# ============================================
 
-FROM mcr.microsoft.com/playwright:v1.49.0-noble
+# --- Stage 1: Dependencies ---
+FROM node:20-slim AS deps
 
-# Install Xvfb for virtual framebuffer (required for non-headless browser on server)
-RUN apt-get update && apt-get install -y \
-    xvfb \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install pnpm
 RUN npm install -g pnpm
 
 WORKDIR /app
 
-# Copy dependency files first for better caching
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY .pnpm-build-approvals.json ./
 
-# Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Copy the rest of the app
+# --- Stage 2: Builder ---
+FROM node:20-slim AS builder
+
+RUN npm install -g pnpm
+
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Generate Prisma client
 RUN npx prisma generate
 
-# Build Next.js
+# Build Next.js (standalone output)
 RUN pnpm build
 
-# Environment variables
-ENV DISPLAY=:99
-ENV SIMULATE_RACE=false
-ENV NODE_ENV=production
+# --- Stage 3: Runner ---
+FROM mcr.microsoft.com/playwright:v1.49.0-noble AS runner
 
-# Expose port
+# Install Xvfb + pnpm + tsx
+RUN apt-get update && apt-get install -y \
+    xvfb \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN npm install -g pnpm tsx
+
+WORKDIR /app
+
+# Copy standalone Next.js server
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+
+# Copy Prisma files (for db push on startup)
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/prisma/generated ./prisma/generated
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+
+# Copy commentary worker + AI modules
+COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /app/lib ./lib
+
+# Copy tsx + dotenv for worker runtime
+COPY --from=builder /app/node_modules/tsx ./node_modules/tsx
+COPY --from=builder /app/node_modules/dotenv ./node_modules/dotenv
+COPY --from=builder /app/node_modules/better-sqlite3 ./node_modules/better-sqlite3
+COPY --from=builder /app/node_modules/@prisma/adapter-better-sqlite3 ./node_modules/@prisma/adapter-better-sqlite3
+COPY --from=builder /app/package.json ./package.json
+
+# Copy startup script
+COPY scripts/start.sh ./start.sh
+RUN chmod +x ./start.sh
+
+# Create data directory for SQLite persistence
+RUN mkdir -p /app/data /app/tmp/videos
+
+# Environment
+ENV NODE_ENV=production
+ENV DISPLAY=:99
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+ENV DATABASE_URL="file:/app/data/autoduck.db"
+
 EXPOSE 3000
 
-# Start Xvfb and the app
-CMD Xvfb :99 -screen 0 1280x720x24 & pnpm start
+CMD ["./start.sh"]

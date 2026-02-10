@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.gitignore
+*.md
+tmp/
+prisma/dev.db
+prisma/dev.db-journal
+prisma/generated/
+.env*
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts
+.pnpm-build-approvals.json
+.playwright-mcp/
