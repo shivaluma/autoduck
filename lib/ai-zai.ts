@@ -1,6 +1,6 @@
 /**
  * Z.AI GLM-4.6v Integration for Race Commentary
- * V6: Narrative Flow + Viral Wit (Fixing disjointed commentary)
+ * V10: "Gen Z Meme Lord" + "Văn Mẫu" (Massive Example Bank)
  * Endpoint: https://api.z.ai/api/coding/paas/v4/chat/completions
  */
 
@@ -17,24 +17,24 @@ export interface CommentaryHistory {
   text: string
 }
 
-const SYSTEM_PROMPT = `Bạn là BLV Đua Vịt với phong cách: Tạ Biên Cương (hoa mỹ) + Rapper (vần điệu) + Táo Quân (cà khịa).
-MỤC TIÊU: Kể một CÂU CHUYỆN kịch tính, xuyên suốt từ đầu đến cuối.
+const SYSTEM_PROMPT = `Bạn là BLV Đua Vịt hệ "Chiến Thần Văn Mẫu".
+Phong cách: 50% Meme Gen Z + 50% Văn Mẫu So Deep.
 
-QUY TẮC VÀNG:
-1. TÍNH LIÊN KẾT (QUAN TRỌNG NHẤT):
-   - KHÔNG bình luận rời rạc từng con.
-   - PHẢI nhắc lại diễn biến trước đó (Ví dụ: "Vừa bị chê giây trước, giờ Zịt A đã...")
-   - Luôn so sánh Kẻ Dẫn Đầu vs Kẻ Bám Đuổi.
+KHO TÀNG VĂN MẪU (Hãy sáng tạo dựa trên các pattern này, KHÔNG copy y nguyên):
+1. [Hệ Tâm Linh]: "Tôi năm nay hơn 70 tuổi mà chưa gặp cái trường hợp nào nó chạy như Zịt A, phải tôi tôi đấm cho mấy phát!"
+2. [Hệ Chữa Lành]: "Zịt B không phải chạy chậm, mà đang enjoy cái moment này, tìm kiếm sự bình yên giữa dòng đời vội vã."
+3. [Hệ Người Yêu Cũ]: "Zịt C lật mặt nhanh hơn người yêu cũ, vừa thề non hẹn biển giờ đã 'chúng ta không thuộc về nhau'."
+4. [Hệ Gen Z]: "Zịt D đang check VAR cực căng, flexing kỹ năng out trình cả server, đúng là kiếp nạn thứ 82!"
+5. [Hệ Tài Chính]: "Đầu tư vào Zịt E là một món hời, còn Zịt F thì đúng là cú lừa thế kỷ, xanh cỏ đỏ lòng!"
+6. [Hệ So Deep]: "Em sai rồi, em xin lỗi vì đã chạy chậm, em chỉ là hạt cát vô danh giữa sa mạc đầy nắng gió..."
+7. [Hệ Giang Hồ]: "Ra đường hỏi Zịt G là ai, thấy Zịt H chạy là phải né, không nói nhiều!"
+8. [Hệ Báo Thủ]: "Gia môn bất hạnh khi có Zịt I, báo cha báo mẹ chưa đủ giờ báo cả đồng đội!"
+9. [Hệ Deadline]: "Chạy như deadline dí đến mông, còn Zịt K thì bình thản như chiều thứ 7 chưa có task."
+10. [Hệ Tấm Cám]: "Zịt L ngã ở đâu đứng dậy ở đó, còn Zịt M ngã xong nằm luôn đợi Bụt hiện lên."
 
-2. PHONG CÁCH:
-   - Dùng từ ngữ bóng bẩy, ẩn dụ, so sánh bất ngờ (vũ trụ, thần thoại, showbiz, kinh tế...).
-   - KHÔNG dùng từ đệm nhạt nhẽo ("ơi", "à", "ừ").
-   - Giọng điệu: Gấp gáp, kịch tính, như đang hét vào mic.
-
-3. CẤU TRÚC:
-   - Một câu duy nhất.
-   - Vế 1: Diễn biến thực tế (Ai vượt ai? Ai tụt?).
-   - Vế 2: So sánh/Bình luận thâm thúy.`
+QUY TẮC:
+- CẤM: "Ơi", "À", "Ừ".
+- Dùng văn mẫu phải hợp ngữ cảnh (đang dẫn đầu dùng 'flex', đang thua dùng 'chữa lành').`
 
 function buildPrompt(
   timestampSeconds: number,
@@ -48,52 +48,50 @@ function buildPrompt(
     : ''
 
   const historyInfo = history && history.length > 0
-    ? `\nDIỄN BIẾN ĐÃ QUA (Hãy nối tiếp mạch này):\n${history.map(h => `[${h.timestamp}s] ${h.text}`).join('\n')}`
-    : '\n(Chưa có diễn biến, hãy mở đầu thật bùng nổ)'
+    ? `\nKỊCH BẢN ĐÃ QUA:\n${history.map(h => `[${h.timestamp}s] ${h.text}`).join('\n')}`
+    : '\n(Chưa có kịch bản, hãy khai màn)'
 
   if (isRaceEnd) {
     let resultsInfo = ''
     if (raceResults) {
       try {
         const ranking = JSON.parse(raceResults) as Array<{ rank: number; name: string }>
-        const winner = ranking[0]?.name || 'không rõ'
-        const loser = ranking[ranking.length - 1]?.name || 'không rõ'
-        resultsInfo = `\nKẾT QUẢ CHUNG CUỘC: 👑 VÔ ĐỊCH: ${winner} | 🥀 ĐỘI SỔ: ${loser}.`
+        const winner = ranking[0]?.name || 'unknown'
+        const loser = ranking[ranking.length - 1]?.name || 'unknown'
+        resultsInfo = `\nKẾT QUẢ: 👑 ONE TRUE KING: ${winner} | 🥀 SADBOI: ${loser}.`
       } catch { /* ignore */ }
     }
 
     return `${SYSTEM_PROMPT}
 
-THỜI KHẮC QUYẾT ĐỊNH: Cuộc đua đã kết thúc!${namesInfo}${resultsInfo}${historyInfo}
+TÌNH HUỐNG: The End!${namesInfo}${resultsInfo}${historyInfo}
 
-NHIỆM VỤ: Viết 1 câu chốt hạ (max 200 ký tự).
-- Kết nối lại với các sự kiện trong quá khứ (callback).
-- Tôn vinh nhà vô địch bằng hình ảnh vĩ đại.
-- "An ủi" kẻ thua cuộc bằng sự mỉa mai thâm thúy.
-
-Ví dụ: "Vương miện đã chọn Zịt Tuấn làm chủ nhân của vũ trụ, trong khi Zịt Lợi vẫn đang loay hoay tìm định nghĩa của từ 'tốc độ' dưới đáy bảng xếp hạng!"`
+NHIỆM VỤ: Viết 1 câu chốt "thấm từng thớ thịt".
+- Dùng 1 trong 10 hệ văn mẫu trên để chốt hạ.
+- Ví dụ: "Zịt A lên ngôi như một vị thần, còn Zịt B - thôi em đừng khóc, bóng tối trướt mắt sẽ bắt em đi..."
+- Ví dụ: "Chúc mừng Zịt C, còn Zịt D thì đúng là 'kiếp này coi như bỏ', hẹn kiếp sau làm lại!"`
   }
 
-  // Dynamic context generation
+  // Mood generation based on timestamps (Văn Mẫu & Meme)
   let contextPrompt = ''
   if (timestampSeconds <= 2) {
-    contextPrompt = 'Giai đoạn XUẤT PHÁT: Ai là kẻ "nổ máy" nhanh nhất? Ai đang ngủ mơ? So sánh khí thế như đi đòi nợ vs đi dạo mát.'
+    contextPrompt = 'Giai đoạn KHỞI ĐỘNG: Dùng Hệ Tâm Linh hoặc Hệ Deadline. Ai đang "ngủ đông"? Ai lao đi như "mới lãnh lương"?'
   } else if (timestampSeconds <= 12) {
-    contextPrompt = 'Giai đoạn BỨT TỐC: Cuộc chiến bắt đầu rõ rệt. Hãy so sánh kẻ dẫn đầu và kẻ bám đuổi (Khoảng cách ntn? Như mặt trăng với mặt trời?).'
+    contextPrompt = 'Giai đoạn BI KỊCH: Dùng Hệ Người Yêu Cũ hoặc Hệ Giang Hồ. Kẻ dẫn đầu đang "gánh team", kẻ bám đuổi thì "lật mặt".'
   } else if (timestampSeconds <= 22) {
-    contextPrompt = 'Giai đoạn CAO TRÀO: Có ai đang âm thầm vươn lên không? Hay kẻ dẫn đầu đang "hết xăng"? Hãy tạo drama kịch tính.'
+    contextPrompt = 'Giai đoạn CAO TRÀO: Dùng Hệ Chữa Lành hoặc Hệ Báo Thủ. Ai cần "healing"? Ai đang báo?'
   } else {
-    contextPrompt = 'Giai đoạn NƯỚC RÚT: Sống còn! Dùng những từ ngữ mạnh nhất (cháy, nổ, hủy diệt, nuốt chửng). Ai sẽ là người chiến thắng?'
+    contextPrompt = 'Giai đoạn KẾT THÚC: Dùng Hệ Tài Chính hoặc Hệ Gen Z/Flex. Ai là "món hời"? Ai là "cú lừa"?'
   }
 
   return `${SYSTEM_PROMPT}
 
 THỜI GIAN: Giây ${timestampSeconds}/${RACE_DURATION}. ${contextPrompt}
-HÌNH ẢNH: Nhìn screenshot để xác định ai dẫn đầu, ai bét bảng.${namesInfo}${historyInfo}
+HÌNH ẢNH: Nhìn screenshot để chế văn mẫu.${namesInfo}${historyInfo}
 
-NHIỆM VỤ: Viết 1 câu bình luận kịch tính (max 180 ký tự).
-- PHẢI SO SÁNH: Đừng chỉ nói về 1 con. Hãy nói "Zịt A đang bay, TRONG KHI Zịt B đang bò".
-- Dùng từ ngữ "đắt": Xi măng, cốt thép, tên lửa, đi bộ, dưỡng sinh...
+NHIỆM VỤ: Viết 1 câu bình luận dựa trên các hệ văn mẫu.
+- Chọn 1 hệ phù hợp nhất với tình huống trong ảnh.
+- Sáng tạo câu mới, đừng lặp lại ví dụ.
 
 VIẾT NGAY:`
 }
@@ -134,7 +132,7 @@ export async function generateZaiCommentary(
       },
       body: JSON.stringify({
         model: MODEL,
-        temperature: 0.9,
+        temperature: 1.0,
         top_p: 0.9,
         messages: [
           {
@@ -152,7 +150,6 @@ export async function generateZaiCommentary(
     })
 
     if (!response.ok) {
-      // ... error handling
       throw new Error((await response.text()))
     }
 
@@ -164,6 +161,8 @@ export async function generateZaiCommentary(
       .replace(/^["']|["']$/g, '')
       .replace(/^(Giây \d+|Phút \d+).*?:/i, '')
       .replace(/(\r\n|\n|\r)/gm, " ")
+      .replace(/---[\s\S]*/, "")
+      .replace(/\*?Giải thích:.*$/i, "")
       .trim()
 
     console.log(`[ZAI][${timestampSeconds}s] ${text.substring(0, 60)}...`)
@@ -175,9 +174,9 @@ export async function generateZaiCommentary(
 }
 
 function getFallbackCommentary(timestampSeconds: number, isRaceEnd: boolean): string {
-  if (isRaceEnd) return 'Cuộc đua đã khép lại với những cảm xúc vỡ òa!'
-  if (timestampSeconds <= 5) return 'Các chiến binh vịt đã lao ra đường đua như những mũi tên!'
-  return 'Cuộc đua đang diễn ra vô cùng kịch tính và khó lường!'
+  if (isRaceEnd) return 'Cuộc tình dù đúng dù sai, người về nhất vẫn là chân ái!'
+  if (timestampSeconds <= 5) return 'Bắt đầu rồi! Em đi xa quá, em đi xa anh quá!'
+  return 'Cuộc đua này là của chúng mình!'
 }
 
 export function shouldCaptureAt(
