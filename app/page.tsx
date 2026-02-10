@@ -43,7 +43,7 @@ export default function Dashboard() {
               </h1>
               <div className="flex items-center gap-2 mt-0.5">
                 <div className="w-2 h-2 bg-[var(--color-f1-red)] rounded-full animate-pulse" />
-                <p className="font-data text-[10px] tracking-[0.3em] uppercase text-white/40">
+                <p className="font-data text-[11px] tracking-[0.3em] uppercase text-white/60">
                   Grand Prix Championship
                 </p>
               </div>
@@ -64,7 +64,7 @@ export default function Dashboard() {
 
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
         {/* Stats Strip - F1 Race Info Bar style */}
-        <div className="grid grid-cols-4 gap-[1px] bg-white/5 animate-slide-up opacity-0" style={{ animationDelay: '0.1s' }}>
+        <div className="grid grid-cols-4 gap-[1px] bg-white/10 animate-slide-up opacity-0" style={{ animationDelay: '0.1s' }}>
           {[
             { label: 'DRIVERS', value: players.length.toString(), accent: false },
             { label: 'RACES', value: totalRaces.toString(), accent: false },
@@ -75,10 +75,10 @@ export default function Dashboard() {
               key={stat.label}
               className={`relative bg-[var(--color-f1-surface)] p-5 ${i === 0 ? 'border-l-2 border-[var(--color-f1-red)]' : ''}`}
             >
-              <div className="font-data text-[10px] tracking-[0.2em] uppercase text-white/30 mb-2">
+              <div className="font-data text-[11px] tracking-[0.2em] uppercase text-white/50 mb-2">
                 {stat.label}
               </div>
-              <div className={`font-display text-3xl font-black ${stat.accent ? 'text-[var(--color-f1-gold)]' : 'text-white'}`}>
+              <div className={`font-display text-3xl font-black ${stat.accent ? 'text-[var(--color-f1-gold)] glow-gold' : 'text-white'}`}>
                 {stat.value}
               </div>
             </div>
@@ -89,7 +89,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Timing Tower - Left 2 Columns */}
           <div className="lg:col-span-2 animate-slide-up opacity-0" style={{ animationDelay: '0.2s' }}>
-            <div className="bg-[var(--color-f1-surface)] border border-white/5 overflow-hidden">
+            <div className="bg-[var(--color-f1-surface)] border border-white/10 overflow-hidden">
               {/* Tower Header */}
               <div className="flex items-center justify-between px-5 py-3 bg-[var(--color-f1-red)]">
                 <div className="flex items-center gap-3">
@@ -103,13 +103,13 @@ export default function Dashboard() {
               </div>
 
               {/* Column Headers */}
-              <div className="grid grid-cols-[60px_1fr_80px_80px_80px_100px] gap-0 px-5 py-2 border-b border-white/5 bg-white/[0.02]">
-                <div className="font-data text-[10px] tracking-wider uppercase text-white/30">POS</div>
-                <div className="font-data text-[10px] tracking-wider uppercase text-white/30">DRIVER</div>
-                <div className="font-data text-[10px] tracking-wider uppercase text-white/30 text-center">SCARS</div>
-                <div className="font-data text-[10px] tracking-wider uppercase text-white/30 text-center">SHIELD</div>
-                <div className="font-data text-[10px] tracking-wider uppercase text-white/30 text-center">USED</div>
-                <div className="font-data text-[10px] tracking-wider uppercase text-white/30 text-right">DZỊT</div>
+              <div className="grid grid-cols-[60px_1fr_80px_80px_80px_100px] gap-0 px-5 py-2 border-b border-white/10 bg-white/[0.04]">
+                <div className="font-data text-[11px] tracking-wider uppercase text-white/50">POS</div>
+                <div className="font-data text-[11px] tracking-wider uppercase text-white/50">DRIVER</div>
+                <div className="font-data text-[11px] tracking-wider uppercase text-white/50 text-center">SCARS</div>
+                <div className="font-data text-[11px] tracking-wider uppercase text-white/50 text-center">SHIELD</div>
+                <div className="font-data text-[11px] tracking-wider uppercase text-white/50 text-center">USED</div>
+                <div className="font-data text-[11px] tracking-wider uppercase text-white/50 text-right">DZỊT</div>
               </div>
 
               {/* Driver Rows */}
@@ -124,7 +124,7 @@ export default function Dashboard() {
                       key={player.id}
                       className={`
                         grid grid-cols-[60px_1fr_80px_80px_80px_100px] gap-0 items-center
-                        px-5 py-3 border-b border-white/[0.03]
+                        px-5 py-3 border-b border-white/[0.06]
                         timing-row speed-lines
                         ${idx === 0 ? 'penalty' : ''}
                         animate-slide-right opacity-0
@@ -133,30 +133,28 @@ export default function Dashboard() {
                     >
                       {/* Position */}
                       <div className="flex items-center gap-2">
-                        <span className={`position-number text-2xl ${
-                          idx === 0 ? 'text-[var(--color-f1-red)]' :
-                          idx === 1 ? 'text-[var(--color-f1-gold)]' :
-                          idx === 2 ? 'text-[var(--color-f1-cyan)]' :
-                          'text-white/30'
-                        }`}>
+                        <span className={`position-number text-2xl ${idx === 0 ? 'text-[var(--color-f1-red)] glow-red' :
+                          idx === 1 ? 'text-[var(--color-f1-gold)] glow-gold' :
+                            idx === 2 ? 'text-[var(--color-f1-cyan)] glow-cyan' :
+                              'text-white/40'
+                          }`}>
                           {String(idx + 1).padStart(2, '0')}
                         </span>
                       </div>
 
                       {/* Driver Name */}
                       <div className="flex items-center gap-3">
-                        <div className={`w-1 h-8 rounded-full ${
-                          idx === 0 ? 'bg-[var(--color-f1-red)]' :
+                        <div className={`w-1 h-8 rounded-full ${idx === 0 ? 'bg-[var(--color-f1-red)]' :
                           idx === 1 ? 'bg-[var(--color-f1-gold)]' :
-                          idx === 2 ? 'bg-[var(--color-f1-cyan)]' :
-                          'bg-white/10'
-                        }`} />
+                            idx === 2 ? 'bg-[var(--color-f1-cyan)]' :
+                              'bg-white/10'
+                          }`} />
                         <div>
                           <div className="font-body text-sm font-semibold text-white tracking-wide uppercase">
                             {player.name}
                           </div>
                           {idx === 0 && (
-                            <div className="font-data text-[9px] tracking-[0.15em] text-[var(--color-f1-red)] uppercase mt-0.5">
+                            <div className="font-data text-[10px] tracking-[0.15em] text-[var(--color-f1-red)] glow-red uppercase mt-0.5">
                               CON DZỊT SỐ 1
                             </div>
                           )}
@@ -165,25 +163,23 @@ export default function Dashboard() {
 
                       {/* Scars */}
                       <div className="text-center">
-                        <span className={`font-data text-sm font-bold ${
-                          player.scars > 0 ? 'text-[var(--color-f1-red)]' : 'text-white/20'
-                        }`}>
+                        <span className={`font-data text-sm font-bold ${player.scars > 0 ? 'text-[var(--color-f1-red)] glow-red' : 'text-white/25'
+                          }`}>
                           {player.scars}
                         </span>
                       </div>
 
                       {/* Shields */}
                       <div className="text-center">
-                        <span className={`font-data text-sm font-bold ${
-                          player.shields > 0 ? 'text-[var(--color-f1-cyan)]' : 'text-white/20'
-                        }`}>
+                        <span className={`font-data text-sm font-bold ${player.shields > 0 ? 'text-[var(--color-f1-cyan)] glow-cyan' : 'text-white/25'
+                          }`}>
                           {player.shields}
                         </span>
                       </div>
 
                       {/* Shields Used */}
                       <div className="text-center">
-                        <span className="font-data text-sm text-white/40">
+                        <span className="font-data text-sm text-white/50">
                           {player.shieldsUsed}
                         </span>
                       </div>
@@ -204,41 +200,40 @@ export default function Dashboard() {
           {/* Right Column: Race History */}
           <div className="animate-slide-up opacity-0" style={{ animationDelay: '0.35s' }}>
             {/* Race History */}
-            <div className="bg-[var(--color-f1-surface)] border border-white/5 overflow-hidden">
-              <div className="px-5 py-3 border-b border-white/5 bg-white/[0.02]">
-                <span className="font-display text-xs font-bold tracking-[0.15em] uppercase text-white/60">
+            <div className="bg-[var(--color-f1-surface)] border border-white/10 overflow-hidden">
+              <div className="px-5 py-3 border-b border-white/10 bg-white/[0.04]">
+                <span className="font-display text-xs font-bold tracking-[0.15em] uppercase text-white/80">
                   Race Log
                 </span>
               </div>
 
               {races.length > 0 ? (
-                <div className="divide-y divide-white/[0.03]">
+                <div className="divide-y divide-white/[0.06]">
                   {races.slice(0, 8).map((race, i) => (
                     <Link
                       key={race.id}
                       href={`/race/${race.id}`}
-                      className="block px-5 py-4 hover:bg-white/[0.02] transition-colors speed-lines animate-slide-right opacity-0"
+                      className="block px-5 py-4 hover:bg-white/[0.04] transition-colors speed-lines animate-slide-right opacity-0"
                       style={{ animationDelay: `${0.4 + i * 0.05}s` }}
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-display text-xs font-bold tracking-wider uppercase text-white">
                           GP #{race.id}
                         </span>
-                        <span className={`font-data text-[10px] px-2 py-0.5 tracking-wider uppercase ${
-                          race.status === 'finished' ? 'bg-green-500/10 text-green-400' :
+                        <span className={`font-data text-[11px] px-2 py-0.5 tracking-wider uppercase ${race.status === 'finished' ? 'bg-green-500/10 text-green-400' :
                           race.status === 'running' ? 'bg-[var(--color-f1-gold)]/10 text-[var(--color-f1-gold)]' :
-                          race.status === 'failed' ? 'bg-[var(--color-f1-red)]/10 text-[var(--color-f1-red)]' :
-                          'bg-white/5 text-white/40'
-                        }`}>
+                            race.status === 'failed' ? 'bg-[var(--color-f1-red)]/10 text-[var(--color-f1-red)]' :
+                              'bg-white/5 text-white/40'
+                          }`}>
                           {race.status}
                         </span>
                       </div>
                       {race.finalVerdict && (
-                        <p className="font-body text-xs text-white/50 truncate">
+                        <p className="font-readable text-xs text-white/60 truncate">
                           {race.finalVerdict}
                         </p>
                       )}
-                      <p className="font-data text-[10px] text-white/20 mt-1">
+                      <p className="font-data text-[11px] text-white/35 mt-1">
                         {new Date(race.createdAt).toLocaleDateString('vi-VN', {
                           day: '2-digit',
                           month: '2-digit',
@@ -253,7 +248,7 @@ export default function Dashboard() {
               ) : (
                 <div className="px-5 py-12 text-center">
                   <div className="text-3xl mb-3 opacity-30">🏁</div>
-                  <p className="font-data text-xs text-white/20 tracking-wider uppercase">
+                  <p className="font-data text-xs text-white/30 tracking-wider uppercase">
                     No races yet
                   </p>
                 </div>
@@ -261,11 +256,11 @@ export default function Dashboard() {
             </div>
 
             {/* Quick Rules Card */}
-            <div className="mt-4 bg-[var(--color-f1-surface)] border border-white/5 p-5 animate-slide-up opacity-0" style={{ animationDelay: '0.5s' }}>
-              <div className="font-display text-[10px] tracking-[0.2em] uppercase text-[var(--color-f1-red)] mb-3">
+            <div className="mt-4 bg-[var(--color-f1-surface)] border border-white/10 p-5 animate-slide-up opacity-0" style={{ animationDelay: '0.5s' }}>
+              <div className="font-display text-[11px] tracking-[0.2em] uppercase text-[var(--color-f1-red)] glow-red mb-3">
                 Race Regulations
               </div>
-              <div className="space-y-2.5 font-body text-xs text-white/50">
+              <div className="space-y-2.5 font-readable text-sm text-white/70">
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-[var(--color-f1-red)] rounded-full flex-shrink-0" />
                   <span>2 người cuối bảng sẽ là <span className="text-[var(--color-f1-red)] font-semibold">con dzịt</span> tuần đó (+1 Sẹo)</span>
@@ -288,11 +283,11 @@ export default function Dashboard() {
         </div>
 
         {/* Footer */}
-        <footer className="border-t border-white/5 pt-6 pb-4 flex items-center justify-between animate-fade-in opacity-0" style={{ animationDelay: '0.6s' }}>
-          <div className="font-data text-[10px] tracking-[0.2em] uppercase text-white/15">
+        <footer className="border-t border-white/10 pt-6 pb-4 flex items-center justify-between animate-fade-in opacity-0" style={{ animationDelay: '0.6s' }}>
+          <div className="font-data text-[11px] tracking-[0.2em] uppercase text-white/30">
             AUTODUCK v1.0 &mdash; Zero-Touch Racing System
           </div>
-          <div className="font-data text-[10px] tracking-[0.2em] uppercase text-white/15">
+          <div className="font-data text-[11px] tracking-[0.2em] uppercase text-white/30">
             Team Web &bull; Sáng thứ 2 hàng tuần
           </div>
         </footer>

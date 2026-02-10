@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Orbitron, Barlow_Condensed, JetBrains_Mono } from "next/font/google";
+import { Orbitron, Barlow_Condensed, JetBrains_Mono, Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
 
 const orbitron = Orbitron({
@@ -20,6 +20,12 @@ const jetbrains = JetBrains_Mono({
   weight: ["400", "500", "600", "700"],
 });
 
+const beVietnam = Be_Vietnam_Pro({
+  variable: "--font-readable",
+  subsets: ["latin", "vietnamese"],
+  weight: ["300", "400", "500", "600", "700"],
+});
+
 export const metadata: Metadata = {
   title: "AUTODUCK GRAND PRIX",
   description: "Zero-Touch Duck Racing Championship | Team Web",
@@ -36,7 +42,7 @@ export default function RootLayout({
   return (
     <html lang="vi" className="dark">
       <body
-        className={`${orbitron.variable} ${barlow.variable} ${jetbrains.variable} antialiased`}
+        className={`${orbitron.variable} ${barlow.variable} ${jetbrains.variable} ${beVietnam.variable} antialiased`}
       >
         {children}
       </body>

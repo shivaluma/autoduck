@@ -48,7 +48,7 @@ export default function RaceDetailPage({
       <div className="min-h-screen bg-[var(--color-f1-dark)] flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl animate-bounce mb-4">🦆</div>
-          <div className="font-display text-sm tracking-[0.3em] uppercase text-white/30">Loading Race Data</div>
+          <div className="font-display text-sm tracking-[0.3em] uppercase text-white/50">Loading Race Data</div>
         </div>
       </div>
     )
@@ -58,8 +58,8 @@ export default function RaceDetailPage({
     return (
       <div className="min-h-screen bg-[var(--color-f1-dark)] flex items-center justify-center">
         <div className="text-center">
-          <div className="font-display text-6xl font-black text-[var(--color-f1-red)]/30 mb-4">404</div>
-          <p className="font-data text-xs text-white/30 tracking-wider uppercase mb-6">Race not found</p>
+          <div className="font-display text-6xl font-black text-[var(--color-f1-red)]/40 mb-4">404</div>
+          <p className="font-data text-xs text-white/40 tracking-wider uppercase mb-6">Race not found</p>
           <Link href="/" className="font-display text-xs tracking-[0.15em] uppercase text-[var(--color-f1-red)] hover:text-white transition-colors">
             ← RETURN TO PADDOCK
           </Link>
@@ -77,32 +77,30 @@ export default function RaceDetailPage({
   return (
     <div className="min-h-screen bg-[var(--color-f1-dark)] noise-overlay grid-lines">
       {/* Race Status Bar */}
-      <div className={`h-1 ${
-        isRunning ? 'bg-green-500 animate-pulse' :
+      <div className={`h-1 ${isRunning ? 'bg-green-500 animate-pulse' :
         isFinished ? 'bg-gradient-to-r from-[var(--color-f1-red)] via-[var(--color-f1-gold)] to-[var(--color-f1-red)]' :
-        isFailed ? 'bg-[var(--color-f1-red)]' :
-        'bg-white/10'
-      }`} />
+          isFailed ? 'bg-[var(--color-f1-red)]' :
+            'bg-white/10'
+        }`} />
 
       {/* Header */}
-      <header className="border-b border-white/5">
+      <header className="border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="font-data text-xs tracking-[0.15em] uppercase text-white/30 hover:text-white transition-colors">
+          <Link href="/" className="font-data text-xs tracking-[0.15em] uppercase text-white/40 hover:text-white transition-colors">
             ← PADDOCK
           </Link>
           <div className="flex items-center gap-4 animate-slide-right">
             <div className="font-display text-lg font-bold tracking-[0.15em] uppercase text-white">
               GP <span className="text-[var(--color-f1-red)]">#{raceId}</span>
             </div>
-            <div className={`font-data text-[10px] px-3 py-1.5 tracking-[0.15em] uppercase ${
-              isFinished ? 'bg-green-500/10 text-green-400' :
+            <div className={`font-data text-[11px] px-3 py-1.5 tracking-[0.15em] uppercase ${isFinished ? 'bg-green-500/10 text-green-400' :
               isRunning ? 'bg-[var(--color-f1-gold)]/10 text-[var(--color-f1-gold)] animate-pulse' :
-              isFailed ? 'bg-[var(--color-f1-red)]/10 text-[var(--color-f1-red)]' :
-              'bg-white/5 text-white/40'
-            }`}>
+                isFailed ? 'bg-[var(--color-f1-red)]/10 text-[var(--color-f1-red)]' :
+                  'bg-white/5 text-white/40'
+              }`}>
               {race.status === 'pending' ? 'FORMATION LAP' :
-               race.status === 'running' ? 'RACE LIVE' :
-               race.status === 'finished' ? 'CHEQUERED FLAG' : 'RED FLAG'}
+                race.status === 'running' ? 'RACE LIVE' :
+                  race.status === 'finished' ? 'CHEQUERED FLAG' : 'RED FLAG'}
             </div>
           </div>
         </div>
@@ -118,7 +116,7 @@ export default function RaceDetailPage({
                 <div className="font-display text-2xl font-black tracking-[0.2em] uppercase text-green-400">
                   RACE IN PROGRESS
                 </div>
-                <div className="font-data text-xs text-white/40 tracking-wider uppercase mt-1">
+                <div className="font-data text-xs text-white/50 tracking-wider uppercase mt-1">
                   Live timing updating automatically
                 </div>
               </div>
@@ -147,13 +145,13 @@ export default function RaceDetailPage({
                 ))}
               </div>
 
-              <div className="font-display text-[10px] tracking-[0.4em] uppercase text-[var(--color-f1-gold)] mb-3">
+              <div className="font-display text-[11px] tracking-[0.4em] uppercase text-[var(--color-f1-gold)] glow-gold mb-3">
                 Kết quả chính thức
               </div>
-              <h2 className="font-display text-3xl md:text-4xl font-black tracking-wider uppercase text-white leading-tight">
+              <h2 className="font-display text-3xl md:text-4xl font-black tracking-wider uppercase text-white leading-tight glow-gold">
                 {race.finalVerdict}
               </h2>
-              <div className="font-data text-xs text-white/30 tracking-wider uppercase mt-4">
+              <div className="font-data text-xs text-white/40 tracking-wider uppercase mt-4">
                 Luật Rừng &bull; 2 con dzịt đã lộ diện
               </div>
             </div>
@@ -163,7 +161,7 @@ export default function RaceDetailPage({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Classification - Left 2 cols */}
           <div className="lg:col-span-2 animate-slide-up opacity-0" style={{ animationDelay: '0.2s' }}>
-            <div className="bg-[var(--color-f1-surface)] border border-white/5 overflow-hidden">
+            <div className="bg-[var(--color-f1-surface)] border border-white/10 overflow-hidden">
               {/* Header */}
               <div className="flex items-center justify-between px-5 py-3 bg-[var(--color-f1-red)]">
                 <span className="font-display text-xs font-bold tracking-[0.2em] uppercase text-white">
@@ -175,11 +173,11 @@ export default function RaceDetailPage({
               </div>
 
               {/* Column Headers */}
-              <div className="grid grid-cols-[60px_1fr_120px_140px] gap-0 px-5 py-2 border-b border-white/5 bg-white/[0.02]">
-                <div className="font-data text-[10px] tracking-wider uppercase text-white/30">POS</div>
-                <div className="font-data text-[10px] tracking-wider uppercase text-white/30">DRIVER</div>
-                <div className="font-data text-[10px] tracking-wider uppercase text-white/30 text-center">DEFENSE</div>
-                <div className="font-data text-[10px] tracking-wider uppercase text-white/30 text-right">STATUS</div>
+              <div className="grid grid-cols-[60px_1fr_120px_140px] gap-0 px-5 py-2 border-b border-white/10 bg-white/[0.04]">
+                <div className="font-data text-[11px] tracking-wider uppercase text-white/50">POS</div>
+                <div className="font-data text-[11px] tracking-wider uppercase text-white/50">DRIVER</div>
+                <div className="font-data text-[11px] tracking-wider uppercase text-white/50 text-center">DEFENSE</div>
+                <div className="font-data text-[11px] tracking-wider uppercase text-white/50 text-right">STATUS</div>
               </div>
 
               {hasResults ? (
@@ -189,7 +187,7 @@ export default function RaceDetailPage({
                       key={p.userId}
                       className={`
                         grid grid-cols-[60px_1fr_120px_140px] gap-0 items-center
-                        px-5 py-4 border-b border-white/[0.03]
+                        px-5 py-4 border-b border-white/[0.06]
                         timing-row
                         ${p.gotScar ? 'penalty' : p.usedShield ? 'shield-active' : idx < 3 ? 'podium' : ''}
                         animate-slide-right opacity-0
@@ -198,31 +196,29 @@ export default function RaceDetailPage({
                     >
                       {/* Position */}
                       <div>
-                        <span className={`position-number text-2xl ${
-                          p.gotScar ? 'text-[var(--color-f1-red)]' :
-                          idx === 0 ? 'text-[var(--color-f1-gold)]' :
-                          idx === 1 ? 'text-[var(--color-f1-silver)]' :
-                          idx === 2 ? 'text-amber-600' :
-                          'text-white/25'
-                        }`}>
+                        <span className={`position-number text-2xl ${p.gotScar ? 'text-[var(--color-f1-red)] glow-red' :
+                          idx === 0 ? 'text-[var(--color-f1-gold)] glow-gold' :
+                            idx === 1 ? 'text-[var(--color-f1-silver)]' :
+                              idx === 2 ? 'text-amber-600' :
+                                'text-white/35'
+                          }`}>
                           {String((p.initialRank ?? idx + 1)).padStart(2, '0')}
                         </span>
                       </div>
 
                       {/* Driver */}
                       <div className="flex items-center gap-3">
-                        <div className={`w-1 h-10 rounded-full ${
-                          p.gotScar ? 'bg-[var(--color-f1-red)]' :
+                        <div className={`w-1 h-10 rounded-full ${p.gotScar ? 'bg-[var(--color-f1-red)]' :
                           p.usedShield ? 'bg-[var(--color-f1-cyan)]' :
-                          idx === 0 ? 'bg-[var(--color-f1-gold)]' :
-                          'bg-white/10'
-                        }`} />
+                            idx === 0 ? 'bg-[var(--color-f1-gold)]' :
+                              'bg-white/10'
+                          }`} />
                         <div>
                           <div className="font-body text-sm font-semibold text-white tracking-wide uppercase">
                             {p.name}
                           </div>
                           {idx === 0 && isFinished && (
-                            <div className="font-data text-[9px] tracking-[0.15em] text-[var(--color-f1-gold)] uppercase">
+                            <div className="font-data text-[10px] tracking-[0.15em] text-[var(--color-f1-gold)] glow-gold uppercase">
                               RACE WINNER
                             </div>
                           )}
@@ -232,18 +228,18 @@ export default function RaceDetailPage({
                       {/* Shield Status */}
                       <div className="text-center">
                         {p.usedShield ? (
-                          <span className="font-data text-[10px] px-3 py-1 bg-[var(--color-f1-cyan)]/10 text-[var(--color-f1-cyan)] tracking-wider uppercase">
+                          <span className="font-data text-[11px] px-3 py-1 bg-[var(--color-f1-cyan)]/10 text-[var(--color-f1-cyan)] tracking-wider uppercase">
                             SHIELD ON
                           </span>
                         ) : (
-                          <span className="font-data text-[10px] text-white/15 tracking-wider uppercase">—</span>
+                          <span className="font-data text-[11px] text-white/25 tracking-wider uppercase">—</span>
                         )}
                       </div>
 
                       {/* Result Status */}
                       <div className="text-right">
                         {p.gotScar ? (
-                          <span className="font-display text-xs font-bold tracking-wider uppercase text-[var(--color-f1-red)]">
+                          <span className="font-display text-xs font-bold tracking-wider uppercase text-[var(--color-f1-red)] glow-red">
                             CON DZỊT 🦆
                           </span>
                         ) : p.usedShield && (p.initialRank ?? 0) >= sortedParticipants.length - 1 ? (
@@ -255,7 +251,7 @@ export default function RaceDetailPage({
                             P1
                           </span>
                         ) : (
-                          <span className="font-data text-xs text-white/20 tracking-wider uppercase">
+                          <span className="font-data text-xs text-white/30 tracking-wider uppercase">
                             CLASSIFIED
                           </span>
                         )}
@@ -266,7 +262,7 @@ export default function RaceDetailPage({
               ) : (
                 <div className="py-16 text-center">
                   <div className="text-3xl mb-3 opacity-30">⏳</div>
-                  <div className="font-data text-xs text-white/20 tracking-wider uppercase">
+                  <div className="font-data text-xs text-white/30 tracking-wider uppercase">
                     {isRunning ? 'Awaiting classification...' : 'No results available'}
                   </div>
                 </div>
@@ -275,9 +271,9 @@ export default function RaceDetailPage({
 
             {/* Video */}
             {race.videoUrl && (
-              <div className="mt-6 bg-[var(--color-f1-surface)] border border-white/5 overflow-hidden animate-slide-up opacity-0" style={{ animationDelay: '0.6s' }}>
-                <div className="px-5 py-3 border-b border-white/5 bg-white/[0.02]">
-                  <span className="font-display text-xs font-bold tracking-[0.15em] uppercase text-white/60">
+              <div className="mt-6 bg-[var(--color-f1-surface)] border border-white/10 overflow-hidden animate-slide-up opacity-0" style={{ animationDelay: '0.6s' }}>
+                <div className="px-5 py-3 border-b border-white/10 bg-white/[0.04]">
+                  <span className="font-display text-xs font-bold tracking-[0.15em] uppercase text-white/80">
                     Race Replay
                   </span>
                 </div>
@@ -290,11 +286,11 @@ export default function RaceDetailPage({
 
           {/* Right Column: Race Commentary */}
           <div className="animate-slide-up opacity-0" style={{ animationDelay: '0.35s' }}>
-            <div className="bg-[var(--color-f1-surface)] border border-white/5 overflow-hidden">
+            <div className="bg-[var(--color-f1-surface)] border border-white/10 overflow-hidden">
               {/* Header */}
-              <div className="flex items-center justify-between px-5 py-3 border-b border-white/5 bg-white/[0.02]">
+              <div className="flex items-center justify-between px-5 py-3 border-b border-white/10 bg-white/[0.04]">
                 <div className="flex items-center gap-2">
-                  <span className="font-display text-xs font-bold tracking-[0.15em] uppercase text-white/60">
+                  <span className="font-display text-xs font-bold tracking-[0.15em] uppercase text-white/80">
                     Race Director
                   </span>
                   {isRunning && (
@@ -307,11 +303,11 @@ export default function RaceDetailPage({
 
               <ScrollArea className="h-[520px]">
                 {race.commentaries.length > 0 ? (
-                  <div className="divide-y divide-white/[0.03]">
+                  <div className="divide-y divide-white/[0.06]">
                     {race.commentaries.map((c, idx) => (
                       <div
                         key={idx}
-                        className="px-5 py-4 hover:bg-white/[0.02] transition-colors animate-slide-right opacity-0"
+                        className="px-5 py-4 hover:bg-white/[0.04] transition-colors animate-slide-right opacity-0"
                         style={{ animationDelay: `${0.4 + idx * 0.05}s` }}
                       >
                         <div className="flex items-center gap-2 mb-1.5">
@@ -320,7 +316,7 @@ export default function RaceDetailPage({
                           </span>
                           <div className="flex-1 h-px bg-white/5" />
                         </div>
-                        <p className="font-body text-sm text-white/70 leading-relaxed">
+                        <p className="font-readable text-sm text-white/85 leading-relaxed">
                           {c.content}
                         </p>
                       </div>
@@ -329,7 +325,7 @@ export default function RaceDetailPage({
                 ) : (
                   <div className="px-5 py-16 text-center">
                     <div className="text-2xl mb-3 opacity-30">🎙️</div>
-                    <p className="font-data text-xs text-white/20 tracking-wider uppercase">
+                    <p className="font-data text-xs text-white/30 tracking-wider uppercase">
                       {isRunning ? 'Awaiting commentary...' : 'No commentary recorded'}
                     </p>
                   </div>
@@ -340,8 +336,8 @@ export default function RaceDetailPage({
         </div>
 
         {/* Action Bar */}
-        <div className="flex items-center justify-between pt-4 border-t border-white/5 animate-fade-in opacity-0" style={{ animationDelay: '0.7s' }}>
-          <Link href="/" className="font-display text-xs font-bold tracking-[0.15em] uppercase text-white/30 hover:text-white transition-colors px-4 py-3">
+        <div className="flex items-center justify-between pt-4 border-t border-white/10 animate-fade-in opacity-0" style={{ animationDelay: '0.7s' }}>
+          <Link href="/" className="font-display text-xs font-bold tracking-[0.15em] uppercase text-white/40 hover:text-white transition-colors px-4 py-3">
             ← PADDOCK
           </Link>
           {isFinished && (
