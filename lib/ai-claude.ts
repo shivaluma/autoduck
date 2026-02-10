@@ -62,7 +62,7 @@ ${history.map(h => `- Giây ${h.timestamp}s: "${h.text}"`).join('\n')}
 Nhiệm vụ: Vinh danh kẻ thắng như một vị thần, mỉa mai kẻ thua như một "báo thủ" chính hiệu.
 Dùng từ ngữ cực gắt: 'cook', 'về vườn', 'out trình', 'tới công chuyện', 'xu cà na'.
 Nếu có bình luận trước, hãy tạo "plot twist" hoặc callback bất ngờ.
-Chỉ trả về 1 câu < 100 ký tự.`
+Chỉ trả về 1 câu < 100 từ.`
   }
 
   return `⏱️ GIÂY THỨ: ${timestampSeconds}/${RACE_DURATION}. Bối cảnh cảm xúc: ${randomContext}.${namesContext}${historyContext}
@@ -75,7 +75,7 @@ Yêu cầu:
 - Phải có tính sát thương cao, dùng từ ngữ trendy 2026.
 - Thử dùng: 'cà khịa', 'xu cà na', 'tới công chuyện', 'nội tại', 'vô tri', 'kiếp nạn'.
 - Tránh tuyệt đối 'flex', 'trúng số', 'ý nghĩa cuộc đời' (quá phổ biến).
-Chỉ 1 câu duy nhất < 100 ký tự.`
+Chỉ 1 câu duy nhất < 100 từ.`
 }
 
 interface AnthropicResponse {
