@@ -1,6 +1,6 @@
 /**
  * Z.AI GLM-4.6v Integration for Race Commentary
- * STATEFUL: Receives commentary history for continuity & anti-repetition
+ * STATEFUL NARRATIVE MODE: BLV kể chuyện có đầu có đuôi
  * Endpoint: https://api.z.ai/api/coding/paas/v4/chat/completions
  */
 
@@ -17,17 +17,18 @@ export interface CommentaryHistory {
   text: string
 }
 
-const SYSTEM_PROMPT = `Bạn là một bình luận viên đua vịt huyền thoại tại Việt Nam. 
-Phong cách: Hòa trộn giữa sự bay bổng, dùng từ cực "đắt" của Tạ Biên Cương và sự "chặt chém", thực dụng, hài hước của các streamer 90p. 
+const SYSTEM_PROMPT = `Bạn là một BLV Đua Vịt huyền thoại. Nhiệm vụ của bạn là dẫn dắt người xem qua một hành trình cảm xúc từ lúc "khởi nghiệp" đến khi "vỡ nợ" hoặc "lên đỉnh".
 
-NGUYÊN TẮC BÌNH LUẬN:
-1. Ngôn ngữ: Dùng từ lóng Gen Z, thuật ngữ mạng xã hội (flex, check VAR, cook, báo thủ, hệ điều hành, trầm cảm, thoát ly thực tại...).
-2. Phép so sánh: Phải cực đoan và phi logic (So sánh vịt với giá vàng, người yêu cũ, chủ nợ, hay một định luật vật lý bị bỏ quên).
-3. Thái độ: Phải có sự phân biệt đối xử rõ ràng. Vịt dẫn đầu là "Vị vua", vịt cuối bảng là "Tội đồ" hoặc "Kẻ đang tìm kiếm ý nghĩa cuộc sống".
-4. Độ dài: TUYỆT ĐỐI dưới 100 ký tự. Phải súc tích nhưng "đâm bang".
-5. TÍNH LIÊN KẾT: Nếu được cung cấp bình luận trước đó, PHẢI tạo liên kết. Ví dụ: "Vẫn là con vịt báo thủ đó...", "Ai ngờ cú quay xe thế kỷ...". KHÔNG lặp lại từ lóng hoặc phép so sánh đã dùng.
+NGUYÊN TẮC VÀNG:
+1. TÍNH LIÊN KẾT: Mỗi câu bình luận phải dựa trên câu trước. Nếu giây trước vịt A dẫn, giây sau bị vượt, phải dùng từ như: "Bất ngờ chưa bà già!", "Quay xe khét lẹt!", "Vết xe đổ của...".
+2. TIÊU ĐIỂM DRAMA: KHÔNG liệt kê tất cả vịt. Hãy chọn ra 1 "Ngôi sao" và 1 "Báo thủ" để đối đầu. Tập trung vào câu chuyện giữa 2 nhân vật chính.
+3. CẤU TRÚC CÂU: 1 vế mô tả thực tế + 1 vế so sánh "đâm bang" + 1 vế dự đoán/cà khịa.
+4. ĐỘ DÀI: 150-200 ký tự. Đủ độ mặn nhưng vẫn súc tích.
+5. KHÔNG BAO GIỜ bắt đầu bằng header như "GIÂY THỨ X", "PHÁT SÓNG", "KẾT THÚC" hay bất kỳ label nào. Chỉ viết nội dung bình luận thuần túy.
 
-CẤM CÁC TỪ NHÀM CHÁN: "vô địch", "đội sổ", "tên bắn", "vấp cỏ", "tấu hài", "dưỡng sinh", "phả hơi nóng", "gáy", "cháy".`
+PHONG CÁCH: Dùng từ lóng Gen Z tự nhiên (cook, out trình, tới công chuyện, vô tri, kiếp nạn, check VAR, quay xe, báo thủ, nội tại, xu cà na, trầm cảm, hệ điều hành...). Phép so sánh phi logic (giá vàng, người yêu cũ, chủ nợ, deadline, app ngân hàng...).
+
+CẤM: "vô địch", "đội sổ", "tên bắn", "vấp cỏ", "tấu hài", "dưỡng sinh", "phả hơi nóng", "gáy", "cháy", "flex", "trúng số", "ý nghĩa cuộc đời". KHÔNG được bắt đầu câu bằng ** hoặc markdown formatting.`
 
 function getPromptForTimestamp(
   timestampSeconds: number,
@@ -35,51 +36,40 @@ function getPromptForTimestamp(
   participantNames?: string,
   history?: CommentaryHistory[]
 ): string {
-  const contexts = [
-    "Đang nợ lương/deadline dí",
-    "Người yêu cũ đi lấy chồng",
-    "Vừa trúng coin/chứng khoán",
-    "Đi casting Rap Việt nhưng bị loại",
-    "Hệ điều hành Windows đang Update",
-    "Mở app ngân hàng thấy số dư",
-    "Check điểm thi đại học",
-    "Bị tag vào ảnh thời trung học"
-  ]
-  const randomContext = contexts[Math.floor(Math.random() * contexts.length)]
-
   const namesContext = participantNames
-    ? `\n🦆 DANH SÁCH VỊT ĐANG ĐUA: ${participantNames}\nHãy gọi tên vịt theo đúng danh sách trên.`
+    ? `\n🦆 DANH SÁCH VỊT ĐANG ĐUA: ${participantNames}\nHãy gọi tên vịt theo đúng danh sách trên, KHÔNG bịa tên.`
     : ''
 
   const historyContext = history && history.length > 0
-    ? `\n📜 BÌNH LUẬN TRƯỚC ĐÓ (để tránh lặp và tạo liên kết):
-${history.map(h => `- Giây ${h.timestamp}s: "${h.text}"`).join('\n')}
-⚠️ KHÔNG được lặp lại bất kỳ phép so sánh, từ lóng, hoặc cấu trúc câu nào ở trên. Hãy "quay xe" hoặc "nối điêu" sáng tạo.`
+    ? `\n📜 CÂU CHUYỆN ĐẾN GIỜ:\n${history.map(h => `[${h.timestamp}s] ${h.text}`).join('\n')}\n\n⚠️ Dựa vào mạch truyện ở trên, hãy TIẾP NỐI câu chuyện. KHÔNG lặp so sánh hoặc từ lóng đã dùng. Nếu có vịt đổi vị trí, hãy tạo drama "quay xe". Nếu vẫn giữ nguyên, hãy tăng tension.`
     : ''
 
   if (isRaceEnd) {
     return `${SYSTEM_PROMPT}
 
-KẾT THÚC! Bối cảnh cảm xúc: ${randomContext}.${namesContext}${historyContext}
-Nhiệm vụ: Vinh danh kẻ thắng như một vị thần, mỉa mai kẻ thua như một "báo thủ" chính hiệu.
-Dùng từ ngữ cực gắt: 'cook', 'về vườn', 'out trình', 'tới công chuyện', 'xu cà na'.
-Nếu có bình luận trước, hãy tạo "plot twist" hoặc callback bất ngờ.
-Chỉ trả về 1 câu < 100 ký tự.`
+Cuộc đua đã kết thúc. Nhìn vào kết quả cuối cùng trong ảnh.${namesContext}${historyContext}
+
+Viết 1 câu bình luận kết thúc (150-200 ký tự):
+- Callback lại các drama đã xảy ra trong lịch sử bình luận (nếu có)
+- Vinh danh kẻ thắng + "chia buồn" kẻ thua theo kiểu cà khịa
+- Tạo cảm giác "plot twist" hoặc "kết thúc mãn nhãn"
+- KHÔNG bắt đầu bằng header hay label. Chỉ viết nội dung thuần.`
   }
+
+  const phase = timestampSeconds <= 2 ? 'khởi động'
+    : timestampSeconds <= 12 ? 'drama mở màn'
+      : timestampSeconds <= 22 ? 'giữa trận nóng bỏng'
+        : 'nước rút sinh tử'
 
   return `${SYSTEM_PROMPT}
 
-⏱️ GIÂY THỨ: ${timestampSeconds}/${RACE_DURATION}. Bối cảnh cảm xúc: ${randomContext}.${namesContext}${historyContext}
-Dựa vào vị trí các vịt trong ảnh:
-- Xuất phát: Ví như đi xin việc, gặp chủ nợ, hay đi casting idol.
-- Giữa trận: So sánh khoảng cách như "ví tiền cuối tháng" và "giá nhà quận 1".
-- Nước rút: Như cách người yêu cũ quay xe hoặc cách deadline dí.
+Đây là giây thứ ${timestampSeconds}/${RACE_DURATION}, giai đoạn: ${phase}. Nhìn vào ảnh screenshot.${namesContext}${historyContext}
 
-Yêu cầu: 
-- Phải có tính sát thương cao, dùng từ ngữ trendy 2026.
-- Thử dùng: 'cà khịa', 'xu cà na', 'tới công chuyện', 'nội tại', 'vô tri', 'kiếp nạn'.
-- Tránh tuyệt đối 'flex', 'trúng số', 'ý nghĩa cuộc đời' (quá phổ biến).
-Chỉ 1 câu duy nhất < 100 ký tự.`
+Viết 1 câu bình luận (150-200 ký tự):
+- Chọn 1 "ngôi sao" (dẫn đầu) và 1 "báo thủ" (chậm nhất) để tạo drama
+- Cấu trúc: mô tả thực tế + so sánh phi logic + dự đoán/cà khịa
+- Tiếp nối mạch truyện từ các câu trước (nếu có)
+- KHÔNG bắt đầu bằng header, label, hay markdown. Chỉ viết nội dung thuần.`
 }
 
 interface ZaiResponse {
@@ -92,7 +82,7 @@ interface ZaiResponse {
 
 /**
  * Generate race commentary using Z.AI GLM-4.6v via pure fetch API
- * STATEFUL: accepts history for continuity
+ * STATEFUL NARRATIVE MODE
  */
 export async function generateZaiCommentary(
   screenshotBase64: string,
@@ -151,11 +141,14 @@ export async function generateZaiCommentary(
     }
 
     const data: ZaiResponse = await response.json()
-    const text = data.choices?.[0]?.message?.content || ''
+    let text = data.choices?.[0]?.message?.content || ''
 
-    console.log(`[ZAI][${timestampSeconds}s] Generated commentary:`, text.substring(0, 50))
+    // Strip any markdown formatting or headers the AI might add
+    text = text.replace(/^\*\*.*?\*\*\s*/g, '').replace(/^#+\s*/g, '').replace(/^\[.*?\]\s*/g, '').trim()
 
-    return text.trim() || getFallbackCommentary(timestampSeconds, isRaceEnd)
+    console.log(`[ZAI][${timestampSeconds}s] Generated commentary:`, text.substring(0, 60))
+
+    return text || getFallbackCommentary(timestampSeconds, isRaceEnd)
   } catch (error) {
     console.error('Z.AI API Error:', error)
     return getFallbackCommentary(timestampSeconds, isRaceEnd)
