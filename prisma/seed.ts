@@ -7,14 +7,15 @@ const adapter = new PrismaBetterSqlite3({ url: dbUrl })
 const prisma = new PrismaClient({ adapter })
 
 // Data từ bảng tracking hiện tại
+// totalKhaos = shieldsUsed * 2 + shields * 2 + scars
 const players = [
-  { name: 'Zịt Dũng', scars: 1, shields: 0, shieldsUsed: 3, totalKhaos: 3 },
-  { name: 'Zịt Lợi', scars: 1, shields: 0, shieldsUsed: 5, totalKhaos: 5 },
-  { name: 'Zịt Minh', scars: 1, shields: 0, shieldsUsed: 4, totalKhaos: 4 },
-  { name: 'Zịt Tâm', scars: 1, shields: 1, shieldsUsed: 4, totalKhaos: 4 },
-  { name: 'Zịt Tân', scars: 1, shields: 2, shieldsUsed: 2, totalKhaos: 2 },
-  { name: 'Zịt Thanh', scars: 0, shields: 1, shieldsUsed: 4, totalKhaos: 4 },
-  { name: 'Zịt Tuấn', scars: 1, shields: 1, shieldsUsed: 6, totalKhaos: 6 },
+  { name: 'Zịt Dũng', scars: 1, shields: 0, shieldsUsed: 3, totalKhaos: 7 },   // 3*2 + 0*2 + 1
+  { name: 'Zịt Lợi', scars: 1, shields: 0, shieldsUsed: 5, totalKhaos: 11 },  // 5*2 + 0*2 + 1
+  { name: 'Zịt Minh', scars: 1, shields: 0, shieldsUsed: 4, totalKhaos: 9 },   // 4*2 + 0*2 + 1
+  { name: 'Zịt Tâm', scars: 1, shields: 1, shieldsUsed: 4, totalKhaos: 11 },  // 4*2 + 1*2 + 1
+  { name: 'Zịt Tân', scars: 1, shields: 2, shieldsUsed: 2, totalKhaos: 9 },   // 2*2 + 2*2 + 1
+  { name: 'Zịt Thanh', scars: 0, shields: 1, shieldsUsed: 4, totalKhaos: 10 },  // 4*2 + 1*2 + 0
+  { name: 'Zịt Tuấn', scars: 1, shields: 1, shieldsUsed: 6, totalKhaos: 15 },  // 6*2 + 1*2 + 1
 ]
 
 async function main() {
