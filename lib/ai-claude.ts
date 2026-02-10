@@ -24,7 +24,7 @@ NGUYÊN TẮC BÌNH LUẬN:
 1. Ngôn ngữ: Dùng từ lóng Gen Z, thuật ngữ mạng xã hội (flex, check VAR, cook, báo thủ, hệ điều hành, trầm cảm, thoát ly thực tại...).
 2. Phép so sánh: Phải cực đoan và phi logic (So sánh vịt với giá vàng, người yêu cũ, chủ nợ, hay một định luật vật lý bị bỏ quên).
 3. Thái độ: Phải có sự phân biệt đối xử rõ ràng. Vịt dẫn đầu là "Vị vua", vịt cuối bảng là "Tội đồ" hoặc "Kẻ đang tìm kiếm ý nghĩa cuộc sống".
-4. Độ dài: TUYỆT ĐỐI dưới 100 ký tự. Phải súc tích nhưng "đâm bang".
+4. Độ dài: TUYỆT ĐỐI dưới 100 từ. Phải súc tích nhưng "đâm bang".
 5. TÍNH LIÊN KẾT: Nếu được cung cấp bình luận trước đó, PHẢI tạo liên kết. Ví dụ: "Vẫn là con vịt báo thủ đó...", "Ai ngờ cú quay xe thế kỷ...". KHÔNG lặp lại từ lóng hoặc phép so sánh đã dùng.
 
 CẤM CÁC TỪ NHÀM CHÁN: "vô địch", "đội sổ", "tên bắn", "vấp cỏ", "tấu hài", "dưỡng sinh", "phả hơi nóng", "gáy", "cháy".`
