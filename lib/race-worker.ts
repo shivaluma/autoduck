@@ -585,7 +585,12 @@ export async function runRaceWorker(players: PlayerInput[], raceId?: number): Pr
       const elapsed = (Date.now() - startTime) / 1000
 
       if (raceId) {
-        const resultsJson = JSON.stringify(rawRanking)
+        // Enrich ranking with shield usage data for AI commentary
+        const enrichedRanking = rawRanking.map(r => {
+          const matched = players.find(p => p.name === r.name)
+          return { ...r, usedShield: matched?.useShield ?? false }
+        })
+        const resultsJson = JSON.stringify(enrichedRanking)
         await queueCommentary(raceId, Math.round(elapsed), resultsBase64, true, playerNames.join(', '), resultsJson)
         commentaryJobsQueued++
         console.log(`  [End] 📝 Queued final commentary with actual results: ${rawRanking.map(r => `#${r.rank} ${r.name}`).join(', ')}`)

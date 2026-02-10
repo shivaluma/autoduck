@@ -53,23 +53,56 @@ function buildPrompt(
 
   if (isRaceEnd) {
     let resultsInfo = ''
+    let shieldContext = ''
     if (raceResults) {
       try {
-        const ranking = JSON.parse(raceResults) as Array<{ rank: number; name: string }>
+        const ranking = JSON.parse(raceResults) as Array<{ rank: number; name: string; usedShield?: boolean }>
         const winner = ranking[0]?.name || 'unknown'
-        const loser = ranking[ranking.length - 1]?.name || 'unknown'
-        resultsInfo = `\nKẾT QUẢ: 👑 ONE TRUE KING: ${winner} | 🥀 SADBOI: ${loser}.`
+        const totalPlayers = ranking.length
+        // Bottom 2 are potential losers
+        const bottom2 = ranking.slice(-2)
+        const shieldUsers = bottom2.filter(r => r.usedShield)
+        const noShieldLosers = bottom2.filter(r => !r.usedShield)
+
+        resultsInfo = `\nKẾT QUẢ: 👑 VÔ ĐỊCH: ${winner}`
+
+        if (shieldUsers.length > 0 && noShieldLosers.length > 0) {
+          // Case: Someone in bottom 2 used shield → they're saved, unlucky one gets punished
+          const savedDuck = shieldUsers[0].name
+          const unluckyDuck = noShieldLosers[0].name
+          resultsInfo += ` | 🛡️ DÙNG KHIÊN (AN TOÀN): ${savedDuck} | 💀 XUI XẺO (BỊ SẸO): ${unluckyDuck}`
+          shieldContext = `
+⚠️ TÌNH HUỐNG ĐẶC BIỆT - KHIÊN:
+- ${savedDuck} tuy về cuối nhưng ĐÃ DÙNG KHIÊN → An toàn! Khen sự khôn ngoan, tính toán cao tay.
+- ${unluckyDuck} KHÔNG dùng khiên → Nhận sẹo! Cà khịa sự xui xẻo, thiếu tầm nhìn.
+- Phải nhắc đến cả 2: Một kẻ "thông minh" và một kẻ "ngây thơ".`
+        } else if (shieldUsers.length === 0) {
+          // Case: No one used shield, bottom 2 both get punished
+          const loser1 = bottom2[0]?.name || 'unknown'
+          const loser2 = bottom2[1]?.name || 'unknown'
+          resultsInfo += ` | 💀 2 CON DZỊT: ${loser1} & ${loser2}`
+          shieldContext = `
+⚠️ LUẬT RỪNG: 2 vịt cuối bảng (${loser1} & ${loser2}) đều bị sẹo vì KHÔNG AI dùng khiên. Cà khịa cả 2!`
+        } else {
+          // Edge case: both used shields (still get punished per rules)
+          resultsInfo += ` | 💀 KHIÊN VÔ DỤNG: ${bottom2.map(r => r.name).join(' & ')}`
+          shieldContext = `
+⚠️ CẢ 2 DÙNG KHIÊN MÀ VẪN THUA: ${bottom2.map(r => r.name).join(' & ')} - Khiên không cứu được! Cà khịa sự tuyệt vọng.`
+        }
       } catch { /* ignore */ }
     }
 
     return `${SYSTEM_PROMPT}
 
-TÌNH HUỐNG: The End!${namesInfo}${resultsInfo}${historyInfo}
+TÌNH HUỐNG: The End!${namesInfo}${resultsInfo}${shieldContext}${historyInfo}
 
 NHIỆM VỤ: Viết 1 câu chốt "thấm từng thớ thịt".
 - Dùng 1 trong 10 hệ văn mẫu trên để chốt hạ.
-- Ví dụ: "Zịt A lên ngôi như một vị thần, còn Zịt B - thôi em đừng khóc, bóng tối trướt mắt sẽ bắt em đi..."
-- Ví dụ: "Chúc mừng Zịt C, còn Zịt D thì đúng là 'kiếp này coi như bỏ', hẹn kiếp sau làm lại!"`
+- NẾU CÓ KHIÊN: Phải nhắc đến khiên trong câu chốt!
+
+Ví dụ (không khiên): "Zịt A lên ngôi, còn Zịt B & Zịt C - thôi em đừng khóc, bóng tối trước mắt sẽ bắt em đi..."
+Ví dụ (có khiên): "Zịt A đăng quang, Zịt B khôn như cáo dùng khiên thoát kiếp nạn, còn Zịt C không khiên không giáp - đúng là 'ra đường không mang bảo hiểm' rồi nhận sẹo!"
+Ví dụ (có khiên): "Vương miện thuộc về Zịt A, Zịt B tuy bét bảng nhưng khiên thần hộ mệnh đã cứu rỗi linh hồn, trong khi Zịt C đứng đó chịu trận vì 'quên mang áo mưa ngày bão'!"`
   }
 
   // Mood generation based on timestamps (Văn Mẫu & Meme)
@@ -92,8 +125,9 @@ HÌNH ẢNH: Nhìn screenshot để chế văn mẫu.${namesInfo}${historyInfo}
 NHIỆM VỤ: Viết 1 câu bình luận dựa trên các hệ văn mẫu.
 - Chọn 1 hệ phù hợp nhất với tình huống trong ảnh.
 - Sáng tạo câu mới, đừng lặp lại ví dụ.
+- KHÔNG được ghi tên hệ (ví dụ [Hệ Deadline]) vào câu trả lời. Chỉ ghi nội dung bình luận.
 
-VIẾT NGAY:`
+VIẾT NGAY: `
 }
 
 interface AnthropicResponse {
