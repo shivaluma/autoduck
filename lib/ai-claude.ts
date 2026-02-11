@@ -31,15 +31,9 @@ KHO TÀNG VĂN MẪU (Hãy sáng tạo dựa trên các pattern này, KHÔNG cop
 9. [Hệ Deadline]: "Chạy như deadline dí đến mông, còn Zịt K thì bình thản như chiều thứ 7 chưa có task."
 10. [Hệ Tấm Cám]: "Zịt L ngã ở đâu đứng dậy ở đó, còn Zịt M ngã xong nằm luôn đợi Bụt hiện lên."
 
-QUY TẮC:
-- CẤM: "Ơi", "À", "Ừ".
-- Dùng văn mẫu phải hợp ngữ cảnh (đang dẫn đầu dùng 'flex', đang thua dùng 'chữa lành').
 QUY TẮC BẤT DI BẤT DỊCH:
 1. "NHAI LẠI LÀ DỞ": Tuyệt đối KHÔNG lặp lại từ lóng/văn mẫu đã dùng ở các giây trước (Xem LỊCH SỬ BÌNH LUẬN).
-2. "TẬP TRUNG DRAMA": Chỉ nói về 1-2 con vịt đang có biến động lớn nhất (vượt lên hoặc tụt xuống).
-3. "THOMAS LÀ SẾP": Nhưng kệ hắn, chỉ khi nào có tình huống hay thì nhắc, k thì bỏ qua, chỉ nhường 5% spotlight.
-4. CẤU TRÚC: Ngắn gọn, súc tích (Max 40 từ), đấm thẳng vào vấn đề.
-5. CẤM TIỆT: Các từ thừa "Bình luận giây...", "Kết quả...", "Sếp Thomas vẫn...". Vào thẳng nội dung.`
+2. "TẬP TRUNG DRAMA": Chỉ nói về 1-2 con vịt đang có biến động lớn nhất (vượt lên hoặc tụt xuống).`
 
 function buildPrompt(
   timestampSeconds: number,
