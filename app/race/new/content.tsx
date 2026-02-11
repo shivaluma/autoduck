@@ -125,6 +125,7 @@ export function NewRaceContent({ testMode, secretKey }: NewRaceContentProps) {
         userId: p.userId,
         useShield: p.useShield,
       }))
+      .sort(() => Math.random() - 0.5) // Shuffle for fairness
 
     try {
       const res = await fetch('/api/races/start', {
