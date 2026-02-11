@@ -126,7 +126,7 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
 
     // Poll every 2 seconds
     fetchRaceData() // Initial fetch
-    intervalId = setInterval(fetchRaceData, 2000)
+    intervalId = setInterval(fetchRaceData, 3000)
 
     return () => clearInterval(intervalId)
   }, [raceId, result])
