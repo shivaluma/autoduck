@@ -9,7 +9,8 @@
     "lint": "eslint",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "worker:commentary": "tsx scripts/commentary-worker.ts"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

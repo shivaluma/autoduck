@@ -7,6 +7,7 @@
 import { prisma } from './db'
 import { generateZaiCommentary, type CommentaryHistory } from './ai-zai'
 import { generateClaudeCommentary } from './ai-claude'
+import { raceEventBus, RACE_EVENTS } from './event-bus'
 
 // AI Provider switching via env var: 'zai' (default) or 'claude'
 const AI_PROVIDER = process.env.AI_PROVIDER || 'zai'
@@ -128,6 +129,14 @@ export async function processNextJob(): Promise<boolean> {
     })
 
     console.log(`✅ Job #${job.id} completed: "${commentary.substring(0, 60)}..."`)
+
+    // Broadcast to live clients via EventBus
+    raceEventBus.emit(RACE_EVENTS.COMMENTARY, {
+      raceId: job.raceId,
+      text: commentary,
+      timestamp: job.timestamp
+    })
+
     return true
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)

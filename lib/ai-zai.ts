@@ -25,12 +25,11 @@ KHO TÀNG VĂN MẪU (Hãy sáng tạo dựa trên các pattern này, KHÔNG cop
 2. [Hệ Chữa Lành]: "Zịt B không phải chạy chậm, mà đang enjoy cái moment này, tìm kiếm sự bình yên giữa dòng đời vội vã."
 3. [Hệ Người Yêu Cũ]: "Zịt C lật mặt nhanh hơn người yêu cũ, vừa thề non hẹn biển giờ đã 'chúng ta không thuộc về nhau'."
 4. [Hệ Gen Z]: "Zịt D đang check VAR cực căng, flexing kỹ năng out trình cả server, đúng là kiếp nạn thứ 82!"
-5. [Hệ Tài Chính]: "Đầu tư vào Zịt E là một món hời, còn Zịt F thì đúng là cú lừa thế kỷ, xanh cỏ đỏ lòng!"
-6. [Hệ So Deep]: "Em sai rồi, em xin lỗi vì đã chạy chậm, em chỉ là hạt cát vô danh giữa sa mạc đầy nắng gió..."
-7. [Hệ Giang Hồ]: "Ra đường hỏi Zịt G là ai, thấy Zịt H chạy là phải né, không nói nhiều!"
-8. [Hệ Báo Thủ]: "Gia môn bất hạnh khi có Zịt I, báo cha báo mẹ chưa đủ giờ báo cả đồng đội!"
-9. [Hệ Deadline]: "Chạy như deadline dí đến mông, còn Zịt K thì bình thản như chiều thứ 7 chưa có task."
-10. [Hệ Tấm Cám]: "Zịt L ngã ở đâu đứng dậy ở đó, còn Zịt M ngã xong nằm luôn đợi Bụt hiện lên."
+5. [Hệ So Deep]: "Em sai rồi, em xin lỗi vì đã chạy chậm, em chỉ là hạt cát vô danh giữa sa mạc đầy nắng gió..."
+6. [Hệ Giang Hồ]: "Ra đường hỏi Zịt G là ai, thấy Zịt H chạy là phải né, không nói nhiều!"
+7. [Hệ Báo Thủ]: "Gia môn bất hạnh khi có Zịt I, báo cha báo mẹ chưa đủ giờ báo cả đồng đội!"
+8. [Hệ Deadline]: "Chạy như deadline dí đến mông, còn Zịt K thì bình thản như chiều thứ 7 chưa có task."
+9. [Hệ Tấm Cám]: "Zịt L ngã ở đâu đứng dậy ở đó, còn Zịt M ngã xong nằm luôn đợi Bụt hiện lên."
 
 QUY TẮC:
 - CẤM: "Ơi", "À", "Ừ".
@@ -101,7 +100,7 @@ function buildPrompt(
 TÌNH HUỐNG: The End!${namesInfo}${resultsInfo}${shieldContext}${historyInfo}
 
 NHIỆM VỤ: Viết 1 câu chốt "thấm từng thớ thịt".
-- Dùng 1 trong 10 hệ văn mẫu trên để chốt hạ.
+- Dùng 1 trong 9 hệ văn mẫu trên để chốt hạ.
 - NẾU CÓ KHIÊN: Phải nhắc đến khiên trong câu chốt!
 
 Ví dụ (không khiên): "Zịt A lên ngôi, còn Zịt B & Zịt C - thôi em đừng khóc, bóng tối trước mắt sẽ bắt em đi..."
@@ -116,9 +115,9 @@ Ví dụ (có khiên): "Vương miện thuộc về Zịt A, Zịt B tuy bét b�
   } else if (timestampSeconds <= 12) {
     contextPrompt = 'Giai đoạn BI KỊCH: Dùng Hệ Người Yêu Cũ hoặc Hệ Giang Hồ. Kẻ dẫn đầu đang "gánh team", kẻ bám đuổi thì "lật mặt".'
   } else if (timestampSeconds <= 22) {
-    contextPrompt = 'Giai đoạn CAO TRÀO: Dùng Hệ Chữa Lành hoặc Hệ Báo Thủ. Ai cần "healing"? Ai đang báo?'
+    contextPrompt = 'Giai đoạn CAO TRÀO: Dùng Hệ Chữa Lành hoặc Hệ Tấm Cám. Ai cần "healing"? Ai đang đợi Bụt?'
   } else {
-    contextPrompt = 'Giai đoạn KẾT THÚC: Dùng Hệ Tài Chính hoặc Hệ Gen Z/Flex. Ai là "món hời"? Ai là "cú lừa"?'
+    contextPrompt = 'Giai đoạn KẾT THÚC: Dùng Hệ Gen Z/Flex hoặc Hệ Báo Thủ. Ai đang "flexing"? Ai là "báo thủ"?'
   }
 
   return `${SYSTEM_PROMPT}
