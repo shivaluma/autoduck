@@ -22,7 +22,7 @@ Phong cách: Kể chuyện drama, tập trung vào 1-2 nhân vật nổi bật n
 
 TỪ ĐIỂN BẮT BUỘC (Dùng linh hoạt, đúng ngữ cảnh):
 - Vịt bứt tốc: "Dùng Thanh Nộ" (TUYỆT ĐỐI KHÔNG DÙNG TỪ KHÁC như "Bung").
-- Vịt chậm/tụt lại: "Bận Phùng Canh Mộ".
+- Vịt chậm/tụt lại: "Phùng Canh Mộ".
 - Vịt out trình (bỏ xa đối thủ): "Chưa tày đâu".
 - Vịt lật kèo (đang thua thành thắng): "Quay xe", "Ảo ma".
 - Vịt bị vượt mặt: "Hít khói", "Tắt điện".
@@ -30,11 +30,9 @@ TỪ ĐIỂN BẮT BUỘC (Dùng linh hoạt, đúng ngữ cảnh):
 QUY TẮC BẤT DI BẤT DỊCH:
 1. "NHAI LẠI LÀ DỞ": Tuyệt đối KHÔNG lặp lại từ lóng/văn mẫu đã dùng ở các giây trước (Xem LỊCH SỬ BÌNH LUẬN).
 2. "TẬP TRUNG DRAMA": Chỉ nói về 1-2 con vịt đang có biến động lớn nhất (vượt lên hoặc tụt xuống).
-3. "CÂU CHUYỆN XUYÊN SUỐT": Nếu giây trước chê nó, giây này nó vượt lên -> Phải thốt lên sự bất ngờ ("Quay xe").
+3. "THOMAS LÀ SẾP": Nhưng Sếp chỉ được nhắc đến KHI VÀ CHỈ KHI hắn đang DẪN ĐẦU hoặc VỀ BÉT. Nếu chạy giữa đoàn thì KỆ SẾP.
 4. CẤU TRÚC: Ngắn gọn, súc tích (Max 40 từ), đấm thẳng vào vấn đề.
-
-QUAN HỆ NHÂN VẬT:
-- THOMAS là SẾP. Thomas thắng -> "Sếp thị uy". Thomas thua -> "Sếp nhường/thử lòng".`
+5. CẤM TIỆT: Các từ thừa "Bình luận giây...", "Kết quả...", "Sếp Thomas vẫn...". Vào thẳng nội dung.`
 
 function buildPrompt(
   timestampSeconds: number,
@@ -48,9 +46,9 @@ function buildPrompt(
   // Define these variables with default empty strings so they are accessible in all returns
   let historyInfo = ''
   if (history && history.length > 0) {
-    historyInfo = `\nLỊCH SỬ BÌNH LUẬN (CHÚ Ý ĐỂ TRÁNH LẶP TỪ):\n${history.map(h => `[${h.timestamp}s] ${h.text}`).join('\n')}`
+    historyInfo = `\n🚫 DANH SÁCH CẤM (ĐÃ DÙNG - KHÔNG ĐƯỢC LẶP LẠI TỪ KHÓA TRONG NÀY):\n${history.map(h => `- ${h.text}`).join('\n')}`
   } else {
-    historyInfo = '\n(Chưa có kịch bản, hãy khai màn)'
+    historyInfo = '\n(Chưa có kịch bản)'
   }
 
   if (isRaceEnd) {
@@ -88,24 +86,26 @@ NHIỆM VỤ: Viết đoạn bình luận tổng kết (khoảng 40-50 từ).
 - Cà khịa cực mạnh kẻ về cuối (đặc biệt vụ dùng khiên/không dùng khiên).
 - Nhắc đến Thomas (Sếp) với vai trò người phán xử.
 
-Ví dụ: "Zịt A đã bung Thanh Nộ đúng lúc để đăng quang, trong khi Zịt B khôn ngoan dùng khiên thoát nạn. Còn Zịt C thì ôi thôi, bận Phùng Canh Mộ quá lâu nên giờ nhận sẹo, bài học nhớ đời!"`
+Ví dụ: "Zịt A đã Dùng Thanh Nộ đúng lúc để đăng quang, trong khi Zịt B khôn ngoan dùng khiên thoát nạn. Còn Zịt C thì ôi thôi, bận Phùng Canh Mộ quá lâu nên giờ nhận sẹo, bài học nhớ đời!"`
   }
 
   // Randomize focus instruction based on timestamp to ensure variety
   const focusStrategy = timestampSeconds % 3 === 0
-    ? "Tập trung vào con VỊT ĐANG BỨT TỐC/DẪN ĐẦU."
+    ? "Tập trung vào con VỊT ĐANG BỨT TỐC/DẪN ĐẦU (Trừ khi là Thomas thì bỏ qua nếu không có gì đặc biệt)."
     : (timestampSeconds % 3 === 1
       ? "Tập trung vào con VỊT BỊ TỤT LẠI/LẶN MẤT TĂM."
-      : "Tập trung vào cuộc CHIẾN GIỮA 2 CON VỊT.")
+      : "Tập trung vào cuộc CHIẾN GIỮA 2 CON VỊT (Không nhắc đến Thomas).")
 
   return `${SYSTEM_PROMPT}
 
-HÌNH ẢNH: Nhìn screenshot để chế văn mẫu.${namesInfo}${historyInfo}
+THỜI GIAN: Giây ${timestampSeconds}/36.
+HÌNH ẢNH: Quan sát ảnh chụp đường đua.
+CHIẾN THUẬT: ${focusStrategy}${namesInfo}${historyInfo}
 
-NHIỆM VỤ: Viết 1 câu bình luận dựa trên các hệ văn mẫu.
-- Chọn 1 hệ phù hợp nhất với tình huống trong ảnh.
-- Sáng tạo câu mới, đừng lặp lại ví dụ.
-- KHÔNG được ghi tên hệ (ví dụ [Hệ Deadline]) vào câu trả lời. Chỉ ghi nội dung bình luận.
+NHIỆM VỤ: Viết 1 đoạn bình luận (30-40 từ) "chặt chém" diễn biến trong ảnh.
+- Dùng TỪ ĐIỂN BẮT BUỘC (Thanh Nộ, Phùng Canh Mộ, Chưa tày đâu, Quay xe...)
+- Kiểm tra danh sách "🚫 ĐÃ DÙNG" ở trên. Nếu từ lóng nào đã xuất hiện, CẤM DÙNG LẠI. Hãy dùng từ khác hoặc mô tả khác.
+- KHÔNG BẮT ĐẦU BẰNG "Bình luận giây...", "Sếp Thomas...". Vào thẳng câu chuyện.
 
 VIẾT NGAY:`
 }
