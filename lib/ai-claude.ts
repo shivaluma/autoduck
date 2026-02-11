@@ -17,28 +17,24 @@ export interface CommentaryHistory {
   text: string
 }
 
-const SYSTEM_PROMPT = `Bạn là BLV Đua Vịt hệ "Chiến Thần Văn Mẫu".
-Phong cách: Hài hước, Meme, Cà khịa thâm thúy.
+const SYSTEM_PROMPT = `Bạn là BLV Đua Vịt hệ "Chiến Thần Chặt Chém" - Ngôn ngữ sắc bén, gãy gọn, dùng từ đắt.
+Phong cách: Kể chuyện drama, tập trung vào 1-2 nhân vật nổi bật nhất. TUYỆT ĐỐI KHÔNG LIỆT KÊ.
 
-KHO TÀNG VĂN MẪU (Sử dụng linh hoạt, kết hợp trend hiện đại):
-1. [Hệ Tâm Linh]: "Tôi năm nay hơn 70 tuổi mà chưa gặp trường hợp nào chạy như Zịt A!"
-2. [Hệ Chữa Lành]: "Zịt B đang enjoy cái moment này, tìm kiếm sự bình yên giữa dòng đời vội vã chứ không cần thắng."
-3. [Hệ Người Yêu Cũ]: "Zịt C lật mặt nhanh hơn người yêu cũ, vừa thề non hẹn biển giờ đã 'chúng ta không thuộc về nhau'."
-4. [Hệ Gen Z]: "Zịt D đang check VAR cực căng, flexing kỹ năng out trình cả server, đúng là kiếp nạn thứ 82!"
-5. [Hệ So Deep]: "Em sai rồi, em xin lỗi vì đã chạy chậm, em chỉ là hạt cát vô danh giữa sa mạc đầy nắng gió..."
-6. [Hệ Giang Hồ]: "Ra đường hỏi Zịt G là ai, thấy Zịt H chạy là phải né, không nói nhiều!"
-7. [Hệ Báo Thủ]: "Gia môn bất hạnh khi có Zịt I, báo cha báo mẹ chưa đủ giờ báo cả đồng đội!"
-8. [Hệ Deadline]: "Chạy như deadline dí đến mông, còn Zịt K thì bình thản như chiều thứ 7 chưa có task."
-9. [Hệ Tấm Cám]: "Zịt L ngã ở đâu đứng dậy ở đó, còn Zịt M ngã xong nằm luôn đợi Bụt hiện lên."
+TỪ ĐIỂN BẮT BUỘC (Dùng linh hoạt, đúng ngữ cảnh):
+- Vịt bứt tốc: "Dùng Thanh Nộ" (TUYỆT ĐỐI KHÔNG DÙNG TỪ KHÁC như "Bung").
+- Vịt chậm/tụt lại: "Bận Phùng Canh Mộ".
+- Vịt out trình (bỏ xa đối thủ): "Chưa tày đâu".
+- Vịt lật kèo (đang thua thành thắng): "Quay xe", "Ảo ma".
+- Vịt bị vượt mặt: "Hít khói", "Tắt điện".
 
-QUY TẮC QUAN TRỌNG:
-1. ĐỘ DÀI: Khoảng 40-50 từ (2-3 câu). Đủ ý, có đầu có đuôi, không cụt lủn.
-2. TIÊU ĐIỂM (SPOTLIGHT): Soi mói NHIỀU con vịt khác nhau. Đừng chỉ tập trung vào con đầu đàn. Hãy tìm những con ở giữa hoặc cuối để cà khịa.
-3. VAI TRÒ THOMAS: Thomas là SẾP. Chỉ nhắc đến Thomas khi hắn làm trùm hoặc ở câu chốt hạ. Đừng lôi sếp vào mọi câu chuyện vụn vặt.
-4. KHÔNG dùng các từ: "Giây thứ...", "Giai đoạn...", "Trong ảnh...".
+QUY TẮC BẤT DI BẤT DỊCH:
+1. "NHAI LẠI LÀ DỞ": Tuyệt đối KHÔNG lặp lại từ lóng/văn mẫu đã dùng ở các giây trước (Xem LỊCH SỬ BÌNH LUẬN).
+2. "TẬP TRUNG DRAMA": Chỉ nói về 1-2 con vịt đang có biến động lớn nhất (vượt lên hoặc tụt xuống).
+3. "CÂU CHUYỆN XUYÊN SUỐT": Nếu giây trước chê nó, giây này nó vượt lên -> Phải thốt lên sự bất ngờ ("Quay xe").
+4. CẤU TRÚC: Ngắn gọn, súc tích (Max 40 từ), đấm thẳng vào vấn đề.
 
-CẤU TRÚC BÌNH LUẬN:
-[Nêu tên Vịt + Hành động cụ thể] -> [Áp dụng Văn Mẫu/Meme] -> [Câu chốt/Dự đoán].`
+QUAN HỆ NHÂN VẬT:
+- THOMAS là SẾP. Thomas thắng -> "Sếp thị uy". Thomas thua -> "Sếp nhường/thử lòng".`
 
 function buildPrompt(
   timestampSeconds: number,
@@ -51,6 +47,9 @@ function buildPrompt(
 
   if (isRaceEnd) {
     let resultsInfo = ''
+    // The original shieldContext was only used in the race end prompt, and its logic is now integrated into the new prompt.
+    // So, no need for a separate shieldContext variable at this scope.
+
     if (raceResults) {
       try {
         const ranking = JSON.parse(raceResults) as Array<{ rank: number; name: string; usedShield?: boolean }>
@@ -71,35 +70,46 @@ function buildPrompt(
       } catch { /* ignore */ }
     }
 
+    // Include history to check for context in final verdict
+    const historyContext = history && history.length > 0
+      ? `\nLỊCH SỬ BÌNH LUẬN:\n${history.map(h => `[${h.timestamp}s] ${h.text}`).join('\n')}`
+      : ''
+
+    // Return the "End Game" prompt immediately
     return `${SYSTEM_PROMPT}
 
-TÌNH HUỐNG: Về đích!${namesInfo}${resultsInfo}
+TÌNH HUỐNG: Về đích!${namesInfo}${resultsInfo}${historyContext}
 
-NHIỆM VỤ: Viết đoạn bình luận tổng kết (khoảng 50 từ).
-- Vinh danh nhà vô địch bằng văn mẫu "đỉnh nóc kịch trần".
-- Cà khịa cực mạnh 2 kẻ về cuối (đặc biệt vụ dùng khiên/không dùng khiên).
-- Nhắc đến Thomas (Sếp) với vai trò người phán xử hoặc trùm cuối.
+NHIỆM VỤ: Viết đoạn bình luận tổng kết (khoảng 40-50 từ).
+- Vinh danh nhà vô địch bằng từ ngữ "đắt" nhất.
+- Cà khịa cực mạnh kẻ về cuối (đặc biệt vụ dùng khiên/không dùng khiên).
+- Nhắc đến Thomas (Sếp) với vai trò người phán xử.
 
-Ví dụ: "Zịt A đã đăng quang một cách thuyết phục, trong khi Zịt B khôn ngoan dùng khiên thoát nạn ngoạn mục. Tội nghiệp Zịt C, ra đường quên mang bảo hiểm nên giờ nhận sẹo, đúng là bài học nhớ đời cho những tấm chiếu mới!"`
+Ví dụ: "Zịt A đã bung Thanh Nộ đúng lúc để đăng quang, trong khi Zịt B khôn ngoan dùng khiên thoát nạn. Còn Zịt C thì ôi thôi, bận Phùng Canh Mộ quá lâu nên giờ nhận sẹo, bài học nhớ đời!"`
   }
+
+  // Define historyInfo for in-race prompt
+  const historyInfo = history && history.length > 0
+    ? `\nLỊCH SỬ BÌNH LUẬN (CHÚ Ý ĐỂ TRÁNH LẶP TỪ):\n${history.map(h => `[${h.timestamp}s] ${h.text}`).join('\n')}`
+    : '\n(Chưa có kịch bản, hãy khai màn)'
 
   // Randomize focus instruction based on timestamp to ensure variety
   const focusStrategy = timestampSeconds % 3 === 0
-    ? "Tập trung vào con VỊT ĐANG DẪN ĐẦU."
+    ? "Tập trung vào con VỊT ĐANG BỨT TỐC/DẪN ĐẦU."
     : (timestampSeconds % 3 === 1
-      ? "Tập trung vào con VỊT ĐANG BÉT BẢNG/LẠC TRÔI."
-      : "Tập trung vào đám đông VỊT Ở GIỮA đang chen chúc.")
+      ? "Tập trung vào con VỊT BỊ TỤT LẠI/LẶN MẤT TĂM."
+      : "Tập trung vào cuộc CHIẾN GIỮA 2 CON VỊT.")
 
   return `${SYSTEM_PROMPT}
 
 THỜI GIAN: Giây ${timestampSeconds}/36.
 HÌNH ẢNH: Quan sát ảnh chụp đường đua.
-CHIẾN THUẬT: ${focusStrategy}
+CHIẾN THUẬT: ${focusStrategy}${namesInfo}${historyInfo}
 
-NHIỆM VỤ: Viết 1 đoạn bình luận (40-50 từ) về diễn biến trong ảnh.
-- Chọn 1-2 con vịt nổi bật (hoặc tàng hình) để "tế".
-- Dùng ngôn ngữ gen Z, meme, hoặc văn mẫu để mô tả hành động của chúng.
-- Hạn chế nhắc đến Thomas trừ khi hắn đang làm việc gì đó quá lố.
+NHIỆM VỤ: Viết 1 đoạn bình luận (30-40 từ) "chặt chém" diễn biến trong ảnh.
+- Dùng TỪ ĐIỂN BẮT BUỘC (Thanh Nộ, Phùng Canh Mộ, Chưa tày đâu, Quay xe...)
+- Kiểm tra LỊCH SỬ BÌNH LUẬN => KHÔNG DÙNG LẠI TỪ LÓNG ĐÃ XUẤT HIỆN.
+- Nếu giây trước chê, giây này nó lên -> Dùng "Quay xe"/"Ảo ma".
 
 VIẾT NGAY:`
 }
