@@ -4,6 +4,16 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { PlayerData } from '@/lib/types'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 interface ParticipantSetup {
   userId: number
@@ -21,8 +31,6 @@ interface NewRaceContentProps {
 
 export function NewRaceContent({ testMode, secretKey }: NewRaceContentProps) {
   const router = useRouter()
-  // const searchParams = useSearchParams() <- Removed
-  // testMode and secretKey passed as props
 
   const [players, setPlayers] = useState<ParticipantSetup[]>([])
   const [loading, setLoading] = useState(true)
@@ -30,19 +38,25 @@ export function NewRaceContent({ testMode, secretKey }: NewRaceContentProps) {
   const [error, setError] = useState<string | null>(null)
   const [countdown, setCountdown] = useState<number | null>(null)
 
+  // Dialog State
+  const [playerToRemove, setPlayerToRemove] = useState<number | null>(null)
+
   useEffect(() => {
     fetch('/api/users')
       .then((r) => r.json())
       .then((data: PlayerData[]) => {
         setPlayers(
-          data.map((p) => ({
-            userId: p.id,
-            name: p.name,
-            selected: true,
-            useShield: false,
-            availableShields: p.shields,
-            scars: p.scars,
-          }))
+          data.map((p) => {
+            const isThomas = p.name === 'Thomas'
+            return {
+              userId: p.id,
+              name: p.name,
+              selected: true, // Auto-select everyone
+              useShield: isThomas, // Thomas always uses shield
+              availableShields: p.shields,
+              scars: p.scars,
+            }
+          })
         )
         setLoading(false)
       })
@@ -52,11 +66,31 @@ export function NewRaceContent({ testMode, secretKey }: NewRaceContentProps) {
   const selectedCount = players.filter((p) => p.selected).length
   const shieldsInUse = players.filter((p) => p.selected && p.useShield).length
 
-  const handleTogglePlayer = (userId: number) => {
+  const handleTogglePlayerRequest = (userId: number) => {
+    const player = players.find(p => p.userId === userId)
+    if (!player) return
+
+    if (player.selected) {
+      // Trying to deselect -> Show Confirmation
+      setPlayerToRemove(userId)
+    } else {
+      // Selecting -> Just do it
+      togglePlayerRef(userId)
+    }
+  }
+
+  const confirmRemovePlayer = () => {
+    if (playerToRemove !== null) {
+      togglePlayerRef(playerToRemove)
+      setPlayerToRemove(null)
+    }
+  }
+
+  const togglePlayerRef = (userId: number) => {
     setPlayers((prev) =>
       prev.map((p) =>
         p.userId === userId
-          ? { ...p, selected: !p.selected, useShield: !p.selected ? false : p.useShield }
+          ? { ...p, selected: !p.selected, useShield: !p.selected ? (p.name === 'Thomas') : p.useShield }
           : p
       )
     )
@@ -64,9 +98,12 @@ export function NewRaceContent({ testMode, secretKey }: NewRaceContentProps) {
 
   const handleToggleShield = (userId: number) => {
     setPlayers((prev) =>
-      prev.map((p) =>
-        p.userId === userId ? { ...p, useShield: !p.useShield } : p
-      )
+      prev.map((p) => {
+        if (p.userId !== userId) return p
+        // Thomas cannot disable shield
+        if (p.name === 'Thomas') return p
+        return { ...p, useShield: !p.useShield }
+      })
     )
   }
 
@@ -212,7 +249,7 @@ export function NewRaceContent({ testMode, secretKey }: NewRaceContentProps) {
               {players.map((player, idx) => (
                 <div
                   key={player.userId}
-                  onClick={() => handleTogglePlayer(player.userId)}
+                  onClick={() => handleTogglePlayerRequest(player.userId)}
                   className={`
                     grid grid-cols-[50px_1fr_100px_120px_140px] gap-0 items-center
                     px-5 py-4 cursor-pointer transition-all duration-200
@@ -237,7 +274,7 @@ export function NewRaceContent({ testMode, secretKey }: NewRaceContentProps) {
                     </div>
                   </div>
 
-                  {/* Driver Info */}
+                  {/* DriverInfo */}
                   <div className="flex items-center gap-3">
                     <div className={`w-1 h-10 rounded-full ${player.useShield ? 'bg-[var(--color-f1-cyan)]' :
                       player.selected ? 'bg-[var(--color-f1-red)]' : 'bg-white/10'
@@ -245,6 +282,7 @@ export function NewRaceContent({ testMode, secretKey }: NewRaceContentProps) {
                     <div>
                       <div className="font-body text-sm font-semibold text-white tracking-wide uppercase">
                         {player.name}
+                        {player.name === 'Thomas' && <span className="ml-2 text-[10px] bg-yellow-600/20 text-yellow-500 px-1 rounded border border-yellow-600/50">IMMORTAL</span>}
                       </div>
                       <div className="flex items-center gap-3 mt-0.5">
                         <span className="font-data text-[11px] text-white/40">
@@ -255,7 +293,9 @@ export function NewRaceContent({ testMode, secretKey }: NewRaceContentProps) {
                           )}
                         </span>
                         <span className="font-data text-[11px] text-white/40">
-                          {player.availableShields > 0 ? (
+                          {player.availableShields > 9000 ? (
+                            <span className="text-[var(--color-f1-cyan)]">∞ SHIELDS</span>
+                          ) : player.availableShields > 0 ? (
                             <span className="text-[var(--color-f1-cyan)]">{player.availableShields} SHIELD{player.availableShields > 1 ? 'S' : ''}</span>
                           ) : (
                             'NO SHIELDS'
@@ -278,7 +318,7 @@ export function NewRaceContent({ testMode, secretKey }: NewRaceContentProps) {
                   <div className="text-center">
                     <span className={`font-data text-lg font-bold ${player.availableShields > 0 ? 'text-[var(--color-f1-cyan)]' : 'text-white/15'
                       }`}>
-                      {player.availableShields}
+                      {player.availableShields > 9000 ? '∞' : player.availableShields}
                     </span>
                     <div className="font-data text-[10px] text-white/30 uppercase mt-0.5">Available</div>
                   </div>
@@ -287,7 +327,7 @@ export function NewRaceContent({ testMode, secretKey }: NewRaceContentProps) {
                   <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={() => handleToggleShield(player.userId)}
-                      disabled={!player.selected || player.availableShields <= 0}
+                      disabled={!player.selected || player.availableShields <= 0 || player.name === 'Thomas'}
                       className={`
                         font-display text-[11px] font-bold tracking-[0.15em] uppercase
                         px-4 py-2 transition-all duration-200
@@ -376,6 +416,31 @@ export function NewRaceContent({ testMode, secretKey }: NewRaceContentProps) {
           </button>
         </div>
       </main>
+
+      {/* Opt-out Confirmation Dialog */}
+      <AlertDialog open={playerToRemove !== null} onOpenChange={(open) => !open && setPlayerToRemove(null)}>
+        <AlertDialogContent className="bg-zinc-900 border border-zinc-700 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-[var(--color-f1-red)] font-display uppercase tracking-wider">
+              Confirm Opt-out
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-zinc-400">
+              Are you sure you want to remove <strong>{players.find(p => p.userId === playerToRemove)?.name}</strong> from this race?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-transparent border border-zinc-700 hover:bg-zinc-800 text-white font-display text-xs tracking-wider uppercase">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmRemovePlayer}
+              className="bg-[var(--color-f1-red)] hover:bg-red-700 text-white font-display text-xs tracking-wider uppercase border-0"
+            >
+              Confirm Removal
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

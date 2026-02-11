@@ -16,24 +16,38 @@ const players = [
   { name: 'Zịt Tân', scars: 1, shields: 2, shieldsUsed: 2, totalKhaos: 9 },   // 2*2 + 2*2 + 1
   { name: 'Zịt Thanh', scars: 0, shields: 1, shieldsUsed: 4, totalKhaos: 10 },  // 4*2 + 1*2 + 0
   { name: 'Zịt Tuấn', scars: 1, shields: 1, shieldsUsed: 6, totalKhaos: 15 },  // 6*2 + 1*2 + 1
+  { name: 'Thomas', scars: 0, shields: 9999, shieldsUsed: 0, totalKhaos: 0, avatarUrl: 'https://api.dicebear.com/9.x/bottts-neutral/svg?seed=Thomas' }, // The Immortal Duck
 ]
 
 async function main() {
-  console.log('🦆 Seeding database...')
+  const isCI = process.env.CI === 'true' || process.argv.includes('--ci')
+  console.log(`🦆 Seeding database...${isCI ? ' (CI Mode)' : ''}`)
 
   // Check if data already exists
   const existingUsers = await prisma.user.count()
 
-  if (existingUsers > 0) {
+  if (!isCI && existingUsers > 0) {
     console.log('⚠️ Database already contains data. Skipping seed.')
     return
   }
 
   for (const player of players) {
-    await prisma.user.create({
-      data: player,
-    })
-    console.log(`  ✓ Created ${player.name}`)
+    if (isCI) {
+      // In CI, we update if exists to ensure latest seed data
+      await prisma.user.upsert({
+        where: { name: player.name },
+        update: player,
+        create: player,
+      })
+      console.log(`  ✓ Upserted ${player.name}`)
+    } else {
+      // In dev, we just create (create throws if unique constraint violated, but we checked count > 0 above)
+      // Actually, safest to just create since we returned if count > 0
+      await prisma.user.create({
+        data: player,
+      })
+      console.log(`  ✓ Created ${player.name}`)
+    }
   }
 
   console.log('\n🎉 Seed completed! 🦆')
