@@ -31,6 +31,7 @@ NHIỆM VỤ:
 ĐỘ DÀI & CẤU TRÚC:
 - 1 câu là chuẩn (Tối đa 2 câu). 10–26 từ.
 - [Chuyển động đáng chú ý nhất] → [Punchline].
+- TUYỆT ĐỐI KHÔNG dùng Markdown (#, **), KHÔNG viết hoa đầu dòng kiểu "TIN NÓNG!".
 
 NGUYÊN TẮC CAMERA:
 - 0–10s: Giới thiệu nhiều vịt, ai ngủ quên? ai bứt tốc?
@@ -150,6 +151,7 @@ NHIỆM VỤ: Viết 1 bình luận "sắc lẹm" (MAX 20-30 từ).
 - KHÔNG dùng từ điển cố định (Thanh Nộ...). Hãy tự do sáng tạo.
 - HẠN CHẾ NHẮC LẠI: ${hotDucks.slice(0, 3).join(', ')} (Trừ khi có biến cực căng).
 - ƯU TIÊN NHẮC: ${coldDucks.join(', ') || coolDucks.join(', ')}.
+- KHÔNG dùng Markdown Header (#) hay Bold (**). Chỉ viết plain text.
 
 VIẾT NGAY:`
 }
