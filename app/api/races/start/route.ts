@@ -117,12 +117,15 @@ export async function POST(request: Request) {
     })
 
     // Build player list for the worker - map userId to name
-    const playerInputs: { name: string; useShield: boolean; userId: number }[] =
+    let playerInputs: { name: string; useShield: boolean; userId: number }[] =
       race.participants.map((p: { user: { name: string }; usedShield: boolean; userId: number }) => ({
         name: p.user.name,
         useShield: p.usedShield,
         userId: p.userId,
       }))
+
+    // Explicitly shuffle playerInputs to ensure fairness (Frontend shuffle might be lost in DB saving)
+    playerInputs = playerInputs.sort(() => Math.random() - 0.5)
 
     // Start the race asynchronously (don't await - let it run in background)
     executeRace(race.id, playerInputs).catch((error: unknown) => {
