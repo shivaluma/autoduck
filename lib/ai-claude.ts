@@ -187,7 +187,7 @@ export async function generateClaudeCommentary(
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 90,
+        max_tokens: 250,
         temperature: 0.8, // Adjusted for spotlight rotation
         system: SYSTEM_PROMPT,
         messages: [
