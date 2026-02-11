@@ -134,7 +134,8 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
   // Auto-scroll effect
   useEffect(() => {
     if (bottomRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: 'smooth' })
+      // Use 'nearest' to prevent scrolling the parent window/viewport
+      bottomRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     }
   }, [commentaries])
 
