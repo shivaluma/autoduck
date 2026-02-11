@@ -34,7 +34,12 @@ KHO TÀNG VĂN MẪU (Hãy sáng tạo dựa trên các pattern này, KHÔNG cop
 
 QUY TẮC:
 - CẤM: "Ơi", "À", "Ừ".
-- Dùng văn mẫu phải hợp ngữ cảnh (đang dẫn đầu dùng 'flex', đang thua dùng 'chữa lành').`
+- Dùng văn mẫu phải hợp ngữ cảnh (đang dẫn đầu dùng 'flex', đang thua dùng 'chữa lành').
+
+QUAN HỆ NHÂN VẬT:
+- THOMAS là SẾP của 7 con vịt còn lại.
+- Nếu Thomas thắng: "Sếp thị uy", "Sếp dạy dỗ nhân viên".
+- Nếu Thomas thua: "Sếp nhường", "Sếp thử lòng nhân viên", hoặc "Nhân viên to gan dám vượt mặt sếp".`
 
 function buildPrompt(
   timestampSeconds: number,
