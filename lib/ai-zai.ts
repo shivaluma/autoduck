@@ -17,26 +17,26 @@ export interface CommentaryHistory {
   text: string
 }
 
-const SYSTEM_PROMPT = `Bạn là BLV đua vịt realtime, sắc bén và hài thông minh.
+const SYSTEM_PROMPT = `Bạn là BLV đua vịt realtime, quan sát toàn bộ đường đua như camera bay.
 
-MỤC TIÊU:
-- Tạo commentary khiến người xem muốn đọc tiếp toàn bộ trận.
-- Nhanh, gọn, punchy, có giá trị giải trí cao.
+NHIỆM VỤ:
+- Mỗi timestamp phải quét toàn frame, sau đó chọn góc thú vị nhất.
+- Luân phiên spotlight: Nhóm dẫn đầu -> Nhóm giữa -> Kẻ tụt lại.
+- KHÔNG LẶP LẠI nhân vật chính quá 2 lần liên tiếp.
 
-ĐỘ DÀI:
-- Tối đa 2 câu.
-- Lý tưởng: 1 câu mạnh.
-- 12–28 từ.
+ƯU TIÊN DRAMA:
+- Chọn con có thay đổi vị trí lớn nhất (vượt nhiều, tụt mạnh, tách nhóm).
+- Nếu 2 câu trước đã nói về Top, câu này PHẢI nói về Mid hoặc Bottom.
 
-CẤU TRÚC BẮT BUỘC:
-[Diễn biến thật trong race] → [Punchline bất ngờ]
+ĐỘ DÀI & CẤU TRÚC:
+- 1 câu là chuẩn (Tối đa 2 câu). 10–26 từ.
+- [Chuyển động đáng chú ý nhất] → [Punchline].
 
-NGUYÊN TẮC:
-1. Ai vượt lên / tụt lại -> Phải báo ngay.
-2. So sánh thông minh -> Dùng ẩn dụ đời sống/công sở/tình yêu.
-3. Kết thúc gắt -> Không lửng lơ.
-4. KHÔNG DÙNG TỪ ĐIỂN CỐ ĐỊNH -> Hãy sáng tạo từ ngữ mới mẻ.
-5. Thomas là Sếp -> Chỉ nhắc khi nhất hoặc bét bảng (Thắng = Thị uy, Thua = Nhường).`
+NGUYÊN TẮC CAMERA:
+- 0–10s: Giới thiệu nhiều vịt, ai ngủ quên? ai bứt tốc?
+- 10–25s: Cạnh tranh gay gắt, focus vào các cuộc lật đổ (Quay xe).
+- 25s+: Tập trung vào Top + Kẻ tuyệt vọng (Phùng Canh Mộ).
+- Thomas là Sếp: Chỉ nhắc khi Nhất hoặc Bét.`
 
 function buildPrompt(
   timestampSeconds: number,
@@ -45,6 +45,34 @@ function buildPrompt(
   history?: CommentaryHistory[],
   raceResults?: string
 ): string {
+  // Analyze interactions to find "Cold" ducks (rarely mentioned)
+  const participants = participantNames ? participantNames.split(',').map(n => n.trim()) : []
+  const mentions: Record<string, number> = {}
+  participants.forEach(p => mentions[p] = 0)
+
+  if (history) {
+    history.forEach(h => {
+      participants.forEach(p => {
+        if (h.text.includes(p)) mentions[p]++
+      })
+    })
+  }
+
+  // Sort ducks by mentions (Ascending)
+  const sortedDucks = [...participants].sort((a, b) => mentions[a] - mentions[b])
+  const coldDucks = sortedDucks.filter(p => mentions[p] === 0)
+  const coolDucks = sortedDucks.filter(p => mentions[p] > 0 && mentions[p] <= 2)
+  const hotDucks = sortedDucks.filter(p => mentions[p] > 2)
+
+  let spotlightInstruction = ""
+  if (coldDucks.length > 0) {
+    spotlightInstruction = `\n🔦 ƯU TIÊN SPOTLIGHT (CHƯA ĐƯỢC NHẮC): ${coldDucks.join(', ')} (Hãy tìm xem chúng đang làm gì).`
+  } else if (coolDucks.length > 0) {
+    spotlightInstruction = `\n🔦 ƯU TIÊN SPOTLIGHT (ÍT ĐƯỢC NHẮC): ${coolDucks.slice(0, 3).join(', ')}.`
+  } else {
+    spotlightInstruction = `\n🔦 SPOTLIGHT: Tự do chọn vịt có drama nhất, tránh ${hotDucks.slice(0, 2).join(', ')} nếu vừa nhắc.`
+  }
+
   const namesInfo = participantNames ? `\nCASTING: ${participantNames}.` : ''
 
   if (isRaceEnd) {
@@ -58,7 +86,11 @@ function buildPrompt(
         const shieldUsers = bottom2.filter(r => r.usedShield)
         const noShieldLosers = bottom2.filter(r => !r.usedShield)
 
-        resultsInfo = `\nKQ: 👑 VÔ ĐỊCH: ${winner}`
+        // Count mentions for final recap logic
+        const winnerMentions = mentions[winner] || 0
+        const darkHorse = winnerMentions === 0 ? " (Kẻ im lặng đáng sợ)" : ""
+
+        resultsInfo = `\nKQ: 👑 VÔ ĐỊCH: ${winner}${darkHorse}`
 
         if (shieldUsers.length > 0 && noShieldLosers.length > 0) {
           const savedDuck = shieldUsers[0].name
@@ -110,13 +142,14 @@ Ví dụ: "Zịt A về nhất quá đỉnh, còn Zịt B dùng khiên thoát n�
   return `${SYSTEM_PROMPT}
 
 THỜI GIAN: Giây ${timestampSeconds}/36.
-TRẠNG THÁI: ${focusStrategy}${namesInfo}${historyInfo}
+TRẠNG THÁI: ${focusStrategy}${spotlightInstruction}${namesInfo}${historyInfo}
 HÌNH ẢNH: Quan sát ảnh.
 
 NHIỆM VỤ: Viết 1 bình luận "sắc lẹm" (MAX 20-30 từ).
 - Quan sát ảnh -> Mô tả nhanh (Ai lên/xuống?) -> Thêm Twist hài hước.
 - KHÔNG dùng từ điển cố định (Thanh Nộ...). Hãy tự do sáng tạo.
-- KHÔNG lặp lại từ đã dùng.
+- HẠN CHẾ NHẮC LẠI: ${hotDucks.slice(0, 3).join(', ')} (Trừ khi có biến cực căng).
+- ƯU TIÊN NHẮC: ${coldDucks.join(', ') || coolDucks.join(', ')}.
 
 VIẾT NGAY:`
 }
@@ -157,8 +190,9 @@ export async function generateZaiCommentary(
       },
       body: JSON.stringify({
         model: MODEL,
-        temperature: 1.0,
+        temperature: 0.8,
         top_p: 0.9,
+        max_tokens: 90,
         messages: [
           {
             role: 'user',
