@@ -17,22 +17,26 @@ export interface CommentaryHistory {
   text: string
 }
 
-const SYSTEM_PROMPT = `Bạn là BLV Đua Vịt hệ "Chiến Thần Chặt Chém" - Ngôn ngữ sắc bén, gãy gọn, dùng từ đắt.
-Phong cách: Kể chuyện drama, tập trung vào 1-2 nhân vật nổi bật nhất. TUYỆT ĐỐI KHÔNG LIỆT KÊ.
+const SYSTEM_PROMPT = `Bạn là BLV đua vịt realtime, sắc bén và hài thông minh.
 
-TỪ ĐIỂN BẮT BUỘC (Dùng linh hoạt, đúng ngữ cảnh):
-- Vịt bứt tốc: "Dùng Thanh Nộ" (TUYỆT ĐỐI KHÔNG DÙNG TỪ KHÁC như "Bung").
-- Vịt chậm/tụt lại: "Phùng Canh Mộ".
-- Vịt out trình (bỏ xa đối thủ): "Chưa tày đâu".
-- Vịt lật kèo (đang thua thành thắng): "Quay xe", "Ảo ma".
-- Vịt bị vượt mặt: "Hít khói", "Tắt điện".
+MỤC TIÊU:
+- Tạo commentary khiến người xem muốn đọc tiếp toàn bộ trận.
+- Nhanh, gọn, punchy, có giá trị giải trí cao.
 
-QUY TẮC BẤT DI BẤT DỊCH:
-1. "NHAI LẠI LÀ DỞ": Tuyệt đối KHÔNG lặp lại từ lóng/văn mẫu đã dùng ở các giây trước (Xem LỊCH SỬ BÌNH LUẬN).
-2. "TẬP TRUNG DRAMA": Chỉ nói về 1-2 con vịt đang có biến động lớn nhất (vượt lên hoặc tụt xuống).
-3. "THOMAS LÀ SẾP": Nhưng Sếp chỉ được nhắc đến KHI VÀ CHỈ KHI hắn đang DẪN ĐẦU hoặc VỀ BÉT. Nếu chạy giữa đoàn thì KỆ SẾP.
-4. CẤU TRÚC: Ngắn gọn, súc tích (Max 40 từ), đấm thẳng vào vấn đề.
-5. CẤM TIỆT: Các từ thừa "Bình luận giây...", "Kết quả...", "Sếp Thomas vẫn...". Vào thẳng nội dung.`
+ĐỘ DÀI:
+- Tối đa 2 câu.
+- Lý tưởng: 1 câu mạnh.
+- 12–28 từ.
+
+CẤU TRÚC BẮT BUỘC:
+[Diễn biến thật trong race] → [Punchline bất ngờ]
+
+NGUYÊN TẮC:
+1. Ai vượt lên / tụt lại -> Phải báo ngay.
+2. So sánh thông minh -> Dùng ẩn dụ đời sống/công sở/tình yêu.
+3. Kết thúc gắt -> Không lửng lơ.
+4. KHÔNG DÙNG TỪ ĐIỂN CỐ ĐỊNH -> Hãy sáng tạo từ ngữ mới mẻ.
+5. Thomas là Sếp -> Chỉ nhắc khi nhất hoặc bét bảng (Thắng = Thị uy, Thua = Nhường).`
 
 function buildPrompt(
   timestampSeconds: number,
@@ -43,19 +47,9 @@ function buildPrompt(
 ): string {
   const namesInfo = participantNames ? `\nCASTING: ${participantNames}.` : ''
 
-  // Define these variables with default empty strings so they are accessible in all returns
-  let historyInfo = ''
-  if (history && history.length > 0) {
-    historyInfo = `\n🚫 DANH SÁCH CẤM (ĐÃ DÙNG - KHÔNG ĐƯỢC LẶP LẠI TỪ KHÓA TRONG NÀY):\n${history.map(h => `- ${h.text}`).join('\n')}`
-  } else {
-    historyInfo = '\n(Chưa có kịch bản)'
-  }
-
   if (isRaceEnd) {
     let resultsInfo = ''
-    // The original shieldContext was only used in the race end prompt, and its logic is now integrated into the new prompt.
-    // So, no need for a separate shieldContext variable at this scope.
-
+    let shieldContext = ''
     if (raceResults) {
       try {
         const ranking = JSON.parse(raceResults) as Array<{ rank: number; name: string; usedShield?: boolean }>
@@ -64,48 +58,65 @@ function buildPrompt(
         const shieldUsers = bottom2.filter(r => r.usedShield)
         const noShieldLosers = bottom2.filter(r => !r.usedShield)
 
-        resultsInfo = `\nKQ: VÔ ĐỊCH: ${winner}`
+        resultsInfo = `\nKQ: 👑 VÔ ĐỊCH: ${winner}`
 
         if (shieldUsers.length > 0 && noShieldLosers.length > 0) {
-          resultsInfo += ` | ${shieldUsers[0].name} (DÙNG KHIÊN) | ${noShieldLosers[0].name} (BỊ SẸO)`
+          const savedDuck = shieldUsers[0].name
+          const unluckyDuck = noShieldLosers[0].name
+          resultsInfo += ` | 🛡️ ${savedDuck} (DÙNG KHIÊN) | 💀 ${unluckyDuck} (BỊ SẸO)`
+          shieldContext = `\nTWIST KHIÊN: ${savedDuck} khôn (thoát), ${unluckyDuck} xui (dính sẹo). Cà khịa mạnh!`
         } else if (shieldUsers.length === 0) {
-          resultsInfo += ` | 2 VỊT: ${bottom2.map(r => r.name).join(' & ')}`
+          resultsInfo += ` | 💀 2 VỊT: ${bottom2.map(r => r.name).join(' & ')}`
+          shieldContext = `\nTWIST KHIÊN: Cả 2 đều "quên não" ở nhà, không dùng khiên nên dính sẹo!`
         } else {
-          resultsInfo += ` | KHIÊN VÔ DỤNG: ${bottom2.map(r => r.name).join(' & ')}`
+          resultsInfo += ` | 💀 KHIÊN VÔ DỤNG: ${bottom2.map(r => r.name).join(' & ')}`
+          shieldContext = `\nTWIST KHIÊN: Dùng khiên mà vẫn thua, đúng là "có làm mà không có ăn"!`
         }
       } catch { /* ignore */ }
     }
 
-    // Return the "End Game" prompt immediately
+    // Include history to check for context in final verdict
+    const historyContext = history && history.length > 0
+      ? `\n🚫 TRÁNH LẶP LẠI (TỪ KHÓA ĐÃ DÙNG):\n${history.map(h => `- ${h.text}`).join('\n')}`
+      : ''
+
     return `${SYSTEM_PROMPT}
 
-TÌNH HUỐNG: Về đích!${namesInfo}${resultsInfo}${historyInfo}
+TÌNH HUỐNG: VỀ ĐÍCH!${namesInfo}${resultsInfo}${shieldContext}${historyContext}
 
-NHIỆM VỤ: Viết đoạn bình luận tổng kết (khoảng 40-50 từ).
-- Vinh danh nhà vô địch bằng từ ngữ "đắt" nhất.
-- Cà khịa cực mạnh kẻ về cuối (đặc biệt vụ dùng khiên/không dùng khiên).
-- Nhắc đến Thomas (Sếp) với vai trò người phán xử.
+NHIỆM VỤ: Viết 1 câu chốt hạ (MAX 25 từ).
+- Tuyên bố nhà vô địch bằng từ "đắt".
+- Cà khịa cực gắt kẻ thua cuộc (đặc biệt vụ dùng khiên).
+- Nếu Thomas thắng/thua đặc biệt: "Sếp thị uy" hoặc "Sếp nhường".
 
-Ví dụ: "Zịt A đã Dùng Thanh Nộ đúng lúc để đăng quang, trong khi Zịt B khôn ngoan dùng khiên thoát nạn. Còn Zịt C thì ôi thôi, bận Phùng Canh Mộ quá lâu nên giờ nhận sẹo, bài học nhớ đời!"`
+Ví dụ: "Zịt A về nhất quá đỉnh, còn Zịt B dùng khiên thoát nạn trong gang tấc để Zịt C ôm sẹo ngậm ngùi!"`
   }
 
-  // Randomize focus instruction based on timestamp to ensure variety
-  const focusStrategy = timestampSeconds % 3 === 0
-    ? "Tập trung vào con VỊT ĐANG BỨT TỐC/DẪN ĐẦU (Trừ khi là Thomas thì bỏ qua nếu không có gì đặc biệt)."
-    : (timestampSeconds % 3 === 1
-      ? "Tập trung vào con VỊT BỊ TỤT LẠI/LẶN MẤT TĂM."
-      : "Tập trung vào cuộc CHIẾN GIỮA 2 CON VỊT (Không nhắc đến Thomas).")
+  // Define historyInfo for in-race prompt
+  const historyInfo = history && history.length > 0
+    ? `\n🚫 TRÁNH LẶP LẠI (TỪ KHÓA ĐÃ DÙNG):\n${history.map(h => `- ${h.text}`).join('\n')}`
+    : '\n(Chưa có kịch bản)'
+
+  // Dynamic context based on race phase
+  let focusStrategy = ""
+  if (timestampSeconds <= 5) {
+    focusStrategy = "KHỞI ĐỘNG: Ai bứt tốc? Ai ngủ quên? (Hài hước)"
+  } else if (timestampSeconds <= 20) {
+    focusStrategy = "DIỄN BIẾN: Ai đang lật kèo (Quay xe)? Ai đang hít khói? (Kịch tính)"
+  } else {
+    focusStrategy = "VỀ ĐÍCH: Ai sắp Win? Ai tuyệt vọng Phùng Canh Mộ? (Gấp gáp)"
+  }
 
   return `${SYSTEM_PROMPT}
 
 THỜI GIAN: Giây ${timestampSeconds}/36.
-HÌNH ẢNH: Quan sát ảnh chụp đường đua.
-CHIẾN THUẬT: ${focusStrategy}${namesInfo}${historyInfo}
+TRẠNG THÁI: ${focusStrategy}${namesInfo}${historyInfo}
+HÌNH ẢNH: Quan sát ảnh.
 
-NHIỆM VỤ: Viết 1 đoạn bình luận (30-40 từ) "chặt chém" diễn biến trong ảnh.
-- Dùng TỪ ĐIỂN BẮT BUỘC (Thanh Nộ, Phùng Canh Mộ, Chưa tày đâu, Quay xe...)
-- Kiểm tra danh sách "🚫 ĐÃ DÙNG" ở trên. Nếu từ lóng nào đã xuất hiện, CẤM DÙNG LẠI. Hãy dùng từ khác hoặc mô tả khác.
-- KHÔNG BẮT ĐẦU BẰNG "Bình luận giây...", "Sếp Thomas...". Vào thẳng câu chuyện.
+NHIỆM VỤ: Viết 1 bình luận "sắc lẹm" (MAX 20-30 từ).
+- Quan sát ảnh -> Mô tả nhanh (Ai lên/xuống?) -> Thêm Twist hài hước.
+- KHÔNG dùng từ điển cố định (Thanh Nộ...). Hãy tự do sáng tạo.
+- KHÔNG lặp lại từ đã dùng.
 
 VIẾT NGAY:`
 }
