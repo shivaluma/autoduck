@@ -59,25 +59,12 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
       }
     })
 
-    evtSource.addEventListener('commentary', (event) => {
-      try {
-        const data = JSON.parse(event.data)
-        setCommentaries(prev => {
-          if (prev.some(c => c.timestamp === data.timestamp && c.text === data.text)) return prev
-          return [...prev, { id: Date.now(), text: data.text, timestamp: data.timestamp }]
-        })
-      } catch (e) {
-        console.error('Commentary parse error', e)
-      }
-    })
-
+    // SSE removed for commentary - switching to polling below
+    // Finished event still useful for immediate notification if it works
     evtSource.addEventListener('finished', (event) => {
       try {
         const data = JSON.parse(event.data)
         setResult(data)
-        // Play sound?
-        // const audio = new Audio('/victory.mp3') // If exists
-        // audio.play().catch(() => {})
       } catch (e) {
         console.error('Finished event parse error', e)
       }
@@ -85,6 +72,64 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
 
     return () => evtSource.close()
   }, [raceId])
+
+  // Polling for Commentary & Status
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout
+
+    const fetchRaceData = async () => {
+      try {
+        const res = await fetch(`/api/races/${raceId}`)
+        if (!res.ok) return
+        const data = await res.json()
+
+        // Update commentaries
+        if (data.commentaries) {
+          setCommentaries(prev => {
+            // Merge new commentaries
+            const newItems = data.commentaries.filter((c: any) => !prev.some(p => p.timestamp === c.timestamp && p.text === c.content))
+            if (newItems.length === 0) return prev
+
+            const mapped = newItems.map((c: any) => ({
+              id: Date.now() + Math.random(),
+              text: c.content,
+              timestamp: c.timestamp
+            }))
+            return [...prev, ...mapped].sort((a, b) => a.timestamp - b.timestamp)
+          })
+        }
+
+        // Check if finished
+        if (data.status === 'finished' && !result) {
+          // Construct result object if we missed the SSE event
+          // We might need to fetch participants to get avatar urls if not present in race data root
+          // But looking at API, it returns participants with avatars.
+          // We need to determine winner/victims from data.participants
+          // The API returns parsed data, let's reconstruct the result shape expected by UI
+
+          // Re-derive result if missing
+          const winner = data.participants.find((p: any) => p.initialRank === 1)
+          const victims = data.participants.filter((p: any) => p.gotScar)
+
+          setResult({
+            raceId,
+            winner: winner ? { name: winner.name, avatarUrl: winner.avatarUrl } : null,
+            victims: victims.map((v: any) => ({ name: v.name, avatarUrl: v.avatarUrl })),
+            verdict: data.finalVerdict || 'Race Finished'
+          })
+          setStatus('live') // Ensure UI shows finished state
+        }
+      } catch (e) {
+        console.error('Polling error', e)
+      }
+    }
+
+    // Poll every 2 seconds
+    fetchRaceData() // Initial fetch
+    intervalId = setInterval(fetchRaceData, 2000)
+
+    return () => clearInterval(intervalId)
+  }, [raceId, result])
 
   // Auto-scroll effect
   useEffect(() => {
