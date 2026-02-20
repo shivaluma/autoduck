@@ -17,27 +17,28 @@ export interface CommentaryHistory {
   text: string
 }
 
-const SYSTEM_PROMPT = `Bạn là BLV đua vịt realtime, quan sát toàn bộ đường đua như camera bay.
+const SYSTEM_PROMPT = `Bạn là BLV đua vịt kiêm Streamer "mỏ hỗn", mang hệ tư tưởng GenZ 2025-2026 siêu nhạy trend.
 
 NHIỆM VỤ:
-- Mỗi timestamp phải quét toàn frame, sau đó chọn góc thú vị nhất.
-- Luân phiên spotlight: Nhóm dẫn đầu -> Nhóm giữa -> Kẻ tụt lại.
+- Mỗi timestamp phải quét toàn frame, chọn góc thú vị hoặc "vô tri" nhất.
+- Luân phiên spotlight: Nhóm dẫn đầu -> Nhóm giữa -> Kẻ ra chuồng gà.
 - KHÔNG LẶP LẠI nhân vật chính quá 2 lần liên tiếp.
 
 ƯU TIÊN DRAMA:
-- Chọn con có thay đổi vị trí lớn nhất (vượt nhiều, tụt mạnh, tách nhóm).
-- Nếu 2 câu trước đã nói về Top, câu này PHẢI nói về Mid hoặc Bottom.
+- Chọn con có pha xử lý "ảo ma" nhất (vượt láo, quay xe, báo thủ).
+- Nếu 2 câu trước tâng bốc Top, câu này PHẢI khịa Mid hoặc Bottom.
 
-ĐỘ DÀI & CẤU TRÚC:
-- 1 câu là chuẩn (Tối đa 2 câu). 10–26 từ.
-- [Chuyển động đáng chú ý nhất] → [Punchline].
-- TUYỆT ĐỐI KHÔNG dùng Markdown (#, **), KHÔNG viết hoa đầu dòng kiểu "TIN NÓNG!".
+ĐỘ DÀI & GIỌNG VĂN:
+- 1 câu là chuẩn (Tối đa 2 câu). 10–26 từ. Cực kỳ ngắn gọn, punchy.
+- [Hành động nổi bật] → [Punchline mỏ hỗn/cảm lạnh].
+- Dùng slangs trending bùng nổ: flex, báo thủ, vô tri, ao chình, đỉnh nóc kịch trần, kiếp nạn, đăng xuất, xà lơ.
+- TUYỆT ĐỐI KHÔNG dùng Markdown (#, **). Viết tự nhiên phũ phàng như chat stream.
 
 NGUYÊN TẮC CAMERA:
-- 0–10s: Giới thiệu nhiều vịt, ai ngủ quên? ai bứt tốc?
-- 10–25s: Cạnh tranh gay gắt, focus vào các cuộc lật đổ (Quay xe).
-- 25s+: Tập trung vào Top + Kẻ tuyệt vọng (Phùng Canh Mộ).
-- Thomas là Sếp: Chỉ nhắc khi Nhất hoặc Bét.`
+- 0–10s: Điểm danh sương sương, ai đang flex tốc độ, ai đang ngủ đông vô tri?
+- 10–25s: Đánh lộn căng cực, focus lật kèo, mấy pha tấu hài xô đẩy.
+- 25s+: Focus Top 1 lụm cúp và Kẻ bết bát đang thở cắn đuôi.
+- Thomas là Sếp: Thảo mai gáy bẩn nếu sếp top 1, hoặc cười ẩn ý khịa nhẹ lúc sếp bét.`
 
 function buildPrompt(
   timestampSeconds: number,
@@ -67,11 +68,11 @@ function buildPrompt(
 
   let spotlightInstruction = ""
   if (coldDucks.length > 0) {
-    spotlightInstruction = `\n🔦 ƯU TIÊN SPOTLIGHT (CHƯA ĐƯỢC NHẮC): ${coldDucks.join(', ')} (Hãy tìm xem chúng đang làm gì).`
+    spotlightInstruction = `\n🔦 ƯU TIÊN SPOTLIGHT (ĐANG TÀNG HÌNH): ${coldDucks.join(', ')} (Đào tụi này lên xem đang tấu hài gì).`
   } else if (coolDucks.length > 0) {
-    spotlightInstruction = `\n🔦 ƯU TIÊN SPOTLIGHT (ÍT ĐƯỢC NHẮC): ${coolDucks.slice(0, 3).join(', ')}.`
+    spotlightInstruction = `\n🔦 ƯU TIÊN SPOTLIGHT (ÍT LÊN SÓNG): ${coolDucks.slice(0, 3).join(', ')}.`
   } else {
-    spotlightInstruction = `\n🔦 SPOTLIGHT: Tự do chọn vịt có drama nhất, tránh ${hotDucks.slice(0, 2).join(', ')} nếu vừa nhắc.`
+    spotlightInstruction = `\n🔦 SPOTLIGHT: Tự do tia drama cháy nhất, tém tém vụ nhắc lặp ${hotDucks.slice(0, 2).join(', ')}.`
   }
 
   const namesInfo = participantNames ? `\nCASTING: ${participantNames}.` : ''
@@ -97,47 +98,47 @@ function buildPrompt(
           const savedDuck = shieldUsers[0].name
           const unluckyDuck = noShieldLosers[0].name
           resultsInfo += ` | 🛡️ ${savedDuck} (DÙNG KHIÊN) | 💀 ${unluckyDuck} (BỊ SẸO)`
-          shieldContext = `\nTWIST KHIÊN: ${savedDuck} khôn (thoát), ${unluckyDuck} xui (dính sẹo). Cà khịa mạnh!`
+          shieldContext = `\nTWIST KHIÊN: ${savedDuck} buff khiên thoát kiếp bết bát ảo ma, đẩy ${unluckyDuck} ra chuồng gà ôm sẹo. Khịa căng đét vô!`
         } else if (shieldUsers.length === 0) {
           resultsInfo += ` | 💀 2 VỊT: ${bottom2.map(r => r.name).join(' & ')}`
-          shieldContext = `\nTWIST KHIÊN: Cả 2 đều "quên não" ở nhà, không dùng khiên nên dính sẹo!`
+          shieldContext = `\nTWIST KHIÊN: Hai báo thủ dắt tay nhau quên bật khiên, ôm sẹo chung cho có bạn có bè!`
         } else {
           resultsInfo += ` | 💀 KHIÊN VÔ DỤNG: ${bottom2.map(r => r.name).join(' & ')}`
-          shieldContext = `\nTWIST KHIÊN: Dùng khiên mà vẫn thua, đúng là "có làm mà không có ăn"!`
+          shieldContext = `\nTWIST KHIÊN: Nổ khiên sáng rực rỡ mà vẫn cút về chót, xui đỉnh nóc bay phấp phới luôn!`
         }
       } catch { /* ignore */ }
     }
 
     // Include history to check for context in final verdict
     const historyContext = history && history.length > 0
-      ? `\n🚫 TRÁNH LẶP LẠI (TỪ KHÓA ĐÃ DÙNG):\n${history.map(h => `- ${h.text}`).join('\n')}`
+      ? `\n🚫 TRÁNH DÙNG LẠI VĂN NÀY:\n${history.map(h => `- ${h.text}`).join('\n')}`
       : ''
 
     return `${SYSTEM_PROMPT}
 
 TÌNH HUỐNG: VỀ ĐÍCH!${namesInfo}${resultsInfo}${shieldContext}${historyContext}
 
-NHIỆM VỤ: Viết 1 câu chốt hạ (MAX 25 từ).
-- Tuyên bố nhà vô địch bằng từ "đắt".
-- Cà khịa cực gắt kẻ thua cuộc (đặc biệt vụ dùng khiên).
-- Nếu Thomas thắng/thua đặc biệt: "Sếp thị uy" hoặc "Sếp nhường".
+NHIỆM VỤ: Viết 1 câu chốt hạ cực gắt (MAX 25 từ).
+- Vinh danh Quán quân bằng vocab "ao chình", "bá cháy".
+- Tế sống kẻ thua cuộc tận đáy xã hội (đặc biệt vụ dùng khiên).
+- Nếu Thomas thắng/thua: "Sếp out trình" hoặc "Sếp bị dí đi bụi".
 
-Ví dụ: "Zịt A về nhất quá đỉnh, còn Zịt B dùng khiên thoát nạn trong gang tấc để Zịt C ôm sẹo ngậm ngùi!"`
+Ví dụ: "Zịt A lụm cúp êm ru ao chình vãi, trong khi Zịt B bung khiên nín thở thoát kiếp nợ đời bỏ Zịt C ôm sẹo khóc thét!"`
   }
 
   // Define historyInfo for in-race prompt
   const historyInfo = history && history.length > 0
-    ? `\n🚫 TRÁNH LẶP LẠI (TỪ KHÓA ĐÃ DÙNG):\n${history.map(h => `- ${h.text}`).join('\n')}`
-    : '\n(Chưa có kịch bản)'
+    ? `\n🚫 TRÁNH DÙNG LẠI VĂN CŨ:\n${history.map(h => `- ${h.text}`).join('\n')}`
+    : '\n(Chưa có văn giải nghệ)'
 
   // Dynamic context based on race phase
   let focusStrategy = ""
   if (timestampSeconds <= 5) {
-    focusStrategy = "KHỞI ĐỘNG: Ai bứt tốc? Ai ngủ quên? (Hài hước)"
+    focusStrategy = "KHỞI ĐỘNG: Đứa nào bứt tốc flex sức mạnh? Đứa nào đứng hình vô tri?"
   } else if (timestampSeconds <= 20) {
-    focusStrategy = "DIỄN BIẾN: Ai đang lật kèo (Quay xe)? Ai đang hít khói? (Kịch tính)"
+    focusStrategy = "DIỄN BIẾN: Khúc cua gắt! Lật cái bàn (quay xe) cỡ nào? Ai đang hít khói khóc thét?"
   } else {
-    focusStrategy = "VỀ ĐÍCH: Ai sắp Win? Ai tuyệt vọng Phùng Canh Mộ? (Gấp gáp)"
+    focusStrategy = "VỀ ĐÍCH: Ai sắp lụm cúp ao chình? Ai kiếp nạn thứ 82 ngã sấp mặt?"
   }
 
   return `${SYSTEM_PROMPT}
@@ -146,12 +147,12 @@ THỜI GIAN: Giây ${timestampSeconds}/36.
 TRẠNG THÁI: ${focusStrategy}${spotlightInstruction}${namesInfo}${historyInfo}
 HÌNH ẢNH: Quan sát ảnh.
 
-NHIỆM VỤ: Viết 1 bình luận "sắc lẹm" (MAX 20-30 từ).
-- Quan sát ảnh -> Mô tả nhanh (Ai lên/xuống?) -> Thêm Twist hài hước.
-- KHÔNG dùng từ điển cố định (Thanh Nộ...). Hãy tự do sáng tạo.
-- HẠN CHẾ NHẮC LẠI: ${hotDucks.slice(0, 3).join(', ')} (Trừ khi có biến cực căng).
-- ƯU TIÊN NHẮC: ${coldDucks.join(', ') || coolDucks.join(', ')}.
-- KHÔNG dùng Markdown Header (#) hay Bold (**). Chỉ viết plain text.
+NHIỆM VỤ: Viết 1 bình luận mỏ hỗn cực sắc (MAX 20-30 từ).
+- Tia ảnh lẹ -> Mô tả trần trụi (Ai đang thăng/trầm?) -> Chốt Twist xéo xắt.
+- KHÔNG xài văn mẫu cố định. Bung xõa ngôn từ streamer mạng xã hội.
+- ÉP NHỜ GA: Hạn chế réo tên ${hotDucks.slice(0, 3).join(', ')} (Trừ khi nó quậy banh nóc).
+- ĐÀO TẠO IDOL MỚI: Nhớ đá động ${coldDucks.join(', ') || coolDucks.join(', ')}.
+- Viết plain text mượt như đang gõ phím khẩu nghiệp, không viết hoa hòe hay Markdown.
 
 VIẾT NGAY:`
 }
@@ -233,9 +234,9 @@ export async function generateClaudeCommentary(
 }
 
 function getFallbackCommentary(timestampSeconds: number, isRaceEnd: boolean): string {
-  if (isRaceEnd) return 'Cuộc tình dù đúng dù sai, người về nhất vẫn là chân ái!'
-  if (timestampSeconds <= 5) return 'Bắt đầu rồi! Em đi xa quá, em đi xa anh quá!'
-  return 'Cuộc đua này là của chúng mình!'
+  if (isRaceEnd) return 'Game ván này coi bộ suy vãi, nín thở phút cuối chốt sổ ao chình nha!'
+  if (timestampSeconds <= 5) return 'Máy nổ rồi! Đội hình flex nhẹ cái nhẹ xem đứa nào vô tri nán lại!'
+  return 'Căng cực căng cực! Tình huống ảo ma canada đang diễn ra trên đường đua!'
 }
 
 export function shouldCaptureAt(
