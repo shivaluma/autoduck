@@ -21,9 +21,10 @@ Thay vì chỉ mô tả "Zịt A chạy nhanh", hãy dùng các phép ẩn dụ/
 3. Triết lý sống giả trân: "Lắng nghe nhịp tim cuộc sống", "Tìm kiếm sự bình yên", "Học cách sống với thất bại cực kỳ trưởng thành", "Sắc dục là xiềng xích", "Ngồi đợi Bụt hiện lên".
 4. Dân IT đáy xã hội: "Fix bug server", "Deadline dí mông chiều thứ 7", "Dính breakpoint", "Out trình cả server".
 
-QUY TẮC VÀNG:
+QUY TẮC VÀNG (BẮT BUỘC TUÂN THỦ):
+- ĐỘ DÀI: Ngắn gọn, súc tích, ĐÚNG 2 CÂU (khoảng 30-50 từ). Lôi cuốn nhưng không rườm rà dài dòng.
+- MỞ ĐẦU CHẤN ĐỘNG: TUYỆT ĐỐI KHÔNG mở đầu bằng mấy câu nhàm chán như "Nhìn kìa", "Trong khi đó", "Trời ơi", hay "XYZ đang...". Hãy đi thẳng vào vấn đề bằng một lời phán xét hống hách, một kết luận cay nghiệt hoặc một luật lệ giang hồ.
 - KHÔNG BAO GIỜ dùng từ đệm nhạt nhẽo ("ơi", "à", "nhé").
-- Hãy viết dài hơn một chút (khoảng 3-4 câu, ~60-90 từ), lồng ghép thật mượt các phép ví von. Chữi Kẻ Bết Bát bằng giọng điệu thương hại mỉa mai, tâng bốc Kẻ Dẫn Đầu bằng sự ghen tị hoặc bợ đỡ lố lăng.
 - Mỗi câu bình luận phải là một "văn mẫu" do chính bạn tự chế tác ngay lúc đó, lấy cảm hứng từ các Chủ Đề trên. KHÔNG CẦN CỐ ĐỊNH 100% CÂU CHỮ, HÃY PHÓNG TÁC!
 
 QUY TẮC CHỐNG LẶP (QUAN TRỌNG NHẤT):
@@ -100,7 +101,7 @@ function buildPrompt(
       ? `\n🚫 TRÁNH DÙNG LẠI VĂN NÀY:\n${history.map(h => `- ${h.text}`).join('\n')}`
       : ''
 
-    return `${SYSTEM_PROMPT}\n\nTÌNH HUỐNG: VỀ ĐÍCH!${namesInfo}${resultsInfo}${shieldContext}${historyContext}\n\nNHIỆM VỤ: Viết 1 đoạn chốt hạ cực gắt, dài khoảng 3-4 câu (~60-90 từ).\n- Tùy diễn biến mà phóng tác ra 1 đoạn văn lố lăng để vinh danh Quán quân HOẶC chửi rủa sự ngu ngốc của Kẻ bết bát.\n- Nếu Thomas thắng/thua: Khịa cực mạnh tay.\n- TRÁNH XA các idea đã dùng trong LỊCH SỬ BÌNH LUẬN.`
+    return `${SYSTEM_PROMPT}\n\nTÌNH HUỐNG: VỀ ĐÍCH!${namesInfo}${resultsInfo}${shieldContext}${historyContext}\n\nNHIỆM VỤ: Viết 1 đoạn chốt hạ cực gắt, ĐÚNG 2 CÂU (~30-50 từ).\n- Tùy diễn biến mà phóng tác ra 1 đoạn lố lăng để vinh danh Quán quân HOẶC chửi rủa sự ngu ngốc của Kẻ bết bát.\n- Tuyệt đối né những từ mở đầu lặp lố bịch như "Nhìn", "Trời ơi".\n- Nếu Thomas thắng/thua: Khịa cực mạnh tay.\n- TRÁNH XA các idea đã dùng trong LỊCH SỬ BÌNH LUẬN.`
   }
 
   const historyInfo = history && history.length > 0
@@ -116,7 +117,7 @@ function buildPrompt(
     focusStrategy = "VỀ ĐÍCH: Ai sắp lụm cúp hiệu năng đỉnh? Ai kiếp nạn thứ 82 ngã sấp mặt?"
   }
 
-  return `${SYSTEM_PROMPT}\n\nTHỜI GIAN: Giây ${timestampSeconds}/36.\nTRẠNG THÁI: ${focusStrategy}${spotlightInstruction}${namesInfo}${historyInfo}\nHÌNH ẢNH: Quan sát ảnh.\n\nNHIỆM VỤ: Viết 1 bình luận lố lăng, xéo xắt, độ dài khoảng 3-4 câu (~60-90 từ).\n- Phân tích tấm ảnh -> Bịa ra một câu chuyện/phép ẩn dụ (Đầu tư, Tình yêu, Triết lý rởm...) để châm biếm tụi vịt.\n- CHỌN CHỦ ĐỀ MỚI TINH CHƯA XUẤT HIỆN TRONG \`LỊCH SỬ BÌNH LUẬN\`.\n- ÉP NHỜ GA: Hạn chế réo tên ${hotDucks.slice(0, 3).join(', ')}.\n- ĐÀO TẠO KHUẤT TẦM: Chửi rủa/Thương hại lố lăng ${coldDucks.join(', ') || coolDucks.join(', ')}.\n- Viết plain text mượt như đang nói trên sóng livestream.\n\nVIẾT NGAY:`
+  return `${SYSTEM_PROMPT}\n\nTHỜI GIAN: Giây ${timestampSeconds}/36.\nTRẠNG THÁI: ${focusStrategy}${spotlightInstruction}${namesInfo}${historyInfo}\nHÌNH ẢNH: Quan sát ảnh.\n\nNHIỆM VỤ: Viết 1 bình luận lố lăng, xéo xắt, ĐÚNG 2 CÂU (~30-50 từ).\n- Phân tích tấm ảnh -> Mở đầu thẳng vào phép ẩn dụ CHÍ MẠNG (Tài chính, Tình yêu, Triết lý rởm...) để phán xét diễn biến cuộc đua.\n- CẤM MỞ ĐẦU BẰNG "Nhìn [tên vịt]", "Trong khi". Vào thẳng câu triết lý hoặc chê bai.\n- CHỌN CHỦ ĐỀ MỚI TINH CHƯA XUẤT HIỆN TRONG \`LỊCH SỬ BÌNH LUẬN\`.\n- ÉP NHỜ GA: Hạn chế réo tên ${hotDucks.slice(0, 3).join(', ')}.\n- ĐÀO TẠO KHUẤT TẦM: Chửi rủa/Thương hại lố lăng ${coldDucks.join(', ') || coolDucks.join(', ')}.\n- Viết plain text mượt như đang nói trên sóng livestream.\n\nVIẾT NGAY:`
 }
 
 export async function generateGeminiCommentary(
@@ -147,8 +148,8 @@ export async function generateGeminiCommentary(
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 250,
-        temperature: 0.85,
+        max_tokens: 150,
+        temperature: 0.9,
         messages: [
           {
             role: 'user',
