@@ -18,11 +18,7 @@ echo "✅ Database ready!"
 echo "🌱 Checking seed data..."
 node --import tsx prisma/seed.ts
 
-# 3. Start commentary worker in background
-echo "🎙️  Starting commentary worker..."
-node --import tsx scripts/commentary-worker.ts &
-WORKER_PID=$!
-echo "✅ Commentary worker started (PID: $WORKER_PID)"
+
 
 # 4. Start Next.js server
 echo "🚀 Starting Next.js server on port ${PORT:-3000}..."

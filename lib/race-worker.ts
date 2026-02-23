@@ -1,7 +1,7 @@
 import { chromium, type Page, type BrowserContext, type Frame } from 'playwright'
 import { generateCommentary } from './ai'
 import { generateZaiCommentary } from './ai-zai'
-import { queueCommentary } from './commentary-queue'
+import { recordCommentary, waitForCommentaryAndCleanup } from './commentary-manager'
 import { uploadVideoToR2 } from './r2-upload'
 import { raceEventBus, RACE_EVENTS } from './event-bus'
 import * as fs from 'fs'
@@ -502,7 +502,7 @@ export async function runRaceWorker(players: PlayerInput[], raceId?: number): Pr
       const screenshotBuf = await page.screenshot({ type: 'jpeg', quality: 70 })
       const base64 = screenshotBuf.toString('base64')
       if (raceId) {
-        await queueCommentary(raceId, 0, base64, false, playerNames.join(', '))
+        recordCommentary(raceId, 0, base64, false, playerNames.join(', '))
         commentaryJobsQueued++
         capturedTimestamps.add(0)
         console.log('  [0s] 📝 Queued for AI commentary')
@@ -535,7 +535,7 @@ export async function runRaceWorker(players: PlayerInput[], raceId?: number): Pr
 
           // Queue for async AI commentary generation
           if (raceId) {
-            await queueCommentary(raceId, targetTimestamp, base64, false, playerNames.join(', '))
+            recordCommentary(raceId, targetTimestamp, base64, false, playerNames.join(', '))
             commentaryJobsQueued++
             console.log(`  [${targetTimestamp}s] 📝 Queued for AI commentary`)
           } else {
@@ -623,7 +623,7 @@ export async function runRaceWorker(players: PlayerInput[], raceId?: number): Pr
           return { ...r, usedShield: matched?.useShield ?? false }
         })
         const resultsJson = JSON.stringify(enrichedRanking)
-        await queueCommentary(raceId, Math.round(elapsed), resultsBase64, true, playerNames.join(', '), resultsJson)
+        recordCommentary(raceId, Math.round(elapsed), resultsBase64, true, playerNames.join(', '), resultsJson)
         commentaryJobsQueued++
         console.log(`  [End] 📝 Queued final commentary with actual results: ${rawRanking.map(r => `#${r.rank} ${r.name}`).join(', ')}`)
       }
@@ -648,6 +648,10 @@ export async function runRaceWorker(players: PlayerInput[], raceId?: number): Pr
       }
     } else {
       videoUrl = videoPath || null
+    }
+
+    if (raceId) {
+      await waitForCommentaryAndCleanup(raceId)
     }
 
     console.log('✅ Race worker complete!', { ranking: rawRanking, commentaryJobsQueued })
