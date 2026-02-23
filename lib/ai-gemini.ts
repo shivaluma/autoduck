@@ -8,7 +8,7 @@ import { CommentaryHistory } from './ai-zai'
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || ''
 const OPENROUTER_ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions'
-const MODEL = 'google/gemini-3-flash'
+const MODEL = 'google/gemini-3-flash-preview'
 
 const SYSTEM_PROMPT = `Bạn là BLV Đua Vịt hệ "Chiến Thần Văn Mẫu Độc Miệng".
 Phong cách: Kết hợp giữa sự trịch thượng, hài hước cực đoan và văn mẫu (copypasta). 
