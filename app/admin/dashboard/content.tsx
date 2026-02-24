@@ -22,7 +22,7 @@ export function AdminDashboardContent({ secret }: Props) {
       .catch(() => { setMsg('Unauthorized'); setLoading(false) })
   }, [secret])
 
-  if (!secret) return <div className="min-h-screen bg-[var(--color-ggd-bg)] text-[var(--color-ggd-orange)] font-display flex items-center justify-center text-3xl text-outlined">🔒 CẤM VÀO!</div>
+  if (!secret) return <div className="min-h-screen bg-transparent text-[var(--color-ggd-orange)] font-display flex items-center justify-center text-3xl text-outlined">🔒 CẤM VÀO!</div>
 
   const handleUpdateUser = async (user: User) => {
     const res = await fetch(`/api/admin?secret=${secret}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'user', data: user }) })
@@ -39,7 +39,7 @@ export function AdminDashboardContent({ secret }: Props) {
   const handleChange = (id: number, field: keyof User, value: string) => setUsers(users.map(u => u.id === id ? { ...u, [field]: value } : u))
 
   return (
-    <div className="min-h-screen bg-[var(--color-ggd-bg)] bubble-bg text-white font-body p-8">
+    <div className="min-h-screen bg-transparent bubble-bg text-white font-body p-8">
       <header className="flex justify-between items-center mb-8 border-b-4 border-[var(--color-ggd-outline)] pb-4">
         <h1 className="font-display text-3xl text-[var(--color-ggd-gold)] text-outlined">🦆 QUẢN LÝ BẦY VỊT ⚡</h1>
         <div className="flex gap-3">

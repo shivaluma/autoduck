@@ -28,7 +28,7 @@ export default function Dashboard() {
   const mostKhaos = sortedPlayers[0] ?? null
 
   return (
-    <div className="min-h-screen bg-[var(--color-ggd-bg)] bubble-bg">
+    <div className="min-h-screen bg-transparent bubble-bg">
       {/* Top neon bar */}
       <div className="neon-divider" />
 

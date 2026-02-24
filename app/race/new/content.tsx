@@ -115,7 +115,7 @@ export function NewRaceContent({ testMode, secretKey }: NewRaceContentProps) {
   // Countdown overlay
   if (countdown !== null) {
     return (
-      <div className="min-h-screen bg-[var(--color-ggd-bg)] flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-center">
           {countdown > 0 ? (
             <>
@@ -167,7 +167,7 @@ export function NewRaceContent({ testMode, secretKey }: NewRaceContentProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-ggd-bg)] bubble-bg">
+    <div className="min-h-screen bg-transparent bubble-bg">
       <div className="neon-divider" />
 
       <header className="border-b-4 border-[var(--color-ggd-outline)]">

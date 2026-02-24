@@ -41,7 +41,7 @@ export default function RaceDetailPage({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[var(--color-ggd-bg)] flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-center">
           <div className="text-7xl animate-bob mb-4">🦆</div>
           <div className="font-display text-2xl text-[var(--color-ggd-lavender)] text-outlined">Đang tải...</div>
@@ -52,7 +52,7 @@ export default function RaceDetailPage({
 
   if (!race) {
     return (
-      <div className="min-h-screen bg-[var(--color-ggd-bg)] flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-center">
           <div className="font-display text-8xl text-[var(--color-ggd-orange)] text-outlined mb-4">404</div>
           <p className="font-data text-lg text-[var(--color-ggd-muted)] mb-6">Không tìm thấy trận đua 🦆</p>
@@ -69,7 +69,7 @@ export default function RaceDetailPage({
   const hasResults = sortedParticipants.length > 0 && sortedParticipants[0].initialRank !== null
 
   return (
-    <div className="min-h-screen bg-[var(--color-ggd-bg)] bubble-bg">
+    <div className="min-h-screen bg-transparent bubble-bg">
       <div className={`h-2 ${isRunning ? 'bg-[var(--color-ggd-neon-green)] animate-pulse shadow-[0_0_15px_rgba(61,255,143,0.5)]' :
         isFinished ? 'neon-divider' : isFailed ? 'bg-[var(--color-ggd-orange)]' : 'bg-[var(--color-ggd-muted)]/20'}`} />
 
