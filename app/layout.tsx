@@ -1,22 +1,22 @@
 import type { Metadata } from "next";
-import { Orbitron, Barlow_Condensed, JetBrains_Mono, Be_Vietnam_Pro } from "next/font/google";
+import { Boogaloo, Nunito, Quicksand, Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
 
-const orbitron = Orbitron({
-  variable: "--font-orbitron",
+const boogaloo = Boogaloo({
+  variable: "--font-boogaloo",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
+  weight: ["400"],
 });
 
-const barlow = Barlow_Condensed({
-  variable: "--font-barlow",
+const nunito = Nunito({
+  variable: "--font-nunito",
   subsets: ["latin", "vietnamese"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["300", "400", "500", "600", "700", "800"],
 });
 
-const jetbrains = JetBrains_Mono({
-  variable: "--font-jetbrains",
-  subsets: ["latin"],
+const quicksand = Quicksand({
+  variable: "--font-quicksand",
+  subsets: ["latin", "vietnamese"],
   weight: ["400", "500", "600", "700"],
 });
 
@@ -27,10 +27,10 @@ const beVietnam = Be_Vietnam_Pro({
 });
 
 export const metadata: Metadata = {
-  title: "AUTODUCK GRAND PRIX",
-  description: "Zero-Touch Duck Racing Championship | Team Web",
+  title: "AUTODUCK 🦆 Quack Quack!",
+  description: "Duck Racing Club — Ai là con vịt tuần này?",
   icons: {
-    icon: "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏁</text></svg>",
+    icon: "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦆</text></svg>",
   },
 };
 
@@ -42,7 +42,7 @@ export default function RootLayout({
   return (
     <html lang="vi" className="dark">
       <body
-        className={`${orbitron.variable} ${barlow.variable} ${jetbrains.variable} ${beVietnam.variable} antialiased`}
+        className={`${boogaloo.variable} ${nunito.variable} ${quicksand.variable} ${beVietnam.variable} antialiased`}
       >
         {children}
       </body>

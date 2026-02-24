@@ -28,96 +28,96 @@ export default function Dashboard() {
   const mostKhaos = sortedPlayers[0] ?? null
 
   return (
-    <div className="min-h-screen bg-[var(--color-f1-dark)] noise-overlay grid-lines">
-      {/* Top Red Accent Bar */}
-      <div className="h-1 bg-gradient-to-r from-[var(--color-f1-red)] via-[var(--color-f1-red)] to-transparent" />
+    <div className="min-h-screen bg-[var(--color-ggd-deep)] bubble-bg">
+      {/* Top Rainbow Accent */}
+      <div className="cute-divider" />
 
       {/* Header */}
-      <header className="relative border-b border-white/5">
+      <header className="relative border-b-2 border-[var(--color-ggd-mint)]/20">
         <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
           <div className="flex items-center gap-5 animate-slide-left">
             <div className="relative">
-              <div className="text-5xl filter drop-shadow-[0_0_15px_rgba(225,6,0,0.3)]">🦆</div>
+              <div className="text-5xl duck-mascot">🦆</div>
             </div>
             <div>
-              <h1 className="font-display text-2xl font-black tracking-[0.15em] uppercase text-white">
-                AUTO<span className="text-[var(--color-f1-red)]">DUCK</span>
+              <h1 className="font-display text-3xl text-[var(--color-ggd-cream)]">
+                AUTO<span className="text-[var(--color-ggd-mint)]">DUCK</span>
               </h1>
               <div className="flex items-center gap-2 mt-0.5">
-                <div className="w-2 h-2 bg-[var(--color-f1-red)] rounded-full animate-pulse" />
-                <p className="font-data text-[11px] tracking-[0.3em] uppercase text-white/60">
-                  Grand Prix Championship
+                <div className="w-2 h-2 bg-[var(--color-ggd-mint)] rounded-full animate-pulse" />
+                <p className="font-data text-sm tracking-wide text-[var(--color-ggd-lavender)]">
+                  Quack Quack Club 🦆
                 </p>
               </div>
             </div>
           </div>
 
           <Link href="/race/new" className="animate-slide-right">
-            <button className="group relative overflow-hidden bg-[var(--color-f1-red)] hover:bg-[#ff1a1a] text-white font-display font-bold text-sm tracking-[0.1em] uppercase px-8 py-4 transition-all duration-300 diagonal-cut">
-              <span className="relative z-10 flex items-center gap-3">
-                <span className="text-lg">🏁</span>
-                RACE START
+            <button className="puffy-btn bg-[var(--color-ggd-orange)] hover:bg-[#ff7f5e] text-white text-lg px-8 py-4">
+              <span className="flex items-center gap-3">
+                <span className="text-xl animate-wiggle-duck">🦆</span>
+                Chạy Đua!
               </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
             </button>
           </Link>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-        {/* Stats Strip - F1 Race Info Bar style */}
-        <div className="grid grid-cols-4 gap-[1px] bg-white/10 animate-slide-up opacity-0" style={{ animationDelay: '0.1s' }}>
+        {/* Stats Strip */}
+        <div className="grid grid-cols-4 gap-4 animate-slide-up opacity-0" style={{ animationDelay: '0.1s' }}>
           {[
-            { label: 'DRIVERS', value: players.length.toString(), accent: false },
-            { label: 'RACES', value: totalRaces.toString(), accent: false },
-            { label: 'LÀM DZỊT', value: totalKhaos.toString(), accent: true },
-            { label: 'DZỊT NHẤT', value: mostKhaos?.name?.replace('Zịt ', '') || '—', accent: true },
+            { label: '🦆 Bầy Vịt', value: players.length.toString(), color: 'text-[var(--color-ggd-cream)]' },
+            { label: '🏁 Số Trận', value: totalRaces.toString(), color: 'text-[var(--color-ggd-cream)]' },
+            { label: '💀 Làm Dzịt', value: totalKhaos.toString(), color: 'text-[var(--color-ggd-gold)]' },
+            { label: '👑 Dzịt Nhất', value: mostKhaos?.name?.replace('Zịt ', '') || '—', color: 'text-[var(--color-ggd-orange)]' },
           ].map((stat, i) => (
             <div
               key={stat.label}
-              className={`relative bg-[var(--color-f1-surface)] p-5 ${i === 0 ? 'border-l-2 border-[var(--color-f1-red)]' : ''}`}
+              className="soft-card p-4 text-center animate-bounce-in opacity-0"
+              style={{ animationDelay: `${0.15 + i * 0.08}s` }}
             >
-              <div className="font-data text-[11px] tracking-[0.2em] uppercase text-white/50 mb-2">
+              <div className="font-data text-xs tracking-wide text-[var(--color-ggd-lavender)] mb-1">
                 {stat.label}
               </div>
-              <div className={`font-display text-3xl font-black ${stat.accent ? 'text-[var(--color-f1-gold)] glow-gold' : 'text-white'}`}>
+              <div className={`font-display text-3xl ${stat.color}`}>
                 {stat.value}
               </div>
             </div>
           ))}
         </div>
 
-        {/* Main Content: Timing Tower + Season Stats */}
+        {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Timing Tower - Left 2 Columns */}
+          {/* Standings - Left 2 Columns */}
           <div className="lg:col-span-2 animate-slide-up opacity-0" style={{ animationDelay: '0.2s' }}>
-            <div className="bg-[var(--color-f1-surface)] border border-white/10 overflow-hidden">
-              {/* Tower Header */}
-              <div className="flex items-center justify-between px-5 py-3 bg-[var(--color-f1-red)]">
+            <div className="cartoon-card overflow-hidden">
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 py-3 bg-[var(--color-ggd-mint)] rounded-t-[17px]">
                 <div className="flex items-center gap-3">
-                  <span className="font-display text-xs font-bold tracking-[0.2em] uppercase text-white">
-                    Championship Standings
+                  <span className="font-display text-lg text-[var(--color-ggd-deep)]">
+                    🏆 Bảng Xếp Hạng Bầy Vịt
                   </span>
                 </div>
-                <span className="font-data text-[10px] tracking-[0.15em] text-white/70 uppercase">
+                <span className="font-data text-sm text-[var(--color-ggd-deep)]/70">
                   2 Sẹo = 1 Khiên
                 </span>
               </div>
 
               {/* Column Headers */}
-              <div className="grid grid-cols-[60px_1fr_80px_80px_80px_100px] gap-0 px-5 py-2 border-b border-white/10 bg-white/[0.04]">
-                <div className="font-data text-[11px] tracking-wider uppercase text-white/50">POS</div>
-                <div className="font-data text-[11px] tracking-wider uppercase text-white/50">DRIVER</div>
-                <div className="font-data text-[11px] tracking-wider uppercase text-white/50 text-center">SCARS</div>
-                <div className="font-data text-[11px] tracking-wider uppercase text-white/50 text-center">SHIELD</div>
-                <div className="font-data text-[11px] tracking-wider uppercase text-white/50 text-center">USED</div>
-                <div className="font-data text-[11px] tracking-wider uppercase text-white/50 text-right">DZỊT</div>
+              <div className="grid grid-cols-[60px_1fr_80px_80px_80px_100px] gap-0 px-5 py-2.5 border-b-2 border-[var(--color-ggd-mint)]/10 bg-[var(--color-ggd-surface-2)]/30">
+                <div className="font-data text-xs tracking-wide text-[var(--color-ggd-lavender)]">#</div>
+                <div className="font-data text-xs tracking-wide text-[var(--color-ggd-lavender)]">VỊT 🦆</div>
+                <div className="font-data text-xs tracking-wide text-[var(--color-ggd-lavender)] text-center">SẸO</div>
+                <div className="font-data text-xs tracking-wide text-[var(--color-ggd-lavender)] text-center">KHIÊN</div>
+                <div className="font-data text-xs tracking-wide text-[var(--color-ggd-lavender)] text-center">ĐÃ DÙNG</div>
+                <div className="font-data text-xs tracking-wide text-[var(--color-ggd-lavender)] text-right">DZỊT</div>
               </div>
 
-              {/* Driver Rows */}
+              {/* Player Rows */}
               {loading ? (
                 <div className="flex items-center justify-center py-20">
-                  <div className="text-4xl animate-spin">🦆</div>
+                  <div className="text-5xl animate-bob">🦆</div>
                 </div>
               ) : (
                 <div>
@@ -126,38 +126,38 @@ export default function Dashboard() {
                       key={player.id}
                       className={`
                         grid grid-cols-[60px_1fr_80px_80px_80px_100px] gap-0 items-center
-                        px-5 py-3 border-b border-white/[0.06]
-                        timing-row speed-lines
-                        ${idx === 0 ? 'penalty' : ''}
+                        px-5 py-3.5 border-b border-[var(--color-ggd-mint)]/8
+                        duck-row
+                        ${idx === 0 ? 'loser' : ''}
                         animate-slide-right opacity-0
                       `}
                       style={{ animationDelay: `${0.3 + idx * 0.06}s` }}
                     >
                       {/* Position */}
                       <div className="flex items-center gap-2">
-                        <span className={`position-number text-2xl ${idx === 0 ? 'text-[var(--color-f1-red)] glow-red' :
-                          idx === 1 ? 'text-[var(--color-f1-gold)] glow-gold' :
-                            idx === 2 ? 'text-[var(--color-f1-cyan)] glow-cyan' :
-                              'text-white/40'
+                        <span className={`position-number text-2xl ${idx === 0 ? 'text-[var(--color-ggd-orange)] glow-orange' :
+                          idx === 1 ? 'text-[var(--color-ggd-gold)] glow-gold' :
+                            idx === 2 ? 'text-[var(--color-ggd-mint)] glow-mint' :
+                              'text-[var(--color-ggd-lavender)]/50'
                           }`}>
                           {String(idx + 1).padStart(2, '0')}
                         </span>
                       </div>
 
-                      {/* Driver Name */}
+                      {/* Name */}
                       <div className="flex items-center gap-3">
-                        <div className={`w-1 h-8 rounded-full ${idx === 0 ? 'bg-[var(--color-f1-red)]' :
-                          idx === 1 ? 'bg-[var(--color-f1-gold)]' :
-                            idx === 2 ? 'bg-[var(--color-f1-cyan)]' :
-                              'bg-white/10'
+                        <div className={`w-1.5 h-8 rounded-full ${idx === 0 ? 'bg-[var(--color-ggd-orange)]' :
+                          idx === 1 ? 'bg-[var(--color-ggd-gold)]' :
+                            idx === 2 ? 'bg-[var(--color-ggd-mint)]' :
+                              'bg-[var(--color-ggd-lavender)]/20'
                           }`} />
                         <div>
-                          <div className="font-body text-sm font-semibold text-white tracking-wide uppercase">
+                          <div className="font-body text-sm font-bold text-[var(--color-ggd-cream)] tracking-wide">
                             {player.name}
                           </div>
                           {idx === 0 && (
-                            <div className="font-data text-[10px] tracking-[0.15em] text-[var(--color-f1-red)] glow-red uppercase mt-0.5">
-                              CON DZỊT SỐ 1
+                            <div className="font-data text-xs text-[var(--color-ggd-orange)] glow-orange mt-0.5">
+                              👑 CON DZỊT SỐ 1
                             </div>
                           )}
                         </div>
@@ -165,7 +165,7 @@ export default function Dashboard() {
 
                       {/* Scars */}
                       <div className="text-center">
-                        <span className={`font-data text-sm font-bold ${player.scars > 0 ? 'text-[var(--color-f1-red)] glow-red' : 'text-white/25'
+                        <span className={`font-data text-sm font-bold ${player.scars > 0 ? 'text-[var(--color-ggd-orange)]' : 'text-[var(--color-ggd-lavender)]/25'
                           }`}>
                           {player.scars}
                         </span>
@@ -173,7 +173,7 @@ export default function Dashboard() {
 
                       {/* Shields */}
                       <div className="text-center">
-                        <span className={`font-data text-sm font-bold ${player.shields > 0 ? 'text-[var(--color-f1-cyan)] glow-cyan' : 'text-white/25'
+                        <span className={`font-data text-sm font-bold ${player.shields > 0 ? 'text-[var(--color-ggd-mint)]' : 'text-[var(--color-ggd-lavender)]/25'
                           }`}>
                           {player.shields}
                         </span>
@@ -181,14 +181,14 @@ export default function Dashboard() {
 
                       {/* Shields Used */}
                       <div className="text-center">
-                        <span className="font-data text-sm text-white/50">
+                        <span className="font-data text-sm text-[var(--color-ggd-lavender)]/50">
                           {player.shieldsUsed}
                         </span>
                       </div>
 
-                      {/* Total Penalties */}
+                      {/* Total */}
                       <div className="text-right">
-                        <span className="font-display text-xl font-black text-white">
+                        <span className="font-display text-2xl text-[var(--color-ggd-cream)]">
                           {player.totalKhaos}
                         </span>
                       </div>
@@ -199,13 +199,13 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Right Column: Race History */}
+          {/* Right Column */}
           <div className="animate-slide-up opacity-0" style={{ animationDelay: '0.35s' }}>
             {/* Race History */}
-            <div className="bg-[var(--color-f1-surface)] border border-white/10 overflow-hidden">
-              <div className="px-5 py-3 border-b border-white/10 bg-white/[0.04] flex items-center justify-between">
-                <span className="font-display text-xs font-bold tracking-[0.15em] uppercase text-white/80">
-                  Race Log
+            <div className="cartoon-card overflow-hidden">
+              <div className="px-5 py-3 border-b-2 border-[var(--color-ggd-mint)]/10 bg-[var(--color-ggd-surface-2)]/30 flex items-center justify-between rounded-t-[17px]">
+                <span className="font-display text-base text-[var(--color-ggd-cream)]">
+                  📜 Lịch Sử Trận
                 </span>
                 <label className="flex items-center gap-2 cursor-pointer group">
                   <div className="relative">
@@ -215,47 +215,47 @@ export default function Dashboard() {
                       checked={showTestRaces}
                       onChange={(e) => setShowTestRaces(e.target.checked)}
                     />
-                    <div className={`w-8 h-4 rounded-full transition-colors ${showTestRaces ? 'bg-[var(--color-f1-cyan)]' : 'bg-white/20'}`}></div>
-                    <div className={`absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform ${showTestRaces ? 'translate-x-4' : 'translate-x-0'}`}></div>
+                    <div className={`w-9 h-5 rounded-full transition-colors ${showTestRaces ? 'bg-[var(--color-ggd-mint)]' : 'bg-[var(--color-ggd-lavender)]/30'}`}></div>
+                    <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow ${showTestRaces ? 'translate-x-4' : 'translate-x-0'}`}></div>
                   </div>
-                  <span className="font-data text-[9px] tracking-wider uppercase text-white/50 group-hover:text-white/80 transition-colors">
+                  <span className="font-data text-xs text-[var(--color-ggd-lavender)] group-hover:text-[var(--color-ggd-cream)] transition-colors">
                     Test
                   </span>
                 </label>
               </div>
 
               {displayedRaces.length > 0 ? (
-                <div className="divide-y divide-white/[0.06]">
+                <div className="divide-y divide-[var(--color-ggd-mint)]/8">
                   {displayedRaces.slice(0, 8).map((race, i) => (
                     <Link
                       key={race.id}
                       href={`/race/${race.id}`}
-                      className="block px-5 py-4 hover:bg-white/[0.04] transition-colors speed-lines animate-slide-right opacity-0"
+                      className="block px-5 py-4 hover:bg-[var(--color-ggd-mint)]/5 transition-colors animate-slide-right opacity-0"
                       style={{ animationDelay: `${0.4 + i * 0.05}s` }}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-display text-xs font-bold tracking-wider uppercase text-white flex items-center gap-2">
-                          GP #{race.id}
+                        <span className="font-display text-base text-[var(--color-ggd-cream)] flex items-center gap-2">
+                          Trận #{race.id}
                           {race.isTest && (
-                            <span className="text-[var(--color-f1-cyan)] border border-[var(--color-f1-cyan)]/50 px-1.5 py-0.5 rounded-[2px] text-[9px] font-mono tracking-widest bg-[var(--color-f1-cyan)]/10">
+                            <span className="cute-tag bg-[var(--color-ggd-sky)]/20 text-[var(--color-ggd-sky)] border border-[var(--color-ggd-sky)]/30">
                               TEST
                             </span>
                           )}
                         </span>
-                        <span className={`font-data text-[11px] px-2 py-0.5 tracking-wider uppercase ${race.status === 'finished' ? 'bg-green-500/10 text-green-400' :
-                          race.status === 'running' ? 'bg-[var(--color-f1-gold)]/10 text-[var(--color-f1-gold)]' :
-                            race.status === 'failed' ? 'bg-[var(--color-f1-red)]/10 text-[var(--color-f1-red)]' :
-                              'bg-white/5 text-white/40'
+                        <span className={`cute-tag ${race.status === 'finished' ? 'bg-[var(--color-ggd-mint)]/15 text-[var(--color-ggd-mint)]' :
+                          race.status === 'running' ? 'bg-[var(--color-ggd-gold)]/15 text-[var(--color-ggd-gold)]' :
+                            race.status === 'failed' ? 'bg-[var(--color-ggd-orange)]/15 text-[var(--color-ggd-orange)]' :
+                              'bg-[var(--color-ggd-lavender)]/10 text-[var(--color-ggd-lavender)]'
                           }`}>
-                          {race.status}
+                          {race.status === 'finished' ? '✅' : race.status === 'running' ? '🏃' : race.status === 'failed' ? '💥' : '⏳'} {race.status}
                         </span>
                       </div>
                       {race.finalVerdict && (
-                        <p className="font-readable text-xs text-white/60 truncate">
+                        <p className="font-readable text-xs text-[var(--color-ggd-lavender)] truncate">
                           {race.finalVerdict}
                         </p>
                       )}
-                      <p className="font-data text-[11px] text-white/35 mt-1">
+                      <p className="font-data text-xs text-[var(--color-ggd-lavender)]/50 mt-1">
                         {new Date(race.createdAt).toLocaleDateString('vi-VN', {
                           day: '2-digit',
                           month: '2-digit',
@@ -269,35 +269,35 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <div className="px-5 py-12 text-center">
-                  <div className="text-3xl mb-3 opacity-30">🏁</div>
-                  <p className="font-data text-xs text-white/30 tracking-wider uppercase">
-                    No races yet
+                  <div className="text-4xl mb-3 animate-bob">🦆</div>
+                  <p className="font-data text-sm text-[var(--color-ggd-lavender)]/50">
+                    Chưa có trận nào cả!
                   </p>
                 </div>
               )}
             </div>
 
-            {/* Quick Rules Card */}
-            <div className="mt-4 bg-[var(--color-f1-surface)] border border-white/10 p-5 animate-slide-up opacity-0" style={{ animationDelay: '0.5s' }}>
-              <div className="font-display text-[11px] tracking-[0.2em] uppercase text-[var(--color-f1-red)] glow-red mb-3">
-                Race Regulations
+            {/* Rules Card */}
+            <div className="mt-4 cartoon-card-gold p-5 animate-slide-up opacity-0" style={{ animationDelay: '0.5s' }}>
+              <div className="font-display text-lg text-[var(--color-ggd-gold)] mb-3">
+                📖 Luật Chơi
               </div>
-              <div className="space-y-2.5 font-readable text-sm text-white/70">
-                <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-[var(--color-f1-red)] rounded-full flex-shrink-0" />
-                  <span>2 người cuối bảng sẽ là <span className="text-[var(--color-f1-red)] font-semibold">con dzịt</span> tuần đó (+1 Sẹo)</span>
+              <div className="space-y-3 font-readable text-sm text-[var(--color-ggd-cream)]/80">
+                <div className="flex items-start gap-2">
+                  <span className="text-lg flex-shrink-0">🤕</span>
+                  <span>2 người cuối bảng sẽ là <span className="text-[var(--color-ggd-orange)] font-semibold">con dzịt</span> tuần đó (+1 Sẹo)</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-[var(--color-f1-cyan)] rounded-full flex-shrink-0" />
-                  <span>Dùng <span className="text-[var(--color-f1-cyan)] font-semibold">Khiên</span> để thoát kiếp dzịt 1 lần</span>
+                <div className="flex items-start gap-2">
+                  <span className="text-lg flex-shrink-0">🛡️</span>
+                  <span>Dùng <span className="text-[var(--color-ggd-mint)] font-semibold">Khiên</span> để thoát kiếp dzịt 1 lần</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-[var(--color-f1-gold)] rounded-full flex-shrink-0" />
-                  <span>Tích <span className="text-[var(--color-f1-gold)] font-semibold">2 Sẹo</span> tự động quy đổi thành 1 Khiên</span>
+                <div className="flex items-start gap-2">
+                  <span className="text-lg flex-shrink-0">✨</span>
+                  <span>Tích <span className="text-[var(--color-ggd-gold)] font-semibold">2 Sẹo</span> tự động quy đổi thành 1 Khiên</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-white/30 rounded-full flex-shrink-0" />
-                  <span>Con dzịt phải <span className="text-white font-semibold">làm dzịt</span> cho cả team</span>
+                <div className="flex items-start gap-2">
+                  <span className="text-lg flex-shrink-0">🧹</span>
+                  <span>Con dzịt phải <span className="text-[var(--color-ggd-cream)] font-semibold">làm dzịt</span> cho cả team</span>
                 </div>
               </div>
             </div>
@@ -305,12 +305,12 @@ export default function Dashboard() {
         </div>
 
         {/* Footer */}
-        <footer className="border-t border-white/10 pt-6 pb-4 flex items-center justify-between animate-fade-in opacity-0" style={{ animationDelay: '0.6s' }}>
-          <div className="font-data text-[11px] tracking-[0.2em] uppercase text-white/30">
-            AUTODUCK v1.0 &mdash; Zero-Touch Racing System
+        <footer className="border-t-2 border-[var(--color-ggd-mint)]/10 pt-6 pb-4 flex items-center justify-between animate-fade-in opacity-0" style={{ animationDelay: '0.6s' }}>
+          <div className="font-data text-sm text-[var(--color-ggd-lavender)]/40">
+            AUTODUCK v1.0 🦆 Quack Quack!
           </div>
-          <div className="font-data text-[11px] tracking-[0.2em] uppercase text-white/30">
-            Team Web &bull; Sáng thứ 2 hàng tuần
+          <div className="font-data text-sm text-[var(--color-ggd-lavender)]/40">
+            Team Web • Sáng thứ 2 hàng tuần
           </div>
         </footer>
       </main>

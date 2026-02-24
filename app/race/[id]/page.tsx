@@ -47,10 +47,10 @@ export default function RaceDetailPage({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[var(--color-f1-dark)] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--color-ggd-deep)] bubble-bg flex items-center justify-center">
         <div className="text-center">
-          <div className="text-6xl animate-bounce mb-4">🦆</div>
-          <div className="font-display text-sm tracking-[0.3em] uppercase text-white/50">Loading Race Data</div>
+          <div className="text-6xl animate-bob mb-4">🦆</div>
+          <div className="font-display text-xl text-[var(--color-ggd-lavender)]">Đang tải dữ liệu...</div>
         </div>
       </div>
     )
@@ -58,12 +58,12 @@ export default function RaceDetailPage({
 
   if (!race) {
     return (
-      <div className="min-h-screen bg-[var(--color-f1-dark)] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--color-ggd-deep)] bubble-bg flex items-center justify-center">
         <div className="text-center">
-          <div className="font-display text-6xl font-black text-[var(--color-f1-red)]/40 mb-4">404</div>
-          <p className="font-data text-xs text-white/40 tracking-wider uppercase mb-6">Race not found</p>
-          <Link href="/" className="font-display text-xs tracking-[0.15em] uppercase text-[var(--color-f1-red)] hover:text-white transition-colors">
-            ← RETURN TO PADDOCK
+          <div className="font-display text-7xl text-[var(--color-ggd-orange)]/40 mb-4">404</div>
+          <p className="font-data text-sm text-[var(--color-ggd-lavender)] mb-6">Không tìm thấy trận đua 🦆</p>
+          <Link href="/" className="font-display text-base text-[var(--color-ggd-mint)] hover:text-[var(--color-ggd-cream)] transition-colors">
+            ← Về Chuồng
           </Link>
         </div>
       </div>
@@ -77,32 +77,32 @@ export default function RaceDetailPage({
   const hasResults = sortedParticipants.length > 0 && sortedParticipants[0].initialRank !== null
 
   return (
-    <div className="min-h-screen bg-[var(--color-f1-dark)] noise-overlay grid-lines">
-      {/* Race Status Bar */}
-      <div className={`h-1 ${isRunning ? 'bg-green-500 animate-pulse' :
-        isFinished ? 'bg-gradient-to-r from-[var(--color-f1-red)] via-[var(--color-f1-gold)] to-[var(--color-f1-red)]' :
-          isFailed ? 'bg-[var(--color-f1-red)]' :
-            'bg-white/10'
+    <div className="min-h-screen bg-[var(--color-ggd-deep)] bubble-bg">
+      {/* Status Bar */}
+      <div className={`h-1.5 rounded-b-full ${isRunning ? 'bg-[var(--color-ggd-mint)] animate-pulse' :
+        isFinished ? 'cute-divider' :
+          isFailed ? 'bg-[var(--color-ggd-orange)]' :
+            'bg-[var(--color-ggd-lavender)]/20'
         }`} />
 
       {/* Header */}
-      <header className="border-b border-white/10">
+      <header className="border-b-2 border-[var(--color-ggd-mint)]/20">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="font-data text-xs tracking-[0.15em] uppercase text-white/40 hover:text-white transition-colors">
-            ← PADDOCK
+          <Link href="/" className="font-data text-sm text-[var(--color-ggd-lavender)] hover:text-[var(--color-ggd-cream)] transition-colors">
+            ← Về Chuồng
           </Link>
           <div className="flex items-center gap-4 animate-slide-right">
-            <div className="font-display text-lg font-bold tracking-[0.15em] uppercase text-white">
-              GP <span className="text-[var(--color-f1-red)]">#{raceId}</span>
+            <div className="font-display text-2xl text-[var(--color-ggd-cream)]">
+              🦆 Trận <span className="text-[var(--color-ggd-mint)]">#{raceId}</span>
             </div>
-            <div className={`font-data text-[11px] px-3 py-1.5 tracking-[0.15em] uppercase ${isFinished ? 'bg-green-500/10 text-green-400' :
-              isRunning ? 'bg-[var(--color-f1-gold)]/10 text-[var(--color-f1-gold)] animate-pulse' :
-                isFailed ? 'bg-[var(--color-f1-red)]/10 text-[var(--color-f1-red)]' :
-                  'bg-white/5 text-white/40'
+            <div className={`cute-tag ${isFinished ? 'bg-[var(--color-ggd-mint)]/15 text-[var(--color-ggd-mint)]' :
+              isRunning ? 'bg-[var(--color-ggd-gold)]/15 text-[var(--color-ggd-gold)] animate-pulse' :
+                isFailed ? 'bg-[var(--color-ggd-orange)]/15 text-[var(--color-ggd-orange)]' :
+                  'bg-[var(--color-ggd-lavender)]/10 text-[var(--color-ggd-lavender)]'
               }`}>
-              {race.status === 'pending' ? 'FORMATION LAP' :
-                race.status === 'running' ? 'RACE LIVE' :
-                  race.status === 'finished' ? 'CHEQUERED FLAG' : 'RED FLAG'}
+              {race.status === 'pending' ? '⏳ Đang xếp hàng...' :
+                race.status === 'running' ? '🏃 ĐANG CHẠY!' :
+                  race.status === 'finished' ? '🏁 KẾT THÚC!' : '💥 LỖI'}
             </div>
           </div>
         </div>
@@ -112,20 +112,19 @@ export default function RaceDetailPage({
         {/* Running State & Live Stream */}
         {isRunning && (
           <div className="space-y-6">
-            <div className="relative overflow-hidden bg-[var(--color-f1-surface)] border border-green-500/20 p-8 animate-pulse">
+            <div className="relative overflow-hidden cartoon-card border-[var(--color-ggd-mint)] p-8">
               <div className="flex items-center justify-center gap-6">
-                <div className="text-5xl animate-bounce">🦆</div>
+                <div className="text-5xl animate-bob">🦆</div>
                 <div className="text-center">
-                  <div className="font-display text-2xl font-black tracking-[0.2em] uppercase text-green-400">
-                    RACE IN PROGRESS
+                  <div className="font-display text-3xl text-[var(--color-ggd-mint)]">
+                    ĐANG ĐUA! 🏃💨
                   </div>
-                  <div className="font-data text-xs text-white/50 tracking-wider uppercase mt-1">
-                    Live Stream Connected via CDP
+                  <div className="font-data text-sm text-[var(--color-ggd-lavender)] mt-1">
+                    Đang phát trực tiếp...
                   </div>
                 </div>
-                <div className="text-5xl animate-bounce" style={{ animationDelay: '0.15s' }}>🦆</div>
+                <div className="text-5xl animate-bob" style={{ animationDelay: '0.3s' }}>🦆</div>
               </div>
-              <div className="absolute top-0 left-0 w-full h-1 bg-green-500" />
             </div>
 
             {/* LIVE STREAM & COMMENTARY VIEW */}
@@ -146,31 +145,29 @@ export default function RaceDetailPage({
             />
 
             {race.finalVerdict && (
-              <div className="relative overflow-hidden animate-slide-up opacity-0" style={{ animationDelay: '0.1s' }}>
-                {/* Background */}
-                <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-f1-red)]/20 via-[var(--color-f1-dark)] to-[var(--color-f1-red)]/20" />
-                <div className="absolute inset-0 checkered-bg opacity-50" />
-
+              <div className="relative overflow-hidden cartoon-card-gold animate-slide-up opacity-0" style={{ animationDelay: '0.1s' }}>
                 <div className="relative px-8 py-10 text-center">
-                  {/* Podium decoration */}
-                  <div className="flex justify-center gap-2 mb-6">
-                    {[...Array(5)].map((_, i) => (
+                  {/* Celebration emojis */}
+                  <div className="flex justify-center gap-3 mb-6">
+                    {['🎉', '🦆', '🏆', '🦆', '🎉'].map((emoji, i) => (
                       <div
                         key={i}
-                        className="w-3 h-3 bg-[var(--color-f1-gold)] rounded-full shadow-[0_0_10px_rgba(255,215,0,0.5)]"
-                        style={{ animationDelay: `${i * 0.1}s` }}
-                      />
+                        className="text-2xl animate-bob"
+                        style={{ animationDelay: `${i * 0.15}s` }}
+                      >
+                        {emoji}
+                      </div>
                     ))}
                   </div>
 
-                  <div className="font-display text-[11px] tracking-[0.4em] uppercase text-[var(--color-f1-gold)] glow-gold mb-3">
-                    Kết quả chính thức
+                  <div className="font-display text-base text-[var(--color-ggd-gold)] glow-gold mb-3">
+                    ✨ Kết Quả Chính Thức ✨
                   </div>
-                  <h2 className="font-display text-3xl md:text-4xl font-black tracking-wider uppercase text-white leading-tight glow-gold">
+                  <h2 className="font-display text-4xl md:text-5xl text-[var(--color-ggd-cream)] leading-tight">
                     {race.finalVerdict}
                   </h2>
-                  <div className="font-data text-xs text-white/40 tracking-wider uppercase mt-4">
-                    Luật Rừng &bull; 2 con dzịt đã lộ diện
+                  <div className="font-data text-sm text-[var(--color-ggd-lavender)] mt-4">
+                    🦆 2 con dzịt đã lộ diện! Quack quack!
                   </div>
                 </div>
               </div>
@@ -179,25 +176,25 @@ export default function RaceDetailPage({
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Classification - Left 2 cols (Expand to 3 if running) */}
+          {/* Classification */}
           <div className={`${isRunning ? 'lg:col-span-3' : 'lg:col-span-2'} animate-slide-up opacity-0`} style={{ animationDelay: '0.2s' }}>
-            <div className="bg-[var(--color-f1-surface)] border border-white/10 overflow-hidden">
+            <div className="cartoon-card overflow-hidden">
               {/* Header */}
-              <div className="flex items-center justify-between px-5 py-3 bg-[var(--color-f1-red)]">
-                <span className="font-display text-xs font-bold tracking-[0.2em] uppercase text-white">
-                  Official Classification
+              <div className="flex items-center justify-between px-5 py-3 bg-[var(--color-ggd-mint)] rounded-t-[17px]">
+                <span className="font-display text-lg text-[var(--color-ggd-deep)]">
+                  🏆 Bảng Xếp Hạng
                 </span>
-                <span className="font-data text-[10px] text-white/70 tracking-wider uppercase">
-                  {sortedParticipants.length} Classified
+                <span className="font-data text-sm text-[var(--color-ggd-deep)]/70">
+                  {sortedParticipants.length} vịt tham gia
                 </span>
               </div>
 
               {/* Column Headers */}
-              <div className="grid grid-cols-[60px_1fr_120px_140px] gap-0 px-5 py-2 border-b border-white/10 bg-white/[0.04]">
-                <div className="font-data text-[11px] tracking-wider uppercase text-white/50">POS</div>
-                <div className="font-data text-[11px] tracking-wider uppercase text-white/50">DRIVER</div>
-                <div className="font-data text-[11px] tracking-wider uppercase text-white/50 text-center">DEFENSE</div>
-                <div className="font-data text-[11px] tracking-wider uppercase text-white/50 text-right">STATUS</div>
+              <div className="grid grid-cols-[60px_1fr_120px_140px] gap-0 px-5 py-2.5 border-b-2 border-[var(--color-ggd-mint)]/10 bg-[var(--color-ggd-surface-2)]/30">
+                <div className="font-data text-xs tracking-wide text-[var(--color-ggd-lavender)]">#</div>
+                <div className="font-data text-xs tracking-wide text-[var(--color-ggd-lavender)]">VỊT 🦆</div>
+                <div className="font-data text-xs tracking-wide text-[var(--color-ggd-lavender)] text-center">PHÒNG THỦ</div>
+                <div className="font-data text-xs tracking-wide text-[var(--color-ggd-lavender)] text-right">KẾT QUẢ</div>
               </div>
 
               {hasResults ? (
@@ -207,39 +204,39 @@ export default function RaceDetailPage({
                       key={p.userId}
                       className={`
                         grid grid-cols-[60px_1fr_120px_140px] gap-0 items-center
-                        px-5 py-4 border-b border-white/[0.06]
-                        timing-row
-                        ${p.gotScar ? 'penalty' : p.usedShield ? 'shield-active' : idx < 3 ? 'podium' : ''}
+                        px-5 py-4 border-b border-[var(--color-ggd-mint)]/8
+                        duck-row
+                        ${p.gotScar ? 'loser' : p.usedShield ? 'shielded' : idx < 3 ? 'winner' : ''}
                         animate-slide-right opacity-0
                       `}
                       style={{ animationDelay: `${0.3 + idx * 0.08}s` }}
                     >
                       {/* Position */}
                       <div>
-                        <span className={`position-number text-2xl ${p.gotScar ? 'text-[var(--color-f1-red)] glow-red' :
-                          idx === 0 ? 'text-[var(--color-f1-gold)] glow-gold' :
-                            idx === 1 ? 'text-[var(--color-f1-silver)]' :
-                              idx === 2 ? 'text-amber-600' :
-                                'text-white/35'
+                        <span className={`position-number text-2xl ${p.gotScar ? 'text-[var(--color-ggd-orange)] glow-orange' :
+                          idx === 0 ? 'text-[var(--color-ggd-gold)] glow-gold' :
+                            idx === 1 ? 'text-[var(--color-ggd-cream)]/70' :
+                              idx === 2 ? 'text-[var(--color-ggd-mint)]' :
+                                'text-[var(--color-ggd-lavender)]/35'
                           }`}>
                           {String((p.initialRank ?? idx + 1)).padStart(2, '0')}
                         </span>
                       </div>
 
-                      {/* Driver */}
+                      {/* Name */}
                       <div className="flex items-center gap-3">
-                        <div className={`w-1 h-10 rounded-full ${p.gotScar ? 'bg-[var(--color-f1-red)]' :
-                          p.usedShield ? 'bg-[var(--color-f1-cyan)]' :
-                            idx === 0 ? 'bg-[var(--color-f1-gold)]' :
-                              'bg-white/10'
+                        <div className={`w-1.5 h-10 rounded-full ${p.gotScar ? 'bg-[var(--color-ggd-orange)]' :
+                          p.usedShield ? 'bg-[var(--color-ggd-sky)]' :
+                            idx === 0 ? 'bg-[var(--color-ggd-gold)]' :
+                              'bg-[var(--color-ggd-lavender)]/20'
                           }`} />
                         <div>
-                          <div className="font-body text-sm font-semibold text-white tracking-wide uppercase">
+                          <div className="font-body text-sm font-bold text-[var(--color-ggd-cream)] tracking-wide">
                             {p.name}
                           </div>
                           {idx === 0 && isFinished && (
-                            <div className="font-data text-[10px] tracking-[0.15em] text-[var(--color-f1-gold)] glow-gold uppercase">
-                              RACE WINNER
+                            <div className="font-data text-xs text-[var(--color-ggd-gold)] glow-gold mt-0.5">
+                              👑 VỊT THẮNG CUỘC
                             </div>
                           )}
                         </div>
@@ -248,31 +245,31 @@ export default function RaceDetailPage({
                       {/* Shield Status */}
                       <div className="text-center">
                         {p.usedShield ? (
-                          <span className="font-data text-[11px] px-3 py-1 bg-[var(--color-f1-cyan)]/10 text-[var(--color-f1-cyan)] tracking-wider uppercase">
-                            SHIELD ON
+                          <span className="cute-tag bg-[var(--color-ggd-sky)]/15 text-[var(--color-ggd-sky)]">
+                            🛡️ Có Khiên
                           </span>
                         ) : (
-                          <span className="font-data text-[11px] text-white/25 tracking-wider uppercase">—</span>
+                          <span className="font-data text-sm text-[var(--color-ggd-lavender)]/25">—</span>
                         )}
                       </div>
 
                       {/* Result Status */}
                       <div className="text-right">
                         {p.gotScar ? (
-                          <span className="font-display text-xs font-bold tracking-wider uppercase text-[var(--color-f1-red)] glow-red">
+                          <span className="font-display text-base text-[var(--color-ggd-orange)] glow-orange">
                             CON DZỊT 🦆
                           </span>
                         ) : p.usedShield && (p.initialRank ?? 0) >= sortedParticipants.length - 1 ? (
-                          <span className="font-display text-xs font-bold tracking-wider uppercase text-[var(--color-f1-cyan)]">
-                            SHIELD SAVED
+                          <span className="font-display text-base text-[var(--color-ggd-sky)]">
+                            🛡️ Thoát Nạn!
                           </span>
                         ) : idx === 0 ? (
-                          <span className="font-display text-xs font-bold tracking-wider uppercase text-[var(--color-f1-gold)]">
-                            P1
+                          <span className="font-display text-base text-[var(--color-ggd-gold)]">
+                            🏆 P1
                           </span>
                         ) : (
-                          <span className="font-data text-xs text-white/30 tracking-wider uppercase">
-                            CLASSIFIED
+                          <span className="font-data text-sm text-[var(--color-ggd-lavender)]/40">
+                            An Toàn ✨
                           </span>
                         )}
                       </div>
@@ -281,9 +278,9 @@ export default function RaceDetailPage({
                 </div>
               ) : (
                 <div className="py-16 text-center">
-                  <div className="text-3xl mb-3 opacity-30">⏳</div>
-                  <div className="font-data text-xs text-white/30 tracking-wider uppercase">
-                    {isRunning ? 'Awaiting classification...' : 'No results available'}
+                  <div className="text-4xl mb-3 animate-bob">🥚</div>
+                  <div className="font-data text-sm text-[var(--color-ggd-lavender)]/50">
+                    {isRunning ? 'Đang đua... chờ kết quả! 🏃' : 'Chưa có kết quả'}
                   </div>
                 </div>
               )}
@@ -291,31 +288,31 @@ export default function RaceDetailPage({
 
             {/* Video */}
             {race.videoUrl && (
-              <div className="mt-6 bg-[var(--color-f1-surface)] border border-white/10 overflow-hidden animate-slide-up opacity-0" style={{ animationDelay: '0.6s' }}>
-                <div className="px-5 py-3 border-b border-white/10 bg-white/[0.04]">
-                  <span className="font-display text-xs font-bold tracking-[0.15em] uppercase text-white/80">
-                    Race Replay
+              <div className="mt-6 cartoon-card overflow-hidden animate-slide-up opacity-0" style={{ animationDelay: '0.6s' }}>
+                <div className="px-5 py-3 border-b-2 border-[var(--color-ggd-mint)]/10 bg-[var(--color-ggd-surface-2)]/30 rounded-t-[17px]">
+                  <span className="font-display text-base text-[var(--color-ggd-cream)]">
+                    🎬 Xem Lại Trận Đua
                   </span>
                 </div>
-                <div className="aspect-video bg-black">
-                  <video src={race.videoUrl} controls className="w-full h-full" />
+                <div className="aspect-video bg-black rounded-b-[17px]">
+                  <video src={race.videoUrl} controls className="w-full h-full rounded-b-[17px]" />
                 </div>
               </div>
             )}
           </div>
 
-          {/* Right Column: Race Commentary (Hide if running) */}
+          {/* Right Column: Commentary */}
           {!isRunning && (
             <div className="animate-slide-up opacity-0" style={{ animationDelay: '0.35s' }}>
-              <div className="bg-[var(--color-f1-surface)] border border-white/10 overflow-hidden">
+              <div className="cartoon-card overflow-hidden">
                 {/* Header */}
-                <div className="flex items-center justify-between px-5 py-3 border-b border-white/10 bg-white/[0.04]">
+                <div className="flex items-center justify-between px-5 py-3 border-b-2 border-[var(--color-ggd-mint)]/10 bg-[var(--color-ggd-surface-2)]/30 rounded-t-[17px]">
                   <div className="flex items-center gap-2">
-                    <span className="font-display text-xs font-bold tracking-[0.15em] uppercase text-white/80">
-                      Race Director
+                    <span className="font-display text-base text-[var(--color-ggd-cream)]">
+                      🎤 MC Vịt
                     </span>
                     {isRunning && (
-                      <span className="font-data text-[10px] px-2 py-0.5 bg-[var(--color-f1-red)] text-white tracking-wider uppercase animate-pulse">
+                      <span className="cute-tag bg-[var(--color-ggd-orange)]/20 text-[var(--color-ggd-orange)] animate-pulse">
                         LIVE
                       </span>
                     )}
@@ -324,20 +321,20 @@ export default function RaceDetailPage({
 
                 <ScrollArea className="h-[520px]">
                   {race.commentaries.length > 0 ? (
-                    <div className="divide-y divide-white/[0.06]">
+                    <div className="divide-y divide-[var(--color-ggd-mint)]/8">
                       {race.commentaries.map((c, idx) => (
                         <div
                           key={idx}
-                          className="px-5 py-4 hover:bg-white/[0.04] transition-colors animate-slide-right opacity-0"
+                          className="px-5 py-4 hover:bg-[var(--color-ggd-mint)]/5 transition-colors animate-slide-right opacity-0"
                           style={{ animationDelay: `${0.4 + idx * 0.05}s` }}
                         >
                           <div className="flex items-center gap-2 mb-1.5">
-                            <span className="font-data text-[10px] px-2 py-0.5 bg-white/5 text-[var(--color-f1-cyan)] tracking-wider">
-                              {formatTime(c.timestamp)}
+                            <span className="cute-tag bg-[var(--color-ggd-mint)]/10 text-[var(--color-ggd-mint)]">
+                              ⏱️ {formatTime(c.timestamp)}
                             </span>
-                            <div className="flex-1 h-px bg-white/5" />
+                            <div className="flex-1 h-px bg-[var(--color-ggd-mint)]/8" />
                           </div>
-                          <p className="font-readable text-sm text-white/85 leading-relaxed">
+                          <p className="font-readable text-sm text-[var(--color-ggd-cream)]/85 leading-relaxed">
                             {c.content}
                           </p>
                         </div>
@@ -345,9 +342,9 @@ export default function RaceDetailPage({
                     </div>
                   ) : (
                     <div className="px-5 py-16 text-center">
-                      <div className="text-2xl mb-3 opacity-30">🎙️</div>
-                      <p className="font-data text-xs text-white/30 tracking-wider uppercase">
-                        {isRunning ? 'Awaiting commentary...' : 'No commentary recorded'}
+                      <div className="text-3xl mb-3 animate-bob">🎤</div>
+                      <p className="font-data text-sm text-[var(--color-ggd-lavender)]/50">
+                        {isRunning ? 'MC Vịt đang chuẩn bị... 🦆' : 'Chưa có bình luận'}
                       </p>
                     </div>
                   )}
@@ -358,15 +355,14 @@ export default function RaceDetailPage({
         </div>
 
         {/* Action Bar */}
-        <div className="flex items-center justify-between pt-4 border-t border-white/10 animate-fade-in opacity-0" style={{ animationDelay: '0.7s' }}>
-          <Link href="/" className="font-display text-xs font-bold tracking-[0.15em] uppercase text-white/40 hover:text-white transition-colors px-4 py-3">
-            ← PADDOCK
+        <div className="flex items-center justify-between pt-4 border-t-2 border-[var(--color-ggd-mint)]/10 animate-fade-in opacity-0" style={{ animationDelay: '0.7s' }}>
+          <Link href="/" className="font-display text-base text-[var(--color-ggd-lavender)]/50 hover:text-[var(--color-ggd-cream)] transition-colors px-4 py-3">
+            ← Về Chuồng
           </Link>
           {isFinished && (
             <Link href="/race/new">
-              <button className="group relative overflow-hidden bg-[var(--color-f1-red)] hover:bg-[#ff1a1a] text-white font-display font-bold text-xs tracking-[0.15em] uppercase px-8 py-3 transition-all duration-300 diagonal-cut">
-                <span className="relative z-10">NEXT RACE →</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+              <button className="puffy-btn bg-[var(--color-ggd-orange)] hover:bg-[#ff7f5e] text-white text-base px-8 py-3">
+                Trận Tiếp → 🦆
               </button>
             </Link>
           )}

@@ -16,6 +16,17 @@ export function Fireworks() {
     let rockets: Rocket[] = []
     let animationId: number
 
+    // GGD Color palette
+    const colors = [
+      '#5ee8b7', // mint
+      '#ffc857', // gold
+      '#ff6b4a', // orange
+      '#ff8fab', // pink
+      '#7ec8e3', // sky
+      '#9b8ec4', // lavender
+      '#f0e6d3', // cream
+    ]
+
     const resize = () => {
       canvas.width = window.innerWidth
       canvas.height = window.innerHeight
@@ -35,7 +46,7 @@ export function Fireworks() {
         this.y = canvas!.height
         this.vx = (Math.random() - 0.5) * 4
         this.vy = -(Math.random() * 5 + 10)
-        this.color = `hsl(${Math.random() * 360}, 100%, 50%)`
+        this.color = colors[Math.floor(Math.random() * colors.length)]
       }
 
       draw() {
@@ -49,16 +60,15 @@ export function Fireworks() {
       update() {
         this.x += this.vx
         this.y += this.vy
-        this.vy += 0.2 // Gravity
+        this.vy += 0.2
 
-        // Explode when starting to fall
         if (this.vy >= -2) {
           for (let i = 0; i < 50; i++) {
             particles.push(new Particle(this.x, this.y, this.color))
           }
-          return false // Dead
+          return false
         }
-        return true // Alive
+        return true
       }
     }
 
@@ -69,6 +79,7 @@ export function Fireworks() {
       vy: number
       alpha: number
       color: string
+      size: number
 
       constructor(x: number, y: number, color: string) {
         this.x = x
@@ -79,23 +90,30 @@ export function Fireworks() {
         this.vy = Math.sin(angle) * speed
         this.alpha = 1
         this.color = color
+        this.size = Math.random() * 3 + 1
       }
 
       draw() {
         if (!ctx) return
         ctx.globalAlpha = this.alpha
         ctx.fillStyle = this.color
-        ctx.beginPath()
-        ctx.arc(this.x, this.y, 2, 0, Math.PI * 2)
-        ctx.fill()
+        // Draw little star shapes for some particles
+        if (this.size > 2) {
+          ctx.font = `${this.size * 4}px serif`
+          ctx.fillText('✦', this.x, this.y)
+        } else {
+          ctx.beginPath()
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
+          ctx.fill()
+        }
         ctx.globalAlpha = 1
       }
 
       update() {
         this.x += this.vx
         this.y += this.vy
-        this.vy += 0.1 // Gravity
-        this.vx *= 0.95 // Friction
+        this.vy += 0.1
+        this.vx *= 0.95
         this.vy *= 0.95
         this.alpha -= 0.02
         return this.alpha > 0
@@ -105,8 +123,8 @@ export function Fireworks() {
     const loop = () => {
       if (!ctx || !canvas) return
 
-      // Trail effect
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)'
+      // Trail effect with purple tint
+      ctx.fillStyle = 'rgba(26, 18, 53, 0.2)'
       ctx.fillRect(0, 0, canvas.width, canvas.height)
 
       if (Math.random() < 0.05) {

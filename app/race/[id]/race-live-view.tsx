@@ -59,8 +59,6 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
       }
     })
 
-    // SSE removed for commentary - switching to polling below
-    // Finished event still useful for immediate notification if it works
     evtSource.addEventListener('finished', (event) => {
       try {
         const data = JSON.parse(event.data)
@@ -86,7 +84,6 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
         // Update commentaries
         if (data.commentaries) {
           setCommentaries(prev => {
-            // Merge new commentaries
             const newItems = data.commentaries.filter((c: any) => !prev.some(p => p.timestamp === c.timestamp && p.text === c.content))
             if (newItems.length === 0) return prev
 
@@ -101,13 +98,6 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
 
         // Check if finished
         if (data.status === 'finished' && !result) {
-          // Construct result object if we missed the SSE event
-          // We might need to fetch participants to get avatar urls if not present in race data root
-          // But looking at API, it returns participants with avatars.
-          // We need to determine winner/victims from data.participants
-          // The API returns parsed data, let's reconstruct the result shape expected by UI
-
-          // Re-derive result if missing
           const winner = data.participants.find((p: any) => p.initialRank === 1)
           const victims = data.participants.filter((p: any) => p.gotScar)
 
@@ -117,15 +107,14 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
             victims: victims.map((v: any) => ({ name: v.name, avatarUrl: v.avatarUrl })),
             verdict: data.finalVerdict || 'Race Finished'
           })
-          setStatus('live') // Ensure UI shows finished state
+          setStatus('live')
         }
       } catch (e) {
         console.error('Polling error', e)
       }
     }
 
-    // Poll every 2 seconds
-    fetchRaceData() // Initial fetch
+    fetchRaceData()
     intervalId = setInterval(fetchRaceData, 3000)
 
     return () => clearInterval(intervalId)
@@ -134,7 +123,6 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
   // Auto-scroll effect
   useEffect(() => {
     if (bottomRef.current) {
-      // Use 'nearest' to prevent scrolling the parent window/viewport
       bottomRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     }
   }, [commentaries])
@@ -152,46 +140,43 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center animate-fade-in pointer-events-none">
           <Fireworks />
 
-          {/* Winner Avatar (Centered) */}
+          {/* Winner Avatar */}
           {result.winner && (
-            <div className="relative animate-zoom-in mb-8">
-              <div className="absolute -inset-4 bg-yellow-500 rounded-full blur-xl opacity-50 animate-pulse" />
+            <div className="relative animate-bounce-in mb-8">
+              <div className="absolute -inset-6 bg-[var(--color-ggd-gold)] rounded-full blur-2xl opacity-40 animate-pulse" />
               <img
                 src={result.winner.avatarUrl || '/placeholder-avatar.png'}
-                className="w-48 h-48 rounded-full border-4 border-yellow-400 shadow-[0_0_50px_rgba(255,215,0,0.6)] object-cover relative z-10"
+                className="w-48 h-48 rounded-full border-4 border-[var(--color-ggd-gold)] shadow-[0_0_50px_rgba(255,200,87,0.5)] object-cover relative z-10"
               />
-              <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-yellow-500 text-black font-black uppercase px-4 py-1 rounded shadow-lg whitespace-nowrap z-20">
-                🏆 CHAMPION: {result.winner.name} 🏆
+              <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 bg-[var(--color-ggd-gold)] text-[var(--color-ggd-deep)] font-display text-lg px-5 py-1.5 rounded-full shadow-lg whitespace-nowrap z-20">
+                👑 VỊT NHẤT: {result.winner.name} 🏆
               </div>
             </div>
           )}
 
           {/* Verdict */}
-          <div className="bg-black/80 backdrop-blur text-white px-8 py-4 rounded-xl border border-white/20 shadow-2xl animate-slide-up">
-            <h2 className="text-3xl font-display font-bold text-[var(--color-f1-red)] uppercase text-center glow-text">
-              RACE FINISHED
+          <div className="cartoon-card-gold p-6 animate-slide-up">
+            <h2 className="font-display text-4xl text-[var(--color-ggd-gold)] text-center glow-gold">
+              🎉 HẾT TRẬN RỒI!
             </h2>
-            <p className="text-xl mt-2 text-center text-zinc-300 italic">"{result.verdict}"</p>
+            <p className="text-xl mt-2 text-center text-[var(--color-ggd-cream)]/80 font-readable italic">&ldquo;{result.verdict}&rdquo;</p>
           </div>
 
-          {/* Losers (Bottom) */}
+          {/* Losers */}
           {result.victims && result.victims.length > 0 && (
-            <div className="absolute bottom-10 flex gap-12 animate-slide-up delay-500">
+            <div className="absolute bottom-10 flex gap-12 animate-slide-up" style={{ animationDelay: '0.5s' }}>
               {result.victims.map((v, idx) => (
                 <div key={idx} className="flex flex-col items-center group relative">
-                  {/* Glitch/Cursed Effect */}
                   <div className="relative">
-                    <div className="absolute inset-0 bg-red-600 mix-blend-overlay opacity-0 group-hover:opacity-100 animate-pulse rounded-full" />
+                    <div className="absolute -inset-2 bg-[var(--color-ggd-orange)] rounded-full blur-lg opacity-30 animate-pulse" />
                     <img
                       src={v.avatarUrl || '/placeholder-avatar.png'}
-                      className="w-24 h-24 rounded-full border-2 border-red-900 grayscale contrast-150 brightness-75 object-cover"
-                      style={{ filter: 'grayscale(100%) contrast(1.2) brightness(0.8)' }}
+                      className="w-24 h-24 rounded-full border-3 border-[var(--color-ggd-orange)] object-cover relative z-10 saturate-50"
                     />
-                    {/* Glitch overlay */}
-                    <div className="absolute inset-0 bg-noise opacity-30 mix-blend-overlay rounded-full" />
+                    <div className="absolute -top-2 -right-2 text-2xl z-20 animate-bob">😢</div>
                   </div>
-                  <div className="mt-2 text-red-700 font-creepster font-bold uppercase tracking-widest text-sm bg-black px-2 rounded">
-                    🦆 VICTIM: {v.name}
+                  <div className="mt-2 font-display text-base text-[var(--color-ggd-orange)] bg-[var(--color-ggd-deep)]/80 px-3 py-1 rounded-full">
+                    🦆 VỊT XUI: {v.name}
                   </div>
                 </div>
               ))}
@@ -203,23 +188,23 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px] lg:h-[700px]">
         {/* LEFT: Live Stream (2 cols) */}
         <div className="lg:col-span-2 flex flex-col gap-4">
-          <Card className="flex-1 bg-black flex items-center justify-center overflow-hidden relative border-2 border-[var(--color-f1-red)] shadow-[0_0_20px_rgba(255,24,1,0.3)]">
+          <Card className="flex-1 bg-black/50 flex items-center justify-center overflow-hidden relative border-3 border-[var(--color-ggd-mint)] rounded-2xl shadow-[0_0_20px_rgba(94,232,183,0.2)]">
             {status === 'connecting' && (
-              <div className="text-[var(--color-f1-cyan)] animate-pulse flex flex-col items-center">
-                <span className="text-3xl">📡</span>
-                <p className="mt-2 text-sm font-mono">ESTABLISHING LINK...</p>
+              <div className="text-[var(--color-ggd-mint)] animate-pulse flex flex-col items-center">
+                <span className="text-4xl animate-bob">📡</span>
+                <p className="mt-2 text-sm font-data text-[var(--color-ggd-lavender)]">Đang kết nối...</p>
               </div>
             )}
 
             {/* Live Badge */}
             <div className="absolute top-4 left-4 z-10 flex gap-2">
-              <div className={`bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg flex items-center gap-1 ${status === 'live' ? 'animate-pulse' : ''}`}>
-                <div className="w-2 h-2 bg-white rounded-full"></div>
-                {result ? 'FINISHED' : 'LIVE'}
+              <div className={`cute-tag bg-[var(--color-ggd-orange)] text-white shadow-lg ${status === 'live' ? 'animate-pulse' : ''}`}>
+                <div className="w-2 h-2 bg-white rounded-full mr-1.5"></div>
+                {result ? '🏁 KẾT THÚC' : '🔴 LIVE'}
               </div>
               {status === 'live' && !result && (
-                <div className="bg-black/50 text-[var(--color-f1-cyan)] text-xs font-mono px-2 py-1 rounded border border-[var(--color-f1-cyan)]">
-                  CDP STREAM
+                <div className="cute-tag bg-[var(--color-ggd-deep)]/70 text-[var(--color-ggd-mint)] border border-[var(--color-ggd-mint)]/30">
+                  📺 Trực Tiếp
                 </div>
               )}
             </div>
@@ -232,45 +217,48 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
             />
           </Card>
 
-          {/* Stream Info / Stats could go here */}
-          <div className="bg-[var(--color-f1-surface)] p-4 border border-white/10 flex justify-between items-center">
-            <div className="font-display text-sm uppercase text-white tracking-widest">
-              {result ? 'Final Classification' : 'Live Feed from Server'}
+          {/* Stream Info */}
+          <div className="soft-card p-4 flex justify-between items-center">
+            <div className="font-display text-base text-[var(--color-ggd-cream)]">
+              {result ? '🏆 Đã Kết Thúc' : '📺 Phát Trực Tiếp'}
             </div>
-            <div className="text-xs font-mono text-green-400">
-              ● {status === 'live' ? 'Connected' : 'Reconnecting...'}
+            <div className="flex items-center gap-2 text-sm font-data">
+              <div className={`w-2 h-2 rounded-full ${status === 'live' ? 'bg-[var(--color-ggd-mint)]' : 'bg-[var(--color-ggd-orange)]'}`} />
+              <span className={status === 'live' ? 'text-[var(--color-ggd-mint)]' : 'text-[var(--color-ggd-orange)]'}>
+                {status === 'live' ? 'Đang kết nối' : 'Đang kết nối lại...'}
+              </span>
             </div>
           </div>
         </div>
 
         {/* RIGHT: Live Commentary (1 col) */}
-        <Card className="lg:col-span-1 bg-[var(--color-f1-surface)] border border-white/10 flex flex-col h-full overflow-hidden">
+        <Card className="lg:col-span-1 cartoon-card flex flex-col h-full overflow-hidden">
           {/* Header */}
-          <div className="px-5 py-3 border-b border-white/10 bg-white/[0.04] flex items-center justify-between">
-            <span className="font-display text-xs font-bold tracking-[0.15em] uppercase text-white/80">
-              Race Director
+          <div className="px-5 py-3 border-b-2 border-[var(--color-ggd-mint)]/10 bg-[var(--color-ggd-surface-2)]/30 flex items-center justify-between rounded-t-[17px]">
+            <span className="font-display text-base text-[var(--color-ggd-cream)]">
+              🎤 MC Vịt
             </span>
-            {status === 'live' && !result && <span className="w-2 h-2 bg-[var(--color-f1-cyan)] rounded-full animate-ping" />}
+            {status === 'live' && !result && <span className="w-2.5 h-2.5 bg-[var(--color-ggd-mint)] rounded-full animate-ping" />}
           </div>
 
           {/* Chat Area */}
           <ScrollArea className="flex-1 p-4" ref={scrollRef}>
             <div className="space-y-4">
               {commentaries.length === 0 && (
-                <div className="text-center text-white/20 py-10 text-sm italic">
-                  Waiting for commentary...
+                <div className="text-center text-[var(--color-ggd-lavender)]/30 py-10 text-sm font-data">
+                  🎤 MC Vịt đang chuẩn bị... 🦆
                 </div>
               )}
 
               {commentaries.map((c) => (
                 <div key={c.id} className="animate-slide-up flex gap-3 group">
                   <div className="mt-1">
-                    <span className="font-mono text-[10px] text-[var(--color-f1-red)] bg-white/5 px-1.5 py-0.5 rounded">
+                    <span className="cute-tag bg-[var(--color-ggd-mint)]/10 text-[var(--color-ggd-mint)] text-[10px]">
                       {formatTime(c.timestamp)}
                     </span>
                   </div>
-                  <div className="flex-1 bg-white/5 p-3 rounded-tr-xl rounded-bl-xl rounded-br-xl border border-white/5 group-hover:bg-white/10 transition-colors">
-                    <p className="font-readable text-sm text-white/90 leading-relaxed">
+                  <div className="flex-1 bg-[var(--color-ggd-surface-2)]/40 p-3 rounded-2xl rounded-tl-sm border border-[var(--color-ggd-mint)]/10 group-hover:bg-[var(--color-ggd-surface-2)]/60 transition-colors">
+                    <p className="font-readable text-sm text-[var(--color-ggd-cream)]/90 leading-relaxed">
                       {c.text}
                     </p>
                   </div>
@@ -280,10 +268,10 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
             </div>
           </ScrollArea>
 
-          {/* Input area mimic (optional, just visual) */}
-          <div className="p-3 border-t border-white/10 bg-black/20">
-            <div className="h-8 bg-white/5 rounded border border-white/10 flex items-center px-3 text-xs text-white/30 italic cursor-not-allowed">
-              Commentary is generated by AI...
+          {/* Input area mimic */}
+          <div className="p-3 border-t-2 border-[var(--color-ggd-mint)]/10 bg-[var(--color-ggd-deep)]/40">
+            <div className="h-8 bg-[var(--color-ggd-surface-2)]/30 rounded-full border border-[var(--color-ggd-mint)]/10 flex items-center px-3 text-xs text-[var(--color-ggd-lavender)]/40 font-data cursor-not-allowed">
+              🤖 MC Vịt AI đang bình luận...
             </div>
           </div>
         </Card>
