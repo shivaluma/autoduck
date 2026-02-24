@@ -37,8 +37,6 @@ export function NewRaceContent({ testMode, secretKey }: NewRaceContentProps) {
   const [starting, setStarting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [countdown, setCountdown] = useState<number | null>(null)
-
-  // Dialog State
   const [playerToRemove, setPlayerToRemove] = useState<number | null>(null)
 
   useEffect(() => {
@@ -49,12 +47,8 @@ export function NewRaceContent({ testMode, secretKey }: NewRaceContentProps) {
           data.map((p) => {
             const isThomas = p.name === 'Thomas'
             return {
-              userId: p.id,
-              name: p.name,
-              selected: true,
-              useShield: isThomas,
-              availableShields: p.shields,
-              scars: p.scars,
+              userId: p.id, name: p.name, selected: true,
+              useShield: isThomas, availableShields: p.shields, scars: p.scars,
             }
           })
         )
@@ -69,19 +63,11 @@ export function NewRaceContent({ testMode, secretKey }: NewRaceContentProps) {
   const handleTogglePlayerRequest = (userId: number) => {
     const player = players.find(p => p.userId === userId)
     if (!player) return
-
-    if (player.selected) {
-      setPlayerToRemove(userId)
-    } else {
-      togglePlayerRef(userId)
-    }
+    if (player.selected) { setPlayerToRemove(userId) } else { togglePlayerRef(userId) }
   }
 
   const confirmRemovePlayer = () => {
-    if (playerToRemove !== null) {
-      togglePlayerRef(playerToRemove)
-      setPlayerToRemove(null)
-    }
+    if (playerToRemove !== null) { togglePlayerRef(playerToRemove); setPlayerToRemove(null) }
   }
 
   const togglePlayerRef = (userId: number) => {
@@ -106,89 +92,71 @@ export function NewRaceContent({ testMode, secretKey }: NewRaceContentProps) {
 
   const handleStartRace = async () => {
     setCountdown(5)
-    for (let i = 4; i >= 0; i--) {
-      await new Promise(r => setTimeout(r, 600))
-      setCountdown(i)
-    }
+    for (let i = 4; i >= 0; i--) { await new Promise(r => setTimeout(r, 600)); setCountdown(i) }
     await new Promise(r => setTimeout(r, 400))
-    setCountdown(null)
-    setStarting(true)
-    setError(null)
+    setCountdown(null); setStarting(true); setError(null)
 
     const participants = players
       .filter((p) => p.selected)
-      .map((p) => ({
-        userId: p.userId,
-        useShield: p.useShield,
-      }))
+      .map((p) => ({ userId: p.userId, useShield: p.useShield }))
       .sort(() => Math.random() - 0.5)
 
     try {
       const res = await fetch('/api/races/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          participants,
-          test: testMode,
-          secret: secretKey
-        }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ participants, test: testMode, secret: secretKey }),
       })
       const data = await res.json()
-      if (!res.ok) {
-        setError(data.error || 'Có lỗi xảy ra')
-        setStarting(false)
-        return
-      }
+      if (!res.ok) { setError(data.error || 'Có lỗi xảy ra'); setStarting(false); return }
       router.push(`/race/${data.raceId}`)
-    } catch {
-      setError('Không thể kết nối server')
-      setStarting(false)
-    }
+    } catch { setError('Không thể kết nối server'); setStarting(false) }
   }
 
   // Countdown overlay
   if (countdown !== null) {
     return (
-      <div className="min-h-screen bg-[var(--color-ggd-deep)] bubble-bg flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--color-ggd-bg)] flex items-center justify-center">
         <div className="text-center">
           {countdown > 0 ? (
             <>
-              {/* Egg countdown */}
               <div className="flex gap-5 mb-12 justify-center">
                 {[5, 4, 3, 2, 1].map((n) => (
                   <div
                     key={n}
-                    className={`w-14 h-14 rounded-full transition-all duration-300 flex items-center justify-center text-2xl ${countdown <= n
-                      ? 'bg-[var(--color-ggd-orange)] shadow-[0_0_30px_rgba(255,107,74,0.4)] scale-110'
-                      : 'bg-[var(--color-ggd-surface)] scale-90 opacity-40'
+                    className={`w-16 h-16 rounded-full border-4 border-[var(--color-ggd-outline)] transition-all duration-300 flex items-center justify-center text-2xl
+                      shadow-[inset_0_2px_0_rgba(255,255,255,0.1),0_4px_0_var(--color-ggd-outline)]
+                      ${countdown <= n
+                        ? 'bg-[var(--color-ggd-orange)] scale-110 shadow-[0_0_25px_rgba(255,87,51,0.5)]'
+                        : 'bg-[var(--color-ggd-panel)] scale-90 opacity-30'
                       }`}
                   >
                     {countdown <= n ? '🥚' : ''}
                   </div>
                 ))}
               </div>
-              <div className="font-display text-[120px] text-[var(--color-ggd-orange)] leading-none animate-pulse glow-orange">
+              <div className="font-display text-[140px] text-[var(--color-ggd-orange)] leading-none animate-pulse text-outlined">
                 {countdown}
               </div>
             </>
           ) : (
             <>
-              {/* GO! All eggs hatched! */}
               <div className="flex gap-5 mb-12 justify-center">
                 {[5, 4, 3, 2, 1].map((n) => (
                   <div
                     key={n}
-                    className="w-14 h-14 rounded-full bg-[var(--color-ggd-mint)] shadow-[0_0_30px_rgba(94,232,183,0.4)] flex items-center justify-center text-2xl animate-wiggle-duck"
+                    className="w-16 h-16 rounded-full bg-[var(--color-ggd-neon-green)] border-4 border-[var(--color-ggd-outline)]
+                      shadow-[0_0_25px_rgba(61,255,143,0.5),0_4px_0_var(--color-ggd-outline)]
+                      flex items-center justify-center text-2xl animate-wiggle-duck"
                     style={{ animationDelay: `${n * 0.05}s` }}
                   >
                     🐣
                   </div>
                 ))}
               </div>
-              <div className="font-display text-[80px] text-[var(--color-ggd-mint)] leading-none glow-mint">
+              <div className="font-display text-[90px] text-[var(--color-ggd-neon-green)] leading-none text-outlined glow-green">
                 QUACK QUACK!
               </div>
-              <div className="font-body text-xl text-[var(--color-ggd-cream)]/60 mt-4">
+              <div className="font-body text-2xl text-white/70 mt-4 font-bold">
                 🦆 Chạy đi các vịt ơiiiii! 🦆
               </div>
             </>
@@ -199,21 +167,20 @@ export function NewRaceContent({ testMode, secretKey }: NewRaceContentProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-ggd-deep)] bubble-bg">
-      <div className="cute-divider" />
+    <div className="min-h-screen bg-[var(--color-ggd-bg)] bubble-bg">
+      <div className="neon-divider" />
 
-      {/* Header */}
-      <header className="border-b-2 border-[var(--color-ggd-mint)]/20">
+      <header className="border-b-4 border-[var(--color-ggd-outline)]">
         <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
-          <Link href="/" className="font-data text-sm text-[var(--color-ggd-lavender)] hover:text-[var(--color-ggd-cream)] transition-colors">
+          <Link href="/" className="font-data text-sm text-[var(--color-ggd-muted)] hover:text-white transition-colors">
             ← Về Chuồng
           </Link>
           <div className="flex items-center gap-3 animate-slide-right">
-            <div className="font-display text-2xl text-[var(--color-ggd-cream)]">
-              🦆 Tập Hợp <span className="text-[var(--color-ggd-mint)]">Bầy Vịt</span>
+            <div className="font-display text-2xl text-white text-outlined">
+              🦆 Tập Hợp <span className="text-[var(--color-ggd-neon-green)]">Bầy Vịt</span>
             </div>
             {testMode && (
-              <div className="cute-tag bg-[var(--color-ggd-gold)]/20 text-[var(--color-ggd-gold)] border border-[var(--color-ggd-gold)]/50 animate-pulse">
+              <div className="ggd-tag bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)] animate-pulse">
                 TEST MODE
               </div>
             )}
@@ -222,122 +189,99 @@ export function NewRaceContent({ testMode, secretKey }: NewRaceContentProps) {
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-8 space-y-6">
-        {/* Driver Grid */}
-        <div className="cartoon-card overflow-hidden animate-slide-up opacity-0" style={{ animationDelay: '0.1s' }}>
-          {/* Header bar */}
-          <div className="flex items-center justify-between px-5 py-3 bg-[var(--color-ggd-surface-2)]/40 border-b-2 border-[var(--color-ggd-mint)]/10 rounded-t-[17px]">
+        <div className="ggd-card-green ggd-stripe animate-slide-up opacity-0" style={{ animationDelay: '0.1s' }}>
+          <div className="flex items-center justify-between px-5 py-3 bg-[var(--color-ggd-neon-green)] rounded-t-[6px]">
             <div className="flex items-center gap-4">
-              <span className="font-display text-lg text-[var(--color-ggd-cream)]">
+              <span className="font-display text-lg text-[var(--color-ggd-outline)]">
                 🦆 Danh Sách Vịt
               </span>
-              <span className="cute-tag bg-[var(--color-ggd-mint)]/15 text-[var(--color-ggd-mint)]">
+              <span className="ggd-tag bg-[var(--color-ggd-outline)] text-[var(--color-ggd-neon-green)]">
                 {selectedCount} đã chọn
               </span>
               {shieldsInUse > 0 && (
-                <span className="cute-tag bg-[var(--color-ggd-sky)]/15 text-[var(--color-ggd-sky)]">
+                <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)]">
                   🛡️ {shieldsInUse} khiên
                 </span>
               )}
             </div>
           </div>
 
-          {/* Player Grid */}
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <div className="text-5xl animate-bob">🦆</div>
+              <div className="text-6xl animate-bob">🦆</div>
             </div>
           ) : (
-            <div className="divide-y divide-[var(--color-ggd-mint)]/8">
+            <div className="py-1">
               {players.map((player, idx) => (
                 <div
                   key={player.userId}
                   onClick={() => handleTogglePlayerRequest(player.userId)}
                   className={`
-                    grid grid-cols-[50px_1fr_100px_120px_140px] gap-0 items-center
+                    grid grid-cols-[50px_1fr_90px_100px_140px] gap-0 items-center
                     px-5 py-4 cursor-pointer transition-all duration-200
                     duck-row
-                    ${player.selected ? '' : 'opacity-30'}
+                    ${player.selected ? '' : 'opacity-25'}
                     ${player.useShield ? 'shielded' : ''}
                     animate-slide-right opacity-0
                   `}
                   style={{ animationDelay: `${0.15 + idx * 0.05}s` }}
                 >
-                  {/* Selection */}
                   <div className="flex items-center">
-                    <div className={`w-8 h-8 flex items-center justify-center rounded-lg border-2 transition-colors ${player.selected
-                      ? 'border-[var(--color-ggd-mint)] bg-[var(--color-ggd-mint)]/20'
-                      : 'border-[var(--color-ggd-lavender)]/20'
-                      }`}>
+                    <div className={`w-9 h-9 flex items-center justify-center rounded-xl border-3 border-[var(--color-ggd-outline)] transition-colors
+                      shadow-[inset_0_2px_0_rgba(255,255,255,0.1),0_2px_0_var(--color-ggd-outline)]
+                      ${player.selected ? 'bg-[var(--color-ggd-neon-green)]' : 'bg-[var(--color-ggd-panel)]'}`}>
                       {player.selected && (
                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                          <path d="M2 7L5.5 10.5L12 3.5" stroke="var(--color-ggd-mint)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M2 7L5.5 10.5L12 3.5" stroke="var(--color-ggd-outline)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                       )}
                     </div>
                   </div>
 
-                  {/* Player Info */}
                   <div className="flex items-center gap-3">
-                    <div className={`w-1.5 h-10 rounded-full ${player.useShield ? 'bg-[var(--color-ggd-sky)]' :
-                      player.selected ? 'bg-[var(--color-ggd-mint)]' : 'bg-[var(--color-ggd-lavender)]/20'
-                      }`} />
+                    <div className={`w-2 h-10 rounded-full ${player.useShield ? 'bg-[var(--color-ggd-sky)] shadow-[0_0_6px_rgba(61,200,255,0.5)]' :
+                      player.selected ? 'bg-[var(--color-ggd-neon-green)] shadow-[0_0_6px_rgba(61,255,143,0.3)]' : 'bg-[var(--color-ggd-muted)]/20'}`} />
                     <div>
-                      <div className="font-body text-sm font-bold text-[var(--color-ggd-cream)] tracking-wide">
+                      <div className="font-body text-base font-extrabold text-white tracking-wide">
                         {player.name}
-                        {player.name === 'Thomas' && <span className="ml-2 cute-tag bg-[var(--color-ggd-gold)]/20 text-[var(--color-ggd-gold)] text-[10px]">BẤT TỬ ✨</span>}
+                        {player.name === 'Thomas' && <span className="ml-2 ggd-tag bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)] text-[10px] py-0">BẤT TỬ ✨</span>}
                       </div>
                       <div className="flex items-center gap-3 mt-0.5">
-                        <span className="font-data text-xs text-[var(--color-ggd-lavender)]/60">
-                          {player.scars > 0 ? (
-                            <span className="text-[var(--color-ggd-orange)]">🤕 {player.scars} Sẹo</span>
-                          ) : (
-                            'Sạch sẽ ✨'
-                          )}
+                        <span className="font-data text-xs text-[var(--color-ggd-muted)]">
+                          {player.scars > 0 ? (<span className="text-[var(--color-ggd-orange)]">🤕 {player.scars} Sẹo</span>) : 'Sạch sẽ ✨'}
                         </span>
-                        <span className="font-data text-xs text-[var(--color-ggd-lavender)]/60">
-                          {player.availableShields > 9000 ? (
-                            <span className="text-[var(--color-ggd-mint)]">🛡️ ∞</span>
-                          ) : player.availableShields > 0 ? (
-                            <span className="text-[var(--color-ggd-mint)]">🛡️ {player.availableShields}</span>
-                          ) : (
-                            'Không khiên'
-                          )}
+                        <span className="font-data text-xs text-[var(--color-ggd-muted)]">
+                          {player.availableShields > 9000 ? (<span className="text-[var(--color-ggd-neon-green)]">🛡️ ∞</span>) :
+                            player.availableShields > 0 ? (<span className="text-[var(--color-ggd-neon-green)]">🛡️ {player.availableShields}</span>) : 'Không khiên'}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Scars */}
                   <div className="text-center">
-                    <span className={`font-data text-lg font-bold ${player.scars > 0 ? 'text-[var(--color-ggd-orange)]' : 'text-[var(--color-ggd-lavender)]/15'
-                      }`}>
+                    <span className={`font-data text-xl font-extrabold ${player.scars > 0 ? 'text-[var(--color-ggd-orange)]' : 'text-[var(--color-ggd-muted)]/15'}`}>
                       {player.scars}
                     </span>
-                    <div className="font-data text-[10px] text-[var(--color-ggd-lavender)]/40 mt-0.5">Sẹo</div>
+                    <div className="font-data text-[10px] text-[var(--color-ggd-muted)]/50 mt-0.5 uppercase">Sẹo</div>
                   </div>
 
-                  {/* Available Shields */}
                   <div className="text-center">
-                    <span className={`font-data text-lg font-bold ${player.availableShields > 0 ? 'text-[var(--color-ggd-mint)]' : 'text-[var(--color-ggd-lavender)]/15'
-                      }`}>
+                    <span className={`font-data text-xl font-extrabold ${player.availableShields > 0 ? 'text-[var(--color-ggd-neon-green)]' : 'text-[var(--color-ggd-muted)]/15'}`}>
                       {player.availableShields > 9000 ? '∞' : player.availableShields}
                     </span>
-                    <div className="font-data text-[10px] text-[var(--color-ggd-lavender)]/40 mt-0.5">Khiên</div>
+                    <div className="font-data text-[10px] text-[var(--color-ggd-muted)]/50 mt-0.5 uppercase">Khiên</div>
                   </div>
 
-                  {/* Shield Toggle */}
                   <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={() => handleToggleShield(player.userId)}
                       disabled={!player.selected || player.availableShields <= 0 || player.name === 'Thomas'}
-                      className={`
-                        puffy-btn text-xs px-4 py-2
-                        disabled:opacity-20 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none
+                      className={`ggd-btn text-sm px-5 py-2
+                        disabled:opacity-15 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none
                         ${player.useShield
-                          ? 'bg-[var(--color-ggd-mint)] text-[var(--color-ggd-deep)]'
-                          : 'bg-[var(--color-ggd-surface-2)] text-[var(--color-ggd-lavender)] hover:bg-[var(--color-ggd-surface-2)]/80'
-                        }
-                      `}
+                          ? 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]'
+                          : 'bg-[var(--color-ggd-panel)] text-[var(--color-ggd-muted)] hover:bg-[var(--color-ggd-surface-2)]'
+                        }`}
                     >
                       {player.useShield ? '🛡️ Đang Bật' : 'Bật Khiên'}
                     </button>
@@ -348,93 +292,68 @@ export function NewRaceContent({ testMode, secretKey }: NewRaceContentProps) {
           )}
         </div>
 
-        {/* Error */}
         {error && (
-          <div className="cartoon-card-orange px-5 py-3">
-            <span className="font-data text-sm text-[var(--color-ggd-orange)]">
-              ⚠️ LỖI: {error}
-            </span>
+          <div className="ggd-card-orange p-4">
+            <span className="font-data text-base text-white font-bold">⚠️ LỖI: {error}</span>
           </div>
         )}
 
-        {/* Active Shields Banner */}
         {shieldsInUse > 0 && (
-          <div className="soft-card p-5 border-[var(--color-ggd-sky)]/30 animate-slide-up opacity-0" style={{ animationDelay: '0.5s' }}>
+          <div className="ggd-card p-5 border-[var(--color-ggd-sky)] animate-slide-up opacity-0" style={{ animationDelay: '0.5s' }}>
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-2 h-2 bg-[var(--color-ggd-sky)] rounded-full animate-pulse" />
-              <span className="font-display text-base text-[var(--color-ggd-sky)]">
-                🛡️ Khiên Đang Hoạt Động
-              </span>
+              <div className="w-3 h-3 bg-[var(--color-ggd-sky)] rounded-full animate-pulse shadow-[0_0_8px_rgba(61,200,255,0.6)]" />
+              <span className="font-display text-lg text-[var(--color-ggd-sky)] text-outlined">🛡️ Khiên Đang Bật</span>
             </div>
             <div className="flex flex-wrap gap-2">
-              {players
-                .filter((p) => p.selected && p.useShield)
-                .map((p) => (
-                  <span key={p.userId} className="cute-tag bg-[var(--color-ggd-sky)]/15 text-[var(--color-ggd-sky)]">
-                    {p.name}
-                  </span>
-                ))}
+              {players.filter((p) => p.selected && p.useShield).map((p) => (
+                <span key={p.userId} className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)]">{p.name}</span>
+              ))}
             </div>
-            <p className="font-body text-sm text-[var(--color-ggd-lavender)]/60 mt-2">
+            <p className="font-body text-sm text-[var(--color-ggd-muted)] mt-2">
               Vịt có khiên sẽ thoát kiếp dzịt nếu về cuối. Phận dzịt chuyển cho vịt kế tiếp! 🦆
             </p>
           </div>
         )}
 
-        {/* Action Bar */}
         <div className="flex items-center justify-between pt-2 animate-slide-up opacity-0" style={{ animationDelay: '0.4s' }}>
           <Link href="/">
-            <button className="font-display text-base text-[var(--color-ggd-lavender)]/50 hover:text-[var(--color-ggd-cream)] transition-colors px-4 py-3">
+            <button className="font-display text-lg text-[var(--color-ggd-muted)] hover:text-white transition-colors px-4 py-3">
               ← Hủy
             </button>
           </Link>
           <button
             onClick={handleStartRace}
             disabled={selectedCount < 2 || starting}
-            className={`
-              puffy-btn text-lg px-10 py-4
-              disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none
+            className={`ggd-btn text-xl px-12 py-4
+              disabled:opacity-25 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none
               ${starting
-                ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-deep)]'
-                : 'bg-[var(--color-ggd-orange)] hover:bg-[#ff7f5e] text-white'
-              }
-            `}
+                ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]'
+                : 'bg-[var(--color-ggd-orange)] text-white'
+              }`}
           >
             <span className="flex items-center gap-3">
-              {starting ? (
-                <>
-                  <span className="animate-spin">🥚</span>
-                  Đang Khởi Động...
-                </>
-              ) : (
-                <>
-                  🦆 Chạy Đi Các Vịt! ({selectedCount})
-                </>
-              )}
+              {starting ? (<><span className="animate-spin">🥚</span> Đang Khởi Động...</>)
+                : (<>🦆 Chạy Đi Các Vịt! ({selectedCount})</>)}
             </span>
           </button>
         </div>
       </main>
 
-      {/* Opt-out Confirmation Dialog */}
       <AlertDialog open={playerToRemove !== null} onOpenChange={(open) => !open && setPlayerToRemove(null)}>
-        <AlertDialogContent className="bg-[var(--color-ggd-surface)] border-2 border-[var(--color-ggd-mint)]/30 text-[var(--color-ggd-cream)] rounded-2xl">
+        <AlertDialogContent className="bg-[var(--color-ggd-surface)] border-4 border-[var(--color-ggd-outline)] text-white rounded-2xl shadow-[0_6px_0_var(--color-ggd-outline),0_12px_30px_rgba(0,0,0,0.6)]">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-[var(--color-ggd-orange)] font-display text-xl">
+            <AlertDialogTitle className="text-[var(--color-ggd-orange)] font-display text-2xl text-outlined">
               🦆 Bỏ Vịt Ra?
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-[var(--color-ggd-lavender)]">
-              Chắc chắn muốn bỏ <strong className="text-[var(--color-ggd-cream)]">{players.find(p => p.userId === playerToRemove)?.name}</strong> ra khỏi trận đua?
+            <AlertDialogDescription className="text-[var(--color-ggd-lavender)] text-base">
+              Chắc chắn muốn bỏ <strong className="text-white">{players.find(p => p.userId === playerToRemove)?.name}</strong> ra khỏi trận?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-transparent border-2 border-[var(--color-ggd-lavender)]/30 hover:bg-[var(--color-ggd-surface-2)] text-[var(--color-ggd-cream)] font-display rounded-full">
+            <AlertDialogCancel className="ggd-btn bg-[var(--color-ggd-panel)] text-[var(--color-ggd-muted)] hover:bg-[var(--color-ggd-surface-2)] text-sm">
               Thôi
             </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmRemovePlayer}
-              className="bg-[var(--color-ggd-orange)] hover:bg-[#ff7f5e] text-white font-display rounded-full border-0"
-            >
+            <AlertDialogAction onClick={confirmRemovePlayer} className="ggd-btn bg-[var(--color-ggd-orange)] text-white text-sm">
               Bỏ Ra 🦆
             </AlertDialogAction>
           </AlertDialogFooter>
