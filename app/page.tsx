@@ -8,6 +8,7 @@ export default function Dashboard() {
   const [players, setPlayers] = useState<PlayerData[]>([])
   const [loading, setLoading] = useState(true)
   const [races, setRaces] = useState<{ id: number; status: string; finalVerdict: string | null; createdAt: string; isTest?: boolean }[]>([])
+  const [showTestRaces, setShowTestRaces] = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -20,7 +21,8 @@ export default function Dashboard() {
     }).catch(() => setLoading(false))
   }, [])
 
-  const totalRaces = races.length
+  const displayedRaces = showTestRaces ? races : races.filter(r => !r.isTest)
+  const totalRaces = displayedRaces.length
   const totalKhaos = players.reduce((sum, p) => sum + p.totalKhaos, 0)
   const sortedPlayers = [...players].sort((a, b) => b.totalKhaos - a.totalKhaos)
   const mostKhaos = sortedPlayers[0] ?? null
@@ -201,15 +203,30 @@ export default function Dashboard() {
           <div className="animate-slide-up opacity-0" style={{ animationDelay: '0.35s' }}>
             {/* Race History */}
             <div className="bg-[var(--color-f1-surface)] border border-white/10 overflow-hidden">
-              <div className="px-5 py-3 border-b border-white/10 bg-white/[0.04]">
+              <div className="px-5 py-3 border-b border-white/10 bg-white/[0.04] flex items-center justify-between">
                 <span className="font-display text-xs font-bold tracking-[0.15em] uppercase text-white/80">
                   Race Log
                 </span>
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      className="sr-only"
+                      checked={showTestRaces}
+                      onChange={(e) => setShowTestRaces(e.target.checked)}
+                    />
+                    <div className={`w-8 h-4 rounded-full transition-colors ${showTestRaces ? 'bg-[var(--color-f1-cyan)]' : 'bg-white/20'}`}></div>
+                    <div className={`absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform ${showTestRaces ? 'translate-x-4' : 'translate-x-0'}`}></div>
+                  </div>
+                  <span className="font-data text-[9px] tracking-wider uppercase text-white/50 group-hover:text-white/80 transition-colors">
+                    Test
+                  </span>
+                </label>
               </div>
 
-              {races.length > 0 ? (
+              {displayedRaces.length > 0 ? (
                 <div className="divide-y divide-white/[0.06]">
-                  {races.slice(0, 8).map((race, i) => (
+                  {displayedRaces.slice(0, 8).map((race, i) => (
                     <Link
                       key={race.id}
                       href={`/race/${race.id}`}
