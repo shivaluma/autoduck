@@ -635,19 +635,30 @@
 }
 
 .timing-row {
-  @apply duck-row;
+  border-left: 4px solid transparent;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.timing-row:hover {
+  border-left-color: var(--color-ggd-mint);
+  background: rgba(94, 232, 183, 0.08);
+  transform: translateX(4px);
 }
 
 .timing-row.penalty {
-  @apply loser;
+  border-left-color: var(--color-ggd-orange);
+  background: rgba(255, 107, 74, 0.08);
 }
 
 .timing-row.podium {
-  @apply winner;
+  border-left-color: var(--color-ggd-gold);
+  background: rgba(255, 200, 87, 0.08);
 }
 
 .timing-row.shield-active {
-  @apply shielded;
+  border-left-color: var(--color-ggd-sky);
+  background: rgba(126, 200, 227, 0.08);
 }
 
 .checkered-bg {
