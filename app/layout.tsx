@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Boogaloo, Nunito, Quicksand, Be_Vietnam_Pro } from "next/font/google";
+import { Fredoka, Nunito, Quicksand, Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
 
-const boogaloo = Boogaloo({
+const fredoka = Fredoka({
   variable: "--font-boogaloo",
-  subsets: ["latin"],
-  weight: ["400"],
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "500", "600", "700"],
 });
 
 const nunito = Nunito({
@@ -42,7 +42,7 @@ export default function RootLayout({
   return (
     <html lang="vi" className="dark">
       <body
-        className={`${boogaloo.variable} ${nunito.variable} ${quicksand.variable} ${beVietnam.variable} antialiased`}
+        className={`${fredoka.variable} ${nunito.variable} ${quicksand.variable} ${beVietnam.variable} antialiased`}
       >
         {children}
       </body>
