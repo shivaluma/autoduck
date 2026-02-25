@@ -324,16 +324,18 @@ export function NewRaceContent({ testMode, secretKey }: NewRaceContentProps) {
           <button
             onClick={handleStartRace}
             disabled={selectedCount < 2 || starting}
-            className={`ggd-btn text-xl px-12 py-4
-              disabled:opacity-25 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none
+            className={`font-display text-2xl tracking-widest uppercase px-14 py-4
+              border-[5px] border-[var(--color-ggd-outline)] rounded-xl cursor-pointer
+              transition-all duration-100
+              disabled:opacity-25 disabled:cursor-not-allowed disabled:shadow-none
               ${starting
-                ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]'
-                : 'bg-[var(--color-ggd-orange)] text-white'
+                ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)] shadow-[inset_0_3px_0_rgba(255,255,255,0.35),0_7px_0_#7a6000,0_12px_24px_rgba(0,0,0,0.5)]'
+                : 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)] shadow-[inset_0_3px_0_rgba(255,255,255,0.45),0_7px_0_#007a3a,0_12px_28px_rgba(61,255,143,0.35)] hover:-translate-y-1 hover:shadow-[inset_0_3px_0_rgba(255,255,255,0.45),0_9px_0_#007a3a,0_16px_32px_rgba(61,255,143,0.45)] active:translate-y-[5px] active:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_2px_0_#007a3a]'
               }`}
           >
             <span className="flex items-center gap-3">
               {starting ? (<><span className="animate-spin">🥚</span> Đang Khởi Động...</>)
-                : (<>🦆 Chạy Đi Các Vịt! ({selectedCount})</>)}
+                : (<>🦆 Chạy Đua! ({selectedCount})</>)}
             </span>
           </button>
         </div>
