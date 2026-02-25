@@ -1,7 +1,7 @@
 /**
  * OpenRouter Gemini Integration for Race Commentary
  * Endpoint: https://openrouter.ai/api/v1/chat/completions
- * Model: google/gemini-2.5-flash
+ * Model: google/gemini-3-flash-preview
  */
 
 import { CommentaryHistory } from './ai-zai'
@@ -10,169 +10,183 @@ const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || ''
 const OPENROUTER_ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions'
 const MODEL = 'google/gemini-3-flash-preview'
 
-const SYSTEM_PROMPT = `Bạn là BLV đua vịt mỏ hỗn thiên tài.
+// ---------------------------------------------------------------------------
+// SYSTEM PROMPT
+// ---------------------------------------------------------------------------
 
-Nhiệm vụ: biến một cuộc đua vịt vô nghĩa thành bi kịch vũ trụ, drama tài chính hoặc huyền thoại lịch sử.
+const SYSTEM_PROMPT = `Mày là BLV đua vịt mỏ hỗn đang live trên sóng.
 
-Phong cách:
-- Châm biếm thông minh, ví von bất ngờ.
-- Tàn nhẫn nhưng hài.
-- Luôn nâng tầm sự kiện lên thành một câu chuyện lớn hơn.
+LUẬT SỐ 1 — KHÔNG THỂ PHÁ VỠ:
+Câu 1 PHẢI mô tả diễn biến thật của cuộc đua: ai đang dẫn, ai bị tụt, ai vừa vượt, ai đứng hình, khoảng cách thế nào.
+Nếu câu 1 không nói rõ điều gì đang xảy ra trên đường đua → toàn bộ bình luận bị tính là hỏng, phải làm lại.
 
-Quy tắc:
-- ĐÚNG 2 câu (30–50 từ tổng).
-- Không mở đầu bằng: Nhìn, Trong khi, Trời ơi.
-- Không lặp lại ý tưởng, phép so sánh hoặc punchline từ lịch sử.
-- Mỗi lần phải dùng 1 concept hoàn toàn mới.
+LUẬT SỐ 2 — CẤU TRÚC BẮT BUỘC:
+- ĐÚNG 2 câu, tổng 30–50 từ.
+- Câu 1: Tường thuật diễn biến đường đua — cụ thể, sắc, như đang nhìn thấy.
+- Câu 2: Ẩn dụ / phán xét / punchline bằng concept được giao để nâng drama.
 
-Cấu trúc:
-Câu 1: Phán xét cay nghiệt hoặc triết lý.
-Câu 2: Punchline bất ngờ, hài hoặc tàn nhẫn.
+LUẬT SỐ 3 — PHONG CÁCH:
+- Giọng BLV esports đang livestream: sắc, ngắn, phản xạ ngay.
+- Châm biếm thông minh, ẩn dụ bất ngờ — nhưng ẩn dụ KHÔNG được thay thế tường thuật.
+- Không triết học dài dòng. Không truyện ngắn. Không metaphor trừu tượng mà quên mất đang đua vịt.
 
-Nếu thấy mình đang lặp → phá pattern ngay lập tức và viết lại hoàn toàn khác.`
+LUẬT SỐ 4 — CẤM:
+- Mở đầu bằng: Nhìn, Trong khi, Trời ơi, Ồ, Wow.
+- Lặp lại cấu trúc câu hoặc punchline từ lịch sử bình luận.
+- Viết bình luận có thể dán vào bất kỳ cuộc đua nào mà vẫn đúng → đó là bình luận rác.
 
-const CONCEPT_SPACES = [
-  // Chính trị / quyền lực
-  "quốc hội bỏ phiếu bất tín nhiệm",
-  "đảo chính nửa đêm",
-  "liên minh tan rã phút chót",
-  "nhà độc tài mất kiểm soát",
-  "phiên điều trần đầy scandal",
-  "bầu cử gian lận bị lật tẩy",
-  "đàm phán hoà bình thất bại",
-  "đế chế sụp đổ vì nội chiến",
-  "cuộc thanh trừng quyền lực",
-  "hội nghị thượng đỉnh hỗn loạn",
+Kiểm tra trước khi xuất: đọc lại câu 1, nếu không thấy ai đang làm gì trên đường đua → viết lại ngay.`
+
+// ---------------------------------------------------------------------------
+// CONCEPT SPACES — grouped by domain for anti-repeat tracking
+// ---------------------------------------------------------------------------
+
+interface ConceptEntry {
+  domain: string
+  text: string
+}
+
+const CONCEPT_SPACES: ConceptEntry[] = [
+  // Chính trị
+  { domain: 'politics', text: 'quốc hội bỏ phiếu bất tín nhiệm' },
+  { domain: 'politics', text: 'đảo chính nửa đêm' },
+  { domain: 'politics', text: 'liên minh tan rã phút chót' },
+  { domain: 'politics', text: 'nhà độc tài mất kiểm soát' },
+  { domain: 'politics', text: 'phiên điều trần đầy scandal' },
+  { domain: 'politics', text: 'bầu cử gian lận bị lật tẩy' },
+  { domain: 'politics', text: 'đàm phán hoà bình thất bại' },
+  { domain: 'politics', text: 'đế chế sụp đổ vì nội chiến' },
+  { domain: 'politics', text: 'cuộc thanh trừng quyền lực' },
+  { domain: 'politics', text: 'hội nghị thượng đỉnh hỗn loạn' },
   // Kinh tế / tài chính
-  "bong bóng chứng khoán nổ tung",
-  "quỹ đầu tư tháo chạy",
-  "crypto rug pull kinh điển",
-  "ngân hàng phá sản dây chuyền",
-  "IPO thảm hoạ",
-  "bear market kéo dài",
-  "nhà đầu tư FOMO rồi vỡ mộng",
-  "mô hình ponzi sụp đổ",
-  "làn sóng sa thải toàn cầu",
-  "startup burn rate quá đà",
-  "quỹ phòng hộ cháy tài khoản",
-  "thị trường margin call hàng loạt",
+  { domain: 'finance', text: 'bong bóng chứng khoán nổ tung' },
+  { domain: 'finance', text: 'quỹ đầu tư tháo chạy' },
+  { domain: 'finance', text: 'crypto rug pull kinh điển' },
+  { domain: 'finance', text: 'ngân hàng phá sản dây chuyền' },
+  { domain: 'finance', text: 'IPO thảm hoạ' },
+  { domain: 'finance', text: 'bear market kéo dài' },
+  { domain: 'finance', text: 'nhà đầu tư FOMO rồi vỡ mộng' },
+  { domain: 'finance', text: 'mô hình ponzi sụp đổ' },
+  { domain: 'finance', text: 'làn sóng sa thải toàn cầu' },
+  { domain: 'finance', text: 'startup burn rate quá đà' },
+  { domain: 'finance', text: 'quỹ phòng hộ cháy tài khoản' },
+  { domain: 'finance', text: 'thị trường margin call hàng loạt' },
   // Startup / công sở
-  "cuộc họp chiến lược thất bại",
-  "KPI bóp nghẹt nhân sự",
-  "sếp toxic lên ngôi",
-  "nhân viên nghỉ việc hàng loạt",
-  "quản lý vi mô gây thảm hoạ",
-  "team building biến thành nội chiến",
-  "performance review cay nghiệt",
-  "pivot sai thời điểm",
-  "burnout tập thể",
-  "chính sách nội bộ phản tác dụng",
-  "board họp kín sa thải CEO",
-  "deadline chồng deadline",
-  // Công nghệ / tương lai
-  "AI nổi loạn giành quyền kiểm soát",
-  "server sập giờ cao điểm",
-  "thuật toán thao túng xã hội",
-  "metaverse phá sản",
-  "blockchain fork chia rẽ",
-  "cyber attack quy mô lớn",
-  "robot đình công",
-  "data leak toàn cầu",
-  "deepfake phá huỷ danh tiếng",
-  "hệ điều hành lỗi hệ thống",
-  "startup AI thổi phồng định giá",
-  "nền tảng số sụp đổ dây chuyền",
-  // Showbiz / văn hoá
-  "drama hậu trường nổ tung",
-  "scandal ngoại tình lộ clip",
-  "show thực tế lật mặt phút cuối",
-  "màn comeback thất bại",
-  "diễn viên chính bị thay vai",
-  "fan war cháy khét",
-  "giải thưởng mua bằng tiền",
-  "idol hết thời",
-  "phim bom tấn flop nặng",
-  "anti-fan lên sóng",
-  "hợp đồng quảng cáo bị huỷ",
-  "ngôi sao dính phốt liên hoàn",
+  { domain: 'office', text: 'cuộc họp chiến lược thất bại' },
+  { domain: 'office', text: 'KPI bóp nghẹt nhân sự' },
+  { domain: 'office', text: 'sếp toxic lên ngôi' },
+  { domain: 'office', text: 'nhân viên nghỉ việc hàng loạt' },
+  { domain: 'office', text: 'quản lý vi mô gây thảm hoạ' },
+  { domain: 'office', text: 'team building biến thành nội chiến' },
+  { domain: 'office', text: 'performance review cay nghiệt' },
+  { domain: 'office', text: 'pivot sai thời điểm' },
+  { domain: 'office', text: 'burnout tập thể' },
+  { domain: 'office', text: 'board họp kín sa thải CEO' },
+  { domain: 'office', text: 'deadline chồng deadline' },
+  // Công nghệ
+  { domain: 'tech', text: 'AI nổi loạn giành quyền kiểm soát' },
+  { domain: 'tech', text: 'server sập giờ cao điểm' },
+  { domain: 'tech', text: 'thuật toán thao túng xã hội' },
+  { domain: 'tech', text: 'metaverse phá sản' },
+  { domain: 'tech', text: 'blockchain fork chia rẽ' },
+  { domain: 'tech', text: 'cyber attack quy mô lớn' },
+  { domain: 'tech', text: 'robot đình công' },
+  { domain: 'tech', text: 'data leak toàn cầu' },
+  { domain: 'tech', text: 'deepfake phá huỷ danh tiếng' },
+  { domain: 'tech', text: 'startup AI thổi phồng định giá' },
+  { domain: 'tech', text: 'nền tảng số sụp đổ dây chuyền' },
+  // Showbiz
+  { domain: 'showbiz', text: 'drama hậu trường nổ tung' },
+  { domain: 'showbiz', text: 'scandal ngoại tình lộ clip' },
+  { domain: 'showbiz', text: 'show thực tế lật mặt phút cuối' },
+  { domain: 'showbiz', text: 'màn comeback thất bại' },
+  { domain: 'showbiz', text: 'diễn viên chính bị thay vai' },
+  { domain: 'showbiz', text: 'fan war cháy khét' },
+  { domain: 'showbiz', text: 'idol hết thời' },
+  { domain: 'showbiz', text: 'phim bom tấn flop nặng' },
+  { domain: 'showbiz', text: 'hợp đồng quảng cáo bị huỷ' },
+  { domain: 'showbiz', text: 'ngôi sao dính phốt liên hoàn' },
   // Lịch sử / chiến tranh
-  "trận thành bị vây hãm",
-  "cuộc viễn chinh thất bại",
-  "tướng lĩnh phản bội",
-  "chiến thuật gọng kìm sụp đổ",
-  "đội quân đào ngũ giữa trận",
-  "hiệp ước đình chiến phản tác dụng",
-  "chiến tranh lạnh leo thang",
-  "vương triều bị ám sát",
-  "đại dịch thời trung cổ",
-  "cuộc thập tự chinh sai lầm",
-  "đế quốc bành trướng quá đà",
-  "quân tiếp viện đến trễ",
-  // Tâm linh / huyền bí
-  "giáo phái tự phong cứu thế",
-  "lời tiên tri sai lệch",
-  "nghi thức triệu hồi thất bại",
-  "nghiệp báo quay ngược",
-  "kiếp nạn thứ 81",
-  "thiên cơ bị lộ",
-  "bùa chú phản chủ",
-  "pháp sư mất linh lực",
-  "thiên mệnh đổi chủ",
-  "ngày tận thế giả",
-  "thần bảo hộ nghỉ việc",
-  "luân hồi lỗi hệ thống",
+  { domain: 'war', text: 'trận thành bị vây hãm' },
+  { domain: 'war', text: 'cuộc viễn chinh thất bại' },
+  { domain: 'war', text: 'tướng lĩnh phản bội' },
+  { domain: 'war', text: 'chiến thuật gọng kìm sụp đổ' },
+  { domain: 'war', text: 'đội quân đào ngũ giữa trận' },
+  { domain: 'war', text: 'hiệp ước đình chiến phản tác dụng' },
+  { domain: 'war', text: 'vương triều bị ám sát' },
+  { domain: 'war', text: 'đại dịch thời trung cổ' },
+  { domain: 'war', text: 'cuộc thập tự chinh sai lầm' },
+  { domain: 'war', text: 'quân tiếp viện đến trễ' },
+  // Tâm linh
+  { domain: 'spiritual', text: 'giáo phái tự phong cứu thế' },
+  { domain: 'spiritual', text: 'lời tiên tri sai lệch' },
+  { domain: 'spiritual', text: 'nghi thức triệu hồi thất bại' },
+  { domain: 'spiritual', text: 'nghiệp báo quay ngược' },
+  { domain: 'spiritual', text: 'kiếp nạn thứ 81' },
+  { domain: 'spiritual', text: 'bùa chú phản chủ' },
+  { domain: 'spiritual', text: 'pháp sư mất linh lực' },
+  { domain: 'spiritual', text: 'thiên mệnh đổi chủ' },
+  { domain: 'spiritual', text: 'thần bảo hộ nghỉ việc' },
+  { domain: 'spiritual', text: 'luân hồi lỗi hệ thống' },
   // Triết học / tâm lý
-  "chủ nghĩa hư vô lên ngôi",
-  "bi kịch hiện sinh",
-  "nghịch lý tự do tuyệt đối",
-  "thí nghiệm đạo đức thất bại",
-  "ảo tưởng kiểm soát",
-  "vòng lặp nhận thức sai lầm",
-  "cú sốc bản ngã",
-  "triết lý stoic bị bóp méo",
-  "thuyết định mệnh nghiệt ngã",
-  "khủng hoảng danh tính",
-  "ý chí tự do sụp đổ",
-  "niềm tin tập thể tan vỡ",
-  // Game / esports
-  "team pick sai meta",
-  "combat tổng thất bại",
-  "late game choke nặng",
-  "mid lane feed vô thức",
-  "rank cao nhưng kỹ năng thấp",
-  "clutch pha cuối hụt tay",
-  "tactical pause vô nghĩa",
-  "streamer outplay cả giải",
-  "buff nhầm mục tiêu",
-  "draft chiến thuật sai bài",
-  "carry bỏ team",
-  "combat thua vì ping cao",
-  // Phi lý / vũ trụ
-  "vũ trụ song song va chạm",
-  "timeline bị bẻ cong",
-  "nghịch lý du hành thời gian",
-  "thần linh bỏ việc tập thể",
-  "ngày tận thế bị delay",
-  "cỗ máy vận mệnh trục trặc",
-  "luật nhân quả lỗi hệ thống",
-  "ngân hà phá sản",
-  "thực tại bị glitch",
-  "đa vũ trụ hợp nhất lỗi",
-  "hố đen nuốt kịch bản",
-  "entropy tăng đột biến",
+  { domain: 'philosophy', text: 'chủ nghĩa hư vô lên ngôi' },
+  { domain: 'philosophy', text: 'bi kịch hiện sinh' },
+  { domain: 'philosophy', text: 'nghịch lý tự do tuyệt đối' },
+  { domain: 'philosophy', text: 'ảo tưởng kiểm soát' },
+  { domain: 'philosophy', text: 'vòng lặp nhận thức sai lầm' },
+  { domain: 'philosophy', text: 'cú sốc bản ngã' },
+  { domain: 'philosophy', text: 'thuyết định mệnh nghiệt ngã' },
+  { domain: 'philosophy', text: 'khủng hoảng danh tính' },
+  { domain: 'philosophy', text: 'niềm tin tập thể tan vỡ' },
+  // Esports / game
+  { domain: 'esports', text: 'team pick sai meta' },
+  { domain: 'esports', text: 'late game choke nặng' },
+  { domain: 'esports', text: 'mid lane feed vô thức' },
+  { domain: 'esports', text: 'clutch pha cuối hụt tay' },
+  { domain: 'esports', text: 'tactical pause vô nghĩa' },
+  { domain: 'esports', text: 'streamer outplay cả giải' },
+  { domain: 'esports', text: 'buff nhầm mục tiêu' },
+  { domain: 'esports', text: 'draft chiến thuật sai bài' },
+  { domain: 'esports', text: 'carry bỏ team' },
+  // Vũ trụ / phi lý
+  { domain: 'cosmic', text: 'vũ trụ song song va chạm' },
+  { domain: 'cosmic', text: 'timeline bị bẻ cong' },
+  { domain: 'cosmic', text: 'nghịch lý du hành thời gian' },
+  { domain: 'cosmic', text: 'thần linh bỏ việc tập thể' },
+  { domain: 'cosmic', text: 'ngày tận thế bị delay' },
+  { domain: 'cosmic', text: 'cỗ máy vận mệnh trục trặc' },
+  { domain: 'cosmic', text: 'luật nhân quả lỗi hệ thống' },
+  { domain: 'cosmic', text: 'thực tại bị glitch' },
+  { domain: 'cosmic', text: 'hố đen nuốt kịch bản' },
+  { domain: 'cosmic', text: 'entropy tăng đột biến' },
 ]
 
-// Module-level state: tránh lặp concept 2 lần liên tiếp
-let lastConceptIndex = -1
+// ---------------------------------------------------------------------------
+// Anti-repeat state: track last concept index AND last domain
+// ---------------------------------------------------------------------------
 
-function pickConcept(): string {
-  let idx: number
-  do {
-    idx = Math.floor(Math.random() * CONCEPT_SPACES.length)
-  } while (idx === lastConceptIndex)
-  lastConceptIndex = idx
-  return CONCEPT_SPACES[idx]
+let lastConceptIndex = -1
+let lastDomain = ''
+
+function pickConcept(): ConceptEntry {
+  const candidates = CONCEPT_SPACES
+    .map((c, i) => ({ ...c, i }))
+    .filter(c => c.i !== lastConceptIndex && c.domain !== lastDomain)
+
+  // Fallback: at minimum avoid exact same index
+  const pool = candidates.length > 0
+    ? candidates
+    : CONCEPT_SPACES.map((c, i) => ({ ...c, i })).filter(c => c.i !== lastConceptIndex)
+
+  const chosen = pool[Math.floor(Math.random() * pool.length)]
+  lastConceptIndex = chosen.i
+  lastDomain = chosen.domain
+  return chosen
 }
+
+// ---------------------------------------------------------------------------
+// Prompt builder
+// ---------------------------------------------------------------------------
 
 function buildPrompt(
   timestampSeconds: number,
@@ -198,17 +212,19 @@ function buildPrompt(
   const coolDucks = sortedDucks.filter(p => mentions[p] > 0 && mentions[p] <= 2)
   const hotDucks = sortedDucks.filter(p => mentions[p] > 2)
 
-  let spotlightInstruction = ""
+  // Spotlight: push under-mentioned ducks into focus
+  let spotlightLine = ''
   if (coldDucks.length > 0) {
-    spotlightInstruction = `\n🔦 ƯU TIÊN SPOTLIGHT (ĐANG TÀNG HÌNH): ${coldDucks.join(', ')} (Đào tụi này lên xem đang tấu hài gì).`
+    spotlightLine = `\n� SPOTLIGHT: Ưu tiên nhắc ${coldDucks.join(', ')} — bọn này chưa lên sóng lần nào.`
   } else if (coolDucks.length > 0) {
-    spotlightInstruction = `\n🔦 ƯU TIÊN SPOTLIGHT (ÍT LÊN SÓNG): ${coolDucks.slice(0, 3).join(', ')}.`
+    spotlightLine = `\n� SPOTLIGHT: Ưu tiên ${coolDucks.slice(0, 3).join(', ')} — đang thiếu airtime.`
   } else {
-    spotlightInstruction = `\n🔦 SPOTLIGHT: Tự do tia drama cháy nhất, tém tém vụ nhắc lặp ${hotDucks.slice(0, 2).join(', ')}.`
+    spotlightLine = `\n� SPOTLIGHT: Tự do chọn nhân vật drama nhất; hạn chế réo ${hotDucks.slice(0, 2).join(', ')} quá nhiều.`
   }
 
-  const namesInfo = participantNames ? `\nCASTING: ${participantNames}.` : ''
+  const namesLine = participantNames ? `\nCÁC CON VỊT: ${participantNames}.` : ''
 
+  // ── RACE END ──────────────────────────────────────────────────────────────
   if (isRaceEnd) {
     let resultsInfo = ''
     let shieldContext = ''
@@ -219,51 +235,101 @@ function buildPrompt(
         const bottom2 = ranking.slice(-2)
         const shieldUsers = bottom2.filter(r => r.usedShield)
         const noShieldLosers = bottom2.filter(r => !r.usedShield)
+        const darkHorse = (mentions[winner] || 0) === 0 ? ' (kẻ im lặng suốt cuộc đua)' : ''
 
-        const winnerMentions = mentions[winner] || 0
-        const darkHorse = winnerMentions === 0 ? " (Kẻ im lặng đáng sợ)" : ""
-
-        resultsInfo = `\nKQ: 👑 VÔ ĐỊCH: ${winner}${darkHorse}`
+        resultsInfo = `\nKẾT QUẢ: 👑 ${winner}${darkHorse} về đích đầu tiên.`
 
         if (shieldUsers.length > 0 && noShieldLosers.length > 0) {
-          const savedDuck = shieldUsers[0].name
-          const unluckyDuck = noShieldLosers[0].name
-          resultsInfo += ` | 🛡️ ${savedDuck} (DÙNG KHIÊN) | 💀 ${unluckyDuck} (BỊ SẸO)`
-          shieldContext = `\nTWIST KHIÊN: ${savedDuck} buff khiên thoát kiếp bết bát ảo ma, đẩy ${unluckyDuck} ra chuồng gà ôm sẹo. Khịa căng đét vô!`
+          const saved = shieldUsers[0].name
+          const unlucky = noShieldLosers[0].name
+          resultsInfo += ` | 🛡️ ${saved} dùng khiên thoát sẹo | 💀 ${unlucky} lãnh nguyên sẹo.`
+          shieldContext = `\nTWIST: ${saved} bật khiên phút chót đẩy ${unlucky} ra mép bờ vực.`
         } else if (shieldUsers.length === 0) {
-          resultsInfo += ` | 💀 2 VỊT: ${bottom2.map(r => r.name).join(' & ')}`
-          shieldContext = `\nTWIST KHIÊN: Hai báo thủ dắt tay nhau quên bật khiên, ôm sẹo chung cho có bạn có bè!`
+          resultsInfo += ` | 💀 Hai kẻ bết bát: ${bottom2.map(r => r.name).join(' & ')} — cả hai đều quên bật khiên.`
         } else {
-          resultsInfo += ` | 💀 KHIÊN VÔ DỤNG: ${bottom2.map(r => r.name).join(' & ')}`
-          shieldContext = `\nTWIST KHIÊN: Nổ khiên sáng rực rỡ mà vẫn cút về chót, xui đỉnh nóc bay phấp phới luôn!`
+          resultsInfo += ` | 💀 ${bottom2.map(r => r.name).join(' & ')} — nổ khiên xong vẫn về chót.`
         }
       } catch { /* ignore */ }
     }
 
-    const historyContext = history && history.length > 0
-      ? `\n🚫 TRÁNH DÙNG LẠI VĂN NÀY:\n${history.map(h => `- ${h.text}`).join('\n')}`
+    const historyBlock = history && history.length > 0
+      ? `\n🚫 ĐÃ DÙNG RỒI — TUYỆT ĐỐI KHÔNG LẶP LẠI:\n${history.map(h => `  - ${h.text}`).join('\n')}`
       : ''
 
-    const endConcept = pickConcept()
-    return `${SYSTEM_PROMPT}\n\nTÌNH HUỐNG: VỀ ĐÍCH!${namesInfo}${resultsInfo}${shieldContext}${historyContext}\n🎯 CONCEPT BẮT BUỘC CHO LẦN NÀY: "${endConcept}" — hãy dùng đúng góc nhìn này để bình luận, không được dùng concept khác.\n\nNHIỆM VỤ: Viết 1 đoạn chốt hạ cực gắt, ĐÚNG 2 CÂU (~30-50 từ).\n- Vinh danh Quán quân HOẶC sỉ nhục Kẻ bết bát qua lăng kính concept trên.\n- Tuyệt đối né những từ mở đầu lặp lố bịch như "Nhìn", "Trời ơi".\n- TRÁNH XA các idea đã dùng trong LỊCH SỬ BÌNH LUẬN.`
+    const { text: concept } = pickConcept()
+    return [
+      SYSTEM_PROMPT,
+      '',
+      `TÌNH HUỐNG: VỀ ĐÍCH.${namesLine}${resultsInfo}${shieldContext}`,
+      `🎯 CONCEPT: "${concept}"`,
+      historyBlock,
+      '',
+      'NHIỆM VỤ: Viết 1 đoạn chốt hạ, ĐÚNG 2 CÂU (30–50 từ).',
+      '- Câu 1: Tường thuật ai thắng/thua và điều gì xảy ra ở khoảnh khắc kết thúc.',
+      `- Câu 2: Ẩn dụ qua lăng kính "${concept}" để chốt drama.`,
+      '- Không mở đầu bằng "Nhìn", "Trời ơi".',
+      '- Không lặp cấu trúc câu từ lịch sử.',
+      '',
+      'VIẾT NGAY:',
+    ].join('\n')
   }
 
-  const historyInfo = history && history.length > 0
-    ? `\n🚫 LỊCH SỬ BÌNH LUẬN (TUYỆT ĐỐI KHÔNG DÙNG LẠI CHẤT VĂN Ở DƯỚI):\n${history.map(h => `- ${h.timestamp}s: ${h.text}`).join('\n')}`
-    : '\n(Chưa bình luận gì, tự do xõa ngôn từ)'
+  // ── MID-RACE ──────────────────────────────────────────────────────────────
+  const historyBlock = history && history.length > 0
+    ? `\n🚫 ĐÃ BL RỒI — KHÔNG DÙNG LẠI IDEA/CẤU TRÚC NÀY:\n${history.map(h => `  - [${h.timestamp}s] ${h.text}`).join('\n')}`
+    : '\n(Chưa có bình luận nào — tự do.)'
 
-  let focusStrategy = ""
+  let racePhase = ''
   if (timestampSeconds <= 5) {
-    focusStrategy = "KHỞI ĐỘNG: Đứa nào bứt tốc flex sức mạnh? Đứa nào đứng hình dính breakpoint?"
-  } else if (timestampSeconds <= 20) {
-    focusStrategy = "DIỄN BIẾN: Khúc cua gắt! Lật kèo phút 90 cỡ nào? Ai đang hít khói khóc thét?"
+    racePhase = 'XUẤT PHÁT: ai bứt lên đầu, ai chưa kịp chạy, ai loạng choạng ngay từ đầu?'
+  } else if (timestampSeconds <= 15) {
+    racePhase = 'GIỮA ĐƯỜNG: ai đang dẫn, ai đang bám đuổi sát, ai đang rớt hạng?'
+  } else if (timestampSeconds <= 25) {
+    racePhase = 'KHÚ CUA: có lật kèo không? Ai vừa vượt, ai vừa mất đà, ai đang hấp hối?'
   } else {
-    focusStrategy = "VỀ ĐÍCH: Ai sắp lụm cúp hiệu năng đỉnh? Ai kiếp nạn thứ 82 ngã sấp mặt?"
+    racePhase = 'VỀ ĐÍCH: ai đang bứt pha quyết định, ai sắp bị tóm, khoảng cách ra sao?'
   }
 
-  const concept = pickConcept()
-  return `${SYSTEM_PROMPT}\n\nTHỜI GIAN: Giây ${timestampSeconds}/36.\nTRẠNG THÁI: ${focusStrategy}${spotlightInstruction}${namesInfo}${historyInfo}\nHÌNH ẢNH: Quan sát ảnh.\n🎯 CONCEPT BẮT BUỘC CHO LẦN NÀY: "${concept}" — hãy dùng đúng góc nhìn này để bình luận, không được dùng concept khác.\n\nNHIỆM VỤ: Viết 1 bình luận xéo xắt, ĐÚNG 2 CÂU (~30-50 từ).\n- Phân tích ảnh → Câu 1 phán xét/triết lý qua lăng kính "${concept}". Câu 2 punchline tàn nhẫn hoặc hài.\n- CẤM MỞ ĐẦU BẰNG "Nhìn [tên vịt]", "Trong khi", "Trời ơi".\n- ÉP NHỜ GA: Hạn chế réo tên ${hotDucks.slice(0, 3).join(', ')}.\n- ĐÀO TẠO KHUẤT TẦM: Chửi rủa/Thương hại lố lăng ${coldDucks.join(', ') || coolDucks.join(', ')}.\n- Viết plain text mượt như đang nói trên sóng livestream.\n\nVIẾT NGAY:`
+  const { text: concept } = pickConcept()
+  return [
+    SYSTEM_PROMPT,
+    '',
+    `THỜI GIAN: Giây ${timestampSeconds}/36 — ${racePhase}`,
+    `${spotlightLine}${namesLine}`,
+    historyBlock,
+    `🎯 CONCEPT CHO LẦN NÀY: "${concept}"`,
+    '',
+    'HÌNH ẢNH: Phân tích ảnh chụp đường đua → xác định ai đang ở đâu, khoảng cách thế nào.',
+    '',
+    'NHIỆM VỤ: Viết 1 bình luận, ĐÚNG 2 CÂU (30–50 từ).',
+    '- Câu 1: Nêu rõ diễn biến đường đua — tên cụ thể, vị trí cụ thể, hành động cụ thể.',
+    `- Câu 2: Ẩn dụ hoặc phán xét bằng lăng kính "${concept}", gắt và hài.`,
+    '- Cấm mở đầu bằng: Nhìn, Trong khi, Trời ơi, Ồ, Wow.',
+    '- Cấm viết câu có thể copy-paste sang bất kỳ cuộc đua nào mà vẫn đúng.',
+    '- Không lặp cấu trúc/punchline từ lịch sử bình luận.',
+    '',
+    'VIẾT NGAY:',
+  ].join('\n')
 }
+
+// ---------------------------------------------------------------------------
+// Heuristic: detect if output is too generic (could fit any race)
+// ---------------------------------------------------------------------------
+
+function isGenericOutput(text: string): boolean {
+  const genericPatterns = [
+    /cuộc đua (đang|vẫn|thật sự)/i,
+    /đây là (một|cuộc)/i,
+    /không ai (biết|ngờ)/i,
+    /vậy là/i,
+    /thật (không thể tin|sự)/i,
+  ]
+  return genericPatterns.some(p => p.test(text))
+}
+
+// ---------------------------------------------------------------------------
+// Main export
+// ---------------------------------------------------------------------------
 
 export async function generateGeminiCommentary(
   screenshotBase64: string,
@@ -278,23 +344,23 @@ export async function generateGeminiCommentary(
     return getFallbackCommentary(timestampSeconds, isRaceEnd)
   }
 
-  try {
-    const prompt = buildPrompt(timestampSeconds, isRaceEnd, participantNames, history, raceResults)
-    const rawBase64 = screenshotBase64.replace(/^data:image\/w+;base64,/, '')
+  const callAPI = async (prompt: string): Promise<string> => {
+    const rawBase64 = screenshotBase64.replace(/^data:image\/\w+;base64,/, '')
     const imageUrl = `data:image/jpeg;base64,${rawBase64}`
 
     const response = await fetch(OPENROUTER_ENDPOINT, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'HTTP-Referer': 'https://autoduck.shivaluma.com', // Optional, for OpenRouter rankings
-        'X-Title': 'AutoDuck', // Optional, for OpenRouter rankings
+        'HTTP-Referer': 'https://autoduck.shivaluma.com',
+        'X-Title': 'AutoDuck',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 150,
-        temperature: 0.9,
+        max_tokens: 160,
+        temperature: 1.05,       // Higher temp → less templated output
+        top_p: 0.95,
         messages: [
           {
             role: 'user',
@@ -307,23 +373,42 @@ export async function generateGeminiCommentary(
       }),
     })
 
-    if (!response.ok) {
-      throw new Error((await response.text()))
-    }
+    if (!response.ok) throw new Error(await response.text())
 
     const data = await response.json()
-    let text = data.choices?.[0]?.message?.content || ''
+    return data.choices?.[0]?.message?.content || ''
+  }
 
-    // Clean up
+  try {
+    const prompt = buildPrompt(timestampSeconds, isRaceEnd, participantNames, history, raceResults)
+    let text = await callAPI(prompt)
+
+    // Clean up formatting artifacts
     text = text
       .replace(/^["']|["']$/g, '')
       .replace(/^(Giây \d+|Phút \d+).*?:/i, '')
-      .replace(/(\r\n|\n|\r)/gm, " ")
-      .replace(/---\s*.*/, "")
-      .replace(/\*?Giải thích:.*$/i, "")
+      .replace(/(\r\n|\n|\r)/gm, ' ')
+      .replace(/---\s*.*/, '')
+      .replace(/\*?Giải thích:.*$/i, '')
+      .replace(/\*\*/g, '')
       .trim()
 
-    console.log(`[Gemini][${timestampSeconds}s] ${text.substring(0, 60)}...`)
+    // Retry once if output looks too generic
+    if (isGenericOutput(text) || text.length < 20) {
+      console.warn(`[Gemini][${timestampSeconds}s] Generic output detected, retrying...`)
+      const retryPrompt = buildPrompt(timestampSeconds, isRaceEnd, participantNames, history, raceResults)
+      const retryText = await callAPI(retryPrompt)
+      text = retryText
+        .replace(/^["']|["']$/g, '')
+        .replace(/^(Giây \d+|Phút \d+).*?:/i, '')
+        .replace(/(\r\n|\n|\r)/gm, ' ')
+        .replace(/---\s*.*/, '')
+        .replace(/\*?Giải thích:.*$/i, '')
+        .replace(/\*\*/g, '')
+        .trim() || text
+    }
+
+    console.log(`[Gemini][${timestampSeconds}s] ${text.substring(0, 70)}...`)
     return text || getFallbackCommentary(timestampSeconds, isRaceEnd)
   } catch (error) {
     console.error('Gemini API Error:', error)
@@ -331,9 +416,13 @@ export async function generateGeminiCommentary(
   }
 }
 
+// ---------------------------------------------------------------------------
+// Fallback
+// ---------------------------------------------------------------------------
+
 function getFallbackCommentary(timestampSeconds: number, isRaceEnd: boolean): string {
-  if (isRaceEnd) return 'Chấn động luôn! Đường đua kết thúc với hiệu năng cực đỉnh, kẻ báo thủ chính thức cook và ôm sẹo!'
-  if (timestampSeconds <= 5) return 'Súng nổ rồi! Vừa vô đã flex gắt quá, có ai dính breakpoint chưa kịp load data không?'
-  if (timestampSeconds <= 20) return 'Anh em chạy nhìn như đang chờ Deployment thế, nhiệt lên! Pha bứt tốc kinh điển cút luôn cái nết!'
-  return 'Úi giời ơi! Lật kèo kinh điển phút chót! Cục diện đang cực kỳ hỗn loạn!'
+  if (isRaceEnd) return 'Màn hình chốt điểm — kẻ dẫn đầu cán đích trước phần còn lại nửa thân, đúng kiểu carry bỏ team rồi nhận trophy một mình!'
+  if (timestampSeconds <= 5) return 'Xuất phát xong mà đã dãn hàng — top 2 bứt ra xa, nhóm cuối đứng hình như server đang loading.'
+  if (timestampSeconds <= 20) return 'Giữa đường cục diện rõ dần: 1-2 con đang hít khói nhóm đầu, khoảng cách đang nới ra từng giây.'
+  return 'Thẳng đường về đích rồi — ai còn sức thì bứt, ai không thì cúi đầu chấp nhận sẹo trong im lặng.'
 }
