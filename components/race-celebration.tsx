@@ -45,8 +45,8 @@ export function RaceCelebration({ allPlayers, victims, verdict, duration = 6000 
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-between transition-opacity duration-800 ${fading ? 'opacity-0' : 'opacity-100'}`}
-      style={{ pointerEvents: 'none' }}
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-between overflow-hidden transition-opacity duration-800 ${fading ? 'opacity-0' : 'opacity-100'}`}
+      style={{ pointerEvents: 'none', height: '100dvh' }}
     >
       {/* Background — dark with red/orange atmospheric glow like GGD */}
       <div className="absolute inset-0 bg-black">

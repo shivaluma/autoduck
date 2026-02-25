@@ -51,7 +51,13 @@ export default function Dashboard() {
           </div>
 
           <Link href="/race/new" className="animate-slide-right">
-            <button className="ggd-btn bg-[var(--color-ggd-orange)] text-white text-xl px-10 py-4 tracking-wider">
+            <button className={`font-display text-2xl tracking-widest uppercase px-12 py-4
+              border-[5px] border-[var(--color-ggd-outline)] rounded-xl cursor-pointer
+              transition-all duration-100
+              bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]
+              shadow-[inset_0_3px_0_rgba(255,255,255,0.45),0_7px_0_#007a3a,0_12px_28px_rgba(61,255,143,0.35)]
+              hover:-translate-y-1 hover:shadow-[inset_0_3px_0_rgba(255,255,255,0.45),0_9px_0_#007a3a,0_16px_32px_rgba(61,255,143,0.45)]
+              active:translate-y-[5px] active:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_2px_0_#007a3a]`}>
               <span className="flex items-center gap-3">
                 <span className="text-2xl" style={{ animation: 'wiggle-duck 1s ease-in-out infinite' }}>🦆</span>
                 Chạy Đua!
@@ -65,25 +71,25 @@ export default function Dashboard() {
         {/* Stats Strip — tilted cards */}
         <div className="grid grid-cols-4 gap-5 animate-slide-up opacity-0" style={{ animationDelay: '0.1s' }}>
           {[
-            { label: '🦆 BẦY VỊT', value: players.length.toString(), bg: 'bg-[var(--color-ggd-surface)]', accent: 'text-white' },
-            { label: '🏁 SỐ TRẬN', value: totalRaces.toString(), bg: 'bg-[var(--color-ggd-surface)]', accent: 'text-white' },
-            { label: '💀 LÀM DZỊT', value: totalKhaos.toString(), bg: 'bg-[var(--color-ggd-surface)]', accent: 'text-[var(--color-ggd-gold)]' },
-            { label: '👑 DZỊT NHẤT', value: mostKhaos?.name?.replace('Zịt ', '') || '—', bg: 'bg-[var(--color-ggd-surface)]', accent: 'text-[var(--color-ggd-orange)]' },
+            { label: '🦆 BẦY VỊT', value: players.length.toString(), accent: 'text-white' },
+            { label: '🏁 SỐ TRẬN', value: totalRaces.toString(), accent: 'text-white' },
+            { label: '💀 LÀM DZỊT', value: totalKhaos.toString(), accent: 'text-[var(--color-ggd-gold)]' },
+            { label: '👑 DZỊT NHẤT', value: mostKhaos?.name?.replace('Zịt ', '') || '—', accent: 'text-[var(--color-ggd-orange)]' },
           ].map((stat, i) => (
             <div
               key={stat.label}
-              className={`${stat.bg} border-4 border-[var(--color-ggd-outline)] rounded-2xl p-4 text-center
-                shadow-[inset_0_2px_0_rgba(255,255,255,0.08),0_5px_0_var(--color-ggd-outline)]
+              className={`bg-[var(--color-ggd-surface)] border-5 border-[var(--color-ggd-outline)] rounded-2xl p-5 text-center
+                shadow-[inset_0_3px_0_rgba(255,255,255,0.1),0_8px_0_var(--color-ggd-outline),0_16px_30px_rgba(0,0,0,0.7)]
                 animate-bounce-in opacity-0 ggd-stripe`}
               style={{
                 animationDelay: `${0.15 + i * 0.08}s`,
                 transform: `rotate(${i % 2 === 0 ? '-1' : '1'}deg)`,
               }}
             >
-              <div className="font-data text-xs text-[var(--color-ggd-lavender)] mb-1 uppercase tracking-wider">
+              <div className="font-data text-xs text-[var(--color-ggd-lavender)] mb-2 uppercase tracking-widest font-black">
                 {stat.label}
               </div>
-              <div className={`font-display text-4xl ${stat.accent} text-outlined`}>
+              <div className={`font-display text-5xl ${stat.accent} text-outlined`}>
                 {stat.value}
               </div>
             </div>
@@ -95,26 +101,23 @@ export default function Dashboard() {
           {/* Standings - Left 2 Columns */}
           <div className="lg:col-span-2 animate-slide-up opacity-0" style={{ animationDelay: '0.2s' }}>
             <div className="ggd-card-green ggd-stripe">
-              {/* Header — skewed */}
-              <div className="bg-[var(--color-ggd-neon-green)] px-5 py-3 rounded-t-[6px] flex items-center justify-between">
+              {/* Header */}
+              <div className="ggd-panel-header bg-[var(--color-ggd-neon-green)]">
                 <div className="skew-header">
-                  <span className="font-display text-xl text-[var(--color-ggd-outline)]">
+                  <span className="text-[var(--color-ggd-outline)] text-2xl">
                     🏆 Bảng Xếp Hạng Bầy Vịt
                   </span>
                 </div>
-                <span className="font-data text-sm text-[var(--color-ggd-outline)]/70 font-bold">
+                <span className="font-data text-sm text-[var(--color-ggd-outline)]/70 font-black tracking-wider">
                   2 Sẹo = 1 Khiên
                 </span>
               </div>
 
               {/* Column Headers */}
-              <div className="grid grid-cols-[60px_1fr_80px_80px_80px_100px] gap-0 px-5 py-3 border-b-3 border-[var(--color-ggd-outline)]/30 bg-[var(--color-ggd-panel)]">
-                <div className="font-data text-xs uppercase text-[var(--color-ggd-muted)]">#</div>
-                <div className="font-data text-xs uppercase text-[var(--color-ggd-muted)]">VỊT 🦆</div>
-                <div className="font-data text-xs uppercase text-[var(--color-ggd-muted)] text-center">SẸO</div>
-                <div className="font-data text-xs uppercase text-[var(--color-ggd-muted)] text-center">KHIÊN</div>
-                <div className="font-data text-xs uppercase text-[var(--color-ggd-muted)] text-center">ĐÃ DÙNG</div>
-                <div className="font-data text-xs uppercase text-[var(--color-ggd-muted)] text-right">DZỊT</div>
+              <div className="grid grid-cols-[60px_1fr_80px_80px_80px_100px] gap-0 px-5 py-3 border-b-[3px] border-black bg-[var(--color-ggd-panel)]">
+                {['#', 'VỊT 🦆', 'SẸO', 'KHIÊN', 'ĐÃ DÙNG', 'DZỊT'].map((h, i) => (
+                  <div key={h} className={`ggd-col-header ${i >= 2 && i <= 4 ? 'text-center' : i === 5 ? 'text-right' : ''}`}>{h}</div>
+                ))}
               </div>
 
               {/* Player Rows */}
@@ -129,7 +132,7 @@ export default function Dashboard() {
                       key={player.id}
                       className={`
                         grid grid-cols-[60px_1fr_80px_80px_80px_100px] gap-0 items-center
-                        px-5 py-3 duck-row
+                        px-5 py-4 duck-row
                         ${idx === 0 ? 'loser' : ''}
                         animate-slide-right opacity-0
                       `}
@@ -137,7 +140,7 @@ export default function Dashboard() {
                     >
                       {/* Position */}
                       <div>
-                        <span className={`position-number text-3xl ${idx === 0 ? 'text-[var(--color-ggd-orange)] glow-orange' :
+                        <span className={`position-number text-4xl ${idx === 0 ? 'text-[var(--color-ggd-orange)] glow-orange' :
                           idx === 1 ? 'text-[var(--color-ggd-gold)] glow-gold' :
                             idx === 2 ? 'text-[var(--color-ggd-neon-green)] glow-green' :
                               'text-[var(--color-ggd-muted)]'
@@ -148,13 +151,13 @@ export default function Dashboard() {
 
                       {/* Name */}
                       <div className="flex items-center gap-3">
-                        <div className={`w-2 h-9 rounded-full ${idx === 0 ? 'bg-[var(--color-ggd-orange)] shadow-[0_0_8px_rgba(255,87,51,0.5)]' :
-                          idx === 1 ? 'bg-[var(--color-ggd-gold)] shadow-[0_0_8px_rgba(255,204,0,0.5)]' :
-                            idx === 2 ? 'bg-[var(--color-ggd-neon-green)] shadow-[0_0_8px_rgba(61,255,143,0.5)]' :
+                        <div className={`w-2.5 h-11 rounded-full ${idx === 0 ? 'bg-[var(--color-ggd-orange)] shadow-[0_0_10px_rgba(255,87,51,0.6)]' :
+                          idx === 1 ? 'bg-[var(--color-ggd-gold)] shadow-[0_0_10px_rgba(255,204,0,0.6)]' :
+                            idx === 2 ? 'bg-[var(--color-ggd-neon-green)] shadow-[0_0_10px_rgba(61,255,143,0.6)]' :
                               'bg-[var(--color-ggd-muted)]/30'
                           }`} />
                         <div>
-                          <div className="font-body text-base font-extrabold text-white tracking-wide">
+                          <div className="font-body text-lg font-black text-white tracking-wide">
                             {player.name}
                           </div>
                           {idx === 0 && (
@@ -167,28 +170,28 @@ export default function Dashboard() {
 
                       {/* Scars */}
                       <div className="text-center">
-                        <span className={`font-data text-lg font-extrabold ${player.scars > 0 ? 'text-[var(--color-ggd-orange)]' : 'text-[var(--color-ggd-muted)]/20'}`}>
+                        <span className={`font-data text-2xl font-black ${player.scars > 0 ? 'text-[var(--color-ggd-orange)]' : 'text-[var(--color-ggd-muted)]/20'}`}>
                           {player.scars}
                         </span>
                       </div>
 
                       {/* Shields */}
                       <div className="text-center">
-                        <span className={`font-data text-lg font-extrabold ${player.shields > 0 ? 'text-[var(--color-ggd-neon-green)]' : 'text-[var(--color-ggd-muted)]/20'}`}>
+                        <span className={`font-data text-2xl font-black ${player.shields > 0 ? 'text-[var(--color-ggd-neon-green)]' : 'text-[var(--color-ggd-muted)]/20'}`}>
                           {player.shields}
                         </span>
                       </div>
 
                       {/* Used */}
                       <div className="text-center">
-                        <span className="font-data text-lg text-[var(--color-ggd-muted)]/50">
+                        <span className="font-data text-2xl font-black text-[var(--color-ggd-muted)]/50">
                           {player.shieldsUsed}
                         </span>
                       </div>
 
                       {/* Total */}
                       <div className="text-right">
-                        <span className="font-display text-3xl text-white text-outlined">
+                        <span className="font-display text-4xl text-white text-outlined">
                           {player.totalKhaos}
                         </span>
                       </div>
@@ -203,8 +206,8 @@ export default function Dashboard() {
           <div className="animate-slide-up opacity-0" style={{ animationDelay: '0.35s' }}>
             {/* Race History */}
             <div className="ggd-card ggd-stripe">
-              <div className="px-5 py-3 border-b-3 border-[var(--color-ggd-outline)]/30 bg-[var(--color-ggd-panel)] flex items-center justify-between rounded-t-[6px]">
-                <span className="font-display text-lg text-white text-outlined">
+              <div className="ggd-panel-header bg-[var(--color-ggd-panel)] rounded-t-[7px]">
+                <span className="font-display text-xl text-white text-outlined">
                   📜 Lịch Sử
                 </span>
                 <label className="flex items-center gap-2 cursor-pointer group">
@@ -215,10 +218,10 @@ export default function Dashboard() {
                       checked={showTestRaces}
                       onChange={(e) => setShowTestRaces(e.target.checked)}
                     />
-                    <div className={`w-10 h-5 rounded-full transition-colors border-2 border-[var(--color-ggd-outline)] ${showTestRaces ? 'bg-[var(--color-ggd-neon-green)]' : 'bg-[var(--color-ggd-muted)]/30'}`}></div>
-                    <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white border border-[var(--color-ggd-outline)] transition-transform shadow ${showTestRaces ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                    <div className={`w-11 h-6 rounded-full transition-colors border-2 border-[var(--color-ggd-outline)] ${showTestRaces ? 'bg-[var(--color-ggd-neon-green)]' : 'bg-[var(--color-ggd-muted)]/30'}`}></div>
+                    <div className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white border-2 border-[var(--color-ggd-outline)] transition-transform shadow ${showTestRaces ? 'translate-x-5' : 'translate-x-0'}`}></div>
                   </div>
-                  <span className="font-data text-xs text-[var(--color-ggd-muted)] group-hover:text-white transition-colors uppercase tracking-wider">
+                  <span className="font-data text-xs font-black text-[var(--color-ggd-muted)] group-hover:text-white transition-colors uppercase tracking-wider">
                     Test
                   </span>
                 </label>
@@ -230,11 +233,11 @@ export default function Dashboard() {
                     <Link
                       key={race.id}
                       href={`/race/${race.id}`}
-                      className="block mx-2 my-1 px-4 py-3 rounded-xl hover:bg-[var(--color-ggd-neon-green)]/8 transition-all hover:translate-x-1 animate-slide-right opacity-0"
+                      className="block mx-2 my-1.5 px-4 py-3.5 rounded-xl hover:bg-[var(--color-ggd-neon-green)]/8 transition-all hover:translate-x-2 animate-slide-right opacity-0 border-b-2 border-black/20"
                       style={{ animationDelay: `${0.4 + i * 0.05}s` }}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-display text-base text-white flex items-center gap-2">
+                        <span className="font-display text-lg text-white flex items-center gap-2">
                           Trận #{race.id}
                           {race.isTest && (
                             <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)] text-[10px]">
@@ -242,7 +245,7 @@ export default function Dashboard() {
                             </span>
                           )}
                         </span>
-                        <span className={`ggd-tag text-[10px] ${race.status === 'finished' ? 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]' :
+                        <span className={`ggd-tag text-[11px] font-black ${race.status === 'finished' ? 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]' :
                           race.status === 'running' ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' :
                             race.status === 'failed' ? 'bg-[var(--color-ggd-orange)] text-white' :
                               'bg-[var(--color-ggd-muted)]/30 text-[var(--color-ggd-muted)]'
@@ -255,7 +258,7 @@ export default function Dashboard() {
                           {race.finalVerdict}
                         </p>
                       )}
-                      <p className="font-data text-xs text-[var(--color-ggd-muted)]/50 mt-1">
+                      <p className="font-data text-xs text-[var(--color-ggd-muted)]/60 mt-1 font-bold">
                         {new Date(race.createdAt).toLocaleDateString('vi-VN', {
                           day: '2-digit', month: '2-digit', year: 'numeric',
                           hour: '2-digit', minute: '2-digit',
@@ -275,26 +278,26 @@ export default function Dashboard() {
             </div>
 
             {/* Rules Card */}
-            <div className="mt-5 ggd-card-gold ggd-stripe p-5 animate-slide-up opacity-0" style={{ animationDelay: '0.5s' }}>
-              <div className="font-display text-xl text-[var(--color-ggd-gold)] text-outlined mb-4">
+            <div className="mt-5 ggd-card-gold ggd-stripe p-6 animate-slide-up opacity-0" style={{ animationDelay: '0.5s' }}>
+              <div className="font-display text-2xl text-[var(--color-ggd-gold)] text-outlined mb-5">
                 📖 Luật Chơi
               </div>
-              <div className="space-y-3 font-readable text-base text-white/90">
+              <div className="space-y-4 font-readable text-base text-white/90">
                 <div className="flex items-start gap-3">
-                  <span className="text-xl flex-shrink-0">🤕</span>
-                  <span>2 người cuối = <span className="text-[var(--color-ggd-orange)] font-bold">con dzịt</span> (+1 Sẹo)</span>
+                  <span className="text-2xl flex-shrink-0">🤕</span>
+                  <span className="text-base font-bold">2 người cuối = <span className="text-[var(--color-ggd-orange)] font-black">con dzịt</span> (+1 Sẹo)</span>
                 </div>
                 <div className="flex items-start gap-3">
-                  <span className="text-xl flex-shrink-0">🛡️</span>
-                  <span>Dùng <span className="text-[var(--color-ggd-neon-green)] font-bold">Khiên</span> để thoát kiếp dzịt</span>
+                  <span className="text-2xl flex-shrink-0">🛡️</span>
+                  <span className="text-base font-bold">Dùng <span className="text-[var(--color-ggd-neon-green)] font-black">Khiên</span> để thoát kiếp dzịt</span>
                 </div>
                 <div className="flex items-start gap-3">
-                  <span className="text-xl flex-shrink-0">✨</span>
-                  <span>Tích <span className="text-[var(--color-ggd-gold)] font-bold">2 Sẹo</span> → 1 Khiên</span>
+                  <span className="text-2xl flex-shrink-0">✨</span>
+                  <span className="text-base font-bold">Tích <span className="text-[var(--color-ggd-gold)] font-black">2 Sẹo</span> → 1 Khiên</span>
                 </div>
                 <div className="flex items-start gap-3">
-                  <span className="text-xl flex-shrink-0">🧹</span>
-                  <span>Con dzịt phải <span className="text-white font-bold">làm dzịt</span> cho cả team!</span>
+                  <span className="text-2xl flex-shrink-0">🧹</span>
+                  <span className="text-base font-bold">Con dzịt phải <span className="text-white font-black">làm dzịt</span> cho cả team!</span>
                 </div>
               </div>
             </div>
