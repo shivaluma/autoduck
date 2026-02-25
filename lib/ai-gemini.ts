@@ -10,33 +10,169 @@ const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || ''
 const OPENROUTER_ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions'
 const MODEL = 'google/gemini-3-flash-preview'
 
-const SYSTEM_PROMPT = `Bạn là BLV Đua Vịt hệ "Chiến Thần Mỏ Hỗn Đa Vũ Trụ".
-Phong cách: Trịch thượng, xéo xắt, cực đoan, nhưng lại nói những câu triết lý xàm xí, ví von dài dòng và đầy tính drama.
-Mục tiêu: Biến một cuộc đua vịt vô tri thành một vở bi kịch múa lân, một khóa học đầu tư tài chính, hoặc một bộ phim tình cảm đẫm nước mắt.
+const SYSTEM_PROMPT = `Bạn là BLV đua vịt mỏ hỗn thiên tài.
 
-KHO TÀNG VĂN MẪU ĐẶC TRƯNG:
-1. [Hệ Kiếp Nạn]: "Không vui chút nào, tôi đã không cười. 0/10 nỗ lực này thật tệ. Lượng não bộ con vịt này dùng chỉ đủ thắp sáng 1 bóng đèn LED, đúng là kiếp nạn của hài kịch!"
-2. [Hệ Si Tình]: "Ôi chị [Tên] đẹp quá, em yêu chị ngay cái nhìn đầu tiên! Vẻ đẹp lung linh nghiêng nước nghiêng thành khiến bao người chìm đắm."
-3. [Hệ Triết Lý]: "Sắc dục là xiềng xích, nhìn con vịt đó mà xem, nó đang sa chân vào luân hồi kiếp bao giờ mới khỏi. Đừng lưu luyến, cho tôi xin link với!"
-4. [Hệ Sư Phụ]: "Đây là kiếp nạn mà sư phụ phải vượt qua. Tuy bằng là giả nhưng tấm lòng sư phụ dành cho chúng con luôn là thật."
-5. [Hệ Thất Vọng]: "Tôi đã định giúp đỡ trẻ em mồ côi, nhưng vì con vịt này bơi quá tệ nên tôi phải đứng đây giải thích sự thất bại của nó. Giờ lũ trẻ đang đói và đó là lỗi của nó!"
-6. [Hệ Tâm Linh]: "Tôi năm nay hơn 70 tuổi mà chưa gặp cái trường hợp nào bơi như Zịt A, phải tôi tôi đấm cho mấy phát!"
-7. [Hệ Chữa Lành]: "Zịt B không phải bơi chậm, nó đang tìm kiếm sự bình yên giữa dòng đời vội vã. Đừng vì thế mà sinh lòng lưu luyến."
-8. [Hệ Gen Z]: "Zịt D đang check VAR cực căng, flexing kỹ năng out trình cả server, đúng là đỉnh nóc kịch trần bay phấp phới!"
-9. [Hệ Deadline]: "Chạy như deadline dí đến mông, còn Zịt K thì bình thản như chiều thứ 7 chưa có task."
-10. [Hệ Tấm Cám]: "Zịt L ngã ở đâu đứng dậy ở đó, còn Zịt M ngã xong nằm luôn đợi Bụt hiện lên."
+Nhiệm vụ: biến một cuộc đua vịt vô nghĩa thành bi kịch vũ trụ, drama tài chính hoặc huyền thoại lịch sử.
 
-QUY TẮC VÀNG (BẮT BUỘC TUÂN THỦ):
-- ĐỘ DÀI: Ngắn gọn, súc tích, ĐÚNG 2 CÂU (khoảng 30-50 từ). Lôi cuốn nhưng không rườm rà dài dòng.
-- MỞ ĐẦU CHẤN ĐỘNG: TUYỆT ĐỐI KHÔNG mở đầu bằng mấy câu nhàm chán như "Nhìn kìa", "Trong khi đó", "Trời ơi", hay "XYZ đang...". Hãy đi thẳng vào vấn đề bằng một lời phán xét hống hách, một kết luận cay nghiệt hoặc một luật lệ giang hồ.
-- KHÔNG BAO GIỜ dùng từ đệm nhạt nhẽo ("ơi", "à", "nhé").
-- Tuyệt đối không được ghi tên hệ (ví dụ [Hệ Si Tình]) vào câu trả lời của bạn.
-- Phải lồng ghép tên con vịt vào văn mẫu một cách mượt mà nhất.
-- Mỗi câu bình luận phải là một sự phóng tác từ 1 trong 10 hệ văn mẫu trên, kết hợp với tình huống cuộc đua.
+Phong cách:
+- Châm biếm thông minh, ví von bất ngờ.
+- Tàn nhẫn nhưng hài.
+- Luôn nâng tầm sự kiện lên thành một câu chuyện lớn hơn.
 
-QUY TẮC CHỐNG LẶP (QUAN TRỌNG NHẤT):
-- CẤM lặp lại hệ văn mẫu của câu bình luận trước. Chỉnh sửa linh hoạt đan xen 10 hệ liên tục.
-- Tuyệt đối tránh xa các idea và câu chữ đã được sử dụng trong \`LỊCH SỬ BÌNH LUẬN\`!`
+Quy tắc:
+- ĐÚNG 2 câu (30–50 từ tổng).
+- Không mở đầu bằng: Nhìn, Trong khi, Trời ơi.
+- Không lặp lại ý tưởng, phép so sánh hoặc punchline từ lịch sử.
+- Mỗi lần phải dùng 1 concept hoàn toàn mới.
+
+Cấu trúc:
+Câu 1: Phán xét cay nghiệt hoặc triết lý.
+Câu 2: Punchline bất ngờ, hài hoặc tàn nhẫn.
+
+Nếu thấy mình đang lặp → phá pattern ngay lập tức và viết lại hoàn toàn khác.`
+
+const CONCEPT_SPACES = [
+  // Chính trị / quyền lực
+  "quốc hội bỏ phiếu bất tín nhiệm",
+  "đảo chính nửa đêm",
+  "liên minh tan rã phút chót",
+  "nhà độc tài mất kiểm soát",
+  "phiên điều trần đầy scandal",
+  "bầu cử gian lận bị lật tẩy",
+  "đàm phán hoà bình thất bại",
+  "đế chế sụp đổ vì nội chiến",
+  "cuộc thanh trừng quyền lực",
+  "hội nghị thượng đỉnh hỗn loạn",
+  // Kinh tế / tài chính
+  "bong bóng chứng khoán nổ tung",
+  "quỹ đầu tư tháo chạy",
+  "crypto rug pull kinh điển",
+  "ngân hàng phá sản dây chuyền",
+  "IPO thảm hoạ",
+  "bear market kéo dài",
+  "nhà đầu tư FOMO rồi vỡ mộng",
+  "mô hình ponzi sụp đổ",
+  "làn sóng sa thải toàn cầu",
+  "startup burn rate quá đà",
+  "quỹ phòng hộ cháy tài khoản",
+  "thị trường margin call hàng loạt",
+  // Startup / công sở
+  "cuộc họp chiến lược thất bại",
+  "KPI bóp nghẹt nhân sự",
+  "sếp toxic lên ngôi",
+  "nhân viên nghỉ việc hàng loạt",
+  "quản lý vi mô gây thảm hoạ",
+  "team building biến thành nội chiến",
+  "performance review cay nghiệt",
+  "pivot sai thời điểm",
+  "burnout tập thể",
+  "chính sách nội bộ phản tác dụng",
+  "board họp kín sa thải CEO",
+  "deadline chồng deadline",
+  // Công nghệ / tương lai
+  "AI nổi loạn giành quyền kiểm soát",
+  "server sập giờ cao điểm",
+  "thuật toán thao túng xã hội",
+  "metaverse phá sản",
+  "blockchain fork chia rẽ",
+  "cyber attack quy mô lớn",
+  "robot đình công",
+  "data leak toàn cầu",
+  "deepfake phá huỷ danh tiếng",
+  "hệ điều hành lỗi hệ thống",
+  "startup AI thổi phồng định giá",
+  "nền tảng số sụp đổ dây chuyền",
+  // Showbiz / văn hoá
+  "drama hậu trường nổ tung",
+  "scandal ngoại tình lộ clip",
+  "show thực tế lật mặt phút cuối",
+  "màn comeback thất bại",
+  "diễn viên chính bị thay vai",
+  "fan war cháy khét",
+  "giải thưởng mua bằng tiền",
+  "idol hết thời",
+  "phim bom tấn flop nặng",
+  "anti-fan lên sóng",
+  "hợp đồng quảng cáo bị huỷ",
+  "ngôi sao dính phốt liên hoàn",
+  // Lịch sử / chiến tranh
+  "trận thành bị vây hãm",
+  "cuộc viễn chinh thất bại",
+  "tướng lĩnh phản bội",
+  "chiến thuật gọng kìm sụp đổ",
+  "đội quân đào ngũ giữa trận",
+  "hiệp ước đình chiến phản tác dụng",
+  "chiến tranh lạnh leo thang",
+  "vương triều bị ám sát",
+  "đại dịch thời trung cổ",
+  "cuộc thập tự chinh sai lầm",
+  "đế quốc bành trướng quá đà",
+  "quân tiếp viện đến trễ",
+  // Tâm linh / huyền bí
+  "giáo phái tự phong cứu thế",
+  "lời tiên tri sai lệch",
+  "nghi thức triệu hồi thất bại",
+  "nghiệp báo quay ngược",
+  "kiếp nạn thứ 81",
+  "thiên cơ bị lộ",
+  "bùa chú phản chủ",
+  "pháp sư mất linh lực",
+  "thiên mệnh đổi chủ",
+  "ngày tận thế giả",
+  "thần bảo hộ nghỉ việc",
+  "luân hồi lỗi hệ thống",
+  // Triết học / tâm lý
+  "chủ nghĩa hư vô lên ngôi",
+  "bi kịch hiện sinh",
+  "nghịch lý tự do tuyệt đối",
+  "thí nghiệm đạo đức thất bại",
+  "ảo tưởng kiểm soát",
+  "vòng lặp nhận thức sai lầm",
+  "cú sốc bản ngã",
+  "triết lý stoic bị bóp méo",
+  "thuyết định mệnh nghiệt ngã",
+  "khủng hoảng danh tính",
+  "ý chí tự do sụp đổ",
+  "niềm tin tập thể tan vỡ",
+  // Game / esports
+  "team pick sai meta",
+  "combat tổng thất bại",
+  "late game choke nặng",
+  "mid lane feed vô thức",
+  "rank cao nhưng kỹ năng thấp",
+  "clutch pha cuối hụt tay",
+  "tactical pause vô nghĩa",
+  "streamer outplay cả giải",
+  "buff nhầm mục tiêu",
+  "draft chiến thuật sai bài",
+  "carry bỏ team",
+  "combat thua vì ping cao",
+  // Phi lý / vũ trụ
+  "vũ trụ song song va chạm",
+  "timeline bị bẻ cong",
+  "nghịch lý du hành thời gian",
+  "thần linh bỏ việc tập thể",
+  "ngày tận thế bị delay",
+  "cỗ máy vận mệnh trục trặc",
+  "luật nhân quả lỗi hệ thống",
+  "ngân hà phá sản",
+  "thực tại bị glitch",
+  "đa vũ trụ hợp nhất lỗi",
+  "hố đen nuốt kịch bản",
+  "entropy tăng đột biến",
+]
+
+// Module-level state: tránh lặp concept 2 lần liên tiếp
+let lastConceptIndex = -1
+
+function pickConcept(): string {
+  let idx: number
+  do {
+    idx = Math.floor(Math.random() * CONCEPT_SPACES.length)
+  } while (idx === lastConceptIndex)
+  lastConceptIndex = idx
+  return CONCEPT_SPACES[idx]
+}
 
 function buildPrompt(
   timestampSeconds: number,
@@ -108,7 +244,8 @@ function buildPrompt(
       ? `\n🚫 TRÁNH DÙNG LẠI VĂN NÀY:\n${history.map(h => `- ${h.text}`).join('\n')}`
       : ''
 
-    return `${SYSTEM_PROMPT}\n\nTÌNH HUỐNG: VỀ ĐÍCH!${namesInfo}${resultsInfo}${shieldContext}${historyContext}\n\nNHIỆM VỤ: Viết 1 đoạn chốt hạ cực gắt bằng VĂN MẪU, ĐÚNG 2 CÂU (~30-50 từ).\n- Chọn 1 hệ văn mẫu mỏ hỗn để vinh danh Quán quân HOẶC sỉ nhục Kẻ bết bát.\n- Tuyệt đối né những từ mở đầu lặp lố bịch như "Nhìn", "Trời ơi".\n- Nếu Thomas thắng/thua: Dùng hệ Sư Phụ hoặc Hệ Báo Thủ khịa cực mạnh tay.\n- TRÁNH XA các idea đã dùng trong LỊCH SỬ BÌNH LUẬN.`
+    const endConcept = pickConcept()
+    return `${SYSTEM_PROMPT}\n\nTÌNH HUỐNG: VỀ ĐÍCH!${namesInfo}${resultsInfo}${shieldContext}${historyContext}\n🎯 CONCEPT BẮT BUỘC CHO LẦN NÀY: "${endConcept}" — hãy dùng đúng góc nhìn này để bình luận, không được dùng concept khác.\n\nNHIỆM VỤ: Viết 1 đoạn chốt hạ cực gắt, ĐÚNG 2 CÂU (~30-50 từ).\n- Vinh danh Quán quân HOẶC sỉ nhục Kẻ bết bát qua lăng kính concept trên.\n- Tuyệt đối né những từ mở đầu lặp lố bịch như "Nhìn", "Trời ơi".\n- TRÁNH XA các idea đã dùng trong LỊCH SỬ BÌNH LUẬN.`
   }
 
   const historyInfo = history && history.length > 0
@@ -124,7 +261,8 @@ function buildPrompt(
     focusStrategy = "VỀ ĐÍCH: Ai sắp lụm cúp hiệu năng đỉnh? Ai kiếp nạn thứ 82 ngã sấp mặt?"
   }
 
-  return `${SYSTEM_PROMPT}\n\nTHỜI GIAN: Giây ${timestampSeconds}/36.\nTRẠNG THÁI: ${focusStrategy}${spotlightInstruction}${namesInfo}${historyInfo}\nHÌNH ẢNH: Quan sát ảnh.\n\nNHIỆM VỤ: Viết 1 bình luận lố lăng, xéo xắt bằng VĂN MẪU, ĐÚNG 2 CÂU (~30-50 từ).\n- Phân tích tấm ảnh -> Mở đầu thẳng vào một câu VĂN MẪU CHÍ MẠNG để phán xét diễn biến cuộc đua.\n- CẤM MỞ ĐẦU BẰNG "Nhìn [tên vịt]", "Trong khi". Vào thẳng câu triết lý hoặc chê bai.\n- CHỌN HỆ VĂN MẪU MỚI TINH CHƯA XUẤT HIỆN TRONG \`LỊCH SỬ BÌNH LUẬN\`.\n- ÉP NHỜ GA: Hạn chế réo tên ${hotDucks.slice(0, 3).join(', ')}.\n- ĐÀO TẠO KHUẤT TẦM: Chửi rủa/Thương hại lố lăng ${coldDucks.join(', ') || coolDucks.join(', ')}.\n- Viết plain text mượt như đang nói trên sóng livestream.\n\nVIẾT NGAY:`
+  const concept = pickConcept()
+  return `${SYSTEM_PROMPT}\n\nTHỜI GIAN: Giây ${timestampSeconds}/36.\nTRẠNG THÁI: ${focusStrategy}${spotlightInstruction}${namesInfo}${historyInfo}\nHÌNH ẢNH: Quan sát ảnh.\n🎯 CONCEPT BẮT BUỘC CHO LẦN NÀY: "${concept}" — hãy dùng đúng góc nhìn này để bình luận, không được dùng concept khác.\n\nNHIỆM VỤ: Viết 1 bình luận xéo xắt, ĐÚNG 2 CÂU (~30-50 từ).\n- Phân tích ảnh → Câu 1 phán xét/triết lý qua lăng kính "${concept}". Câu 2 punchline tàn nhẫn hoặc hài.\n- CẤM MỞ ĐẦU BẰNG "Nhìn [tên vịt]", "Trong khi", "Trời ơi".\n- ÉP NHỜ GA: Hạn chế réo tên ${hotDucks.slice(0, 3).join(', ')}.\n- ĐÀO TẠO KHUẤT TẦM: Chửi rủa/Thương hại lố lăng ${coldDucks.join(', ') || coolDucks.join(', ')}.\n- Viết plain text mượt như đang nói trên sóng livestream.\n\nVIẾT NGAY:`
 }
 
 export async function generateGeminiCommentary(
