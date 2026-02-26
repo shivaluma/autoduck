@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { Card } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Fireworks } from '@/components/fireworks'
+
 
 interface RaceLiveViewProps { raceId: number }
 interface Commentary { id: number; text: string; timestamp: number }
@@ -65,39 +65,6 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
 
   return (
     <div className="relative">
-      {result && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center animate-fade-in pointer-events-none">
-          <Fireworks />
-          {result.winner && (
-            <div className="relative animate-bounce-in mb-8">
-              <div className="absolute -inset-6 bg-[var(--color-ggd-gold)] rounded-full blur-2xl opacity-40 animate-pulse" />
-              <img src={result.winner.avatarUrl || '/placeholder-avatar.png'} className="w-48 h-48 rounded-full border-6 border-[var(--color-ggd-outline)] shadow-[0_0_50px_rgba(255,204,0,0.5),0_6px_0_var(--color-ggd-outline)] object-cover relative z-10" />
-              <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 ggd-tag bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)] text-lg px-5 py-1.5 z-20 whitespace-nowrap">
-                👑 VỊT NHẤT: {result.winner.name} 🏆
-              </div>
-            </div>
-          )}
-          <div className="ggd-card-gold p-6 animate-slide-up">
-            <h2 className="font-display text-4xl text-[var(--color-ggd-gold)] text-center text-outlined glow-gold">🎉 HẾT TRẬN!</h2>
-            <p className="text-xl mt-2 text-center text-white/80 font-readable italic">&ldquo;{result.verdict}&rdquo;</p>
-          </div>
-          {result.victims?.length > 0 && (
-            <div className="absolute bottom-10 flex gap-12 animate-slide-up" style={{ animationDelay: '0.5s' }}>
-              {result.victims.map((v, idx) => (
-                <div key={idx} className="flex flex-col items-center">
-                  <div className="relative">
-                    <div className="absolute -inset-2 bg-[var(--color-ggd-orange)] rounded-full blur-lg opacity-30 animate-pulse" />
-                    <img src={v.avatarUrl || '/placeholder-avatar.png'} className="w-24 h-24 rounded-full border-4 border-[var(--color-ggd-outline)] object-cover relative z-10 saturate-50" />
-                    <div className="absolute -top-2 -right-2 text-2xl z-20 animate-bob">😢</div>
-                  </div>
-                  <div className="mt-2 ggd-tag bg-[var(--color-ggd-orange)] text-white text-sm">🦆 VỊT XUI: {v.name}</div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px] lg:h-[700px]">
         <div className="lg:col-span-2 flex flex-col gap-4">
           <Card className="flex-1 bg-black/60 flex items-center justify-center overflow-hidden relative border-4 border-[var(--color-ggd-neon-green)] rounded-2xl shadow-[0_0_25px_rgba(61,255,143,0.2),0_6px_0_var(--color-ggd-outline)]">
