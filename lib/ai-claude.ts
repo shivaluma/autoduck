@@ -86,25 +86,46 @@ function buildPrompt(
       try {
         const ranking = JSON.parse(raceResults) as Array<{ rank: number; name: string; usedShield?: boolean }>
         const winner = ranking[0]?.name || 'unknown'
-        const bottom2 = ranking.slice(-2)
-        const shieldUsers = bottom2.filter(r => r.usedShield)
-        const noShieldLosers = bottom2.filter(r => !r.usedShield)
 
         // Count mentions for final recap logic
         const winnerMentions = mentions[winner] || 0
         const darkHorse = winnerMentions === 0 ? " (Kẻ im lặng đáng sợ)" : ""
 
+        // Replicate shield push-up logic from shield-logic.ts:
+        // Walk from bottom rank upward, skip shield users, find actual 2 victims
+        const sortedFromBottom = [...ranking].sort((a, b) => b.rank - a.rank)
+        const victims: typeof ranking = []
+        const safeByShield: typeof ranking = []
+        for (const player of sortedFromBottom) {
+          if (victims.length >= 2) break
+          if (player.usedShield) {
+            safeByShield.push(player)
+          } else {
+            victims.push(player)
+          }
+        }
+
         resultsInfo = `\nKQ: 👑 VÔ ĐỊCH: ${winner}${darkHorse}`
 
-        if (shieldUsers.length > 0 && noShieldLosers.length > 0) {
-          const savedDuck = shieldUsers[0].name
-          const unluckyDuck = noShieldLosers[0].name
-          resultsInfo += ` | 🛡️ ${savedDuck} (DÙNG KHIÊN) | 💀 ${unluckyDuck} (BỊ SẸO)`
-          shieldContext = `\nTWIST KHIÊN: ${savedDuck} buff khiên thoát kiếp bết bát ảo ma, đẩy ${unluckyDuck} ra chuồng gà ôm sẹo. Khịa căng đét vô!`
-        } else if (shieldUsers.length === 0) {
-          resultsInfo += ` | 💀 2 VỊT: ${bottom2.map(r => r.name).join(' & ')}`
+        if (safeByShield.length > 0 && victims.length > 0) {
+          const savedNames = safeByShield.map(s => s.name)
+          const victimNames = victims.map(v => v.name)
+          const totalPlayers = ranking.length
+          const pushedUpVictims = victims.filter(v => v.rank < totalPlayers - 1)
+
+          resultsInfo += ` | 🛡️ ${savedNames.join(' & ')} (DÙNG KHIÊN, THOÁT) | 💀 CON DZIT: ${victimNames.join(' & ')} (BỊ SẸO)`
+
+          if (pushedUpVictims.length > 0) {
+            const unlucky = pushedUpVictims[0]
+            shieldContext = `\nTWIST KHIÊN ĐẨY LÊN: ${savedNames.join(' & ')} bật khiên → phạt đẩy lên trên → ${unlucky.name} (hạng ${unlucky.rank}/${totalPlayers}) xui xẻo dính chưởng thay dù rank cao hơn bét bảng. CÀ KHỊA ${unlucky.name} CỰC GẮT — rank cao mà vẫn thành con dzit, đen vãi!`
+          } else {
+            shieldContext = `\nTWIST KHIÊN: ${savedNames.join(' & ')} buff khiên thoát kiếp bết bát ảo ma, đẩy ${victimNames.join(' & ')} ra chuồng gà ôm sẹo. Khịa căng đét vô!`
+          }
+        } else if (safeByShield.length === 0 && victims.length >= 2) {
+          resultsInfo += ` | 💀 2 VỊT: ${victims.map(r => r.name).join(' & ')}`
           shieldContext = `\nTWIST KHIÊN: Hai báo thủ dắt tay nhau quên bật khiên, ôm sẹo chung cho có bạn có bè!`
         } else {
+          const bottom2 = sortedFromBottom.slice(0, 2)
           resultsInfo += ` | 💀 KHIÊN VÔ DỤNG: ${bottom2.map(r => r.name).join(' & ')}`
           shieldContext = `\nTWIST KHIÊN: Nổ khiên sáng rực rỡ mà vẫn cút về chót, xui đỉnh nóc bay phấp phới luôn!`
         }

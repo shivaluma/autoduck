@@ -232,21 +232,46 @@ function buildPrompt(
       try {
         const ranking = JSON.parse(raceResults) as Array<{ rank: number; name: string; usedShield?: boolean }>
         const winner = ranking[0]?.name || 'unknown'
-        const bottom2 = ranking.slice(-2)
-        const shieldUsers = bottom2.filter(r => r.usedShield)
-        const noShieldLosers = bottom2.filter(r => !r.usedShield)
         const darkHorse = (mentions[winner] || 0) === 0 ? ' (kẻ im lặng suốt cuộc đua)' : ''
+
+        // Replicate shield push-up logic from shield-logic.ts:
+        // Walk from bottom rank upward, skip shield users, find actual 2 victims
+        const sortedFromBottom = [...ranking].sort((a, b) => b.rank - a.rank)
+        const victims: typeof ranking = []
+        const safeByShield: typeof ranking = []
+        for (const player of sortedFromBottom) {
+          if (victims.length >= 2) break
+          if (player.usedShield) {
+            safeByShield.push(player)
+          } else {
+            victims.push(player)
+          }
+        }
 
         resultsInfo = `\nKẾT QUẢ: 👑 ${winner}${darkHorse} về đích đầu tiên.`
 
-        if (shieldUsers.length > 0 && noShieldLosers.length > 0) {
-          const saved = shieldUsers[0].name
-          const unlucky = noShieldLosers[0].name
-          resultsInfo += ` | 🛡️ ${saved} dùng khiên thoát sẹo | 💀 ${unlucky} lãnh nguyên sẹo.`
-          shieldContext = `\nTWIST: ${saved} bật khiên phút chót đẩy ${unlucky} ra mép bờ vực.`
-        } else if (shieldUsers.length === 0) {
-          resultsInfo += ` | 💀 Hai kẻ bết bát: ${bottom2.map(r => r.name).join(' & ')} — cả hai đều quên bật khiên.`
+        if (safeByShield.length > 0 && victims.length > 0) {
+          // There are shield users who escaped and real victims
+          const savedNames = safeByShield.map(s => s.name)
+          const victimNames = victims.map(v => v.name)
+          // Check if any victim was NOT originally in bottom 2 (pushed up by shields)
+          const totalPlayers = ranking.length
+          const pushedUpVictims = victims.filter(v => v.rank < totalPlayers - 1)
+
+          resultsInfo += ` | 🛡️ ${savedNames.join(' & ')} dùng khiên thoát sẹo | 💀 CON DZIT: ${victimNames.join(' & ')}.`
+
+          if (pushedUpVictims.length > 0) {
+            // Someone higher ranked got screwed by shield cascade!
+            const unlucky = pushedUpVictims[0]
+            shieldContext = `\nTWIST KHIÊN ĐẨY LÊN: ${savedNames.join(' & ')} bật khiên → phạt đẩy lên trên → ${unlucky.name} (hạng ${unlucky.rank}/${totalPlayers}) xui xẻo dính chưởng thay dù đứng trên bét bảng. Cà khịa ${unlucky.name} là tâm điểm — rank cao mà vẫn thành con dzit, drama cực!`
+          } else {
+            shieldContext = `\nTWIST: ${savedNames.join(' & ')} bật khiên phút chót, đẩy ${victimNames.join(' & ')} ra mép bờ vực ôm sẹo.`
+          }
+        } else if (safeByShield.length === 0 && victims.length >= 2) {
+          resultsInfo += ` | 💀 Hai kẻ bết bát: ${victims.map(r => r.name).join(' & ')} — cả hai đều quên bật khiên.`
         } else {
+          // Edge case: everyone used shields or not enough victims
+          const bottom2 = sortedFromBottom.slice(0, 2)
           resultsInfo += ` | 💀 ${bottom2.map(r => r.name).join(' & ')} — nổ khiên xong vẫn về chót.`
         }
       } catch { /* ignore */ }
