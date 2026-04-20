@@ -412,18 +412,28 @@ async function executeRace(
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const transactionSummary = await prisma.$transaction(async (tx: any) => {
+      // Test race: vẫn roll & display chest awarded để show preview, nhưng forceVoid=true
+      // → chest tạo ra mang status='void', KHÔNG cộng asset thật, không thể consume race sau.
+      // Đồng thời KHÔNG truyền activeChests vào (để không "consume" chest thật của user).
       const postRace = isTest
-        ? {
-            modifiedVictims: penalties.victims.map((victim) => ({
+        ? await resolveChestPostRace(
+            tx,
+            raceId,
+            raceResults.map((entry) => ({
+              userId: entry.userId,
+              rank: entry.initialRank,
+              isClone: entry.isClone,
+              cloneOfUserId: entry.cloneOfUserId,
+            })),
+            penalties.victims.map((victim) => ({
               userId: victim.userId,
               initialRank: victim.initialRank,
               isClone: victim.isClone ?? false,
               cloneOfUserId: victim.cloneOfUserId ?? undefined,
             })),
-            shieldsToGrant: [],
-            outcomes: [],
-            newChestsForThisRace: [],
-          }
+            [],
+            { forceVoid: true }
+          )
         : await resolveChestPostRace(
             tx,
             raceId,

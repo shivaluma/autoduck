@@ -86,13 +86,19 @@ export async function issueChestsForVictims(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   prisma: any,
   raceId: number,
-  victims: { userId: number }[]
+  victims: { userId: number }[],
+  options: { forceVoid?: boolean } = {}
 ) {
   const dedupedVictims = Array.from(new Set(victims.map((victim) => victim.userId)))
   const created = []
 
   for (const ownerId of dedupedVictims) {
     const rolled = rollChest()
+    const status = options.forceVoid
+      ? 'void'
+      : rolled.effect === 'NOTHING'
+        ? 'void'
+        : 'active'
     created.push(
       await prisma.mysteryChest.create({
         data: {
@@ -100,7 +106,7 @@ export async function issueChestsForVictims(
           earnedFromRaceId: raceId,
           effect: rolled.effect,
           rngSeed: rolled.seed,
-          status: rolled.effect === 'NOTHING' ? 'void' : 'active',
+          status,
         },
       })
     )
@@ -256,7 +262,8 @@ export async function resolveChestPostRace(
   raceId: number,
   ranking: RankingEntry[],
   victims: PenaltyVictim[],
-  activeChests: ActiveChestRecord[]
+  activeChests: ActiveChestRecord[],
+  options: { forceVoid?: boolean } = {}
 ) {
   const modifiedVictims = [...victims]
   const shieldsToGrant: Array<{ userId: number }> = []
@@ -296,7 +303,8 @@ export async function resolveChestPostRace(
   const newChestsForThisRace = await issueChestsForVictims(
     prisma,
     raceId,
-    modifiedVictims.map((victim) => ({ userId: victim.userId }))
+    modifiedVictims.map((victim) => ({ userId: victim.userId })),
+    { forceVoid: options.forceVoid }
   )
 
   return {

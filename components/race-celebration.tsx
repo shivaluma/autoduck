@@ -44,21 +44,24 @@ export function RaceCelebration({
   awardedChests = [],
   duration = 6000,
 }: Props) {
-  const [visible, setVisible] = useState(duration > 0)
+  // duration > 0  ⇒ lần đầu xem: ẩn rồi stagger reveal + auto-fade
+  // duration === 0 ⇒ replay (reload race detail): hiện full ngay, dismiss bằng nút Skip
+  const isFirstView = duration > 0
+  const [visible, setVisible] = useState(true)
   const [fading, setFading] = useState(false)
-  const [showText, setShowText] = useState(false)
-  const [showVictims, setShowVictims] = useState(false)
-  const [showPlayers, setShowPlayers] = useState(false)
-  const [showChestReport, setShowChestReport] = useState(false)
-  const [showBossFall, setShowBossFall] = useState(false)
+  const [showText, setShowText] = useState(!isFirstView)
+  const [showVictims, setShowVictims] = useState(!isFirstView)
+  const [showPlayers, setShowPlayers] = useState(!isFirstView)
+  const [showChestReport, setShowChestReport] = useState(!isFirstView)
+  const [showBossFall, setShowBossFall] = useState(!isFirstView)
 
   useEffect(() => {
-    if (duration <= 0) {
-      return
-    }
-
     if (raceId && typeof window !== 'undefined') {
       window.sessionStorage.setItem(`race-celebration:${raceId}`, 'done')
+    }
+
+    if (duration <= 0) {
+      return
     }
 
     const timers: ReturnType<typeof setTimeout>[] = []
