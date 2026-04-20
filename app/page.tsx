@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import type { PlayerData } from '@/lib/types'
+import Image from 'next/image'
 import { BossBadge } from '@/components/boss-badge'
-import { ChestIcon } from '@/components/chest-icon'
+import { ChestCard } from '@/components/chest-card'
 import { ShieldAgingStack } from '@/components/shield-aging-stack'
 
 export default function Dashboard() {
@@ -178,7 +179,7 @@ export default function Dashboard() {
                             <div className="font-body text-lg font-black text-white tracking-wide truncate">{player.name}</div>
                             {player.isImmortal && <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)]">♾️ Immortal</span>}
                             {player.isBoss && <BossBadge compact streak={player.cleanStreak} />}
-                            {player.activeChest && <ChestIcon effect={player.activeChest.effect} compact />}
+                            {player.activeChest && <ChestCard effect={player.activeChest.effect} size="sm" opened animated={false} interactive />}
                           </div>
                           <div className="flex flex-wrap items-center gap-2 mt-1">
                             {index === 0 && (
@@ -280,61 +281,103 @@ export default function Dashboard() {
             </div>
 
             <div className="ggd-card-gold ggd-stripe p-6">
-              <div className="font-display text-2xl text-[var(--color-ggd-gold)] text-outlined mb-4">👑 Boss Watch</div>
-              <div className="space-y-3">
-                {bossWatch.length > 0 ? bossWatch.map((entry) => (
-                  <div key={entry.id} className="rounded-xl border-3 border-[var(--color-ggd-outline)] bg-black/20 p-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="font-body text-white font-black">{entry.name}</span>
-                      {entry.isBoss ? <BossBadge compact streak={entry.cleanStreak} /> : <span className="ggd-tag bg-[var(--color-ggd-panel)] text-[var(--color-ggd-neon-green)]">🔥 {entry.cleanStreak}/3</span>}
+              <div className="flex items-center gap-3 mb-4">
+                <Image src="/assets/v2/boss-crown.svg" alt="boss" width={32} height={32} className="animate-bob" unoptimized />
+                <div>
+                  <div className="font-display text-xl text-[var(--color-ggd-gold)] text-outlined leading-none">Boss Watch</div>
+                  <div className="font-data text-[10px] uppercase tracking-widest text-white/50">3 tuần sạch → spawn 3 clone</div>
+                </div>
+              </div>
+              <div className="space-y-2.5">
+                {bossWatch.length > 0 ? bossWatch.map((entry) => {
+                  const streak = Math.min(entry.cleanStreak, 3)
+                  const pct = (streak / 3) * 100
+                  return (
+                    <div key={entry.id} className="stat-row">
+                      <div className="stat-row-icon" style={{ background: entry.isBoss ? 'linear-gradient(180deg, #ffd84d 0%, #f59e0b 100%)' : 'rgba(0,0,0,0.4)' }}>
+                        {entry.isBoss
+                          ? <Image src="/assets/v2/boss-crown.svg" alt="boss" width={24} height={24} unoptimized />
+                          : <Image src="/assets/v2/streak-flame.svg" alt="flame" width={22} height={22} unoptimized />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <span className="font-body text-white font-black truncate">{entry.name}</span>
+                          {entry.isBoss
+                            ? <BossBadge compact streak={entry.cleanStreak} />
+                            : <span className="font-data text-[11px] font-black text-[var(--color-ggd-gold)]">{streak}/3</span>}
+                        </div>
+                        <div className="progress-track">
+                          <div className="progress-fill" style={{ width: `${pct}%`, '--bar-bg': entry.isBoss ? 'linear-gradient(90deg,#ffd84d,#f59e0b)' : 'linear-gradient(90deg,#3dff8f,#ffcc00)' } as React.CSSProperties} />
+                        </div>
+                      </div>
                     </div>
-                    <div className="mt-2 h-3 rounded-full bg-black/30 border-2 border-[var(--color-ggd-outline)] overflow-hidden">
-                      <div
-                        className={`h-full ${entry.isBoss ? 'bg-[var(--color-ggd-gold)]' : 'bg-[var(--color-ggd-neon-green)]'}`}
-                        style={{ width: `${Math.min(entry.cleanStreak, 3) / 3 * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                )) : (
-                  <div className="font-data text-sm text-[var(--color-ggd-muted)]">Chưa có ai chạm mốc 2/3 tuần sạch.</div>
+                  )
+                }) : (
+                  <div className="font-data text-sm text-[var(--color-ggd-muted)] italic">Chưa có ai chạm mốc 2/3 tuần sạch.</div>
                 )}
               </div>
             </div>
 
             <div className="ggd-card p-6">
-              <div className="font-display text-2xl text-white text-outlined mb-4">⏳ Khiên Sắp Hỏng</div>
-              <div className="space-y-3">
-                {fragileShields.length > 0 ? fragileShields.slice(0, 6).map(({ player, shield }) => (
-                  <div key={shield.id} className="rounded-xl border-3 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-3">
-                    <div className="font-body text-white font-black">{player.name}</div>
-                    <div className="font-data text-xs text-[var(--color-ggd-muted)] mt-1">
-                      🛡️#{shield.id} đã để {shield.weeksUnused} tuần
-                      {shield.weeksUnused >= 3 ? ' - đang ở vùng nguy hiểm' : ' - còn 1 nhịp nữa sẽ vỡ'}
+              <div className="flex items-center gap-3 mb-4">
+                <Image src="/assets/v2/shield-cracked.svg" alt="shield" width={32} height={32} className="animate-bob" unoptimized />
+                <div>
+                  <div className="font-display text-xl text-white text-outlined leading-none">Khiên Sắp Hỏng</div>
+                  <div className="font-data text-[10px] uppercase tracking-widest text-white/50">3 tuần → vỡ • 5 tuần → mất</div>
+                </div>
+              </div>
+              <div className="space-y-2.5">
+                {fragileShields.length > 0 ? fragileShields.slice(0, 6).map(({ player, shield }) => {
+                  const danger = shield.weeksUnused >= 3
+                  const pct = Math.min(shield.weeksUnused / 5, 1) * 100
+                  return (
+                    <div key={shield.id} className="stat-row">
+                      <div className="stat-row-icon">
+                        <Image
+                          src={danger ? '/assets/v2/shield-broken.svg' : '/assets/v2/shield-cracked.svg'}
+                          alt="shield" width={26} height={26} unoptimized
+                          className={danger ? 'animate-pulse' : ''}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <span className="font-body text-white font-black truncate">
+                            {player.name} <span className="text-white/50 font-data text-[11px]">#{shield.id}</span>
+                          </span>
+                          <span className={`font-data text-[11px] font-black ${danger ? 'text-[var(--color-ggd-orange)]' : 'text-[var(--color-ggd-gold)]'}`}>
+                            {shield.weeksUnused}w {danger ? '⚠️' : ''}
+                          </span>
+                        </div>
+                        <div className="progress-track">
+                          <div className="progress-fill" style={{ width: `${pct}%`, '--bar-bg': danger ? 'linear-gradient(90deg,#ff5733,#ff8a00)' : 'linear-gradient(90deg,#ffcc00,#ff8a00)' } as React.CSSProperties} />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                )) : (
-                  <div className="font-data text-sm text-[var(--color-ggd-muted)]">Chưa có khiên nào ở ngưỡng cảnh báo.</div>
+                  )
+                }) : (
+                  <div className="font-data text-sm text-[var(--color-ggd-muted)] italic">Chưa có khiên nào ở ngưỡng cảnh báo.</div>
                 )}
               </div>
             </div>
 
             <div className="ggd-card-orange p-6">
-              <div className="font-display text-2xl text-white text-outlined mb-4">🎁 Rương Đang Cầm</div>
-              <div className="space-y-3">
+              <div className="flex items-center gap-3 mb-4">
+                <Image src="/assets/v2/chest-closed.svg" alt="chest" width={32} height={32} className="animate-bob" unoptimized />
+                <div>
+                  <div className="font-display text-xl text-white text-outlined leading-none">Rương Đang Cầm</div>
+                  <div className="font-data text-[10px] uppercase tracking-widest text-white/50">Phải dùng race kế tiếp</div>
+                </div>
+              </div>
+              <div className="space-y-2.5">
                 {activeChests.length > 0 ? activeChests.map(({ player, chest }) => (
-                  <div key={chest.id} className="rounded-xl border-3 border-[var(--color-ggd-outline)] bg-black/20 p-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="font-body text-white font-black">{player.name}</span>
-                      <ChestIcon effect={chest.effect} />
-                    </div>
-                    <div className="font-data text-xs text-white/70 mt-1">
-                      {['CURSE_SWAP', 'INSURANCE_FRAUD', 'PUBLIC_SHIELD', 'I_CHOOSE_YOU'].includes(chest.effect)
-                        ? 'Cần target ở race kế tiếp.'
-                        : 'Tự áp dụng khi người chơi tham gia race kế tiếp.'}
+                  <div key={chest.id} className="stat-row" style={{ '--stat-bg': 'rgba(255,87,51,0.1)' } as React.CSSProperties}>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-body text-white font-black truncate mb-1.5">{player.name}</div>
+                      <ChestCard effect={chest.effect} chestId={chest.id} size="sm" opened animated={false} interactive />
                     </div>
                   </div>
                 )) : (
-                  <div className="font-data text-sm text-white/75">Không ai đang cầm mystery chest active.</div>
+                  <div className="font-data text-sm text-white/75 italic">Không ai đang cầm mystery chest active.</div>
                 )}
               </div>
             </div>

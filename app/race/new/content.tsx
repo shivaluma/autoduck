@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { ChestEffect, PlayerData } from '@/lib/types'
 import { BossBadge } from '@/components/boss-badge'
-import { ChestCard } from '@/components/chest-card'
+import { ChestConfigCard } from '@/components/chest-config-card'
 import { ChestIcon } from '@/components/chest-icon'
 import { ShieldChip } from '@/components/shield-chip'
 import {
@@ -488,7 +488,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                 })
 
                 return (
-                  <ChestCard
+                  <ChestConfigCard
                     key={chest.id}
                     chestId={chest.id}
                     ownerName={ownerName}
@@ -501,7 +501,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                       name: player.name,
                       shieldCount: chest.effect === 'PUBLIC_SHIELD' ? player.activeShields.length : undefined,
                     }))}
-                    onTargetChange={(targetUserId) =>
+                    onTargetChange={(targetUserId?: number) =>
                       updateChestTarget(chest.id, chest.ownerId, chest.effect, targetUserId)
                     }
                   />

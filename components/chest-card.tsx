@@ -1,87 +1,105 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import type { ChestEffect } from '@/lib/types'
-import { ChestIcon } from '@/components/chest-icon'
 
-interface ChestCardOption {
-  userId: number
-  name: string
-  shieldCount?: number
+const effectMeta: Record<ChestEffect, { label: string; svg: string; rarity: 'trash' | 'common' | 'rare' | 'epic'; tagline: string }> = {
+  NOTHING: { label: 'Trống Trơn', svg: '/assets/v2/effect-nothing.svg', rarity: 'trash', tagline: 'Không có gì xảy ra' },
+  CURSE_SWAP: { label: 'Curse Swap', svg: '/assets/v2/effect-curse-swap.svg', rarity: 'common', tagline: 'Đổi tên với target' },
+  INSURANCE_FRAUD: { label: 'Insurance Fraud', svg: '/assets/v2/effect-insurance-fraud.svg', rarity: 'rare', tagline: 'Kéo target xuống nếu cùng làm dzịt' },
+  IDENTITY_THEFT: { label: 'Identity Theft', svg: '/assets/v2/effect-identity-theft.svg', rarity: 'rare', tagline: 'Spawn shadow clone, lấy rank tốt nhất' },
+  PUBLIC_SHIELD: { label: 'Public Shield', svg: '/assets/v2/effect-public-shield.svg', rarity: 'common', tagline: 'Mượn khiên của target' },
+  I_CHOOSE_YOU: { label: 'I Choose You', svg: '/assets/v2/effect-i-choose-you.svg', rarity: 'epic', tagline: 'Target P1 → tặng owner 1 khiên' },
 }
 
 interface ChestCardProps {
-  chestId: number
-  ownerName: string
   effect: ChestEffect
-  description: string
-  targetUserId?: number
-  targetOptions: ChestCardOption[]
-  needsTarget: boolean
-  onTargetChange: (targetUserId?: number) => void
+  chestId?: number
+  size?: 'sm' | 'md' | 'lg'
+  /** Hiển thị animation reveal: chest đóng → mở → effect bay ra */
+  animated?: boolean
+  /** Trạng thái "đã mở" - hiện effect SVG. Nếu false: hiện chest đóng */
+  opened?: boolean
+  /** Hiển thị mô tả effect */
+  showTagline?: boolean
+  /** Có hover effect không (cho chest đang ngồi tĩnh trong sidebar) */
+  interactive?: boolean
 }
 
 export function ChestCard({
-  chestId,
-  ownerName,
   effect,
-  description,
-  targetUserId,
-  targetOptions,
-  needsTarget,
-  onTargetChange,
+  chestId,
+  size = 'md',
+  animated = false,
+  opened = true,
+  showTagline = false,
+  interactive = false,
 }: ChestCardProps) {
-  const targetLabel = effect === 'CURSE_SWAP'
-    ? 'Đổi tên với'
-    : effect === 'INSURANCE_FRAUD'
-      ? 'Kéo theo nếu chết'
-      : effect === 'PUBLIC_SHIELD'
-        ? 'Mượn khiên của'
-        : 'Đặt cược vào'
+  const meta = effectMeta[effect]
+  const [revealed, setRevealed] = useState(!animated || opened === false ? opened : false)
 
-  const helper = effect === 'PUBLIC_SHIELD'
-    ? 'Chỉ hiện những người đang còn ít nhất 1 khiên active.'
-    : effect === 'INSURANCE_FRAUD'
-      ? 'Target sẽ dính theo nếu chủ rương thành con dzit, bypass cả khiên.'
-      : effect === 'CURSE_SWAP'
-        ? 'Live và commentary sẽ nhìn theo tên giả, nhưng scar vẫn map về đúng người.'
-        : 'Nếu target về P1 thì chủ rương ăn thêm 1 khiên.'
+  useEffect(() => {
+    if (!animated || !opened) {
+      setRevealed(opened)
+      return
+    }
+    const timer = window.setTimeout(() => setRevealed(true), 700)
+    return () => window.clearTimeout(timer)
+  }, [animated, opened])
+
+  const dims = size === 'sm'
+    ? { box: 32, icon: 24, padding: 'px-2 py-1.5', title: 'text-[11px]', tag: 'text-[9px]', tagline: 'text-[10px]' }
+    : size === 'lg'
+      ? { box: 64, icon: 48, padding: 'px-4 py-3', title: 'text-base', tag: 'text-xs', tagline: 'text-xs' }
+      : { box: 48, icon: 36, padding: 'px-3 py-2', title: 'text-sm', tag: 'text-[10px]', tagline: 'text-[11px]' }
+
+  const showOpened = revealed && opened
+  const iconSrc = showOpened ? meta.svg : '/assets/v2/chest-closed.svg'
 
   return (
-    <div className="rounded-2xl border-3 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-4 shadow-[0_4px_0_var(--color-ggd-outline)]">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="font-display text-lg text-white">🎁 Rương #{chestId} - {ownerName}</div>
-          <p className="font-body text-sm text-white/75 mt-2">{description}</p>
-        </div>
-        <ChestIcon effect={effect} tone="gold" />
+    <div
+      className={`chest-card chest-rarity-${meta.rarity} ${dims.padding} ${interactive ? 'is-interactive' : ''} ${revealed && opened ? 'is-revealed' : ''}`}
+      title={`${meta.label} · ${meta.tagline}`}
+    >
+      <div
+        className={`chest-icon-box ${animated && showOpened ? 'is-revealing' : !showOpened ? 'is-bobbing' : ''}`}
+        style={{ width: dims.box, height: dims.box }}
+        key={showOpened ? 'open' : 'closed'}
+      >
+        <Image
+          src={iconSrc}
+          alt={meta.label}
+          width={dims.icon}
+          height={dims.icon}
+          unoptimized
+        />
       </div>
-
-      {needsTarget ? (
-        <div className="mt-4">
-          <label className="font-data text-xs uppercase text-[var(--color-ggd-muted)]">{targetLabel}</label>
-          <select
-            value={targetUserId ?? ''}
-            onChange={(event) => onTargetChange(event.target.value ? Number(event.target.value) : undefined)}
-            className="mt-2 w-full rounded-xl border-3 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-surface)] px-4 py-3 text-white font-data outline-none"
-          >
-            <option value="">-- Chọn một vịt --</option>
-            {targetOptions.map((option) => (
-              <option key={option.userId} value={option.userId}>
-                {option.name}
-                {typeof option.shieldCount === 'number' ? ` (${option.shieldCount} khiên)` : ''}
-              </option>
-            ))}
-          </select>
-          <div className="font-data text-xs text-white/60 mt-2">{helper}</div>
-          {!targetUserId && (
-            <div className="font-data text-xs text-[var(--color-ggd-orange)] mt-2">⚠ Chưa chọn, race sẽ bị khóa.</div>
+      <div className="flex flex-col gap-0.5 min-w-0">
+        <div className={`font-display ${dims.title} text-white leading-tight whitespace-nowrap text-outlined`}>
+          {showOpened ? meta.label : 'Rương đóng'}
+        </div>
+        <div className="flex items-center gap-1.5">
+          {chestId !== undefined && (
+            <span className={`font-data ${dims.tag} font-black text-white/70`}>#{chestId}</span>
           )}
+          <span className={`font-data ${dims.tag} font-black uppercase tracking-wider`}
+            style={{
+              color: meta.rarity === 'trash' ? 'rgba(255,255,255,0.4)'
+                : meta.rarity === 'common' ? 'var(--color-ggd-neon-green)'
+                  : meta.rarity === 'rare' ? 'var(--color-ggd-gold)'
+                    : 'var(--color-ggd-hot-pink)',
+            }}
+          >
+            {meta.rarity === 'trash' ? '· trash' : meta.rarity === 'common' ? '· common' : meta.rarity === 'rare' ? '· rare' : '· epic'}
+          </span>
         </div>
-      ) : (
-        <div className="mt-4 rounded-xl border-2 border-[var(--color-ggd-outline)]/30 bg-black/20 px-3 py-2 font-data text-xs text-[var(--color-ggd-neon-green)]">
-          Effect này không cần target, hệ thống sẽ tự áp dụng trong race.
-        </div>
-      )}
+        {showTagline && showOpened && (
+          <div className={`font-readable ${dims.tagline} text-white/65 leading-snug mt-0.5`}>{meta.tagline}</div>
+        )}
+      </div>
     </div>
   )
 }
+
+export const chestEffectMeta = effectMeta

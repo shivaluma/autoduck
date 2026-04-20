@@ -6,7 +6,8 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { RaceLiveView } from './race-live-view'
 import { RaceCelebration } from '@/components/race-celebration'
 import type { RaceStatus } from '@/lib/types'
-import { ChestIcon } from '@/components/chest-icon'
+import Image from 'next/image'
+import { ChestCard } from '@/components/chest-card'
 import { ChestReveal } from '@/components/chest-reveal'
 
 export default function RaceDetailPage({
@@ -161,13 +162,13 @@ export default function RaceDetailPage({
                 <span className="font-data text-sm text-[var(--color-ggd-outline)]/70">{sortedParticipants.length} vịt</span>
               </div>
 
-              <div className="grid grid-cols-[60px_1fr_120px_1.2fr_180px_180px] gap-0 px-5 py-3 border-b-3 border-[var(--color-ggd-outline)]/30 bg-[var(--color-ggd-panel)]">
-                <div className="font-data text-xs uppercase text-[var(--color-ggd-muted)]">#</div>
-                <div className="font-data text-xs uppercase text-[var(--color-ggd-muted)]">VỊT 🦆</div>
-                <div className="font-data text-xs uppercase text-[var(--color-ggd-muted)] text-center">PHÒNG THỦ</div>
-                <div className="font-data text-xs uppercase text-[var(--color-ggd-muted)]">EFFECT</div>
-                <div className="font-data text-xs uppercase text-[var(--color-ggd-muted)] text-right">KẾT QUẢ</div>
-                <div className="font-data text-xs uppercase text-[var(--color-ggd-muted)]">🎁 RƯƠNG MỚI</div>
+              <div className="grid grid-cols-[56px_minmax(0,1fr)_110px_minmax(0,1.4fr)_140px_minmax(0,1fr)] gap-2 px-5 py-3 border-b-[3px] border-[var(--color-ggd-outline)]/40 bg-[var(--color-ggd-panel)]">
+                <div className="ggd-col-header">#</div>
+                <div className="ggd-col-header">VỊT 🦆</div>
+                <div className="ggd-col-header text-center">KHIÊN</div>
+                <div className="ggd-col-header">CHEST DÙNG</div>
+                <div className="ggd-col-header text-right">KẾT QUẢ</div>
+                <div className="ggd-col-header">RƯƠNG MỚI 🎁</div>
               </div>
 
               {hasResults ? (
@@ -176,60 +177,72 @@ export default function RaceDetailPage({
                     const consumedChest = !p.isClone ? consumedChestByOwnerId.get(p.userId) : undefined
                     const awardedChest = p.gotScar && !p.isClone ? awardedChestByOwnerId.get(p.userId) : undefined
 
+                    const totalSlots = sortedParticipants.length
+                    const positionIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : null
                     return (
                     <div
                       key={`${p.userId}-${p.cloneIndex ?? 0}-${p.initialRank ?? idx}`}
-                      className={`grid grid-cols-[60px_1fr_120px_1.2fr_180px_180px] gap-0 items-center px-5 py-4 duck-row
+                      className={`grid grid-cols-[56px_minmax(0,1fr)_110px_minmax(0,1.4fr)_140px_minmax(0,1fr)] gap-2 items-center px-5 py-3.5 duck-row
                         ${p.gotScar ? 'loser' : p.usedShield ? 'shielded' : idx < 3 ? 'winner' : ''}
                         animate-slide-right opacity-0`}
                       style={{ animationDelay: `${0.3 + idx * 0.08}s` }}
                     >
-                      <div>
+                      <div className="flex items-center justify-center relative">
+                        {positionIcon && (
+                          <span className="absolute -top-1 -left-1 text-xl drop-shadow-[2px_2px_0_rgba(0,0,0,0.7)]">{positionIcon}</span>
+                        )}
                         <span className={`position-number text-3xl ${p.gotScar ? 'text-[var(--color-ggd-orange)] glow-orange' :
-                          idx === 0 ? 'text-[var(--color-ggd-gold)] glow-gold' : idx === 1 ? 'text-white/70' :
-                            idx === 2 ? 'text-[var(--color-ggd-neon-green)]' : 'text-[var(--color-ggd-muted)]/35'}`}>
+                          idx === 0 ? 'text-[var(--color-ggd-gold)] glow-gold' : idx === 1 ? 'text-white/80' :
+                            idx === 2 ? 'text-[var(--color-ggd-neon-green)] glow-green' : 'text-[var(--color-ggd-muted)]/40'}`}>
                           {String((p.initialRank ?? idx + 1)).padStart(2, '0')}
                         </span>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className={`w-2 h-10 rounded-full ${p.gotScar ? 'bg-[var(--color-ggd-orange)]' : p.usedShield ? 'bg-[var(--color-ggd-sky)]' :
-                          idx === 0 ? 'bg-[var(--color-ggd-gold)]' : 'bg-[var(--color-ggd-muted)]/20'}`} />
-                        <div>
-                          <div className="font-body text-base font-extrabold text-white">
-                            {p.displayName ?? p.name}
-                            {p.isClone && <span className="ml-2 text-xs text-[var(--color-ggd-muted)]">clone</span>}
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`w-2 h-12 rounded-full flex-shrink-0 ${p.gotScar ? 'bg-[var(--color-ggd-orange)] shadow-[0_0_8px_rgba(255,87,51,0.6)]' : p.usedShield ? 'bg-[var(--color-ggd-sky)] shadow-[0_0_8px_rgba(61,200,255,0.5)]' :
+                          idx === 0 ? 'bg-[var(--color-ggd-gold)] shadow-[0_0_8px_rgba(255,204,0,0.5)]' : 'bg-[var(--color-ggd-muted)]/20'}`} />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <div className="font-body text-base font-extrabold text-white truncate">
+                              {p.displayName ?? p.name}
+                            </div>
+                            {p.isClone && <span className="ggd-tag bg-[var(--color-ggd-panel)] text-white/70 text-[10px] px-2 py-0">clone</span>}
                           </div>
-                          {idx === 0 && isFinished && <div className="font-display text-sm text-[var(--color-ggd-gold)] glow-gold">👑 VỊT THẮNG CUỘC</div>}
+                          {idx === 0 && isFinished && <div className="font-display text-xs text-[var(--color-ggd-gold)] glow-gold mt-0.5">👑 VỊT THẮNG CUỘC</div>}
                         </div>
                       </div>
-                      <div className="text-center">
+                      <div className="flex justify-center">
                         {p.usedShield ? (
-                          <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)] text-xs">🛡️ Có Khiên</span>
-                        ) : (<span className="font-data text-lg text-[var(--color-ggd-muted)]/20">—</span>)}
+                          <span className="shield-chip shield-tier-fresh">
+                            <Image src="/assets/v2/shield-cracked.svg" alt="shield" width={18} height={18} className="shield-chip-icon" unoptimized />
+                            <span>USED</span>
+                          </span>
+                        ) : (<span className="empty-cell">—</span>)}
                       </div>
-                      <div className="pr-4">
+                      <div className="min-w-0">
                         {consumedChest ? (
-                          <div className="space-y-1">
-                            <div className={`ggd-tag text-xs ${consumedChest.outcome === 'success' ? 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]' : 'bg-[var(--color-ggd-orange)] text-white'}`}>
-                              <ChestIcon effect={consumedChest.effect} compact tone={consumedChest.outcome === 'success' ? 'green' : 'orange'} />
-                            </div>
-                            <div className="font-data text-[11px] text-[var(--color-ggd-muted)]">
-                              {consumedChest.targetName ? `→ ${consumedChest.targetName}` : 'Auto effect'}
-                              {consumedChest.outcome === 'success' ? ' (✅)' : ' (❌)'}
+                          <div className="flex flex-col gap-1 min-w-0">
+                            <ChestCard effect={consumedChest.effect} size="sm" opened animated={false} />
+                            <div className="font-data text-[10px] text-[var(--color-ggd-muted)] truncate flex items-center gap-1">
+                              <span className={consumedChest.outcome === 'success' ? 'text-[var(--color-ggd-neon-green)]' : 'text-[var(--color-ggd-orange)]'}>
+                                {consumedChest.outcome === 'success' ? '✓ HIT' : '✗ FIZZLED'}
+                              </span>
+                              {consumedChest.targetName && <span className="opacity-70">→ {consumedChest.targetName}</span>}
                             </div>
                           </div>
-                        ) : (
-                          <span className="font-data text-sm text-[var(--color-ggd-muted)]/40">—</span>
-                        )}
+                        ) : (<span className="empty-cell">—</span>)}
                       </div>
                       <div className="text-right">
                         {p.gotScar ? (
                           <span className="font-display text-lg text-[var(--color-ggd-orange)] glow-orange">CON DZỊT 🦆</span>
-                        ) : p.usedShield && (p.initialRank ?? 0) >= sortedParticipants.length - 1 ? (
-                          <span className="font-display text-lg text-[var(--color-ggd-sky)]">🛡️ Thoát!</span>
+                        ) : p.usedShield && (p.initialRank ?? 0) >= totalSlots - 1 ? (
+                          <span className="font-display text-base text-[var(--color-ggd-sky)] glow-sky">🛡️ Thoát!</span>
                         ) : idx === 0 ? (
-                          <span className="font-display text-lg text-[var(--color-ggd-gold)]">🏆 P1</span>
-                        ) : (<span className="font-data text-sm text-[var(--color-ggd-muted)]/40">An Toàn ✨</span>)}
+                          <span className="font-display text-lg text-[var(--color-ggd-gold)] glow-gold">🏆 P1</span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 font-data text-[11px] uppercase tracking-wider text-[var(--color-ggd-muted)]/55 font-black">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-ggd-muted)]/40" /> An toàn
+                          </span>
+                        )}
                       </div>
                       <div>
                         {awardedChest ? (
@@ -239,9 +252,7 @@ export default function RaceDetailPage({
                             compact
                             animated={!celebrationSeen}
                           />
-                        ) : (
-                          <span className="font-data text-sm text-[var(--color-ggd-muted)]/40">—</span>
-                        )}
+                        ) : (<span className="empty-cell">—</span>)}
                       </div>
                     </div>
                   )})}

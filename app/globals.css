@@ -825,3 +825,322 @@
 .racing-stripe {
   /* removed */
 }
+
+/* ===== 🎁 V2 CHEST / BOSS / SHIELD VISUALS ===== */
+
+/* ---- CHEST CARD: 3D card với gradient theo rarity ---- */
+.chest-card {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px 8px 8px;
+  border-radius: 14px;
+  border: 3px solid var(--color-ggd-outline);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0.25) 100%), var(--chest-bg, var(--color-ggd-panel));
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.18),
+    0 4px 0 var(--color-ggd-outline),
+    0 0 24px var(--chest-glow, transparent);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.chest-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(135deg,
+      transparent 0,
+      transparent 10px,
+      rgba(255, 255, 255, 0.04) 10px,
+      rgba(255, 255, 255, 0.04) 20px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.chest-card>* {
+  position: relative;
+  z-index: 1;
+}
+
+.chest-card.is-interactive:hover {
+  transform: translateY(-3px) rotate(-0.6deg);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.28),
+    0 7px 0 var(--color-ggd-outline),
+    0 0 32px var(--chest-glow, rgba(255, 204, 0, 0.6));
+}
+
+/* Glint sweep on reveal */
+.chest-card.is-revealed::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(110deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.45) 50%,
+      transparent 100%);
+  transform: skewX(-20deg);
+  animation: chest-glint 1.4s cubic-bezier(0.4, 0, 0.2, 1) 0.2s 1 forwards;
+  pointer-events: none;
+  z-index: 2;
+}
+
+@keyframes chest-glint {
+  0% {
+    left: -120%;
+  }
+
+  100% {
+    left: 160%;
+  }
+}
+
+/* Rarity tiers */
+.chest-rarity-trash {
+  --chest-bg: linear-gradient(135deg, #2c2440 0%, #1a1530 100%);
+  --chest-glow: transparent;
+}
+
+.chest-rarity-common {
+  --chest-bg: linear-gradient(135deg, #1f3d2c 0%, #122a20 100%);
+  --chest-glow: rgba(61, 255, 143, 0.45);
+}
+
+.chest-rarity-rare {
+  --chest-bg: linear-gradient(135deg, #4a3812 0%, #2d2208 100%);
+  --chest-glow: rgba(255, 204, 0, 0.55);
+}
+
+.chest-rarity-epic {
+  --chest-bg: linear-gradient(135deg, #3d1736 0%, #240e1f 100%);
+  --chest-glow: rgba(255, 62, 138, 0.55);
+}
+
+/* Chest icon container (the SVG bouncy image) */
+.chest-icon-box {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 2px solid var(--color-ggd-outline);
+  flex-shrink: 0;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.15);
+}
+
+.chest-icon-box.is-bobbing {
+  animation: bob 2.2s ease-in-out infinite;
+}
+
+.chest-icon-box.is-revealing {
+  animation: chest-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes chest-pop {
+  0% {
+    transform: scale(0.4) rotate(-12deg);
+    opacity: 0;
+  }
+
+  60% {
+    transform: scale(1.18) rotate(8deg);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* Boss crown badge */
+.boss-crown-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px 3px 4px;
+  border-radius: 999px;
+  border: 3px solid var(--color-ggd-outline);
+  background: linear-gradient(180deg, #ffd84d 0%, #f59e0b 100%);
+  color: var(--color-ggd-outline);
+  font-family: var(--font-quicksand), sans-serif;
+  font-weight: 900;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 3px 0 var(--color-ggd-outline), 0 0 18px rgba(255, 204, 0, 0.5);
+}
+
+.boss-crown-badge .crown-svg {
+  width: 22px;
+  height: 22px;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.3));
+  animation: bob 2.2s ease-in-out infinite;
+}
+
+/* Shield chip aged states */
+.shield-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px 4px 4px;
+  border-radius: 12px;
+  border: 3px solid var(--color-ggd-outline);
+  font-family: var(--font-quicksand), sans-serif;
+  font-weight: 900;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  background: var(--shield-bg, var(--color-ggd-panel));
+  color: var(--shield-fg, white);
+  box-shadow: 0 2px 0 var(--color-ggd-outline);
+  transition: transform 0.15s ease;
+}
+
+.shield-chip:not(:disabled):hover {
+  transform: translateY(-2px);
+}
+
+.shield-chip-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.shield-tier-fresh {
+  --shield-bg: linear-gradient(180deg, #1e3a5e 0%, #0f2238 100%);
+  --shield-fg: var(--color-ggd-neon-green);
+}
+
+.shield-tier-aging {
+  --shield-bg: linear-gradient(180deg, #4a3812 0%, #2d2208 100%);
+  --shield-fg: var(--color-ggd-gold);
+  animation: shield-pulse-warn 2.4s ease-in-out infinite;
+}
+
+.shield-tier-danger {
+  --shield-bg: linear-gradient(180deg, #5a2515 0%, #3a160d 100%);
+  --shield-fg: var(--color-ggd-orange);
+  animation: shield-pulse-danger 1.4s ease-in-out infinite;
+}
+
+@keyframes shield-pulse-warn {
+
+  0%,
+  100% {
+    box-shadow: 0 2px 0 var(--color-ggd-outline), 0 0 0 rgba(255, 204, 0, 0);
+  }
+
+  50% {
+    box-shadow: 0 2px 0 var(--color-ggd-outline), 0 0 14px rgba(255, 204, 0, 0.5);
+  }
+}
+
+@keyframes shield-pulse-danger {
+
+  0%,
+  100% {
+    box-shadow: 0 2px 0 var(--color-ggd-outline), 0 0 0 rgba(255, 87, 51, 0);
+  }
+
+  50% {
+    box-shadow: 0 2px 0 var(--color-ggd-outline), 0 0 18px rgba(255, 87, 51, 0.6);
+  }
+}
+
+/* Hatched empty placeholder cell */
+.empty-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 28px;
+  border-radius: 8px;
+  background: repeating-linear-gradient(135deg,
+      rgba(255, 255, 255, 0.02) 0px,
+      rgba(255, 255, 255, 0.02) 6px,
+      rgba(255, 255, 255, 0.06) 6px,
+      rgba(255, 255, 255, 0.06) 12px);
+  color: rgba(255, 255, 255, 0.18);
+  font-family: var(--font-quicksand), sans-serif;
+  font-weight: 900;
+  font-size: 14px;
+  border: 2px dashed rgba(255, 255, 255, 0.08);
+}
+
+/* Stat row for sidebar panels */
+.stat-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 3px solid var(--color-ggd-outline);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0.25) 100%), var(--stat-bg, rgba(0, 0, 0, 0.3));
+  box-shadow: 0 3px 0 var(--color-ggd-outline);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.stat-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 0 var(--color-ggd-outline);
+}
+
+.stat-row-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 2px solid var(--color-ggd-outline);
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Animated progress bar with shimmer */
+.progress-track {
+  position: relative;
+  height: 14px;
+  border-radius: 999px;
+  border: 3px solid var(--color-ggd-outline);
+  background: rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+.progress-fill {
+  position: relative;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--bar-bg, var(--color-ggd-neon-green));
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35);
+  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 0%, rgba(255, 255, 255, 0.5) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: progress-shimmer 2s linear infinite;
+}
+
+@keyframes progress-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}

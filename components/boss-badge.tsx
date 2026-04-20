@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface BossBadgeProps {
@@ -8,18 +9,24 @@ interface BossBadgeProps {
 }
 
 export function BossBadge({ compact = false, streak }: BossBadgeProps) {
+  const crownSize = compact ? 18 : 24
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span
-            className={`inline-flex items-center gap-1 rounded-full border-2 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)] shadow-[0_2px_0_var(--color-ggd-outline)] ${
-              compact ? 'px-2 py-0.5 text-[10px]' : 'px-3 py-1 text-xs'
-            }`}
-          >
-            <span>👑</span>
-            <span className="font-data font-black uppercase tracking-wider">Boss</span>
-            {typeof streak === 'number' && <span className="font-data font-black">{Math.min(streak, 3)}/3</span>}
+          <span className="boss-crown-badge" style={compact ? { padding: '2px 8px 2px 3px', fontSize: 10 } : undefined}>
+            <Image
+              src="/assets/v2/boss-crown.svg"
+              alt="Boss"
+              width={crownSize}
+              height={crownSize}
+              className="crown-svg"
+              unoptimized
+            />
+            <span>BOSS</span>
+            {typeof streak === 'number' && (
+              <span className="opacity-80">{Math.min(streak, 3)}/3</span>
+            )}
           </span>
         </TooltipTrigger>
         <TooltipContent sideOffset={6} className="max-w-[220px] bg-[var(--color-ggd-panel)] text-white border-2 border-[var(--color-ggd-outline)]">
