@@ -16,6 +16,7 @@ export interface RaceResultInput {
   isClone?: boolean
   cloneOfUserId?: number | null
   cloneIndex?: number | null
+  chestEffect?: string | null
 }
 
 export interface PenaltyResult {
@@ -24,10 +25,52 @@ export interface PenaltyResult {
   finalVerdict: string
 }
 
+/**
+ * IDENTITY_THEFT: owner spawn thêm 1 clone (cloneIndex=99). Theo spec lấy
+ * min(rank gốc, rank clone) làm kết quả → drop entry tệ hơn trước khi xét phạt.
+ * Boss clones (cloneIndex 1..3) KHÔNG dedupe — mỗi clone vẫn là risk độc lập.
+ */
+function applyIdentityTheftDedupe(results: RaceResultInput[]): RaceResultInput[] {
+  const identityOwners = new Set(
+    results
+      .filter((entry) => entry.chestEffect === 'IDENTITY_THEFT' && !entry.isClone)
+      .map((entry) => entry.userId)
+  )
+
+  if (identityOwners.size === 0) {
+    return results
+  }
+
+  const filtered: RaceResultInput[] = []
+  for (const ownerId of identityOwners) {
+    const original = results.find((entry) => entry.userId === ownerId && !entry.isClone)
+    const shadow = results.find(
+      (entry) => entry.cloneOfUserId === ownerId && entry.cloneIndex === 99 && entry.isClone
+    )
+    if (original && shadow) {
+      const winner = original.initialRank <= shadow.initialRank ? original : shadow
+      filtered.push({ ...winner, isClone: false, cloneIndex: null, cloneOfUserId: null })
+    } else if (original) {
+      filtered.push(original)
+    } else if (shadow) {
+      filtered.push({ ...shadow, isClone: false, cloneIndex: null, cloneOfUserId: null })
+    }
+  }
+
+  return results
+    .filter((entry) => {
+      if (identityOwners.has(entry.userId) && !entry.isClone) return false
+      if (entry.isClone && entry.cloneIndex === 99 && entry.cloneOfUserId && identityOwners.has(entry.cloneOfUserId)) return false
+      return true
+    })
+    .concat(filtered)
+}
+
 export function calculatePenalties(results: RaceResultInput[]): PenaltyResult {
+  const dedupedResults = applyIdentityTheftDedupe(results)
   // Sắp xếp theo thứ hạng từ thấp đến cao (người về bét lên đầu)
-  const sortedResults = [...results].sort((a, b) => b.initialRank - a.initialRank)
-  
+  const sortedResults = [...dedupedResults].sort((a, b) => b.initialRank - a.initialRank)
+
   const totalPlayers = sortedResults.length
   const victims: PenaltyResult['victims'] = []
   const safeByShield: PenaltyResult['safeByShield'] = []

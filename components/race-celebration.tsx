@@ -44,7 +44,7 @@ export function RaceCelebration({
   awardedChests = [],
   duration = 6000,
 }: Props) {
-  const [visible, setVisible] = useState(true)
+  const [visible, setVisible] = useState(duration > 0)
   const [fading, setFading] = useState(false)
   const [showText, setShowText] = useState(false)
   const [showVictims, setShowVictims] = useState(false)
@@ -53,25 +53,35 @@ export function RaceCelebration({
   const [showBossFall, setShowBossFall] = useState(false)
 
   useEffect(() => {
+    if (duration <= 0) {
+      return
+    }
+
     if (raceId && typeof window !== 'undefined') {
       window.sessionStorage.setItem(`race-celebration:${raceId}`, 'done')
     }
 
-    // Stagger reveals
-    setTimeout(() => setShowPlayers(true), 300)
-    setTimeout(() => setShowText(true), 800)
-    setTimeout(() => setShowVictims(true), 1500)
-    setTimeout(() => setShowBossFall(true), 2000)
-    setTimeout(() => setShowChestReport(true), 2400)
+    const timers: ReturnType<typeof setTimeout>[] = []
+    timers.push(setTimeout(() => setShowPlayers(true), 300))
+    timers.push(setTimeout(() => setShowText(true), 800))
+    timers.push(setTimeout(() => setShowVictims(true), 1500))
+    timers.push(setTimeout(() => setShowBossFall(true), 2000))
+    timers.push(setTimeout(() => setShowChestReport(true), 2400))
 
-    if (duration > 0) {
-      const t = setTimeout(() => {
-        setFading(true)
-        setTimeout(() => setVisible(false), 800)
-      }, duration)
-      return () => clearTimeout(t)
-    }
+    const fadeTimer = setTimeout(() => {
+      setFading(true)
+      const hideTimer = setTimeout(() => setVisible(false), 800)
+      timers.push(hideTimer)
+    }, duration)
+    timers.push(fadeTimer)
+
+    return () => timers.forEach((timer) => clearTimeout(timer))
   }, [duration, raceId])
+
+  const handleSkip = () => {
+    setFading(true)
+    setTimeout(() => setVisible(false), 300)
+  }
 
   if (!visible) return null
 
@@ -82,6 +92,13 @@ export function RaceCelebration({
       className={`fixed inset-0 z-50 flex flex-col items-center justify-between overflow-hidden transition-opacity duration-800 ${fading ? 'opacity-0' : 'opacity-100'}`}
       style={{ pointerEvents: 'none', height: '100dvh' }}
     >
+      <button
+        onClick={handleSkip}
+        className="absolute top-5 right-5 z-50 ggd-btn bg-[var(--color-ggd-panel)] text-white text-sm px-4 py-2 border-2 border-white/40 hover:bg-white/10"
+        style={{ pointerEvents: 'auto' }}
+      >
+        ✕ Bỏ qua
+      </button>
       {/* Background — dark with red/orange atmospheric glow like GGD */}
       <div className="absolute inset-0 bg-black">
         {/* Top red glow */}

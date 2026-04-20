@@ -188,6 +188,24 @@ export async function POST(request: Request) {
       )
     }
 
+    // INVARIANT: 1 user không thể đồng thời là Boss và sở hữu chest active.
+    // Khi user thành Boss, mọi chest đang giữ phải void; khi user nhận chest mới,
+    // họ chắc chắn không phải Boss (vì Boss = cleanStreak ≥ 3 không có scar).
+    const bossChestOwners = (activeChests as Array<{ id: number; ownerId: number }>).filter((chest) => {
+      const owner = (users as UserWithActiveShields[]).find((candidate) => candidate.id === chest.ownerId)
+      return owner?.isBoss === true
+    })
+    if (bossChestOwners.length > 0) {
+      const violators = bossChestOwners.map((chest) => `chest #${chest.id} (owner ${chest.ownerId})`).join(', ')
+      console.error(`[INVARIANT VIOLATION] Boss đang giữ chest active: ${violators}`)
+      return NextResponse.json(
+        {
+          error: `Vi phạm ràng buộc: Boss không được giữ chest active. ${violators}. Hãy void chest trước.`,
+        },
+        { status: 409 }
+      )
+    }
+
     const chestConfigMap = new Map(chestConfigs.map((config) => [config.chestId, config]))
     const configuredActiveChests = activeChests.map((chest: { id: number; ownerId: number; effect: ChestEffect }) => ({
       ...chest,
@@ -222,6 +240,20 @@ export async function POST(request: Request) {
 
     const bossExpanded = expandBossParticipants(setupParticipants, users)
     const preRace = await applyChestPreRace(prisma, bossExpanded, configuredActiveChests)
+
+    // CURSE_SWAP / IDENTITY_THEFT có thể làm 2 entry cùng displayName → race-worker
+    // map theo tên sẽ đụng nhau. Append " (2)", " (3)"... cho các duplicate.
+    const displayNameCounts = new Map<string, number>()
+    for (const participant of preRace.participants) {
+      const baseName = participant.displayName ?? participant.name
+      const seen = displayNameCounts.get(baseName) ?? 0
+      if (seen > 0) {
+        participant.displayName = `${baseName} (${seen + 1})`
+      } else {
+        participant.displayName = baseName
+      }
+      displayNameCounts.set(baseName, seen + 1)
+    }
 
     const race = await prisma.race.create({
       data: {
@@ -436,14 +468,22 @@ async function executeRace(
             continue
           }
 
+          // PUBLIC_SHIELD: owner mượn khiên của target → KHÔNG tiêu khiên của owner
+          // (khiên target đã được consume riêng ở borrowedShieldIds loop bên dưới).
+          const ownerEntry = playerInputs.find(
+            (player) => player.userId === participantUserId && !player.isClone
+          )
+          const borrowedFromOther = !!ownerEntry?.borrowedShieldFromUserId
+
           const didUseShield = raceResults.some(
             (entry) => entry.userId === participantUserId && !entry.isClone && entry.usedShield
           )
+          const ownConsumed = didUseShield && !borrowedFromOther
           const gotScarThisRace = finalVictimUserIds.includes(participantUserId)
 
           const isImmortal = isImmortalDuck({ name: user.name, shields: user.shields })
 
-          if (didUseShield && !isImmortal) {
+          if (ownConsumed && !isImmortal) {
             await consumeOldestShield(tx, participantUserId)
           }
 
@@ -470,13 +510,29 @@ async function executeRace(
             where: { id: participantUserId },
             data: {
               scars: shouldCountScar ? { increment: 1 } : undefined,
-              shieldsUsed: didUseShield && !isImmortal ? { increment: 1 } : undefined,
+              shieldsUsed: ownConsumed && !isImmortal ? { increment: 1 } : undefined,
               totalKhaos: shouldCountScar ? { increment: 1 } : undefined,
               cleanStreak: bossStatus.newCleanStreak,
               isBoss: bossStatus.newIsBoss,
               bossSince: bossStatus.newIsBoss && !user.isBoss ? new Date() : bossStatus.newIsBoss ? user.bossSince : null,
             },
           })
+
+          // INVARIANT enforce: user vừa promote Boss → void mọi chest active họ đang giữ.
+          if (bossStatus.newIsBoss && !user.isBoss) {
+            const lingeringChests = await tx.mysteryChest.findMany({
+              where: { ownerId: participantUserId, status: 'active' },
+            })
+            if (lingeringChests.length > 0) {
+              console.error(
+                `[INVARIANT VIOLATION] Promote Boss user ${participantUserId} đang giữ ${lingeringChests.length} chest active → auto-void.`
+              )
+              await tx.mysteryChest.updateMany({
+                where: { ownerId: participantUserId, status: 'active' },
+                data: { status: 'voided', consumedAt: new Date() },
+              })
+            }
+          }
         }
 
         for (const reward of postRace.shieldsToGrant) {
@@ -504,12 +560,17 @@ async function executeRace(
         }
 
         for (const shieldId of borrowedShieldIds) {
-          await tx.shield.update({
+          const shield = await tx.shield.update({
             where: { id: shieldId },
             data: {
               status: 'used',
               consumedAt: new Date(),
             },
+          })
+          // PUBLIC_SHIELD: target mất khiên thật → tăng counter của target, không phải của owner.
+          await tx.user.update({
+            where: { id: shield.ownerId },
+            data: { shieldsUsed: { increment: 1 } },
           })
         }
 
