@@ -23,6 +23,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ users, races })
   } catch (error) {
+    console.error('Failed to fetch admin data:', error)
     return NextResponse.json({ error: 'Failed to fetch data' }, { status: 500 })
   }
 }
@@ -44,8 +45,10 @@ export async function PUT(request: Request) {
           scars: Number(data.scars),
           shields: Number(data.shields),
           shieldsUsed: Number(data.shieldsUsed),
-          totalKhaos: Number(data.totalKhaos), // Allow manual override too
-          avatarUrl: data.avatarUrl
+          totalKhaos: Number(data.totalKhaos),
+          avatarUrl: data.avatarUrl,
+          cleanStreak: Number(data.cleanStreak ?? 0),
+          isBoss: Boolean(data.isBoss),
         }
       })
       return NextResponse.json({ success: true, user: updatedUser })
@@ -53,6 +56,7 @@ export async function PUT(request: Request) {
 
     return NextResponse.json({ error: 'Invalid type' }, { status: 400 })
   } catch (error) {
+    console.error('Failed to update admin entity:', error)
     return NextResponse.json({ error: 'Update failed' }, { status: 500 })
   }
 }
@@ -86,6 +90,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
   } catch (error) {
+    console.error('Failed to run admin action:', error)
     return NextResponse.json({ error: 'Action failed' }, { status: 500 })
   }
 }

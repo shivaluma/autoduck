@@ -10,8 +10,6 @@ const MODEL = 'claude-haiku-4-5'
 
 export const COMMENTARY_TIMESTAMPS = [0, 5, 10, 15, 20, 25, 30, 33]
 
-const RACE_DURATION = 36
-
 export interface CommentaryHistory {
   timestamp: number
   text: string
@@ -47,7 +45,8 @@ function buildPrompt(
   isRaceEnd: boolean,
   participantNames?: string,
   history?: CommentaryHistory[],
-  raceResults?: string
+  raceResults?: string,
+  context?: RaceMetaContext
 ): string {
   // Analyze interactions to find "Cold" ducks (rarely mentioned)
   const participants = participantNames ? participantNames.split(',').map(n => n.trim()) : []
@@ -78,6 +77,20 @@ function buildPrompt(
   }
 
   const namesInfo = participantNames ? `\nCASTING: ${participantNames}.` : ''
+  const metaContext = context
+    ? [
+        context.boss ? `\n👑 BOSS: ${context.boss.name} ôm ${context.boss.cloneCount} clone, chỉ cần 1 clone bét là sập ngai.` : '',
+        context.underdogs && context.underdogs.length > 0
+          ? `\n🎁 UNDERDOG: ${context.underdogs.map((item) => `${item.name}=${item.chest}${item.target ? `->${item.target}` : ''}`).join(' | ')}`
+          : '',
+        context.shieldsAtRisk && context.shieldsAtRisk.length > 0
+          ? `\n⏳ KHIÊN GIÀ: ${context.shieldsAtRisk.map((item) => `${item.owner} ${item.weeksUnused}w`).join(' | ')}`
+          : '',
+        context.curseSwaps && context.curseSwaps.length > 0
+          ? `\n🎭 TÊN GIẢ: ${context.curseSwaps.map((item) => `${item.owner}->${item.displayName}`).join(' | ')}`
+          : '',
+      ].filter(Boolean).join('')
+    : ''
 
   if (isRaceEnd) {
     let resultsInfo = ''
@@ -139,7 +152,7 @@ function buildPrompt(
 
     return `${SYSTEM_PROMPT}
 
-TÌNH HUỐNG: VỀ ĐÍCH!${namesInfo}${resultsInfo}${shieldContext}${historyContext}
+TÌNH HUỐNG: VỀ ĐÍCH!${namesInfo}${resultsInfo}${shieldContext}${metaContext}${historyContext}
 
 NHIỆM VỤ: Viết 1 câu chốt hạ cực gắt (MAX 30 từ).
 - Vinh danh Quán quân "lụm cúp êm ru", "bá cháy", "hiệu năng cực đỉnh".
@@ -167,7 +180,7 @@ Ví dụ: "Chấn động! Zịt A lụm cúp ao chình hiệu năng đỉnh nó
   return `${SYSTEM_PROMPT}
 
 THỜI GIAN: Giây ${timestampSeconds}/36.
-TRẠNG THÁI: ${focusStrategy}${spotlightInstruction}${namesInfo}${historyInfo}
+TRẠNG THÁI: ${focusStrategy}${spotlightInstruction}${namesInfo}${metaContext}${historyInfo}
 HÌNH ẢNH: Quan sát ảnh.
 
 NHIỆM VỤ: Viết 1 bình luận mỏ hỗn cực sắc (MAX 20-30 từ).
@@ -193,7 +206,8 @@ export async function generateClaudeCommentary(
   isRaceEnd: boolean = false,
   participantNames?: string,
   history?: CommentaryHistory[],
-  raceResults?: string
+  raceResults?: string,
+  context?: RaceMetaContext
 ): Promise<string> {
   if (!ANTHROPIC_API_KEY) {
     console.warn('ANTHROPIC_API_KEY not set')
@@ -201,7 +215,7 @@ export async function generateClaudeCommentary(
   }
 
   try {
-    const prompt = buildPrompt(timestampSeconds, isRaceEnd, participantNames, history, raceResults)
+    const prompt = buildPrompt(timestampSeconds, isRaceEnd, participantNames, history, raceResults, context)
     const rawBase64 = screenshotBase64.replace(/^data:image\/\w+;base64,/, '')
 
     const response = await fetch(ANTHROPIC_ENDPOINT, {
@@ -276,3 +290,4 @@ export function shouldCaptureAt(
   }
   return null
 }
+import type { RaceMetaContext } from './types'

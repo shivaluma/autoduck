@@ -3,6 +3,7 @@ import { generateZaiCommentary, type CommentaryHistory } from './ai-zai'
 import { generateClaudeCommentary } from './ai-claude'
 import { generateGeminiCommentary } from './ai-gemini'
 import { raceEventBus, RACE_EVENTS } from './event-bus'
+import type { RaceMetaContext } from './types'
 
 // AI Provider switching via env var: 'gemini' (default), 'zai' or 'claude'
 const AI_PROVIDER = process.env.AI_PROVIDER || 'gemini'
@@ -20,15 +21,16 @@ async function generateCommentary(
   isRaceEnd: boolean,
   participantNames?: string,
   history?: CommentaryHistory[],
-  raceResults?: string
+  raceResults?: string,
+  context?: RaceMetaContext
 ): Promise<string> {
   if (AI_PROVIDER === 'claude') {
-    return generateClaudeCommentary(screenshotB64, timestamp, isRaceEnd, participantNames, history, raceResults)
+    return generateClaudeCommentary(screenshotB64, timestamp, isRaceEnd, participantNames, history, raceResults, context)
   }
   if (AI_PROVIDER === 'zai') {
-    return generateZaiCommentary(screenshotB64, timestamp, isRaceEnd, participantNames, history, raceResults)
+    return generateZaiCommentary(screenshotB64, timestamp, isRaceEnd, participantNames, history, raceResults, context)
   }
-  return generateGeminiCommentary(screenshotB64, timestamp, isRaceEnd, participantNames, history, raceResults)
+  return generateGeminiCommentary(screenshotB64, timestamp, isRaceEnd, participantNames, history, raceResults, context)
 }
 
 /**
@@ -42,7 +44,8 @@ export function recordCommentary(
   screenshotB64: string,
   isRaceEnd: boolean = false,
   participantNames?: string,
-  raceResults?: string
+  raceResults?: string,
+  context?: RaceMetaContext
 ): void {
   // Initialize memory for this race if not exists
   if (!commentaryMemory[raceId]) {
@@ -67,7 +70,8 @@ export function recordCommentary(
         isRaceEnd,
         participantNames,
         history,
-        raceResults
+        raceResults,
+        context
       )
 
       // Add to memory

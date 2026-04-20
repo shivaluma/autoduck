@@ -12,11 +12,14 @@ export interface RaceResultInput {
   userId: number
   initialRank: number // 1 là cao nhất (về đích đầu), N là thấp nhất (về bét)
   usedShield: boolean
+  isClone?: boolean
+  cloneOfUserId?: number | null
+  cloneIndex?: number | null
 }
 
 export interface PenaltyResult {
-  victims: { name: string; userId: number; initialRank: number }[]
-  safeByShield: { name: string; userId: number; initialRank: number }[]
+  victims: { name: string; userId: number; initialRank: number; isClone?: boolean; cloneOfUserId?: number | null; cloneIndex?: number | null }[]
+  safeByShield: { name: string; userId: number; initialRank: number; isClone?: boolean; cloneOfUserId?: number | null; cloneIndex?: number | null }[]
   finalVerdict: string
 }
 
@@ -39,6 +42,9 @@ export function calculatePenalties(results: RaceResultInput[]): PenaltyResult {
         name: player.name,
         userId: player.userId,
         initialRank: player.initialRank,
+        isClone: player.isClone,
+        cloneOfUserId: player.cloneOfUserId,
+        cloneIndex: player.cloneIndex,
       })
       continue
     }
@@ -48,6 +54,9 @@ export function calculatePenalties(results: RaceResultInput[]): PenaltyResult {
       name: player.name,
       userId: player.userId,
       initialRank: player.initialRank,
+      isClone: player.isClone,
+      cloneOfUserId: player.cloneOfUserId,
+      cloneIndex: player.cloneIndex,
     })
   }
 
@@ -56,16 +65,23 @@ export function calculatePenalties(results: RaceResultInput[]): PenaltyResult {
   if (victims.length < penaltiesNeeded) {
     for (let i = 0; i < totalPlayers && victims.length < penaltiesNeeded; i++) {
       const player = sortedResults[i]
-      const alreadyVictim = victims.some(v => v.userId === player.userId)
+      const alreadyVictim = victims.some(
+        (v) => v.userId === player.userId && (v.cloneIndex ?? null) === (player.cloneIndex ?? null)
+      )
       if (!alreadyVictim) {
         // Remove from safe list if they were there
-        const safeIdx = safeByShield.findIndex(s => s.userId === player.userId)
+        const safeIdx = safeByShield.findIndex(
+          (s) => s.userId === player.userId && (s.cloneIndex ?? null) === (player.cloneIndex ?? null)
+        )
         if (safeIdx !== -1) safeByShield.splice(safeIdx, 1)
         
         victims.push({
           name: player.name,
           userId: player.userId,
           initialRank: player.initialRank,
+          isClone: player.isClone,
+          cloneOfUserId: player.cloneOfUserId,
+          cloneIndex: player.cloneIndex,
         })
       }
     }
@@ -84,6 +100,23 @@ export function calculatePenalties(results: RaceResultInput[]): PenaltyResult {
     safeByShield,
     finalVerdict,
   }
+}
+
+export function dedupeVictimUserIds(victims: Array<{ userId: number; cloneOfUserId?: number | null }>) {
+  return Array.from(new Set(victims.map((victim) => victim.cloneOfUserId ?? victim.userId)))
+}
+
+export function applyChestEffectsToVictims<T extends { userId: number }>(
+  victims: T[],
+  additions: T[]
+) {
+  const deduped = [...victims]
+  for (const addition of additions) {
+    if (!deduped.some((victim) => victim.userId === addition.userId)) {
+      deduped.push(addition)
+    }
+  }
+  return deduped
 }
 
 /**

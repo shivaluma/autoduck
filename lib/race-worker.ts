@@ -6,6 +6,7 @@ import { uploadVideoToR2 } from './r2-upload'
 import { raceEventBus, RACE_EVENTS } from './event-bus'
 import * as fs from 'fs'
 import * as path from 'path'
+import type { RaceMetaContext } from './types'
 
 interface PlayerInput {
   name: string
@@ -244,7 +245,7 @@ async function extractRankingFromGame(frame: Frame): Promise<{ rank: number; nam
  * - We interact via JS evaluation on the game's global objects:
  *   exportRoot, stage, Settings, Main, ListWinners etc.
  */
-export async function runRaceWorker(players: PlayerInput[], raceId?: number): Promise<RaceWorkerResult> {
+export async function runRaceWorker(players: PlayerInput[], raceId?: number, metaContext?: RaceMetaContext): Promise<RaceWorkerResult> {
   const shouldSimulate = process.env.SIMULATE_RACE === 'true'
 
   if (shouldSimulate) {
@@ -502,7 +503,7 @@ export async function runRaceWorker(players: PlayerInput[], raceId?: number): Pr
       const screenshotBuf = await page.screenshot({ type: 'jpeg', quality: 70 })
       const base64 = screenshotBuf.toString('base64')
       if (raceId) {
-        recordCommentary(raceId, 0, base64, false, playerNames.join(', '))
+        recordCommentary(raceId, 0, base64, false, playerNames.join(', '), undefined, metaContext)
         commentaryJobsQueued++
         capturedTimestamps.add(0)
         console.log('  [0s] 📝 Queued for AI commentary')
@@ -535,7 +536,7 @@ export async function runRaceWorker(players: PlayerInput[], raceId?: number): Pr
 
           // Queue for async AI commentary generation
           if (raceId) {
-            recordCommentary(raceId, targetTimestamp, base64, false, playerNames.join(', '))
+            recordCommentary(raceId, targetTimestamp, base64, false, playerNames.join(', '), undefined, metaContext)
             commentaryJobsQueued++
             console.log(`  [${targetTimestamp}s] 📝 Queued for AI commentary`)
           } else {
@@ -623,7 +624,7 @@ export async function runRaceWorker(players: PlayerInput[], raceId?: number): Pr
           return { ...r, usedShield: matched?.useShield ?? false }
         })
         const resultsJson = JSON.stringify(enrichedRanking)
-        recordCommentary(raceId, Math.round(elapsed), resultsBase64, true, playerNames.join(', '), resultsJson)
+        recordCommentary(raceId, Math.round(elapsed), resultsBase64, true, playerNames.join(', '), resultsJson, metaContext)
         commentaryJobsQueued++
         console.log(`  [End] 📝 Queued final commentary with actual results: ${rawRanking.map(r => `#${r.rank} ${r.name}`).join(', ')}`)
       }

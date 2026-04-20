@@ -5,6 +5,12 @@ import path from 'path'
 const dbUrl = process.env.DATABASE_URL || `file:${path.join(process.cwd(), 'prisma', 'dev.db')}`
 const adapter = new PrismaBetterSqlite3({ url: dbUrl })
 const prisma = new PrismaClient({ adapter })
+const prismaV2 = prisma as PrismaClient & {
+  shield: {
+    deleteMany: (args: unknown) => Promise<unknown>
+    createMany: (args: unknown) => Promise<unknown>
+  }
+}
 
 // Data từ bảng tracking hiện tại
 // totalKhaos = shieldsUsed * 2 + shields * 2 + scars
@@ -34,18 +40,52 @@ async function main() {
   for (const player of players) {
     if (isCI) {
       // In CI, we update if exists to ensure latest seed data
-      await prisma.user.upsert({
+      const user = await prisma.user.upsert({
         where: { name: player.name },
-        update: player,
-        create: player,
+        update: {
+          ...player,
+          cleanStreak: 0,
+          isBoss: false,
+          bossSince: null,
+        },
+        create: {
+          ...player,
+          cleanStreak: 0,
+          isBoss: false,
+          bossSince: null,
+        },
       })
+      await prismaV2.shield.deleteMany({ where: { ownerId: user.id } })
+      if (player.shields > 0 && player.shields < 9999) {
+        await prismaV2.shield.createMany({
+          data: Array.from({ length: player.shields }).map(() => ({
+            ownerId: user.id,
+            status: 'active',
+            weeksUnused: 0,
+          })),
+        })
+      }
       console.log(`  ✓ Upserted ${player.name}`)
     } else {
       // In dev, we just create (create throws if unique constraint violated, but we checked count > 0 above)
       // Actually, safest to just create since we returned if count > 0
-      await prisma.user.create({
-        data: player,
+      const user = await prisma.user.create({
+        data: {
+          ...player,
+          cleanStreak: 0,
+          isBoss: false,
+          bossSince: null,
+        },
       })
+      if (player.shields > 0 && player.shields < 9999) {
+        await prismaV2.shield.createMany({
+          data: Array.from({ length: player.shields }).map(() => ({
+            ownerId: user.id,
+            status: 'active',
+            weeksUnused: 0,
+          })),
+        })
+      }
       console.log(`  ✓ Created ${player.name}`)
     }
   }

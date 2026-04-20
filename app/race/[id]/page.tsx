@@ -6,6 +6,8 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { RaceLiveView } from './race-live-view'
 import { RaceCelebration } from '@/components/race-celebration'
 import type { RaceStatus } from '@/lib/types'
+import { ChestIcon } from '@/components/chest-icon'
+import { ChestReveal } from '@/components/chest-reveal'
 
 export default function RaceDetailPage({
   params,
@@ -17,6 +19,12 @@ export default function RaceDetailPage({
   const [race, setRace] = useState<RaceStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [polling, setPolling] = useState(true)
+  const [celebrationSeen] = useState(() => {
+    if (typeof window === 'undefined') {
+      return false
+    }
+    return window.sessionStorage.getItem(`race-celebration:${raceId}`) === 'done'
+  })
 
   useEffect(() => {
     const fetchRace = async () => {
@@ -67,6 +75,16 @@ export default function RaceDetailPage({
   const isFailed = race.status === 'failed'
   const sortedParticipants = [...race.participants].sort((a, b) => (a.initialRank ?? 99) - (b.initialRank ?? 99))
   const hasResults = sortedParticipants.length > 0 && sortedParticipants[0].initialRank !== null
+  const consumedChestByOwnerId = new Map((race.consumedChests ?? []).map((chest) => [chest.ownerId, chest]))
+  const awardedChestByOwnerId = new Map((race.awardedChests ?? []).map((chest) => [chest.ownerId, chest]))
+  const bossFalls = Array.from(
+    new Set(
+      sortedParticipants
+        .filter((participant) => participant.isClone && participant.gotScar && typeof participant.cloneOfUserId === 'number')
+        .map((participant) => sortedParticipants.find((candidate) => candidate.userId === participant.cloneOfUserId && !candidate.isClone)?.name)
+        .filter((name): name is string => Boolean(name))
+    )
+  )
 
   return (
     <div className="min-h-screen bg-transparent bubble-bg">
@@ -110,9 +128,13 @@ export default function RaceDetailPage({
         {isFinished && (
           <>
             <RaceCelebration
-              allPlayers={sortedParticipants.map(p => ({ name: p.name, avatarUrl: p.avatarUrl, gotScar: p.gotScar, usedShield: p.usedShield, initialRank: p.initialRank }))}
-              victims={sortedParticipants.filter(p => p.gotScar).map(p => ({ name: p.name, avatarUrl: p.avatarUrl }))}
-              verdict={race.finalVerdict} duration={6000}
+              allPlayers={sortedParticipants.map(p => ({ name: p.displayName ?? p.name, avatarUrl: p.avatarUrl, gotScar: p.gotScar, usedShield: p.usedShield, initialRank: p.initialRank }))}
+              victims={sortedParticipants.filter(p => p.gotScar).map(p => ({ name: p.displayName ?? p.name, avatarUrl: p.avatarUrl }))}
+              verdict={race.finalVerdict} duration={celebrationSeen ? 0 : 6000}
+              bossFalls={bossFalls}
+              consumedChests={race.consumedChests}
+              awardedChests={race.awardedChests}
+              raceId={Number(raceId)}
             />
             {race.finalVerdict && (
               <div className="ggd-card-gold ggd-stripe animate-slide-up opacity-0" style={{ animationDelay: '0.1s' }}>
@@ -139,19 +161,25 @@ export default function RaceDetailPage({
                 <span className="font-data text-sm text-[var(--color-ggd-outline)]/70">{sortedParticipants.length} vịt</span>
               </div>
 
-              <div className="grid grid-cols-[60px_1fr_120px_140px] gap-0 px-5 py-3 border-b-3 border-[var(--color-ggd-outline)]/30 bg-[var(--color-ggd-panel)]">
+              <div className="grid grid-cols-[60px_1fr_120px_1.2fr_180px_180px] gap-0 px-5 py-3 border-b-3 border-[var(--color-ggd-outline)]/30 bg-[var(--color-ggd-panel)]">
                 <div className="font-data text-xs uppercase text-[var(--color-ggd-muted)]">#</div>
                 <div className="font-data text-xs uppercase text-[var(--color-ggd-muted)]">VỊT 🦆</div>
                 <div className="font-data text-xs uppercase text-[var(--color-ggd-muted)] text-center">PHÒNG THỦ</div>
+                <div className="font-data text-xs uppercase text-[var(--color-ggd-muted)]">EFFECT</div>
                 <div className="font-data text-xs uppercase text-[var(--color-ggd-muted)] text-right">KẾT QUẢ</div>
+                <div className="font-data text-xs uppercase text-[var(--color-ggd-muted)]">🎁 RƯƠNG MỚI</div>
               </div>
 
               {hasResults ? (
                 <div className="py-1">
-                  {sortedParticipants.map((p, idx) => (
+                  {sortedParticipants.map((p, idx) => {
+                    const consumedChest = !p.isClone ? consumedChestByOwnerId.get(p.userId) : undefined
+                    const awardedChest = p.gotScar && !p.isClone ? awardedChestByOwnerId.get(p.userId) : undefined
+
+                    return (
                     <div
-                      key={p.userId}
-                      className={`grid grid-cols-[60px_1fr_120px_140px] gap-0 items-center px-5 py-4 duck-row
+                      key={`${p.userId}-${p.cloneIndex ?? 0}-${p.initialRank ?? idx}`}
+                      className={`grid grid-cols-[60px_1fr_120px_1.2fr_180px_180px] gap-0 items-center px-5 py-4 duck-row
                         ${p.gotScar ? 'loser' : p.usedShield ? 'shielded' : idx < 3 ? 'winner' : ''}
                         animate-slide-right opacity-0`}
                       style={{ animationDelay: `${0.3 + idx * 0.08}s` }}
@@ -167,7 +195,10 @@ export default function RaceDetailPage({
                         <div className={`w-2 h-10 rounded-full ${p.gotScar ? 'bg-[var(--color-ggd-orange)]' : p.usedShield ? 'bg-[var(--color-ggd-sky)]' :
                           idx === 0 ? 'bg-[var(--color-ggd-gold)]' : 'bg-[var(--color-ggd-muted)]/20'}`} />
                         <div>
-                          <div className="font-body text-base font-extrabold text-white">{p.name}</div>
+                          <div className="font-body text-base font-extrabold text-white">
+                            {p.displayName ?? p.name}
+                            {p.isClone && <span className="ml-2 text-xs text-[var(--color-ggd-muted)]">clone</span>}
+                          </div>
                           {idx === 0 && isFinished && <div className="font-display text-sm text-[var(--color-ggd-gold)] glow-gold">👑 VỊT THẮNG CUỘC</div>}
                         </div>
                       </div>
@@ -175,6 +206,21 @@ export default function RaceDetailPage({
                         {p.usedShield ? (
                           <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)] text-xs">🛡️ Có Khiên</span>
                         ) : (<span className="font-data text-lg text-[var(--color-ggd-muted)]/20">—</span>)}
+                      </div>
+                      <div className="pr-4">
+                        {consumedChest ? (
+                          <div className="space-y-1">
+                            <div className={`ggd-tag text-xs ${consumedChest.outcome === 'success' ? 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]' : 'bg-[var(--color-ggd-orange)] text-white'}`}>
+                              <ChestIcon effect={consumedChest.effect} compact tone={consumedChest.outcome === 'success' ? 'green' : 'orange'} />
+                            </div>
+                            <div className="font-data text-[11px] text-[var(--color-ggd-muted)]">
+                              {consumedChest.targetName ? `→ ${consumedChest.targetName}` : 'Auto effect'}
+                              {consumedChest.outcome === 'success' ? ' (✅)' : ' (❌)'}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="font-data text-sm text-[var(--color-ggd-muted)]/40">—</span>
+                        )}
                       </div>
                       <div className="text-right">
                         {p.gotScar ? (
@@ -185,8 +231,20 @@ export default function RaceDetailPage({
                           <span className="font-display text-lg text-[var(--color-ggd-gold)]">🏆 P1</span>
                         ) : (<span className="font-data text-sm text-[var(--color-ggd-muted)]/40">An Toàn ✨</span>)}
                       </div>
+                      <div>
+                        {awardedChest ? (
+                          <ChestReveal
+                            chestId={awardedChest.id}
+                            effect={awardedChest.effect}
+                            compact
+                            animated={!celebrationSeen}
+                          />
+                        ) : (
+                          <span className="font-data text-sm text-[var(--color-ggd-muted)]/40">—</span>
+                        )}
+                      </div>
                     </div>
-                  ))}
+                  )})}
                 </div>
               ) : (
                 <div className="py-16 text-center">

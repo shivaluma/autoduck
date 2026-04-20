@@ -8,17 +8,23 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  avatarUrl String?
-  scars     Int      @default(0)
-  shields   Int      @default(0)
-  shieldsUsed Int    @default(0) // Tổng số khiên đã dùng
-  totalKhaos Int     @default(0) // Tổng số lần làm dzịt
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           Int       @id @default(autoincrement())
+  name         String    @unique
+  avatarUrl    String?
+  scars        Int       @default(0)
+  shields      Int       @default(0)
+  shieldsUsed  Int       @default(0) // Tổng số khiên đã dùng
+  totalKhaos   Int       @default(0) // Tổng số lần làm dzịt
+  cleanStreak  Int       @default(0)
+  isBoss       Boolean   @default(false)
+  bossSince    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   raceParticipations RaceParticipant[]
+  ownedShields       Shield[]          @relation("ShieldOwner")
+  loanedShieldsOut   Shield[]          @relation("ShieldLoanedTo")
+  mysteryChests      MysteryChest[]
 }
 
 model Race {
@@ -36,17 +42,68 @@ model Race {
 }
 
 model RaceParticipant {
-  id          Int     @id @default(autoincrement())
-  raceId      Int
-  userId      Int
-  usedShield  Boolean @default(false)
-  initialRank Int?    // Thứ hạng gốc AI đọc được
-  gotScar     Boolean @default(false) // Kết quả cuối: có bị sẹo không?
+  id               Int     @id @default(autoincrement())
+  raceId           Int
+  userId           Int
+  usedShield       Boolean @default(false)
+  initialRank      Int?    // Thứ hạng gốc AI đọc được
+  gotScar          Boolean @default(false) // Kết quả cuối: có bị sẹo không?
+  isClone          Boolean @default(false)
+  cloneOfUserId    Int?
+  cloneIndex       Int?
+  displayName      String?
+  chestEffect      String?
+  chestTargetUserId Int?
 
   race Race @relation(fields: [raceId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([raceId, userId])
+  @@unique([raceId, userId, cloneIndex])
+}
+
+model Shield {
+  id           Int       @id @default(autoincrement())
+  ownerId      Int
+  earnedAt     DateTime  @default(now())
+  earnedRaceId Int?
+  weeksUnused  Int       @default(0)
+  status       String    @default("active")
+  consumedAt   DateTime?
+  loanedToId   Int?
+
+  owner    User  @relation("ShieldOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  loanedTo User? @relation("ShieldLoanedTo", fields: [loanedToId], references: [id])
+
+  @@index([ownerId, status])
+}
+
+model MysteryChest {
+  id               Int       @id @default(autoincrement())
+  ownerId          Int
+  earnedFromRaceId Int
+  status           String    @default("active")
+  effect           String
+  rngSeed          String
+  consumedRaceId   Int?
+  consumedAt       DateTime?
+  targetUserId     Int?
+  createdAt        DateTime  @default(now())
+
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, status])
+  @@index([earnedFromRaceId])
+}
+
+model WeeklyTick {
+  id            Int      @id @default(autoincrement())
+  weekKey       String   @unique
+  runAt         DateTime @default(now())
+  brokenShields Int      @default(0)
+  lostShields   Int      @default(0)
+  newBosses     Int      @default(0)
+  chestsIssued  Int      @default(0)
+  details       String?
 }
 
 model CommentaryLog {
@@ -75,4 +132,3 @@ model CommentaryJob {
 
   race Race @relation(fields: [raceId], references: [id], onDelete: Cascade)
 }
-

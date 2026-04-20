@@ -5,6 +5,7 @@
  */
 
 import { CommentaryHistory } from './ai-zai'
+import type { RaceMetaContext } from './types'
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || ''
 const OPENROUTER_ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions'
@@ -193,7 +194,8 @@ function buildPrompt(
   isRaceEnd: boolean,
   participantNames?: string,
   history?: CommentaryHistory[],
-  raceResults?: string
+  raceResults?: string,
+  context?: RaceMetaContext
 ): string {
   const participants = participantNames ? participantNames.split(',').map(n => n.trim()) : []
   const mentions: Record<string, number> = {}
@@ -223,6 +225,20 @@ function buildPrompt(
   }
 
   const namesLine = participantNames ? `\nCÁC CON VỊT: ${participantNames}.` : ''
+  const metaContext = context
+    ? [
+        context.boss ? `👑 BOSS: ${context.boss.name} mang ${context.boss.cloneCount} clone, chỉ cần 1 clone về cuối là mất ngôi.` : '',
+        context.underdogs && context.underdogs.length > 0
+          ? `🎁 UNDERDOG: ${context.underdogs.map((item) => `${item.name} cầm ${item.chest}${item.target ? ` -> ${item.target}` : ''}`).join(' | ')}`
+          : '',
+        context.shieldsAtRisk && context.shieldsAtRisk.length > 0
+          ? `⏳ KHIÊN GIÀ: ${context.shieldsAtRisk.map((item) => `${item.owner} (${item.weeksUnused}w)`).join(' | ')}`
+          : '',
+        context.curseSwaps && context.curseSwaps.length > 0
+          ? `🎭 CURSE SWAP: ${context.curseSwaps.map((item) => `${item.owner} đang chạy dưới tên ${item.displayName}`).join(' | ')}`
+          : '',
+      ].filter(Boolean).join('\n')
+    : ''
 
   // ── RACE END ──────────────────────────────────────────────────────────────
   if (isRaceEnd) {
@@ -285,7 +301,7 @@ function buildPrompt(
     return [
       SYSTEM_PROMPT,
       '',
-      `TÌNH HUỐNG: VỀ ĐÍCH.${namesLine}${resultsInfo}${shieldContext}`,
+      `TÌNH HUỐNG: VỀ ĐÍCH.${namesLine}${resultsInfo}${shieldContext}${metaContext ? `\n${metaContext}` : ''}`,
       `🎯 CONCEPT: "${concept}"`,
       historyBlock,
       '',
@@ -320,7 +336,7 @@ function buildPrompt(
     SYSTEM_PROMPT,
     '',
     `THỜI GIAN: Giây ${timestampSeconds}/36 — ${racePhase}`,
-    `${spotlightLine}${namesLine}`,
+    `${spotlightLine}${namesLine}${metaContext ? `\n${metaContext}` : ''}`,
     historyBlock,
     `🎯 CONCEPT CHO LẦN NÀY: "${concept}"`,
     '',
@@ -362,7 +378,8 @@ export async function generateGeminiCommentary(
   isRaceEnd: boolean = false,
   participantNames?: string,
   history?: CommentaryHistory[],
-  raceResults?: string
+  raceResults?: string,
+  context?: RaceMetaContext
 ): Promise<string> {
   if (!OPENROUTER_API_KEY) {
     console.warn('OPENROUTER_API_KEY not set')
@@ -405,7 +422,7 @@ export async function generateGeminiCommentary(
   }
 
   try {
-    const prompt = buildPrompt(timestampSeconds, isRaceEnd, participantNames, history, raceResults)
+    const prompt = buildPrompt(timestampSeconds, isRaceEnd, participantNames, history, raceResults, context)
     let text = await callAPI(prompt)
 
     // Clean up formatting artifacts
@@ -421,7 +438,7 @@ export async function generateGeminiCommentary(
     // Retry once if output looks too generic
     if (isGenericOutput(text) || text.length < 20) {
       console.warn(`[Gemini][${timestampSeconds}s] Generic output detected, retrying...`)
-      const retryPrompt = buildPrompt(timestampSeconds, isRaceEnd, participantNames, history, raceResults)
+      const retryPrompt = buildPrompt(timestampSeconds, isRaceEnd, participantNames, history, raceResults, context)
       const retryText = await callAPI(retryPrompt)
       text = retryText
         .replace(/^["']|["']$/g, '')

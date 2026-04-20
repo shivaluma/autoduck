@@ -1,6 +1,9 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
+import { ChestReveal } from '@/components/chest-reveal'
+import type { ChestEffect } from '@/lib/types'
 
 interface PlayerInfo {
   name: string
@@ -11,24 +14,55 @@ interface PlayerInfo {
 }
 
 interface Props {
+  raceId?: number
   allPlayers: PlayerInfo[]
   victims: PlayerInfo[]
   verdict: string | null
+  bossFalls?: string[]
+  consumedChests?: {
+    id: number
+    ownerName: string
+    effect: string
+    targetName?: string | null
+    outcome: 'success' | 'fizzled'
+  }[]
+  awardedChests?: {
+    id: number
+    ownerName: string
+    effect: ChestEffect
+  }[]
   duration?: number
 }
 
-export function RaceCelebration({ allPlayers, victims, verdict, duration = 6000 }: Props) {
+export function RaceCelebration({
+  raceId,
+  allPlayers,
+  victims,
+  verdict,
+  bossFalls = [],
+  consumedChests = [],
+  awardedChests = [],
+  duration = 6000,
+}: Props) {
   const [visible, setVisible] = useState(true)
   const [fading, setFading] = useState(false)
   const [showText, setShowText] = useState(false)
   const [showVictims, setShowVictims] = useState(false)
   const [showPlayers, setShowPlayers] = useState(false)
+  const [showChestReport, setShowChestReport] = useState(false)
+  const [showBossFall, setShowBossFall] = useState(false)
 
   useEffect(() => {
+    if (raceId && typeof window !== 'undefined') {
+      window.sessionStorage.setItem(`race-celebration:${raceId}`, 'done')
+    }
+
     // Stagger reveals
     setTimeout(() => setShowPlayers(true), 300)
     setTimeout(() => setShowText(true), 800)
     setTimeout(() => setShowVictims(true), 1500)
+    setTimeout(() => setShowBossFall(true), 2000)
+    setTimeout(() => setShowChestReport(true), 2400)
 
     if (duration > 0) {
       const t = setTimeout(() => {
@@ -37,7 +71,7 @@ export function RaceCelebration({ allPlayers, victims, verdict, duration = 6000 
       }, duration)
       return () => clearTimeout(t)
     }
-  }, [duration])
+  }, [duration, raceId])
 
   if (!visible) return null
 
@@ -83,9 +117,12 @@ export function RaceCelebration({ allPlayers, victims, verdict, duration = 6000 
               >
                 {/* Avatar */}
                 <div className={`relative ${isVictim ? 'ring-3 ring-[#ff3333] ring-offset-2 ring-offset-black' : ''} rounded-full`}>
-                  <img
+                  <Image
                     src={p.avatarUrl || '/placeholder-avatar.png'}
                     alt={p.name}
+                    width={48}
+                    height={48}
+                    unoptimized
                     className={`w-12 h-12 rounded-full object-cover border-2 ${isVictim ? 'border-[#ff3333]' : 'border-white/30'}`}
                   />
                   {isVictim && (
@@ -151,6 +188,47 @@ export function RaceCelebration({ allPlayers, victims, verdict, duration = 6000 
         )}
       </div>
 
+      {bossFalls.length > 0 && (
+        <div className={`absolute top-[20%] left-1/2 -translate-x-1/2 z-20 transition-all duration-700 ${showBossFall ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-8'}`}>
+          <div className="rounded-2xl border-4 border-[#4d0000] bg-[rgba(120,0,0,0.78)] px-8 py-5 shadow-[0_8px_0_#250000,0_22px_36px_rgba(0,0,0,0.55)]">
+            <div className="font-display text-2xl md:text-3xl text-white text-outlined text-center">
+              👑💔 BOSS DUCK NGÃ NGỰA
+            </div>
+            <div className="font-data text-sm md:text-base text-white/85 text-center mt-2">
+              {bossFalls.join(' • ')} mất danh hiệu!
+            </div>
+          </div>
+        </div>
+      )}
+
+      {(consumedChests.length > 0 || awardedChests.length > 0) && (
+        <div className={`absolute right-6 top-24 z-20 w-[320px] transition-all duration-700 ${showChestReport ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'}`}>
+          <div className="rounded-2xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] shadow-[0_6px_0_var(--color-ggd-outline),0_20px_30px_rgba(0,0,0,0.5)]">
+            <div className="px-4 py-3 border-b-2 border-[var(--color-ggd-outline)]/30">
+              <div className="font-display text-lg text-white text-outlined">🎁 EFFECT REPORT</div>
+            </div>
+            <div className="p-4 space-y-3">
+              {consumedChests.map((chest) => (
+                <div key={`consumed-${chest.id}`} className="rounded-xl bg-black/20 p-3 border-2 border-[var(--color-ggd-outline)]/30">
+                  <div className="font-body text-sm font-black text-white">{chest.ownerName}</div>
+                  <div className="font-data text-xs text-[var(--color-ggd-gold)] mt-1">
+                    {chest.effect}
+                    {chest.targetName ? ` → ${chest.targetName}` : ''}
+                    {chest.outcome === 'success' ? ' ✅' : ' ❌'}
+                  </div>
+                </div>
+              ))}
+              {awardedChests.slice(0, 2).map((chest) => (
+                <div key={`awarded-${chest.id}`} className="rounded-xl bg-[var(--color-ggd-orange)]/15 p-3 border-2 border-[var(--color-ggd-orange)]/40 overflow-hidden">
+                  <div className="font-body text-sm font-black text-white mb-2">{chest.ownerName} nhận rương mới</div>
+                  <ChestReveal chestId={chest.id} effect={chest.effect} animated={duration > 0} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ===== BOTTOM: Victim Ducks (Big) ===== */}
       <div className={`relative z-10 pb-10 transition-all duration-700 ${showVictims ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
         {/* Victim names above their avatars */}
@@ -191,9 +269,12 @@ export function RaceCelebration({ allPlayers, victims, verdict, duration = 6000 
               {/* Red glow behind */}
               <div className="absolute -inset-4 bg-[#ff3333] rounded-full blur-2xl opacity-25 animate-pulse" />
 
-              <img
+              <Image
                 src={v.avatarUrl || '/placeholder-avatar.png'}
                 alt={v.name}
+                width={144}
+                height={144}
+                unoptimized
                 className="w-28 h-28 md:w-36 md:h-36 rounded-full object-cover border-4 border-black relative z-10"
                 style={{
                   boxShadow: '0 0 30px rgba(255, 50, 20, 0.4), 0 8px 0 #000',
