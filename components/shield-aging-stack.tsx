@@ -6,10 +6,14 @@ import { ShieldChip } from '@/components/shield-chip'
 interface ShieldAgingStackProps {
   shields: ShieldData[]
   maxVisible?: number
+  legacyCount?: number
 }
 
-export function ShieldAgingStack({ shields, maxVisible = 4 }: ShieldAgingStackProps) {
+export function ShieldAgingStack({ shields, maxVisible = 4, legacyCount = 0 }: ShieldAgingStackProps) {
   if (shields.length === 0) {
+    if (legacyCount > 0) {
+      return <span className="ggd-tag bg-[var(--color-ggd-panel)] text-[var(--color-ggd-neon-green)]">🛡️ {legacyCount} legacy</span>
+    }
     return <span className="font-data text-2xl font-black text-[var(--color-ggd-muted)]/20">0</span>
   }
 

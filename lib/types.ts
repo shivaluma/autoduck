@@ -4,6 +4,7 @@ export interface PlayerData {
   id: number
   name: string
   avatarUrl?: string | null
+  isImmortal?: boolean
   scars: number
   shields: number
   shieldsUsed: number
@@ -21,6 +22,7 @@ export interface RaceSetupPlayer {
   useShield: boolean
   availableShields: number
   shieldId?: number
+  isImmortal?: boolean
 }
 
 export interface ShieldData {
@@ -99,6 +101,7 @@ export interface RaceStatus {
     usedShield: boolean
     initialRank: number | null
     gotScar: boolean
+    isImmortal?: boolean
     isClone?: boolean
     cloneOfUserId?: number | null
     cloneIndex?: number | null

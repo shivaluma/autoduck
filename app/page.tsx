@@ -176,6 +176,7 @@ export default function Dashboard() {
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
                             <div className="font-body text-lg font-black text-white tracking-wide truncate">{player.name}</div>
+                            {player.isImmortal && <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)]">♾️ Immortal</span>}
                             {player.isBoss && <BossBadge compact streak={player.cleanStreak} />}
                             {player.activeChest && <ChestIcon effect={player.activeChest.effect} compact />}
                           </div>
@@ -198,7 +199,7 @@ export default function Dashboard() {
                         </span>
                       </div>
 
-                      <ShieldAgingStack shields={player.activeShields} />
+                      <ShieldAgingStack shields={player.activeShields} legacyCount={player.shields} />
 
                       <div className="text-center">
                         <span className="font-data text-2xl font-black text-[var(--color-ggd-muted)]/50">{player.shieldsUsed}</span>

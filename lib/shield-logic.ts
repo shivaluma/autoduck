@@ -12,6 +12,7 @@ export interface RaceResultInput {
   userId: number
   initialRank: number // 1 là cao nhất (về đích đầu), N là thấp nhất (về bét)
   usedShield: boolean
+  isImmortal?: boolean
   isClone?: boolean
   cloneOfUserId?: number | null
   cloneIndex?: number | null
@@ -35,6 +36,10 @@ export function calculatePenalties(results: RaceResultInput[]): PenaltyResult {
   // Phase 1: Duyệt từ dưới lên, tìm 2 người không dùng khiên
   for (let i = 0; i < totalPlayers && victims.length < penaltiesNeeded; i++) {
     const player = sortedResults[i]
+
+    if (player.isImmortal) {
+      continue
+    }
 
     if (player.usedShield) {
       // Người này dùng khiên → An toàn, ghi nhận
@@ -65,6 +70,9 @@ export function calculatePenalties(results: RaceResultInput[]): PenaltyResult {
   if (victims.length < penaltiesNeeded) {
     for (let i = 0; i < totalPlayers && victims.length < penaltiesNeeded; i++) {
       const player = sortedResults[i]
+      if (player.isImmortal) {
+        continue
+      }
       const alreadyVictim = victims.some(
         (v) => v.userId === player.userId && (v.cloneIndex ?? null) === (player.cloneIndex ?? null)
       )

@@ -7,6 +7,7 @@ import { expandBossParticipants, evaluateBossStatus, resolveBossOutcome } from '
 import { applyChestPreRace, getActiveChestsForUsers, resolveChestPostRace, validateChestConfig } from '@/lib/mystery-chest'
 import { consumeOldestShield, createShield, tickShieldDecay } from '@/lib/shield-decay'
 import type { ChestEffect, RaceMetaContext } from '@/lib/types'
+import { isImmortalDuck } from '@/lib/immortal-duck'
 
 interface ParticipantInput {
   userId: number
@@ -24,6 +25,7 @@ interface WorkerPlayerInput {
   displayName: string
   useShield: boolean
   userId: number
+  isImmortal?: boolean
   isClone?: boolean
   cloneOfUserId?: number | null
   cloneIndex?: number | null
@@ -35,6 +37,7 @@ interface WorkerPlayerInput {
 interface UserWithActiveShields {
   id: number
   name: string
+  shields: number
   ownedShields: Array<{ id: number }>
   cleanStreak: number
   isBoss: boolean
@@ -65,6 +68,14 @@ async function syncUserShieldCounters(tx: any, userIds: Array<number | null | un
   const uniqueUserIds = Array.from(new Set(userIds))
   for (const userId of uniqueUserIds) {
     if (!userId) {
+      continue
+    }
+
+    const user = await tx.user.findUnique({
+      where: { id: userId },
+      select: { name: true, shields: true },
+    })
+    if (user && isImmortalDuck({ name: user.name, shields: user.shields })) {
       continue
     }
 
@@ -157,6 +168,9 @@ export async function POST(request: Request) {
       }
 
       const user = (users as UserWithActiveShields[]).find((candidate) => candidate.id === participant.userId)
+      if (user && isImmortalDuck({ name: user.name, shields: user.shields })) {
+        continue
+      }
       if (!user || user.ownedShields.length <= 0) {
         return NextResponse.json(
           { error: `${user?.name || 'Unknown'} không có khiên để sử dụng` },
@@ -196,10 +210,13 @@ export async function POST(request: Request) {
 
     const setupParticipants = participants.map((participant) => {
       const user = (users as UserWithActiveShields[]).find((candidate) => candidate.id === participant.userId)
+      const immortal = user ? isImmortalDuck({ name: user.name, shields: user.shields }) : false
       return {
         ...participant,
         name: user?.name ?? `User ${participant.userId}`,
+        useShield: immortal ? true : participant.useShield,
         availableShields: user?.ownedShields.length ?? 0,
+        isImmortal: immortal,
       }
     })
 
@@ -233,6 +250,7 @@ export async function POST(request: Request) {
       displayName: participant.displayName ?? participant.name,
       useShield: participant.useShield,
       userId: participant.userId,
+      isImmortal: participant.isImmortal ?? false,
       isClone: participant.isClone ?? false,
       cloneOfUserId: participant.cloneOfUserId ?? null,
       cloneIndex: participant.cloneIndex ?? null,
@@ -343,6 +361,7 @@ async function executeRace(
         userId: matched?.userId ?? 0,
         initialRank: entry.rank,
         usedShield: matched?.useShield ?? false,
+        isImmortal: matched?.isImmortal ?? false,
         isClone: matched?.isClone ?? false,
         cloneOfUserId: matched?.cloneOfUserId ?? null,
         cloneIndex: matched?.cloneIndex ?? null,
@@ -422,7 +441,9 @@ async function executeRace(
           )
           const gotScarThisRace = finalVictimUserIds.includes(participantUserId)
 
-          if (didUseShield) {
+          const isImmortal = isImmortalDuck({ name: user.name, shields: user.shields })
+
+          if (didUseShield && !isImmortal) {
             await consumeOldestShield(tx, participantUserId)
           }
 
@@ -449,7 +470,7 @@ async function executeRace(
             where: { id: participantUserId },
             data: {
               scars: shouldCountScar ? { increment: 1 } : undefined,
-              shieldsUsed: didUseShield ? { increment: 1 } : undefined,
+              shieldsUsed: didUseShield && !isImmortal ? { increment: 1 } : undefined,
               totalKhaos: shouldCountScar ? { increment: 1 } : undefined,
               cleanStreak: bossStatus.newCleanStreak,
               isBoss: bossStatus.newIsBoss,

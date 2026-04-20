@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import type { ChestEffect } from '@/lib/types'
+import { isImmortalDuck } from '@/lib/immortal-duck'
 
 // GET /api/races/[id] - Chi tiết cuộc đua
 export async function GET(
@@ -144,6 +145,7 @@ export async function GET(
         usedShield: p.usedShield,
         initialRank: p.initialRank,
         gotScar: p.gotScar,
+        isImmortal: isImmortalDuck({ name: p.user.name }),
         isClone: p.isClone,
         cloneOfUserId: p.cloneOfUserId,
         cloneIndex: p.cloneIndex,

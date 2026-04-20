@@ -23,6 +23,7 @@ type ParticipantInput = {
   userId: number
   useShield: boolean
   shieldId?: number
+  isImmortal?: boolean
 }
 
 type ParticipantSetup = ParticipantInput & {

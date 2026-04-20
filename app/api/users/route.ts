@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import type { ChestEffect } from '@/lib/types'
+import { isImmortalDuck } from '@/lib/immortal-duck'
 
 interface UserWithV2State {
   id: number
@@ -8,6 +9,7 @@ interface UserWithV2State {
   avatarUrl?: string | null
   scars: number
   shieldsUsed: number
+  shields: number
   totalKhaos: number
   cleanStreak: number
   isBoss: boolean
@@ -49,37 +51,41 @@ export async function GET() {
       },
     })
     return NextResponse.json(
-      (users as UserWithV2State[]).map((user) => ({
-        id: user.id,
-        name: user.name,
-        avatarUrl: user.avatarUrl,
-        scars: user.scars,
-        shields: user.ownedShields.length,
-        shieldsUsed: user.shieldsUsed,
-        totalKhaos: user.totalKhaos,
-        cleanStreak: user.cleanStreak,
-        isBoss: user.isBoss,
-        bossSince: user.bossSince,
-        activeShields: user.ownedShields.map((shield) => ({
-          id: shield.id,
-          ownerId: shield.ownerId,
-          weeksUnused: shield.weeksUnused,
-          status: shield.status,
-          loanedToId: shield.loanedToId,
-        })),
-        activeChest: user.mysteryChests[0]
-          ? {
-              id: user.mysteryChests[0].id,
-              ownerId: user.mysteryChests[0].ownerId,
-              earnedFromRaceId: user.mysteryChests[0].earnedFromRaceId,
-              status: user.mysteryChests[0].status,
-              effect: user.mysteryChests[0].effect,
-              rngSeed: user.mysteryChests[0].rngSeed,
-              targetUserId: user.mysteryChests[0].targetUserId,
-              createdAt: user.mysteryChests[0].createdAt,
-            }
-          : null,
-      }))
+      (users as UserWithV2State[]).map((user) => {
+        const immortal = isImmortalDuck({ name: user.name, shields: user.shields })
+        return {
+          id: user.id,
+          name: user.name,
+          avatarUrl: user.avatarUrl,
+          isImmortal: immortal,
+          scars: user.scars,
+          shields: immortal ? user.shields : user.ownedShields.length,
+          shieldsUsed: user.shieldsUsed,
+          totalKhaos: user.totalKhaos,
+          cleanStreak: user.cleanStreak,
+          isBoss: user.isBoss,
+          bossSince: user.bossSince,
+          activeShields: user.ownedShields.map((shield) => ({
+            id: shield.id,
+            ownerId: shield.ownerId,
+            weeksUnused: shield.weeksUnused,
+            status: shield.status,
+            loanedToId: shield.loanedToId,
+          })),
+          activeChest: user.mysteryChests[0]
+            ? {
+                id: user.mysteryChests[0].id,
+                ownerId: user.mysteryChests[0].ownerId,
+                earnedFromRaceId: user.mysteryChests[0].earnedFromRaceId,
+                status: user.mysteryChests[0].status,
+                effect: user.mysteryChests[0].effect,
+                rngSeed: user.mysteryChests[0].rngSeed,
+                targetUserId: user.mysteryChests[0].targetUserId,
+                createdAt: user.mysteryChests[0].createdAt,
+              }
+            : null,
+        }
+      })
     )
   } catch (error) {
     console.error('Failed to fetch users:', error)

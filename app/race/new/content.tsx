@@ -29,6 +29,7 @@ interface ParticipantSetup {
   scars: number
   cleanStreak: number
   isBoss: boolean
+  isImmortal?: boolean
   activeShields: PlayerData['activeShields']
   activeChest: PlayerData['activeChest']
 }
@@ -76,12 +77,13 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
             userId: player.id,
             name: player.name,
             selected: true,
-            useShield: false,
+            useShield: Boolean(player.isImmortal),
             selectedShieldId: undefined,
             availableShields: player.activeShields.length,
             scars: player.scars,
             cleanStreak: player.cleanStreak,
             isBoss: player.isBoss,
+            isImmortal: player.isImmortal,
             activeShields: player.activeShields,
             activeChest: player.activeChest,
           }))
@@ -175,7 +177,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
           ? {
               ...player,
               selected: !player.selected,
-              useShield: !player.selected ? player.useShield : false,
+              useShield: !player.selected ? player.useShield : Boolean(player.isImmortal),
               selectedShieldId: !player.selected ? player.selectedShieldId : undefined,
             }
           : player
@@ -192,6 +194,14 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
 
         if (!player.selected) {
           return player
+        }
+
+        if (player.isImmortal) {
+          return {
+            ...player,
+            useShield: true,
+            selectedShieldId: undefined,
+          }
         }
 
         const isSameShield = player.selectedShieldId === shieldId
@@ -406,6 +416,11 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                                 🔥 {Math.min(player.cleanStreak, 3)}/3 tuần sạch
                               </span>
                             )}
+                            {player.isImmortal && (
+                              <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)]">
+                                ♾️ IMMORTAL AUTO SHIELD
+                              </span>
+                            )}
                             {player.activeChest && <ChestIcon effect={player.activeChest.effect} compact />}
                             <span className="font-data text-xs text-[var(--color-ggd-muted)]">
                               {player.scars > 0 ? <span className="text-[var(--color-ggd-orange)]">🤕 {player.scars} Sẹo</span> : 'Sạch sẽ ✨'}
@@ -417,7 +432,9 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                       <div onClick={(event) => event.stopPropagation()}>
                         <div className="font-data text-[10px] uppercase text-[var(--color-ggd-muted)] mb-2">Shield Chips</div>
                         <div className="flex flex-wrap gap-2">
-                          {player.activeShields.length > 0 ? player.activeShields.map((shield) => (
+                          {player.isImmortal ? (
+                            <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)]">♾️ Tự động bật khiên mỗi race</span>
+                          ) : player.activeShields.length > 0 ? player.activeShields.map((shield) => (
                             <ShieldChip
                               key={shield.id}
                               id={shield.id}
@@ -440,7 +457,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                           {player.selected ? 'Đã vào race' : 'Đang nghỉ'}
                         </div>
                         <div className="font-data text-xs text-[var(--color-ggd-muted)]">
-                          {player.availableShields > 0 ? `🛡️ ${player.availableShields} khiên` : 'Không khiên'}
+                          {player.isImmortal ? '♾️ Shield vô hạn' : player.availableShields > 0 ? `🛡️ ${player.availableShields} khiên` : 'Không khiên'}
                         </div>
                       </div>
                     </div>
