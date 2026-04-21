@@ -11,7 +11,7 @@ interface ShieldChipProps {
 }
 
 function tierClass(weeksUnused: number, selected: boolean) {
-  if (selected) return 'shield-tier-fresh ring-2 ring-[var(--color-ggd-sky)]'
+  if (selected) return 'shield-tier-fresh shield-chip-selected'
   if (weeksUnused >= 3) return 'shield-tier-danger'
   if (weeksUnused >= 2) return 'shield-tier-aging'
   return 'shield-tier-fresh'

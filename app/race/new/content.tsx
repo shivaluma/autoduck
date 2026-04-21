@@ -379,17 +379,22 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
             </div>
           ) : (
             <div className="py-1">
-              {players.map((player, index) => (
-                <div
-                  key={player.userId}
-                  onClick={() => handleTogglePlayerRequest(player.userId)}
-                  className={`px-5 py-4 cursor-pointer transition-all duration-200 duck-row animate-slide-right opacity-0
-                    ${player.selected ? '' : 'opacity-30'}
-                    ${player.useShield ? 'shielded' : ''}
-                  `}
-                  style={{ animationDelay: `${0.15 + index * 0.05}s` }}
-                >
-                  <div className="grid grid-cols-[50px_1fr_170px] gap-4 items-start">
+              {players.map((player, index) => {
+                const selectedShield = player.selectedShieldId
+                  ? player.activeShields.find((shield) => shield.id === player.selectedShieldId)
+                  : null
+
+                return (
+                  <div
+                    key={player.userId}
+                    onClick={() => handleTogglePlayerRequest(player.userId)}
+                    className={`px-5 py-4 cursor-pointer transition-all duration-200 duck-row animate-slide-right opacity-0
+                      ${player.selected ? '' : 'opacity-30'}
+                      ${player.useShield ? 'shielded shield-armed' : ''}
+                    `}
+                    style={{ animationDelay: `${0.15 + index * 0.05}s` }}
+                  >
+                    <div className="grid grid-cols-[50px_1fr_190px] gap-4 items-start">
                     <div className="pt-2">
                       <div className={`w-9 h-9 flex items-center justify-center rounded-xl border-3 border-[var(--color-ggd-outline)] transition-colors
                         shadow-[inset_0_2px_0_rgba(255,255,255,0.1),0_2px_0_var(--color-ggd-outline)]
@@ -435,7 +440,14 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                       </div>
 
                       <div onClick={(event) => event.stopPropagation()}>
-                        <div className="font-data text-[10px] uppercase text-[var(--color-ggd-muted)] mb-2">Shield Chips</div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="font-data text-[10px] uppercase text-[var(--color-ggd-muted)]">Shield Chips</div>
+                          {player.useShield && player.selected && (
+                            <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)] text-[10px] animate-pulse">
+                              Đang bật khiên
+                            </span>
+                          )}
+                        </div>
                         <div className="flex flex-wrap gap-2">
                           {player.isImmortal ? (
                             <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)]">♾️ Tự động bật khiên mỗi race</span>
@@ -452,6 +464,23 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                             <span className="font-data text-xs text-[var(--color-ggd-muted)]/70">Không có khiên active</span>
                           )}
                         </div>
+                        {player.useShield && player.selected && (
+                          <div className="mt-3 shield-armed-banner">
+                            <div className="shield-armed-orb">🛡️</div>
+                            <div>
+                              <div className="font-display text-base text-[var(--color-ggd-sky)] text-outlined leading-none">
+                                ĐANG SỬ DỤNG KHIÊN
+                              </div>
+                              <div className="font-data text-xs text-white/80 mt-1">
+                                {player.isImmortal
+                                  ? 'Thomas auto-shield cho mọi cuộc đua.'
+                                  : selectedShield
+                                    ? `Khiên #${selectedShield.id} · ${selectedShield.weeksUnused} tuần chưa dùng${selectedShield.weeksUnused >= 2 ? ' · nhớ là sắp già rồi đó.' : ' · còn tươi.'}`
+                                    : 'Khiên đã bật cho race này.'}
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -461,14 +490,23 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                         <div className={`font-data text-sm ${player.selected ? 'text-[var(--color-ggd-neon-green)]' : 'text-[var(--color-ggd-muted)]'}`}>
                           {player.selected ? 'Đã vào race' : 'Đang nghỉ'}
                         </div>
-                        <div className="font-data text-xs text-[var(--color-ggd-muted)]">
-                          {player.isImmortal ? '♾️ Shield vô hạn' : player.availableShields > 0 ? `🛡️ ${player.availableShields} khiên` : 'Không khiên'}
+                        <div className={`font-data text-xs ${player.useShield ? 'text-[var(--color-ggd-sky)] font-black' : 'text-[var(--color-ggd-muted)]'}`}>
+                          {player.useShield
+                            ? player.isImmortal
+                              ? '♾️ AUTO SHIELD ĐANG BẬT'
+                              : `🛡️ ĐANG DÙNG KHIÊN #${player.selectedShieldId ?? '?'}`
+                            : player.isImmortal
+                              ? '♾️ Shield vô hạn'
+                              : player.availableShields > 0
+                                ? `🛡️ ${player.availableShields} khiên`
+                                : 'Không khiên'}
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>

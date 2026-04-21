@@ -640,6 +640,30 @@
   box-shadow: inset 0 0 0 1px rgba(61, 200, 255, 0.12);
 }
 
+.duck-row.shield-armed {
+  position: relative;
+  background:
+    radial-gradient(circle at 92% 20%, rgba(61, 200, 255, 0.24), transparent 28%),
+    linear-gradient(90deg, rgba(61, 200, 255, 0.22), rgba(61, 255, 143, 0.05) 44%, rgba(61, 200, 255, 0.11));
+  box-shadow:
+    inset 0 0 0 2px rgba(61, 200, 255, 0.36),
+    0 0 24px rgba(61, 200, 255, 0.18);
+}
+
+.duck-row.shield-armed::after {
+  content: 'SHIELD ON';
+  position: absolute;
+  top: 10px;
+  right: 16px;
+  font-family: var(--font-quicksand), sans-serif;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  color: var(--color-ggd-sky);
+  opacity: 0.42;
+  pointer-events: none;
+}
+
 /* Position number */
 .position-number {
   font-family: var(--font-boogaloo), cursive;
@@ -1008,6 +1032,50 @@
   transform: translateY(-2px);
 }
 
+.shield-chip-selected {
+  transform: translateY(-2px) scale(1.08);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.26), rgba(61, 200, 255, 0.12)),
+    linear-gradient(180deg, #255d84 0%, #102f49 100%);
+  color: white;
+  box-shadow:
+    0 4px 0 var(--color-ggd-outline),
+    0 0 0 3px var(--color-ggd-sky),
+    0 0 22px rgba(61, 200, 255, 0.72);
+  animation: shield-selected-pop 1.2s ease-in-out infinite;
+}
+
+.shield-armed-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: fit-content;
+  padding: 10px 14px;
+  border: 3px solid var(--color-ggd-outline);
+  border-radius: 16px;
+  background:
+    repeating-linear-gradient(135deg, transparent 0, transparent 8px, rgba(255, 255, 255, 0.06) 8px, rgba(255, 255, 255, 0.06) 16px),
+    linear-gradient(180deg, rgba(61, 200, 255, 0.24), rgba(20, 54, 85, 0.96));
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.2),
+    0 4px 0 var(--color-ggd-outline),
+    0 0 24px rgba(61, 200, 255, 0.28);
+}
+
+.shield-armed-orb {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 3px solid var(--color-ggd-outline);
+  background: var(--color-ggd-sky);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.35),
+    0 3px 0 var(--color-ggd-outline),
+    0 0 18px rgba(61, 200, 255, 0.8);
+}
+
 .shield-chip-icon {
   width: 18px;
   height: 18px;
@@ -1052,6 +1120,18 @@
 
   50% {
     box-shadow: 0 2px 0 var(--color-ggd-outline), 0 0 18px rgba(255, 87, 51, 0.6);
+  }
+}
+
+@keyframes shield-selected-pop {
+
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+
+  50% {
+    filter: brightness(1.22);
   }
 }
 
