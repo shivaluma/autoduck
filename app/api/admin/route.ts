@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { isImmortalDuck } from '@/lib/immortal-duck'
 
 // Helper to check secret
 const checkSecret = (req: Request) => {
@@ -14,7 +15,31 @@ export async function GET(request: Request) {
   }
 
   try {
-    const users = await prisma.user.findMany({ orderBy: { id: 'asc' } })
+    const rawUsers = await prisma.user.findMany({
+      orderBy: { id: 'asc' },
+      include: {
+        ownedShields: {
+          where: { status: 'active' },
+          select: { id: true },
+        },
+      },
+    })
+    const users = rawUsers.map((user: {
+      ownedShields: { id: number }[]
+      shields: number
+      name: string
+    }) => {
+      const { ownedShields, ...rest } = user
+      const activeShieldCount = ownedShields.length
+      const isImmortal = isImmortalDuck(rest)
+
+      return {
+        ...rest,
+        legacyShields: rest.shields,
+        activeShieldCount,
+        shields: isImmortal ? rest.shields : activeShieldCount,
+      }
+    })
     const races = await prisma.race.findMany({
       orderBy: { id: 'desc' },
       take: 50,
@@ -43,7 +68,6 @@ export async function PUT(request: Request) {
         data: {
           name: data.name,
           scars: Number(data.scars),
-          shields: Number(data.shields),
           shieldsUsed: Number(data.shieldsUsed),
           totalKhaos: Number(data.totalKhaos),
           avatarUrl: data.avatarUrl,
@@ -71,12 +95,27 @@ export async function POST(request: Request) {
     const { action } = body
 
     if (action === 'recalc_khaos') {
-      const users = await prisma.user.findMany()
+      const users = await prisma.user.findMany({
+        include: {
+          ownedShields: {
+            where: { status: 'active' },
+            select: { id: true },
+          },
+        },
+      })
       const updates = []
 
-      for (const user of users) {
+      for (const user of users as Array<{
+        id: number
+        name: string
+        scars: number
+        shields: number
+        shieldsUsed: number
+        ownedShields: { id: number }[]
+      }>) {
         // Formula: scars + (shields * 2) + (shieldsUsed * 2)
-        const newKhaos = user.scars + (user.shields * 2) + (user.shieldsUsed * 2)
+        const shieldCount = isImmortalDuck(user) ? user.shields : user.ownedShields.length
+        const newKhaos = user.scars + (shieldCount * 2) + (user.shieldsUsed * 2)
 
         updates.push(prisma.user.update({
           where: { id: user.id },

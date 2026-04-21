@@ -18,8 +18,11 @@ echo "✅ Database ready!"
 echo "🌱 Checking seed data..."
 node --import tsx prisma/seed.ts
 
+# 4. Backfill legacy User.shields into Shield rows (idempotent)
+echo "🛡️  Migrating legacy shields..."
+pnpm db:migrate-shields
+echo "✅ Shields ready!"
 
-
-# 4. Start Next.js server
+# 5. Start Next.js server
 echo "🚀 Starting Next.js server on port ${PORT:-3000}..."
 exec node server.js

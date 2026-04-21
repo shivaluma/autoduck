@@ -54,13 +54,19 @@ export async function GET() {
     return NextResponse.json(
       (users as UserWithV2State[]).map((user) => {
         const immortal = isImmortalDuck({ name: user.name, shields: user.shields })
+        const activeShieldCount = user.ownedShields.length
+        const displayShieldCount = immortal
+          ? user.shields
+          : activeShieldCount > 0
+            ? activeShieldCount
+            : user.shields
         return {
           id: user.id,
           name: user.name,
           avatarUrl: user.avatarUrl,
           isImmortal: immortal,
           scars: user.scars,
-          shields: immortal ? user.shields : user.ownedShields.length,
+          shields: displayShieldCount,
           shieldsUsed: user.shieldsUsed,
           totalKhaos: user.totalKhaos,
           cleanStreak: user.cleanStreak,

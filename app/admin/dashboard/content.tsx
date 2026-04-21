@@ -11,6 +11,8 @@ interface UserRow {
   avatarUrl?: string
   scars: number
   shields: number
+  legacyShields?: number
+  activeShieldCount?: number
   shieldsUsed: number
   totalKhaos: number
   cleanStreak?: number
@@ -97,6 +99,9 @@ export function AdminDashboardContent({ secret }: Props) {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'users' | 'races' | 'tools' | 'season'>('users')
   const [seasonTab, setSeasonTab] = useState<'boss' | 'shield' | 'active_chests' | 'chest_history' | 'weekly_tick'>('boss')
+  const [shieldOwnerId, setShieldOwnerId] = useState('')
+  const [shieldGrantCount, setShieldGrantCount] = useState('1')
+  const [shieldWeeksUnused, setShieldWeeksUnused] = useState('0')
   const [msg, setMsg] = useState('')
 
   const fetchAdminData = useCallback(async () => {
@@ -245,6 +250,29 @@ export function AdminDashboardContent({ secret }: Props) {
     }
   }
 
+  const handleGrantShield = async () => {
+    if (!shieldOwnerId) {
+      setMsg('Chọn vịt trước đã')
+      return
+    }
+
+    setMsg('🛡️ Grant shield...')
+    const response = await fetch(`/api/admin/shields?secret=${secret}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ownerId: Number(shieldOwnerId),
+        count: Number(shieldGrantCount),
+        weeksUnused: Number(shieldWeeksUnused),
+      }),
+    })
+    const data = await response.json()
+    setMsg(response.ok ? `✅ Added ${data.created} shield(s), active=${data.activeCount}` : data.error || 'Grant shield failed')
+    if (response.ok) {
+      await fetchAdminData()
+    }
+  }
+
   const handleChange = (id: number, field: keyof UserRow, value: string) => {
     setUsers(users.map((user) => (user.id === id ? { ...user, [field]: value } : user)))
   }
@@ -291,36 +319,64 @@ export function AdminDashboardContent({ secret }: Props) {
               <table className="w-full text-left">
                 <thead>
                   <tr className="border-b-[3px] border-black bg-[var(--color-ggd-panel)]">
-                    {['ID', 'Tên', 'Avatar', 'Sẹo', 'Khiên', 'Đã Dùng', 'Dzịt', 'Streak', 'Boss', ''].map((header) => (
+                    {['ID', 'Tên', 'Avatar', 'Sẹo', 'Khiên mới', 'Đã Dùng', 'Dzịt', 'Streak', 'Boss', ''].map((header) => (
                       <th key={header} className="px-4 py-3 ggd-col-header">{header}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y-2 divide-black/20">
-                  {users.map((user) => (
-                    <tr key={user.id} className="hover:bg-[var(--color-ggd-neon-green)]/7 transition-colors">
-                      <td className="px-4 py-3.5 font-data text-base text-[var(--color-ggd-muted)] font-bold">{user.id}</td>
-                      <td className="px-4 py-3.5 font-black text-lg text-white flex items-center gap-2">
-                        {user.avatarUrl && <Image src={user.avatarUrl} alt="" width={36} height={36} unoptimized className="w-9 h-9 rounded-full object-cover border-2 border-[var(--color-ggd-outline)]" />}
-                        {user.name}
-                      </td>
-                      <td className="px-4 py-3.5">
-                        <input
-                          className="bg-transparent w-full min-w-[150px] border-b-2 border-[var(--color-ggd-outline)]/40 focus:border-[var(--color-ggd-neon-green)] text-sm text-white/70 outline-none"
-                          placeholder="https://..."
-                          value={user.avatarUrl || ''}
-                          onChange={(event) => handleChange(user.id, 'avatarUrl', event.target.value)}
-                        />
-                      </td>
-                      <td className="px-4 py-3.5"><input className="bg-transparent w-16 border-b-2 border-[var(--color-ggd-outline)]/40 focus:border-[var(--color-ggd-orange)] text-center outline-none font-bold text-base" value={user.scars} onChange={(event) => handleChange(user.id, 'scars', event.target.value)} /></td>
-                      <td className="px-4 py-3.5"><input className="bg-transparent w-16 border-b-2 border-[var(--color-ggd-outline)]/40 focus:border-[var(--color-ggd-neon-green)] text-center outline-none font-bold text-base" value={user.shields} onChange={(event) => handleChange(user.id, 'shields', event.target.value)} /></td>
-                      <td className="px-4 py-3.5"><input className="bg-transparent w-16 border-b-2 border-[var(--color-ggd-outline)]/40 text-center outline-none font-bold text-base" value={user.shieldsUsed} onChange={(event) => handleChange(user.id, 'shieldsUsed', event.target.value)} /></td>
-                      <td className="px-4 py-3.5 text-[var(--color-ggd-gold)] font-display text-2xl">{user.totalKhaos}</td>
-                      <td className="px-4 py-3.5 text-center font-data">{user.cleanStreak ?? 0}</td>
-                      <td className="px-4 py-3.5 text-center">{user.isBoss ? '👑' : '—'}</td>
-                      <td className="px-4 py-3.5"><button onClick={() => handleUpdateUser(user)} className="ggd-btn text-sm bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)] px-4 py-2">LƯU</button></td>
-                    </tr>
-                  ))}
+                  {users.map((user) => {
+                    const activeShieldCount = user.activeShieldCount ?? 0
+                    const legacyShieldCount = user.legacyShields ?? user.shields
+                    const isImmortal = user.name === 'Thomas' || legacyShieldCount >= 9999
+                    const hasLegacyMismatch = !isImmortal && legacyShieldCount !== activeShieldCount
+
+                    return (
+                      <tr key={user.id} className="hover:bg-[var(--color-ggd-neon-green)]/7 transition-colors">
+                        <td className="px-4 py-3.5 font-data text-base text-[var(--color-ggd-muted)] font-bold">{user.id}</td>
+                        <td className="px-4 py-3.5 font-black text-lg text-white flex items-center gap-2">
+                          {user.avatarUrl && <Image src={user.avatarUrl} alt="" width={36} height={36} unoptimized className="w-9 h-9 rounded-full object-cover border-2 border-[var(--color-ggd-outline)]" />}
+                          {user.name}
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <input
+                            className="bg-transparent w-full min-w-[150px] border-b-2 border-[var(--color-ggd-outline)]/40 focus:border-[var(--color-ggd-neon-green)] text-sm text-white/70 outline-none"
+                            placeholder="https://..."
+                            value={user.avatarUrl || ''}
+                            onChange={(event) => handleChange(user.id, 'avatarUrl', event.target.value)}
+                          />
+                        </td>
+                        <td className="px-4 py-3.5"><input className="bg-transparent w-16 border-b-2 border-[var(--color-ggd-outline)]/40 focus:border-[var(--color-ggd-orange)] text-center outline-none font-bold text-base" value={user.scars} onChange={(event) => handleChange(user.id, 'scars', event.target.value)} /></td>
+                        <td className="px-4 py-3.5 min-w-[150px]">
+                          <div className="flex items-center gap-2">
+                            <span className="ggd-tag bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]">
+                              {isImmortal ? '∞ immortal' : `${activeShieldCount} active`}
+                            </span>
+                            <button
+                              onClick={() => {
+                                setActiveTab('season')
+                                setSeasonTab('shield')
+                                setShieldOwnerId(String(user.id))
+                              }}
+                              className="ggd-btn bg-[var(--color-ggd-surface)] text-[var(--color-ggd-muted)] text-[10px] px-2 py-1"
+                            >
+                              Manage
+                            </button>
+                          </div>
+                          {hasLegacyMismatch && (
+                            <div className="font-data text-[10px] text-[var(--color-ggd-orange)] mt-1">
+                              legacy={legacyShieldCount}, migrate/sync needed
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3.5"><input className="bg-transparent w-16 border-b-2 border-[var(--color-ggd-outline)]/40 text-center outline-none font-bold text-base" value={user.shieldsUsed} onChange={(event) => handleChange(user.id, 'shieldsUsed', event.target.value)} /></td>
+                        <td className="px-4 py-3.5 text-[var(--color-ggd-gold)] font-display text-2xl">{user.totalKhaos}</td>
+                        <td className="px-4 py-3.5 text-center font-data">{user.cleanStreak ?? 0}</td>
+                        <td className="px-4 py-3.5 text-center">{user.isBoss ? '👑' : '—'}</td>
+                        <td className="px-4 py-3.5"><button onClick={() => handleUpdateUser(user)} className="ggd-btn text-sm bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)] px-4 py-2">LƯU</button></td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
@@ -416,8 +472,65 @@ export function AdminDashboardContent({ secret }: Props) {
               )}
 
               {seasonTab === 'shield' && (
-                <div className="ggd-card p-6">
-                  <div className="font-display text-2xl text-white text-outlined mb-4">⏳ Shield Aging</div>
+                <div className="ggd-card p-6 space-y-5">
+                  <div>
+                    <div className="font-display text-2xl text-white text-outlined">⏳ Shield Aging</div>
+                    <div className="font-data text-xs text-[var(--color-ggd-muted)] mt-1">
+                      Manage bằng bảng Shield mới. Ô legacy User.shields chỉ còn là counter cache để UI cũ không lệch.
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border-3 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-4">
+                    <div className="font-display text-lg text-[var(--color-ggd-neon-green)] mb-3">Grant Shield Mới</div>
+                    <div className="flex flex-wrap items-end gap-3">
+                      <label className="flex flex-col gap-1">
+                        <span className="ggd-col-header">Vịt</span>
+                        <select
+                          value={shieldOwnerId}
+                          onChange={(event) => setShieldOwnerId(event.target.value)}
+                          className="bg-[var(--color-ggd-surface)] border-3 border-[var(--color-ggd-outline)] rounded-xl px-3 py-2 font-bold text-white outline-none"
+                        >
+                          <option value="">Chọn vịt</option>
+                          {users.map((user) => (
+                            <option key={user.id} value={user.id}>
+                              #{user.id} {user.name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="flex flex-col gap-1">
+                        <span className="ggd-col-header">Số lượng</span>
+                        <input
+                          type="number"
+                          min="1"
+                          max="20"
+                          value={shieldGrantCount}
+                          onChange={(event) => setShieldGrantCount(event.target.value)}
+                          className="bg-[var(--color-ggd-surface)] border-3 border-[var(--color-ggd-outline)] rounded-xl px-3 py-2 w-28 font-bold text-white outline-none"
+                        />
+                      </label>
+                      <label className="flex flex-col gap-1">
+                        <span className="ggd-col-header">Age</span>
+                        <select
+                          value={shieldWeeksUnused}
+                          onChange={(event) => setShieldWeeksUnused(event.target.value)}
+                          className="bg-[var(--color-ggd-surface)] border-3 border-[var(--color-ggd-outline)] rounded-xl px-3 py-2 font-bold text-white outline-none"
+                        >
+                          <option value="0">0w fresh</option>
+                          <option value="1">1w fresh</option>
+                          <option value="2">2w cracked</option>
+                          <option value="3">3w breaking</option>
+                        </select>
+                      </label>
+                      <button
+                        onClick={handleGrantShield}
+                        className="ggd-btn bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)] text-sm px-5 py-2.5"
+                      >
+                        Grant Shield
+                      </button>
+                    </div>
+                  </div>
+
                   <div className="space-y-3 max-h-[420px] overflow-y-auto pr-2">
                     {season.activeShields.length > 0 ? season.activeShields.map((shield) => (
                       <div key={shield.id} className="rounded-xl border-3 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-4">
@@ -441,7 +554,7 @@ export function AdminDashboardContent({ secret }: Props) {
                             onClick={() => handleShieldAction(shield.id, shield.ownerName, 'lose')}
                             className="ggd-btn bg-[var(--color-ggd-muted)] text-white text-xs px-3 py-2"
                           >
-                            Force Lose
+                            Remove / Lose
                           </button>
                           <button
                             onClick={() => handleShieldAction(shield.id, shield.ownerName, 'reset_age')}
