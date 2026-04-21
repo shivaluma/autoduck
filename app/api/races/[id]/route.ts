@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import type { ChestEffect } from '@/lib/types'
 import { isImmortalDuck } from '@/lib/immortal-duck'
+import { MYSTERY_CHESTS_ENABLED } from '@/lib/feature-flags'
 
 // GET /api/races/[id] - Chi tiết cuộc đua
 export async function GET(
@@ -39,7 +40,7 @@ export async function GET(
       )
     }
 
-    const [consumedChests, awardedChests] = await Promise.all([
+    const [consumedChests, awardedChests] = MYSTERY_CHESTS_ENABLED ? await Promise.all([
       prisma.mysteryChest.findMany({
         where: { consumedRaceId: raceId },
         include: { owner: true },
@@ -50,7 +51,7 @@ export async function GET(
         include: { owner: true },
         orderBy: { id: 'asc' },
       }),
-    ])
+    ]) : [[], []]
 
     const targetUserIds = Array.from(
       new Set(
@@ -149,8 +150,8 @@ export async function GET(
         isClone: p.isClone,
         cloneOfUserId: p.cloneOfUserId,
         cloneIndex: p.cloneIndex,
-        chestEffect: p.chestEffect,
-        chestTargetUserId: p.chestTargetUserId,
+          chestEffect: MYSTERY_CHESTS_ENABLED ? p.chestEffect : null,
+          chestTargetUserId: MYSTERY_CHESTS_ENABLED ? p.chestTargetUserId : null,
       })),
       commentaries: race.commentaries.map((c: { timestamp: number; content: string }) => ({
         timestamp: c.timestamp,

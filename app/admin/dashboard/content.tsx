@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import { startTransition, useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
+import { MYSTERY_CHESTS_ENABLED } from '@/lib/feature-flags'
 
 interface UserRow {
   id: number
@@ -358,7 +359,7 @@ export function AdminDashboardContent({ secret }: Props) {
               <div className="ggd-card-gold ggd-stripe p-6 flex items-center justify-between">
                 <div>
                   <div className="font-display text-3xl text-[var(--color-ggd-gold)] text-outlined">⚙️ Season Control</div>
-                  <div className="font-data text-sm text-[var(--color-ggd-muted)] mt-1">Theo dõi Boss, shield aging, chest pipeline và weekly tick.</div>
+                  <div className="font-data text-sm text-[var(--color-ggd-muted)] mt-1">Theo dõi Boss, shield aging và weekly tick.</div>
                 </div>
                 <button onClick={handleRunWeeklyTick} className="ggd-btn bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)] text-base px-6 py-3">
                   🌀 Run Weekly Tick Now
@@ -369,8 +370,10 @@ export function AdminDashboardContent({ secret }: Props) {
                 {([
                   ['boss', '👑 Boss'],
                   ['shield', '⏳ Shield'],
-                  ['active_chests', '🎁 Active'],
-                  ['chest_history', '📚 History'],
+                  ...(MYSTERY_CHESTS_ENABLED ? [
+                    ['active_chests', '🎁 Active'],
+                    ['chest_history', '📚 History'],
+                  ] as const : []),
                   ['weekly_tick', '🌀 Tick'],
                 ] as const).map(([key, label]) => (
                   <button
@@ -455,7 +458,7 @@ export function AdminDashboardContent({ secret }: Props) {
                 </div>
               )}
 
-              {seasonTab === 'active_chests' && (
+              {MYSTERY_CHESTS_ENABLED && seasonTab === 'active_chests' && (
                 <div className="ggd-card-orange p-6">
                   <div className="font-display text-2xl text-white text-outlined mb-4">🎁 Rương Đang Cầm</div>
                   <div className="space-y-3 max-h-[420px] overflow-y-auto pr-2">
@@ -516,7 +519,7 @@ export function AdminDashboardContent({ secret }: Props) {
                 </div>
               )}
 
-              {seasonTab === 'chest_history' && (
+              {MYSTERY_CHESTS_ENABLED && seasonTab === 'chest_history' && (
                 <div className="ggd-card p-6">
                   <div className="font-display text-2xl text-white text-outlined mb-4">📚 Chest History</div>
                   <div className="space-y-3 max-h-[520px] overflow-y-auto pr-2">

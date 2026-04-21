@@ -8,6 +8,7 @@ import { applyChestPreRace, getActiveChestsForUsers, resolveChestPostRace, valid
 import { consumeOldestShield, createShield, tickShieldDecay } from '@/lib/shield-decay'
 import type { ChestEffect, RaceMetaContext } from '@/lib/types'
 import { isImmortalDuck } from '@/lib/immortal-duck'
+import { MYSTERY_CHESTS_ENABLED } from '@/lib/feature-flags'
 
 interface ParticipantInput {
   userId: number
@@ -179,7 +180,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const activeChests = await getActiveChestsForUsers(prisma, userIds)
+    const activeChests = MYSTERY_CHESTS_ENABLED ? await getActiveChestsForUsers(prisma, userIds) : []
     const chestValidation = validateChestConfig(activeChests, participants, chestConfigs)
     if (!chestValidation.ok) {
       return NextResponse.json(
@@ -412,10 +413,24 @@ async function executeRace(
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const transactionSummary = await prisma.$transaction(async (tx: any) => {
+      const chestDisabledPostRace = {
+        modifiedVictims: penalties.victims.map((victim) => ({
+          userId: victim.userId,
+          initialRank: victim.initialRank,
+          isClone: victim.isClone ?? false,
+          cloneOfUserId: victim.cloneOfUserId ?? undefined,
+        })),
+        shieldsToGrant: [],
+        outcomes: [],
+        newChestsForThisRace: [],
+      }
+
       // Test race: vẫn roll & display chest awarded để show preview, nhưng forceVoid=true
       // → chest tạo ra mang status='void', KHÔNG cộng asset thật, không thể consume race sau.
       // Đồng thời KHÔNG truyền activeChests vào (để không "consume" chest thật của user).
-      const postRace = isTest
+      const postRace = !MYSTERY_CHESTS_ENABLED
+        ? chestDisabledPostRace
+        : isTest
         ? await resolveChestPostRace(
             tx,
             raceId,

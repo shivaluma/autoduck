@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import type { RaceStatus } from '@/lib/types'
+import { MYSTERY_CHESTS_ENABLED } from '@/lib/feature-flags'
 
 interface RaceLiveViewProps {
   raceId: number
@@ -133,19 +134,23 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
     .map((bossOwnerId) => participants.find((participant) => participant.userId === bossOwnerId && !participant.isClone))
     .filter((participant): participant is NonNullable<typeof participant> => Boolean(participant))
 
-  const curseSwaps = participants.filter(
-    (participant) => !participant.isClone && participant.chestEffect === 'CURSE_SWAP' && participant.displayName && participant.displayName !== participant.name
-  )
+  const curseSwaps = MYSTERY_CHESTS_ENABLED
+    ? participants.filter(
+        (participant) => !participant.isClone && participant.chestEffect === 'CURSE_SWAP' && participant.displayName && participant.displayName !== participant.name
+      )
+    : []
 
-  const activeEffects = participants
-    .filter((participant) => !participant.isClone && participant.chestEffect)
-    .map((participant) => ({
-      ownerName: participant.name,
-      effect: participant.chestEffect!,
-      targetName: participant.chestTargetUserId
-        ? participants.find((candidate) => candidate.userId === participant.chestTargetUserId && !candidate.isClone)?.name ?? null
-        : null,
-    }))
+  const activeEffects = MYSTERY_CHESTS_ENABLED
+    ? participants
+        .filter((participant) => !participant.isClone && participant.chestEffect)
+        .map((participant) => ({
+          ownerName: participant.name,
+          effect: participant.chestEffect!,
+          targetName: participant.chestTargetUserId
+            ? participants.find((candidate) => candidate.userId === participant.chestTargetUserId && !candidate.isClone)?.name ?? null
+            : null,
+        }))
+    : []
 
   const clones = participants.filter((participant) => participant.isClone)
 
@@ -222,21 +227,23 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
             </ScrollArea>
           </Card>
 
-          <Card className="ggd-card p-4">
-            <div className="font-display text-lg text-white text-outlined mb-3">🎁 EFFECTS ACTIVE</div>
-            <div className="space-y-2">
-              {activeEffects.length > 0 ? activeEffects.map((effect) => (
-                <div key={`${effect.ownerName}-${effect.effect}`} className="rounded-xl bg-[var(--color-ggd-panel)] p-3 border-2 border-[var(--color-ggd-outline)]/30">
-                  <div className="font-body text-sm text-white font-black">{effect.ownerName}</div>
-                  <div className="font-data text-xs text-[var(--color-ggd-gold)] mt-1">
-                    {effect.effect}{effect.targetName ? ` → ${effect.targetName}` : ''}
+          {MYSTERY_CHESTS_ENABLED && (
+            <Card className="ggd-card p-4">
+              <div className="font-display text-lg text-white text-outlined mb-3">🎁 EFFECTS ACTIVE</div>
+              <div className="space-y-2">
+                {activeEffects.length > 0 ? activeEffects.map((effect) => (
+                  <div key={`${effect.ownerName}-${effect.effect}`} className="rounded-xl bg-[var(--color-ggd-panel)] p-3 border-2 border-[var(--color-ggd-outline)]/30">
+                    <div className="font-body text-sm text-white font-black">{effect.ownerName}</div>
+                    <div className="font-data text-xs text-[var(--color-ggd-gold)] mt-1">
+                      {effect.effect}{effect.targetName ? ` → ${effect.targetName}` : ''}
+                    </div>
                   </div>
-                </div>
-              )) : (
-                <div className="font-data text-sm text-[var(--color-ggd-muted)]">Không có chest effect active.</div>
-              )}
-            </div>
-          </Card>
+                )) : (
+                  <div className="font-data text-sm text-[var(--color-ggd-muted)]">Không có chest effect active.</div>
+                )}
+              </div>
+            </Card>
+          )}
 
           <Card className="ggd-card p-4 flex-1">
             <div className="font-display text-lg text-white text-outlined mb-3">👤 CLONES</div>

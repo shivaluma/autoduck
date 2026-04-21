@@ -45,9 +45,9 @@ export function RaceCelebration({
   duration = 6000,
 }: Props) {
   // duration > 0  ⇒ lần đầu xem: ẩn rồi stagger reveal + auto-fade
-  // duration === 0 ⇒ replay (reload race detail): hiện full ngay, dismiss bằng nút Skip
+  // duration === 0 ⇒ replay/reload race detail: không render overlay nữa
   const isFirstView = duration > 0
-  const [visible, setVisible] = useState(true)
+  const [visible, setVisible] = useState(isFirstView)
   const [fading, setFading] = useState(false)
   const [showText, setShowText] = useState(!isFirstView)
   const [showVictims, setShowVictims] = useState(!isFirstView)

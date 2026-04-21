@@ -8,6 +8,7 @@ import { BossBadge } from '@/components/boss-badge'
 import { ChestConfigCard } from '@/components/chest-config-card'
 import { ChestIcon } from '@/components/chest-icon'
 import { ShieldChip } from '@/components/shield-chip'
+import { MYSTERY_CHESTS_ENABLED } from '@/lib/feature-flags'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -90,15 +91,17 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
         )
 
         const initialChestConfigs: Record<number, ChestConfigState> = {}
-        for (const player of data) {
-          if (!player.activeChest || player.activeChest.effect === 'NOTHING') {
-            continue
-          }
+        if (MYSTERY_CHESTS_ENABLED) {
+          for (const player of data) {
+            if (!player.activeChest || player.activeChest.effect === 'NOTHING') {
+              continue
+            }
 
-          initialChestConfigs[player.activeChest.id] = {
-            chestId: player.activeChest.id,
-            ownerId: player.id,
-            effect: player.activeChest.effect,
+            initialChestConfigs[player.activeChest.id] = {
+              chestId: player.activeChest.id,
+              ownerId: player.id,
+              effect: player.activeChest.effect,
+            }
           }
         }
 
@@ -111,9 +114,11 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
   const selectedPlayers = useMemo(() => players.filter((player) => player.selected), [players])
   const selectedCount = selectedPlayers.length
   const shieldsInUse = selectedPlayers.filter((player) => player.useShield).length
-  const activeSelectedChests = selectedPlayers
-    .map((player) => player.activeChest ? { ownerName: player.name, chest: player.activeChest } : null)
-    .filter((value): value is { ownerName: string; chest: NonNullable<PlayerData['activeChest']> } => Boolean(value))
+  const activeSelectedChests = MYSTERY_CHESTS_ENABLED
+    ? selectedPlayers
+        .map((player) => player.activeChest ? { ownerName: player.name, chest: player.activeChest } : null)
+        .filter((value): value is { ownerName: string; chest: NonNullable<PlayerData['activeChest']> } => Boolean(value))
+    : []
 
   const chestConfigErrors = activeSelectedChests.flatMap(({ ownerName, chest }) => {
     if (!TARGETED_EFFECTS.has(chest.effect)) {
@@ -421,7 +426,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                                 ♾️ IMMORTAL AUTO SHIELD
                               </span>
                             )}
-                            {player.activeChest && <ChestIcon effect={player.activeChest.effect} compact />}
+                            {MYSTERY_CHESTS_ENABLED && player.activeChest && <ChestIcon effect={player.activeChest.effect} compact />}
                             <span className="font-data text-xs text-[var(--color-ggd-muted)]">
                               {player.scars > 0 ? <span className="text-[var(--color-ggd-orange)]">🤕 {player.scars} Sẹo</span> : 'Sạch sẽ ✨'}
                             </span>

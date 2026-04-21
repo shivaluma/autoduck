@@ -9,6 +9,7 @@ import type { RaceStatus } from '@/lib/types'
 import Image from 'next/image'
 import { ChestCard } from '@/components/chest-card'
 import { ChestReveal } from '@/components/chest-reveal'
+import { MYSTERY_CHESTS_ENABLED } from '@/lib/feature-flags'
 
 export default function RaceDetailPage({
   params,
@@ -76,8 +77,11 @@ export default function RaceDetailPage({
   const isFailed = race.status === 'failed'
   const sortedParticipants = [...race.participants].sort((a, b) => (a.initialRank ?? 99) - (b.initialRank ?? 99))
   const hasResults = sortedParticipants.length > 0 && sortedParticipants[0].initialRank !== null
-  const consumedChestByOwnerId = new Map((race.consumedChests ?? []).map((chest) => [chest.ownerId, chest]))
-  const awardedChestByOwnerId = new Map((race.awardedChests ?? []).map((chest) => [chest.ownerId, chest]))
+  const consumedChestByOwnerId = new Map(MYSTERY_CHESTS_ENABLED ? (race.consumedChests ?? []).map((chest) => [chest.ownerId, chest]) : [])
+  const awardedChestByOwnerId = new Map(MYSTERY_CHESTS_ENABLED ? (race.awardedChests ?? []).map((chest) => [chest.ownerId, chest]) : [])
+  const resultGridClass = MYSTERY_CHESTS_ENABLED
+    ? 'grid-cols-[56px_minmax(0,1fr)_110px_minmax(0,1.4fr)_140px_minmax(0,1fr)]'
+    : 'grid-cols-[56px_minmax(0,1fr)_110px_140px]'
   const bossFalls = Array.from(
     new Set(
       sortedParticipants
@@ -133,8 +137,8 @@ export default function RaceDetailPage({
               victims={sortedParticipants.filter(p => p.gotScar).map(p => ({ name: p.displayName ?? p.name, avatarUrl: p.avatarUrl }))}
               verdict={race.finalVerdict} duration={celebrationSeen ? 0 : 6000}
               bossFalls={bossFalls}
-              consumedChests={race.consumedChests}
-              awardedChests={race.awardedChests}
+              consumedChests={MYSTERY_CHESTS_ENABLED ? race.consumedChests : []}
+              awardedChests={MYSTERY_CHESTS_ENABLED ? race.awardedChests : []}
               raceId={Number(raceId)}
             />
             {race.finalVerdict && (
@@ -162,13 +166,13 @@ export default function RaceDetailPage({
                 <span className="font-data text-sm text-[var(--color-ggd-outline)]/70">{sortedParticipants.length} vịt</span>
               </div>
 
-              <div className="grid grid-cols-[56px_minmax(0,1fr)_110px_minmax(0,1.4fr)_140px_minmax(0,1fr)] gap-2 px-5 py-3 border-b-[3px] border-[var(--color-ggd-outline)]/40 bg-[var(--color-ggd-panel)]">
+              <div className={`grid ${resultGridClass} gap-2 px-5 py-3 border-b-[3px] border-[var(--color-ggd-outline)]/40 bg-[var(--color-ggd-panel)]`}>
                 <div className="ggd-col-header">#</div>
                 <div className="ggd-col-header">VỊT 🦆</div>
                 <div className="ggd-col-header text-center">KHIÊN</div>
-                <div className="ggd-col-header">CHEST DÙNG</div>
+                {MYSTERY_CHESTS_ENABLED && <div className="ggd-col-header">CHEST DÙNG</div>}
                 <div className="ggd-col-header text-right">KẾT QUẢ</div>
-                <div className="ggd-col-header">RƯƠNG MỚI 🎁</div>
+                {MYSTERY_CHESTS_ENABLED && <div className="ggd-col-header">RƯƠNG MỚI 🎁</div>}
               </div>
 
               {hasResults ? (
@@ -178,19 +182,15 @@ export default function RaceDetailPage({
                     const awardedChest = p.gotScar && !p.isClone ? awardedChestByOwnerId.get(p.userId) : undefined
 
                     const totalSlots = sortedParticipants.length
-                    const positionIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : null
                     return (
                     <div
                       key={`${p.userId}-${p.cloneIndex ?? 0}-${p.initialRank ?? idx}`}
-                      className={`grid grid-cols-[56px_minmax(0,1fr)_110px_minmax(0,1.4fr)_140px_minmax(0,1fr)] gap-2 items-center px-5 py-3.5 duck-row
+                      className={`grid ${resultGridClass} gap-2 items-center px-5 py-3.5 duck-row
                         ${p.gotScar ? 'loser' : p.usedShield ? 'shielded' : idx < 3 ? 'winner' : ''}
                         animate-slide-right opacity-0`}
                       style={{ animationDelay: `${0.3 + idx * 0.08}s` }}
                     >
                       <div className="flex items-center justify-center relative">
-                        {positionIcon && (
-                          <span className="absolute -top-1 -left-1 text-xl drop-shadow-[2px_2px_0_rgba(0,0,0,0.7)]">{positionIcon}</span>
-                        )}
                         <span className={`position-number text-3xl ${p.gotScar ? 'text-[var(--color-ggd-orange)] glow-orange' :
                           idx === 0 ? 'text-[var(--color-ggd-gold)] glow-gold' : idx === 1 ? 'text-white/80' :
                             idx === 2 ? 'text-[var(--color-ggd-neon-green)] glow-green' : 'text-[var(--color-ggd-muted)]/40'}`}>
@@ -218,19 +218,21 @@ export default function RaceDetailPage({
                           </span>
                         ) : (<span className="empty-cell">—</span>)}
                       </div>
-                      <div className="min-w-0">
-                        {consumedChest ? (
-                          <div className="flex flex-col gap-1 min-w-0">
-                            <ChestCard effect={consumedChest.effect} size="sm" opened animated={false} />
-                            <div className="font-data text-[10px] text-[var(--color-ggd-muted)] truncate flex items-center gap-1">
-                              <span className={consumedChest.outcome === 'success' ? 'text-[var(--color-ggd-neon-green)]' : 'text-[var(--color-ggd-orange)]'}>
-                                {consumedChest.outcome === 'success' ? '✓ HIT' : '✗ FIZZLED'}
-                              </span>
-                              {consumedChest.targetName && <span className="opacity-70">→ {consumedChest.targetName}</span>}
+                      {MYSTERY_CHESTS_ENABLED && (
+                        <div className="min-w-0">
+                          {consumedChest ? (
+                            <div className="flex flex-col gap-1 min-w-0">
+                              <ChestCard effect={consumedChest.effect} size="sm" opened animated={false} />
+                              <div className="font-data text-[10px] text-[var(--color-ggd-muted)] truncate flex items-center gap-1">
+                                <span className={consumedChest.outcome === 'success' ? 'text-[var(--color-ggd-neon-green)]' : 'text-[var(--color-ggd-orange)]'}>
+                                  {consumedChest.outcome === 'success' ? '✓ HIT' : '✗ FIZZLED'}
+                                </span>
+                                {consumedChest.targetName && <span className="opacity-70">→ {consumedChest.targetName}</span>}
+                              </div>
                             </div>
-                          </div>
-                        ) : (<span className="empty-cell">—</span>)}
-                      </div>
+                          ) : (<span className="empty-cell">—</span>)}
+                        </div>
+                      )}
                       <div className="text-right">
                         {p.gotScar ? (
                           <span className="font-display text-lg text-[var(--color-ggd-orange)] glow-orange">CON DZỊT 🦆</span>
@@ -244,16 +246,18 @@ export default function RaceDetailPage({
                           </span>
                         )}
                       </div>
-                      <div>
-                        {awardedChest ? (
-                          <ChestReveal
-                            chestId={awardedChest.id}
-                            effect={awardedChest.effect}
-                            compact
-                            animated={!celebrationSeen}
-                          />
-                        ) : (<span className="empty-cell">—</span>)}
-                      </div>
+                      {MYSTERY_CHESTS_ENABLED && (
+                        <div>
+                          {awardedChest ? (
+                            <ChestReveal
+                              chestId={awardedChest.id}
+                              effect={awardedChest.effect}
+                              compact
+                              animated={!celebrationSeen}
+                            />
+                          ) : (<span className="empty-cell">—</span>)}
+                        </div>
+                      )}
                     </div>
                   )})}
                 </div>

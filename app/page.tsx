@@ -5,8 +5,8 @@ import Link from 'next/link'
 import type { PlayerData } from '@/lib/types'
 import Image from 'next/image'
 import { BossBadge } from '@/components/boss-badge'
-import { ChestCard } from '@/components/chest-card'
 import { ShieldAgingStack } from '@/components/shield-aging-stack'
+import { MYSTERY_CHESTS_ENABLED } from '@/lib/feature-flags'
 
 export default function Dashboard() {
   const [players, setPlayers] = useState<PlayerData[]>([])
@@ -51,16 +51,6 @@ export default function Dashboard() {
           }))
       )
       .sort((left, right) => right.shield.weeksUnused - left.shield.weeksUnused),
-    [players]
-  )
-
-  const activeChests = useMemo(
-    () => players
-      .filter((player) => player.activeChest)
-      .map((player) => ({
-        player,
-        chest: player.activeChest!,
-      })),
     [players]
   )
 
@@ -133,7 +123,7 @@ export default function Dashboard() {
                 <div className="skew-header">
                   <span className="text-[var(--color-ggd-outline)] text-2xl">🏆 Bảng Xếp Hạng Bầy Vịt</span>
                 </div>
-                <span className="font-data text-sm text-[var(--color-ggd-outline)]/70 font-black tracking-wider">Boss, Shield Decay, Mystery Chest</span>
+                <span className="font-data text-sm text-[var(--color-ggd-outline)]/70 font-black tracking-wider">Boss & Shield Decay</span>
               </div>
 
               <div className="grid grid-cols-[60px_1.4fr_90px_180px_90px_100px] gap-0 px-5 py-3 border-b-[3px] border-black bg-[var(--color-ggd-panel)]">
@@ -179,7 +169,9 @@ export default function Dashboard() {
                             <div className="font-body text-lg font-black text-white tracking-wide truncate">{player.name}</div>
                             {player.isImmortal && <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)]">♾️ Immortal</span>}
                             {player.isBoss && <BossBadge compact streak={player.cleanStreak} />}
-                            {player.activeChest && <ChestCard effect={player.activeChest.effect} size="sm" opened animated={false} interactive />}
+                            {MYSTERY_CHESTS_ENABLED && player.activeChest && (
+                              <span className="ggd-tag bg-[var(--color-ggd-orange)] text-white">🎁 Chest</span>
+                            )}
                           </div>
                           <div className="flex flex-wrap items-center gap-2 mt-1">
                             {index === 0 && (
@@ -360,28 +352,6 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="ggd-card-orange p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <Image src="/assets/v2/chest-closed.svg" alt="chest" width={32} height={32} className="animate-bob" unoptimized />
-                <div>
-                  <div className="font-display text-xl text-white text-outlined leading-none">Rương Đang Cầm</div>
-                  <div className="font-data text-[10px] uppercase tracking-widest text-white/50">Phải dùng race kế tiếp</div>
-                </div>
-              </div>
-              <div className="space-y-2.5">
-                {activeChests.length > 0 ? activeChests.map(({ player, chest }) => (
-                  <div key={chest.id} className="stat-row" style={{ '--stat-bg': 'rgba(255,87,51,0.1)' } as React.CSSProperties}>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-body text-white font-black truncate mb-1.5">{player.name}</div>
-                      <ChestCard effect={chest.effect} chestId={chest.id} size="sm" opened animated={false} interactive />
-                    </div>
-                  </div>
-                )) : (
-                  <div className="font-data text-sm text-white/75 italic">Không ai đang cầm mystery chest active.</div>
-                )}
-              </div>
-            </div>
-
             <div className="ggd-card p-6">
               <div className="font-display text-2xl text-white text-outlined mb-4">📖 Luật Chơi v2</div>
               <div className="font-data text-sm text-[var(--color-ggd-muted)] space-y-2">
@@ -391,7 +361,6 @@ export default function Dashboard() {
                 <div>⏳ Khiên 3 tuần không dùng → vỡ thành 1 Sẹo</div>
                 <div>💀 Khiên 5 tuần không dùng → mất hẳn</div>
                 <div>👑 3 tuần sạch → Boss Duck, race kế spawn 3 clone</div>
-                <div>🎁 Bị làm dzịt được mở rương ngay, item phải dùng ở race kế</div>
               </div>
             </div>
           </div>

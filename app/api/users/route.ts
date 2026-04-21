@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import type { ChestEffect } from '@/lib/types'
 import { isImmortalDuck } from '@/lib/immortal-duck'
+import { MYSTERY_CHESTS_ENABLED } from '@/lib/feature-flags'
 
 interface UserWithV2State {
   id: number
@@ -72,7 +73,7 @@ export async function GET() {
             status: shield.status,
             loanedToId: shield.loanedToId,
           })),
-          activeChest: user.mysteryChests[0]
+          activeChest: MYSTERY_CHESTS_ENABLED && user.mysteryChests[0]
             ? {
                 id: user.mysteryChests[0].id,
                 ownerId: user.mysteryChests[0].ownerId,
