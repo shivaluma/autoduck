@@ -38,6 +38,13 @@ const flowSteps = [
   { step: '05', title: 'Effect tự clear sau race', text: 'Resolve xong Race kế tiếp thì modifier tự clear.' },
 ]
 
+const shieldDecaySteps = [
+  { charge: '3', label: 'Khiên mới', text: 'Vừa craft hoặc nhận Golden Shield.', color: 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]' },
+  { charge: '2', label: 'Đã decay 1 lần', text: 'Không dùng sau race thì giảm còn 2 charge.', color: 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' },
+  { charge: '1', label: 'Sắp vỡ', text: 'Còn 1 charge, Race kế tiếp không dùng là rất căng.', color: 'bg-[var(--color-ggd-orange)] text-white' },
+  { charge: '0', label: 'Vỡ', text: 'Về 0 charge thì Khiên mất luôn, không hoàn Sẹo.', color: 'bg-[#4d0000] text-white' },
+]
+
 function RateBar({ common, rare }: { common: number; rare: number }) {
   return (
     <div className="h-5 overflow-hidden rounded-full border-3 border-[var(--color-ggd-outline)] bg-black/35 shadow-[inset_0_2px_0_rgba(255,255,255,0.12)]">
@@ -102,7 +109,7 @@ export default function RulesPage() {
 
       <main className="mx-auto max-w-7xl px-6 py-8 space-y-8">
         <section className="relative overflow-hidden rounded-[28px] border-5 border-[var(--color-ggd-outline)] bg-[radial-gradient(circle_at_12%_18%,rgba(255,204,0,0.22),transparent_30%),radial-gradient(circle_at_84%_24%,rgba(61,255,143,0.18),transparent_28%),linear-gradient(135deg,rgba(33,24,76,0.94),rgba(17,13,38,0.98))] p-7 shadow-[0_10px_0_var(--color-ggd-outline),0_26px_50px_rgba(0,0,0,0.55)]">
-          <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+          <div className="grid gap-8 lg:items-center">
             <div>
               <div className="ggd-tag inline-flex bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]">🎁 Reward Chest System</div>
               <h1 className="mt-5 font-display text-5xl leading-none text-white text-outlined md:text-7xl">
@@ -111,24 +118,60 @@ export default function RulesPage() {
               <p className="mt-5 max-w-2xl font-readable text-lg leading-relaxed text-white/78">
                 Hệ item mới tập trung vào các khoảnh khắc vui, tác động vừa đủ lên cuộc đua. Common mang lợi ích ổn định, Rare tạo ra những round hỗn loạn cho cả lobby.
               </p>
-            </div>
-            <div className="rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-black/25 p-5 shadow-[inset_0_2px_0_rgba(255,255,255,0.12)]">
-              <div className="font-display text-2xl text-[var(--color-ggd-gold)] text-outlined">Core Loop</div>
-              <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="mt-6 grid gap-3 sm:grid-cols-3">
                 {[
-                  ['👑', 'Boss bị hạ'],
-                  ['🎲', 'Roll chest theo streak'],
-                  ['🎒', 'Nhận item / lưu modifier'],
-                  ['⚡', 'Race kế tiếp kích hoạt effect'],
-                  ['🧹', 'Effect tự clear sau race'],
-                ].map(([icon, label]) => (
-                  <div key={label} className="rounded-2xl border-3 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-4 text-center">
-                    <div className="text-3xl">{icon}</div>
-                    <div className="mt-2 font-data text-xs font-black uppercase text-white/72">{label}</div>
+                  ['🔥', 'Boss Streak là gì?', 'Số Race liên tiếp một vịt không bị tính thua.'],
+                  ['👑', 'Mở Boss Mode', 'Đạt Streak 3 thì thành Boss Duck.'],
+                  ['🐣', 'Sống càng lâu càng căng', 'Streak càng cao Boss càng spawn nhiều Clone và chest càng dễ ra Rare.'],
+                ].map(([icon, title, text]) => (
+                  <div key={title} className="rounded-2xl border-3 border-[var(--color-ggd-outline)] bg-black/25 p-4 shadow-[inset_0_2px_0_rgba(255,255,255,0.1)]">
+                    <div className="text-2xl">{icon}</div>
+                    <div className="mt-2 font-display text-base text-white text-outlined leading-tight">{title}</div>
+                    <p className="mt-2 font-readable text-xs leading-relaxed text-white/70">{text}</p>
                   </div>
                 ))}
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="ggd-card p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <div className="font-display text-3xl text-[var(--color-ggd-sky)] text-outlined">🛡 Shield Decay</div>
+              <p className="mt-2 max-w-2xl font-readable text-sm leading-relaxed text-white/72">
+                Khiên không giữ vô hạn. Nếu không được dùng trong race, sau khi resolve xong Khiên sẽ mất 1 charge.
+              </p>
+            </div>
+            <div className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)]">2 Sẹo = 1 Khiên</div>
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-4">
+            {shieldDecaySteps.map((step, index) => (
+              <div key={step.charge} className="relative rounded-2xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-4 shadow-[0_5px_0_var(--color-ggd-outline),0_16px_24px_rgba(0,0,0,0.42)]">
+                {index < shieldDecaySteps.length - 1 && (
+                  <div className="absolute right-[-18px] top-1/2 z-10 hidden -translate-y-1/2 font-display text-2xl text-[var(--color-ggd-muted)] md:block">→</div>
+                )}
+                <div className={`grid h-14 w-14 place-items-center rounded-2xl border-3 border-[var(--color-ggd-outline)] font-display text-3xl shadow-[inset_0_2px_0_rgba(255,255,255,0.18)] ${step.color}`}>
+                  {step.charge}
+                </div>
+                <div className="mt-4 font-display text-xl text-white text-outlined">{step.label}</div>
+                <p className="mt-2 font-readable text-sm leading-relaxed text-white/70">{step.text}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {[
+              ['🧩', 'Auto craft', 'Nếu có đủ 2 Sẹo và đang không có Khiên, hệ thống tự ghép thành 1 Khiên mới.'],
+              ['🙋', 'Declare trước race', 'Muốn Khiên cứu mình thì phải bật dùng Khiên trước khi race bắt đầu.'],
+              ['🌿', 'Safe Week', 'Nếu Safe Week kích hoạt, Race kế tiếp Khiên không bị decay.'],
+            ].map(([icon, title, text]) => (
+              <div key={title} className="rounded-2xl border-3 border-[var(--color-ggd-outline)] bg-black/20 p-4">
+                <div className="font-display text-lg text-white text-outlined">{icon} {title}</div>
+                <p className="mt-2 font-readable text-sm leading-relaxed text-white/70">{text}</p>
+              </div>
+            ))}
           </div>
         </section>
 
