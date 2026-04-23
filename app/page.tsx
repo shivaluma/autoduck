@@ -73,22 +73,37 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <Link href="/race/new" className="animate-slide-right">
-            <button
-              className="font-display text-2xl tracking-widest uppercase px-12 py-4
-                border-[5px] border-[var(--color-ggd-outline)] rounded-xl cursor-pointer
-                transition-all duration-100
-                bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]
-                shadow-[inset_0_3px_0_rgba(255,255,255,0.45),0_7px_0_#007a3a,0_12px_28px_rgba(61,255,143,0.35)]
-                hover:-translate-y-1 hover:shadow-[inset_0_3px_0_rgba(255,255,255,0.45),0_9px_0_#007a3a,0_16px_32px_rgba(61,255,143,0.45)]
-                active:translate-y-[5px] active:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_2px_0_#007a3a]"
-            >
-              <span className="flex items-center gap-3">
-                <span className="text-2xl" style={{ animation: 'wiggle-duck 1s ease-in-out infinite' }}>🦆</span>
-                Chạy Đua!
-              </span>
-            </button>
-          </Link>
+          <div className="flex items-center gap-3 animate-slide-right">
+            <Link href="/rules">
+              <button
+                className="font-display text-lg tracking-widest uppercase px-6 py-3
+                  border-[5px] border-[var(--color-ggd-outline)] rounded-xl cursor-pointer
+                  transition-all duration-100
+                  bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]
+                  shadow-[inset_0_3px_0_rgba(255,255,255,0.35),0_6px_0_#7a6000,0_12px_24px_rgba(0,0,0,0.45)]
+                  hover:-translate-y-1 hover:shadow-[inset_0_3px_0_rgba(255,255,255,0.35),0_8px_0_#7a6000,0_16px_30px_rgba(255,204,0,0.28)]
+                  active:translate-y-[4px] active:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_2px_0_#7a6000]"
+              >
+                📜 Rules V2
+              </button>
+            </Link>
+            <Link href="/race/new">
+              <button
+                className="font-display text-2xl tracking-widest uppercase px-12 py-4
+                  border-[5px] border-[var(--color-ggd-outline)] rounded-xl cursor-pointer
+                  transition-all duration-100
+                  bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]
+                  shadow-[inset_0_3px_0_rgba(255,255,255,0.45),0_7px_0_#007a3a,0_12px_28px_rgba(61,255,143,0.35)]
+                  hover:-translate-y-1 hover:shadow-[inset_0_3px_0_rgba(255,255,255,0.45),0_9px_0_#007a3a,0_16px_32px_rgba(61,255,143,0.45)]
+                  active:translate-y-[5px] active:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_2px_0_#007a3a]"
+              >
+                <span className="flex items-center gap-3">
+                  <span className="text-2xl" style={{ animation: 'wiggle-duck 1s ease-in-out infinite' }}>🦆</span>
+                  Chạy Đua!
+                </span>
+              </button>
+            </Link>
+          </div>
         </div>
       </header>
 

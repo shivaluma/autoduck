@@ -617,23 +617,38 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
               ← Hủy
             </button>
           </Link>
-          <button
-            onClick={handleStartRace}
-            disabled={!canStartRace}
-            title={!canStartRace ? chestConfigErrors[0] ?? 'Cần ít nhất 2 người chơi' : undefined}
-            className={`font-display text-2xl tracking-widest uppercase px-14 py-4
-              border-[5px] border-[var(--color-ggd-outline)] rounded-xl cursor-pointer
-              transition-all duration-100
-              disabled:opacity-25 disabled:cursor-not-allowed disabled:shadow-none
-              ${starting
-                ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)] shadow-[inset_0_3px_0_rgba(255,255,255,0.35),0_7px_0_#7a6000,0_12px_24px_rgba(0,0,0,0.5)]'
-                : 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)] shadow-[inset_0_3px_0_rgba(255,255,255,0.45),0_7px_0_#007a3a,0_12px_28px_rgba(61,255,143,0.35)] hover:-translate-y-1 hover:shadow-[inset_0_3px_0_rgba(255,255,255,0.45),0_9px_0_#007a3a,0_16px_32px_rgba(61,255,143,0.45)] active:translate-y-[5px] active:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_2px_0_#007a3a]'
-              }`}
-          >
-            <span className="flex items-center gap-3">
-              {starting ? <><span className="animate-spin">🥚</span> Đang Khởi Động...</> : <>🦆 Chạy Đua! ({selectedCount})</>}
-            </span>
-          </button>
+          <div className="flex items-center gap-3">
+            <Link href="/rules">
+              <button
+                className="font-display text-lg tracking-widest uppercase px-6 py-3
+                  border-[5px] border-[var(--color-ggd-outline)] rounded-xl cursor-pointer
+                  transition-all duration-100
+                  bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]
+                  shadow-[inset_0_3px_0_rgba(255,255,255,0.35),0_6px_0_#7a6000,0_12px_24px_rgba(0,0,0,0.45)]
+                  hover:-translate-y-1 hover:shadow-[inset_0_3px_0_rgba(255,255,255,0.35),0_8px_0_#7a6000,0_16px_30px_rgba(255,204,0,0.28)]
+                  active:translate-y-[4px] active:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_2px_0_#7a6000]"
+              >
+                📜 Rules V2
+              </button>
+            </Link>
+            <button
+              onClick={handleStartRace}
+              disabled={!canStartRace}
+              title={!canStartRace ? chestConfigErrors[0] ?? 'Cần ít nhất 2 người chơi' : undefined}
+              className={`font-display text-2xl tracking-widest uppercase px-14 py-4
+                border-[5px] border-[var(--color-ggd-outline)] rounded-xl cursor-pointer
+                transition-all duration-100
+                disabled:opacity-25 disabled:cursor-not-allowed disabled:shadow-none
+                ${starting
+                  ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)] shadow-[inset_0_3px_0_rgba(255,255,255,0.35),0_7px_0_#7a6000,0_12px_24px_rgba(0,0,0,0.5)]'
+                  : 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)] shadow-[inset_0_3px_0_rgba(255,255,255,0.45),0_7px_0_#007a3a,0_12px_28px_rgba(61,255,143,0.35)] hover:-translate-y-1 hover:shadow-[inset_0_3px_0_rgba(255,255,255,0.45),0_9px_0_#007a3a,0_16px_32px_rgba(61,255,143,0.45)] active:translate-y-[5px] active:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_2px_0_#007a3a]'
+                }`}
+            >
+              <span className="flex items-center gap-3">
+                {starting ? <><span className="animate-spin">🥚</span> Đang Khởi Động...</> : <>🦆 Chạy Đua! ({selectedCount})</>}
+              </span>
+            </button>
+          </div>
         </div>
       </main>
 
