@@ -12,16 +12,24 @@ export default function Dashboard() {
   const [players, setPlayers] = useState<PlayerData[]>([])
   const [loading, setLoading] = useState(true)
   const [races, setRaces] = useState<{ id: number; status: string; finalVerdict: string | null; createdAt: string; isTest?: boolean }[]>([])
+  const [summary, setSummary] = useState<{
+    rareRolledCount: number
+    bossesDefeated: number
+    longestStreak: { value: number; ownerName: string }
+    mostUnluckyDuck: { name: string; totalKhaos: number } | null
+  } | null>(null)
   const [showTestRaces, setShowTestRaces] = useState(false)
 
   useEffect(() => {
     Promise.all([
       fetch('/api/users').then((response) => response.json()),
       fetch('/api/races').then((response) => response.json()),
+      fetch('/api/dashboard/summary').then((response) => response.json()),
     ])
-      .then(([usersData, racesData]) => {
+      .then(([usersData, racesData, summaryData]) => {
         setPlayers(usersData)
         setRaces(racesData)
+        setSummary(summaryData)
         setLoading(false)
       })
       .catch(() => setLoading(false))
@@ -31,7 +39,8 @@ export default function Dashboard() {
   const totalRaces = displayedRaces.length
   const totalKhaos = players.reduce((sum, player) => sum + player.totalKhaos, 0)
   const sortedPlayers = [...players].sort((left, right) => right.totalKhaos - left.totalKhaos)
-  const mostKhaos = sortedPlayers[0] ?? null
+  const mostUnluckyDuck = summary?.mostUnluckyDuck ?? null
+  const pendingItemsCount = players.filter((player) => player.activeChest).length
 
   const bossWatch = useMemo(
     () => players
@@ -53,6 +62,65 @@ export default function Dashboard() {
       .sort((left, right) => left.shield.charges - right.shield.charges),
     [players]
   )
+
+  const statCards = [
+    {
+      label: '🐥 Tổng Vịt',
+      value: players.length.toString(),
+      accent: 'text-white',
+      detail: 'Tổng dân số trong chuồng',
+      cardClass: 'from-white/8 to-black/10',
+    },
+    {
+      label: '🏁 Tổng Race',
+      value: totalRaces.toString(),
+      accent: 'text-white',
+      detail: showTestRaces ? 'Đang tính cả race test' : 'Đang tính race official',
+      cardClass: 'from-[var(--color-ggd-sky)]/18 to-black/10',
+    },
+    {
+      label: '💀 Tổng Lần Làm Dzịt',
+      value: totalKhaos.toString(),
+      accent: 'text-[var(--color-ggd-gold)]',
+      detail: 'Tổng số lần cả bầy dính sẹo',
+      cardClass: 'from-[var(--color-ggd-orange)]/18 to-black/10',
+    },
+    {
+      label: '🎁 Pending Items',
+      value: String(MYSTERY_CHESTS_ENABLED ? pendingItemsCount : 0),
+      accent: 'text-[var(--color-ggd-gold)]',
+      detail: MYSTERY_CHESTS_ENABLED ? 'Đang chờ nổ ở Race kế tiếp' : 'Hệ item đang tắt',
+      cardClass: 'from-[var(--color-ggd-gold)]/18 to-black/10',
+    },
+    {
+      label: '✨ Rare Rolled',
+      value: String(summary?.rareRolledCount ?? 0),
+      accent: 'text-[var(--color-ggd-gold)]',
+      detail: 'Số lần rare chest đã nổ',
+      cardClass: 'from-[var(--color-ggd-gold)]/22 to-black/10',
+    },
+    {
+      label: '👑 Bosses Defeated',
+      value: String(summary?.bossesDefeated ?? 0),
+      accent: 'text-[var(--color-ggd-neon-green)]',
+      detail: 'Số Boss đã bị kéo xuống',
+      cardClass: 'from-[var(--color-ggd-neon-green)]/20 to-black/10',
+    },
+    {
+      label: '🔥 Longest Streak',
+      value: String(summary?.longestStreak.value ?? 0),
+      accent: 'text-[var(--color-ggd-orange)]',
+      detail: summary?.longestStreak.ownerName ? `${summary.longestStreak.ownerName}` : 'Chưa có chuỗi đáng kể',
+      cardClass: 'from-[var(--color-ggd-gold)]/16 to-black/10',
+    },
+    {
+      label: '☠️ Most Unlucky Duck',
+      value: mostUnluckyDuck?.name?.replace('Zịt ', '') || '—',
+      accent: 'text-[var(--color-ggd-orange)]',
+      detail: mostUnluckyDuck ? `${mostUnluckyDuck.totalKhaos} lần làm dzịt` : 'Chưa xác định',
+      cardClass: 'from-[var(--color-ggd-orange)]/22 to-black/10',
+    },
+  ]
 
   return (
     <div className="min-h-screen bg-transparent bubble-bg">
@@ -122,18 +190,28 @@ export default function Dashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+        <div className="rounded-[26px] border-5 border-[var(--color-ggd-outline)] bg-[radial-gradient(circle_at_12%_18%,rgba(255,204,0,0.16),transparent_28%),radial-gradient(circle_at_84%_24%,rgba(61,255,143,0.14),transparent_28%),linear-gradient(135deg,rgba(33,24,76,0.96),rgba(16,12,34,0.98))] p-5 shadow-[0_8px_0_var(--color-ggd-outline),0_18px_34px_rgba(0,0,0,0.5)] animate-slide-up opacity-0" style={{ animationDelay: '0.06s' }}>
+          <div className="grid gap-4 md:grid-cols-3">
+            {[
+              ['👑 Boss Pressure', '3 tuần sạch là mở Boss Mode. Càng sống lâu càng spawn thêm Clone để bị săn.'],
+              ['🛡 Shield Decay', 'Khiên chạy theo charge 3 → 2 → 1 → vỡ, nên ôm đồ lâu cũng không an toàn.'],
+              ['🎁 Reward Chest', 'Hạ Boss sẽ nổ chest. Rare roll càng lúc càng tăng nếu Boss sống dai.'],
+            ].map(([title, text]) => (
+              <div key={title} className="rounded-2xl border-3 border-[var(--color-ggd-outline)] bg-black/20 p-4">
+                <div className="font-display text-lg text-white text-outlined">{title}</div>
+                <div className="mt-2 font-readable text-sm leading-relaxed text-white/72">{text}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 animate-slide-up opacity-0" style={{ animationDelay: '0.1s' }}>
-          {[
-            { label: '🐥 Tổng Vịt', value: players.length.toString(), accent: 'text-white' },
-            { label: '🏁 Tổng Race', value: totalRaces.toString(), accent: 'text-white' },
-            { label: '💀 Tổng Lần Làm Dzịt', value: totalKhaos.toString(), accent: 'text-[var(--color-ggd-gold)]' },
-            { label: '👑 Vịt Thống Trị', value: mostKhaos?.name?.replace('Zịt ', '') || '—', accent: 'text-[var(--color-ggd-orange)]' },
-          ].map((stat, index) => (
+          {statCards.map((stat, index) => (
             <div
               key={stat.label}
-              className="bg-[var(--color-ggd-surface)] border-5 border-[var(--color-ggd-outline)] rounded-2xl p-5 text-center
+              className={`bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(0,0,0,0.18)),var(--color-ggd-surface)] bg-gradient-to-br ${stat.cardClass} border-5 border-[var(--color-ggd-outline)] rounded-2xl p-5 text-center
                 shadow-[inset_0_3px_0_rgba(255,255,255,0.1),0_8px_0_var(--color-ggd-outline),0_16px_30px_rgba(0,0,0,0.7)]
-                animate-bounce-in opacity-0 ggd-stripe"
+                animate-bounce-in opacity-0 ggd-stripe`}
               style={{
                 animationDelay: `${0.15 + index * 0.08}s`,
                 transform: `rotate(${index % 2 === 0 ? '-1' : '1'}deg)`,
@@ -141,6 +219,7 @@ export default function Dashboard() {
             >
               <div className="font-data text-xs text-[var(--color-ggd-lavender)] mb-2 uppercase tracking-widest font-black">{stat.label}</div>
               <div className={`font-display text-5xl ${stat.accent} text-outlined`}>{stat.value}</div>
+              <div className="mt-2 font-readable text-xs text-white/62 min-h-[32px] leading-relaxed">{stat.detail}</div>
             </div>
           ))}
         </div>
