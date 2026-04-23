@@ -73,14 +73,14 @@ async function migrateShieldCharges(prisma: PrismaClient) {
   }
 }
 
-async function migrateBossWatchFromOfficialRaces(prisma: PrismaClient) {
+async function rebuildBossWatchFromOfficialRaces(prisma: PrismaClient, raceCount: number) {
   const races = await prisma.race.findMany({
     where: {
       status: 'finished',
       isTest: false,
     },
     orderBy: [{ finishedAt: 'desc' }, { id: 'desc' }],
-    take: 5,
+    take: raceCount,
     include: {
       participants: {
         select: {
@@ -147,6 +147,14 @@ async function migrateBossWatchFromOfficialRaces(prisma: PrismaClient) {
   }
 }
 
+async function migrateBossWatchFromOfficialRaces(prisma: PrismaClient) {
+  await rebuildBossWatchFromOfficialRaces(prisma, 5)
+}
+
+async function migrateBossWatchFromLast8OfficialRaces(prisma: PrismaClient) {
+  await rebuildBossWatchFromOfficialRaces(prisma, 8)
+}
+
 async function migrateThomasOutOfBoss(prisma: PrismaClient) {
   await prisma.user.updateMany({
     where: {
@@ -178,6 +186,11 @@ const migrations: Migration[] = [
     id: '2026-04-23-003-thomas-never-boss',
     name: 'Force immortal Thomas out of Boss Duck state',
     run: migrateThomasOutOfBoss,
+  },
+  {
+    id: '2026-04-23-004-boss-watch-last-8-official',
+    name: 'Rebuild boss watch from the latest 8 official finished races',
+    run: migrateBossWatchFromLast8OfficialRaces,
   },
 ]
 
