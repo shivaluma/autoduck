@@ -9,6 +9,7 @@
     "lint": "eslint",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
+    "db:migrate:app": "tsx scripts/run-migrations.ts",
     "db:studio": "prisma studio"
   },
   "pnpm": {

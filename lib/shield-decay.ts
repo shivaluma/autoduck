@@ -9,7 +9,143 @@ function getIsoWeekKey(date = new Date()) {
 
 export { getIsoWeekKey }
 
+export const SHIELD_INITIAL_CHARGES = 3
+export const SHIELD_CRAFT_COST = 2
+export const SHIELD_EXPIRE_REFUND = 1
+export const SHIELD_MAX_ACTIVE = 1
+
 type ShieldCounterRow = { ownerId: number; _count: { _all: number } }
+
+type ActiveShieldRecord = {
+  id: number
+  ownerId: number
+  charges: number
+  weeksUnused: number
+  earnedAt: Date
+}
+
+function chargesToLegacyWeeks(charges: number) {
+  return Math.max(0, SHIELD_INITIAL_CHARGES - Math.max(0, charges))
+}
+
+function legacyWeeksToCharges(weeksUnused: number) {
+  return Math.max(1, SHIELD_INITIAL_CHARGES - Math.max(0, weeksUnused))
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function withTransaction<T>(prisma: any, fn: (tx: any) => Promise<T>) {
+  if (typeof prisma.$transaction === 'function') {
+    return prisma.$transaction(fn)
+  }
+
+  return fn(prisma)
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function syncOwnerShieldCount(prisma: any, ownerId: number) {
+  const activeCount = await prisma.shield.count({
+    where: {
+      ownerId,
+      status: 'active',
+    },
+  })
+
+  await prisma.user.update({
+    where: { id: ownerId },
+    data: { shields: Math.min(activeCount, SHIELD_MAX_ACTIVE) },
+  })
+
+  return activeCount
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function syncShieldCounters(prisma: any, userIds: Array<number | null | undefined>) {
+  const uniqueUserIds = Array.from(new Set(userIds.filter((userId): userId is number => typeof userId === 'number')))
+  for (const ownerId of uniqueUserIds) {
+    await syncOwnerShieldCount(prisma, ownerId)
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function normalizeLegacyShieldState(prisma: any, ownerIds?: number[]) {
+  const shields = await prisma.shield.findMany({
+    where: {
+      status: 'active',
+      ...(ownerIds && ownerIds.length > 0 ? { ownerId: { in: ownerIds } } : {}),
+    },
+    orderBy: [{ ownerId: 'asc' }, { earnedAt: 'asc' }],
+  })
+
+  const grouped = new Map<number, ActiveShieldRecord[]>()
+  for (const shield of shields as ActiveShieldRecord[]) {
+    const ownerShields = grouped.get(shield.ownerId) ?? []
+    ownerShields.push(shield)
+    grouped.set(shield.ownerId, ownerShields)
+  }
+
+  if (grouped.size === 0) {
+    return
+  }
+
+  const now = new Date()
+
+  await withTransaction(prisma, async (tx) => {
+    for (const [ownerId, ownerShields] of grouped) {
+      for (const shield of ownerShields) {
+        const shouldBackfillCharges = shield.charges === SHIELD_INITIAL_CHARGES && shield.weeksUnused > 0
+        const nextCharges = shouldBackfillCharges
+          ? legacyWeeksToCharges(shield.weeksUnused)
+          : Math.min(Math.max(shield.charges, 1), SHIELD_INITIAL_CHARGES)
+        const nextWeeksUnused = chargesToLegacyWeeks(nextCharges)
+
+        if (nextCharges !== shield.charges || nextWeeksUnused !== shield.weeksUnused) {
+          await tx.shield.update({
+            where: { id: shield.id },
+            data: {
+              charges: nextCharges,
+              weeksUnused: nextWeeksUnused,
+            },
+          })
+          shield.charges = nextCharges
+          shield.weeksUnused = nextWeeksUnused
+        }
+      }
+
+      if (ownerShields.length > SHIELD_MAX_ACTIVE) {
+        const sortedShields = [...ownerShields].sort((left, right) => {
+          if (right.charges !== left.charges) {
+            return right.charges - left.charges
+          }
+          return left.earnedAt.getTime() - right.earnedAt.getTime()
+        })
+        const extras = sortedShields.slice(SHIELD_MAX_ACTIVE)
+
+        if (extras.length > 0) {
+          await tx.user.update({
+            where: { id: ownerId },
+            data: {
+              scars: { increment: extras.length * SHIELD_EXPIRE_REFUND },
+            },
+          })
+
+          for (const shield of extras) {
+            await tx.shield.update({
+              where: { id: shield.id },
+              data: {
+                charges: 0,
+                weeksUnused: SHIELD_INITIAL_CHARGES,
+                status: 'converted',
+                consumedAt: now,
+              },
+            })
+          }
+        }
+      }
+
+      await syncOwnerShieldCount(tx, ownerId)
+    }
+  })
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function tickShieldDecay(prisma: any): Promise<{
@@ -26,39 +162,28 @@ export async function tickShieldDecay(prisma: any): Promise<{
     return { broken: [], lost: [], weekKey }
   }
 
+  await normalizeLegacyShieldState(prisma)
+
   const activeShields = await prisma.shield.findMany({
     where: { status: 'active' },
-    orderBy: [{ ownerId: 'asc' }, { earnedAt: 'asc' }],
+    orderBy: [{ ownerId: 'asc' }, { charges: 'asc' }, { earnedAt: 'asc' }],
   })
 
   const broken: { shieldId: number; ownerId: number }[] = []
   const lost: { shieldId: number; ownerId: number }[] = []
+  const decayed: { shieldId: number; ownerId: number; charges: number }[] = []
   const now = new Date()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await prisma.$transaction(async (tx: any) => {
-    for (const shield of activeShields) {
-      const nextWeeksUnused = shield.weeksUnused + 1
+  await withTransaction(prisma, async (tx) => {
+    for (const shield of activeShields as ActiveShieldRecord[]) {
+      const nextCharges = shield.charges - 1
 
-      if (nextWeeksUnused >= 5) {
+      if (nextCharges <= 0) {
         await tx.shield.update({
           where: { id: shield.id },
           data: {
-            weeksUnused: nextWeeksUnused,
-            status: 'lost',
-            consumedAt: now,
-          },
-        })
-
-        lost.push({ shieldId: shield.id, ownerId: shield.ownerId })
-        continue
-      }
-
-      if (nextWeeksUnused === 3) {
-        await tx.shield.update({
-          where: { id: shield.id },
-          data: {
-            weeksUnused: nextWeeksUnused,
+            charges: 0,
+            weeksUnused: SHIELD_INITIAL_CHARGES,
             status: 'broken',
             consumedAt: now,
           },
@@ -78,9 +203,11 @@ export async function tickShieldDecay(prisma: any): Promise<{
       await tx.shield.update({
         where: { id: shield.id },
         data: {
-          weeksUnused: nextWeeksUnused,
+          charges: nextCharges,
+          weeksUnused: chargesToLegacyWeeks(nextCharges),
         },
       })
+      decayed.push({ shieldId: shield.id, ownerId: shield.ownerId, charges: nextCharges })
     }
 
     const userCounts = await tx.shield.groupBy({
@@ -93,7 +220,7 @@ export async function tickShieldDecay(prisma: any): Promise<{
       await tx.user.update({
         where: { id: row.ownerId },
         data: {
-          shields: row._count._all,
+          shields: Math.min(row._count._all, SHIELD_MAX_ACTIVE),
         },
       })
     }
@@ -113,8 +240,8 @@ export async function tickShieldDecay(prisma: any): Promise<{
       data: {
         weekKey,
         brokenShields: broken.length,
-        lostShields: lost.length,
-        details: JSON.stringify({ broken, lost }),
+        lostShields: 0,
+        details: JSON.stringify({ decayed, broken }),
       },
     })
   })
@@ -123,14 +250,22 @@ export async function tickShieldDecay(prisma: any): Promise<{
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function consumeOldestShield(prisma: any, ownerId: number) {
-  const shield = await prisma.shield.findFirst({
-    where: {
-      ownerId,
-      status: 'active',
-    },
-    orderBy: [{ weeksUnused: 'desc' }, { earnedAt: 'asc' }],
-  })
+export async function consumeShield(prisma: any, ownerId: number, shieldId?: number) {
+  const shield = shieldId
+    ? await prisma.shield.findFirst({
+        where: {
+          id: shieldId,
+          ownerId,
+          status: 'active',
+        },
+      })
+    : await prisma.shield.findFirst({
+        where: {
+          ownerId,
+          status: 'active',
+        },
+        orderBy: [{ charges: 'asc' }, { earnedAt: 'asc' }],
+      })
 
   if (!shield) {
     return null
@@ -140,51 +275,81 @@ export async function consumeOldestShield(prisma: any, ownerId: number) {
   await prisma.shield.update({
     where: { id: shield.id },
     data: {
+      charges: 0,
+      weeksUnused: SHIELD_INITIAL_CHARGES,
       status: 'used',
       consumedAt: now,
-      weeksUnused: 0,
     },
   })
 
-  const activeCount = await prisma.shield.count({
-    where: {
-      ownerId,
-      status: 'active',
-    },
-  })
-
-  await prisma.user.update({
-    where: { id: ownerId },
-    data: {
-      shields: activeCount,
-    },
-  })
+  await syncOwnerShieldCount(prisma, ownerId)
 
   return shield
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function createShield(prisma: any, ownerId: number, earnedRaceId?: number) {
+export async function createShield(prisma: any, ownerId: number, earnedRaceId?: number, charges = SHIELD_INITIAL_CHARGES) {
+  const existingShield = await prisma.shield.findFirst({
+    where: {
+      ownerId,
+      status: 'active',
+    },
+    orderBy: [{ charges: 'asc' }, { earnedAt: 'asc' }],
+  })
+
+  if (existingShield) {
+    await syncOwnerShieldCount(prisma, ownerId)
+    return existingShield
+  }
+
+  const normalizedCharges = Math.min(Math.max(charges, 1), SHIELD_INITIAL_CHARGES)
   const shield = await prisma.shield.create({
     data: {
       ownerId,
       earnedRaceId,
-      weeksUnused: 0,
+      charges: normalizedCharges,
+      weeksUnused: chargesToLegacyWeeks(normalizedCharges),
       status: 'active',
     },
   })
 
-  const activeCount = await prisma.shield.count({
+  await syncOwnerShieldCount(prisma, ownerId)
+
+  return shield
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function craftShieldIfEligible(prisma: any, ownerId: number, earnedRaceId?: number) {
+  const user = await prisma.user.findUnique({
+    where: { id: ownerId },
+    select: {
+      id: true,
+      scars: true,
+    },
+  })
+
+  if (!user || user.scars < SHIELD_CRAFT_COST) {
+    return null
+  }
+
+  const existingShield = await prisma.shield.findFirst({
     where: {
       ownerId,
       status: 'active',
     },
   })
 
+  if (existingShield) {
+    await syncOwnerShieldCount(prisma, ownerId)
+    return null
+  }
+
   await prisma.user.update({
     where: { id: ownerId },
-    data: { shields: activeCount },
+    data: {
+      scars: { decrement: SHIELD_CRAFT_COST },
+    },
   })
 
-  return shield
+  return createShield(prisma, ownerId, earnedRaceId, SHIELD_INITIAL_CHARGES)
 }

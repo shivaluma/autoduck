@@ -1,24 +1,11 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { SHIELD_INITIAL_CHARGES, syncOwnerShieldCount } from '@/lib/shield-decay'
 
 function checkSecret(req: Request) {
   const { searchParams } = new URL(req.url)
   const secret = searchParams.get('secret')
   return secret === process.env.RACE_SECRET_KEY
-}
-
-async function syncOwnerShieldCount(ownerId: number) {
-  const activeCount = await prisma.shield.count({
-    where: {
-      ownerId,
-      status: 'active',
-    },
-  })
-
-  await prisma.user.update({
-    where: { id: ownerId },
-    data: { shields: activeCount },
-  })
 }
 
 export async function POST(
@@ -56,6 +43,8 @@ export async function POST(
         const nextShield = await tx.shield.update({
           where: { id: shieldId },
           data: {
+            charges: 0,
+            weeksUnused: SHIELD_INITIAL_CHARGES,
             status: 'broken',
             consumedAt: new Date(),
           },
@@ -71,7 +60,7 @@ export async function POST(
         return nextShield
       })
 
-      await syncOwnerShieldCount(shield.ownerId)
+      await syncOwnerShieldCount(prisma, shield.ownerId)
       return NextResponse.json({ success: true, shield: updated })
     }
 
@@ -79,18 +68,21 @@ export async function POST(
       const updated = await prisma.shield.update({
         where: { id: shieldId },
         data: {
+          charges: 0,
+          weeksUnused: SHIELD_INITIAL_CHARGES,
           status: 'lost',
           consumedAt: new Date(),
         },
       })
 
-      await syncOwnerShieldCount(shield.ownerId)
+      await syncOwnerShieldCount(prisma, shield.ownerId)
       return NextResponse.json({ success: true, shield: updated })
     }
 
     const updated = await prisma.shield.update({
       where: { id: shieldId },
       data: {
+        charges: SHIELD_INITIAL_CHARGES,
         weeksUnused: 0,
       },
     })

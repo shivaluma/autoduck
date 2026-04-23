@@ -61,6 +61,7 @@ async function main() {
           data: Array.from({ length: player.shields }).map(() => ({
             ownerId: user.id,
             status: 'active',
+            charges: 3,
             weeksUnused: 0,
           })),
         })
@@ -82,6 +83,7 @@ async function main() {
           data: Array.from({ length: player.shields }).map(() => ({
             ownerId: user.id,
             status: 'active',
+            charges: 3,
             weeksUnused: 0,
           })),
         })

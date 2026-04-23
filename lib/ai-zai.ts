@@ -81,7 +81,7 @@ function buildPrompt(
           ? `\n🎁 UNDERDOG: ${context.underdogs.map((item) => `${item.name}=${item.chest}${item.target ? `->${item.target}` : ''}`).join(' | ')}`
           : '',
         context.shieldsAtRisk && context.shieldsAtRisk.length > 0
-          ? `\n⏳ KHIÊN GIÀ: ${context.shieldsAtRisk.map((item) => `${item.owner} ${item.weeksUnused}w`).join(' | ')}`
+          ? `\n⏳ KHIÊN SẮP VỠ: ${context.shieldsAtRisk.map((item) => `${item.owner} ${item.charges}c`).join(' | ')}`
           : '',
         context.curseSwaps && context.curseSwaps.length > 0
           ? `\n🎭 TÊN GIẢ: ${context.curseSwaps.map((item) => `${item.owner}->${item.displayName}`).join(' | ')}`

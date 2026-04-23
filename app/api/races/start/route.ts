@@ -5,7 +5,7 @@ import { calculatePenalties, dedupeVictimUserIds } from '@/lib/shield-logic'
 import { raceEventBus, RACE_EVENTS } from '@/lib/event-bus'
 import { expandBossParticipants, evaluateBossStatus, resolveBossOutcome } from '@/lib/boss-logic'
 import { applyChestPreRace, getActiveChestsForUsers, resolveChestPostRace, validateChestConfig } from '@/lib/mystery-chest'
-import { consumeOldestShield, createShield, tickShieldDecay } from '@/lib/shield-decay'
+import { consumeShield, craftShieldIfEligible, createShield, normalizeLegacyShieldState, syncShieldCounters, tickShieldDecay } from '@/lib/shield-decay'
 import type { ChestEffect, RaceMetaContext } from '@/lib/types'
 import { isImmortalDuck } from '@/lib/immortal-duck'
 import { MYSTERY_CHESTS_ENABLED } from '@/lib/feature-flags'
@@ -25,6 +25,7 @@ interface WorkerPlayerInput {
   name: string
   displayName: string
   useShield: boolean
+  shieldId?: number
   userId: number
   isImmortal?: boolean
   isClone?: boolean
@@ -39,7 +40,7 @@ interface UserWithActiveShields {
   id: number
   name: string
   shields: number
-  ownedShields: Array<{ id: number }>
+  ownedShields: Array<{ id: number; charges: number }>
   cleanStreak: number
   isBoss: boolean
   bossSince?: Date | null
@@ -62,38 +63,6 @@ function getVietnamDayWindow() {
   const endOfVNDayUTC = new Date(startOfVNDayUTC.getTime() + 24 * 60 * 60 * 1000 - 1)
 
   return { day, startOfVNDayUTC, endOfVNDayUTC }
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function syncUserShieldCounters(tx: any, userIds: Array<number | null | undefined>) {
-  const uniqueUserIds = Array.from(new Set(userIds))
-  for (const userId of uniqueUserIds) {
-    if (!userId) {
-      continue
-    }
-
-    const user = await tx.user.findUnique({
-      where: { id: userId },
-      select: { name: true, shields: true },
-    })
-    if (user && isImmortalDuck({ name: user.name, shields: user.shields })) {
-      continue
-    }
-
-    const activeCount = await tx.shield.count({
-      where: {
-        ownerId: userId,
-        status: 'active',
-      },
-    })
-
-    await tx.user.update({
-      where: { id: userId },
-      data: {
-        shields: activeCount,
-      },
-    })
-  }
 }
 
 export async function POST(request: Request) {
@@ -146,15 +115,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Cần ít nhất 2 người chơi' }, { status: 400 })
     }
 
-    await tickShieldDecay(prisma)
-
     const userIds = participants.map((participant) => participant.userId)
+    await normalizeLegacyShieldState(prisma, userIds)
+
     const users = await prisma.user.findMany({
       where: { id: { in: userIds } },
       include: {
         ownedShields: {
           where: { status: 'active' },
-          orderBy: [{ weeksUnused: 'desc' }, { earnedAt: 'asc' }],
+          orderBy: [{ charges: 'asc' }, { earnedAt: 'asc' }],
         },
       },
     })
@@ -282,6 +251,7 @@ export async function POST(request: Request) {
       name: participant.displayName ?? participant.name,
       displayName: participant.displayName ?? participant.name,
       useShield: participant.useShield,
+      shieldId: participant.shieldId,
       userId: participant.userId,
       isImmortal: participant.isImmortal ?? false,
       isClone: participant.isClone ?? false,
@@ -325,7 +295,7 @@ async function executeRace(
       where: {
         ownerId: { in: Array.from(new Set(playerInputs.map((player) => player.userId))) },
         status: 'active',
-        weeksUnused: { gte: 2 },
+        charges: { lte: 2 },
       },
       include: {
         owner: {
@@ -334,7 +304,7 @@ async function executeRace(
           },
         },
       },
-      orderBy: [{ weeksUnused: 'desc' }, { earnedAt: 'asc' }],
+      orderBy: [{ charges: 'asc' }, { earnedAt: 'asc' }],
       take: 4,
     })
 
@@ -356,9 +326,9 @@ async function executeRace(
           ? playerInputs.find((player) => player.userId === chest.targetUserId && !player.isClone)?.name ?? null
           : null,
       })),
-      shieldsAtRisk: riskyShields.map((shield: { owner: { name: string }; weeksUnused: number }) => ({
+      shieldsAtRisk: riskyShields.map((shield: { owner: { name: string }; charges: number }) => ({
         owner: shield.owner.name,
-        weeksUnused: shield.weeksUnused,
+        charges: shield.charges,
       })),
       curseSwaps: playerInputs
         .filter((player) => !player.isClone && player.chestEffect === 'CURSE_SWAP' && player.displayName !== player.name)
@@ -405,6 +375,12 @@ async function executeRace(
     })
 
     const penalties = calculatePenalties(raceResults)
+    const shieldActivatedEntries = penalties.safeByShield
+    const didActivateShield = (entry: { userId: number; cloneIndex?: number | null }) =>
+      shieldActivatedEntries.some(
+        (safe) => safe.userId === entry.userId && (safe.cloneIndex ?? null) === (entry.cloneIndex ?? null)
+      )
+    const activatedShieldUserIds = dedupeVictimUserIds(shieldActivatedEntries)
     const race = await prisma.race.findUnique({ where: { id: raceId } })
     const isTest = race?.isTest ?? false
     const bossUsers = await prisma.user.findMany({
@@ -472,6 +448,7 @@ async function executeRace(
       for (const resultEntry of raceResults) {
         const effectiveUserId = resultEntry.cloneOfUserId ?? resultEntry.userId
         const isVictim = finalVictimUserIds.includes(effectiveUserId)
+        const shieldActivated = didActivateShield(resultEntry)
 
         await tx.raceParticipant.updateMany({
           where: {
@@ -482,6 +459,7 @@ async function executeRace(
           data: {
             initialRank: resultEntry.initialRank,
             gotScar: isVictim,
+            usedShield: shieldActivated,
           },
         })
       }
@@ -500,16 +478,14 @@ async function executeRace(
           )
           const borrowedFromOther = !!ownerEntry?.borrowedShieldFromUserId
 
-          const didUseShield = raceResults.some(
-            (entry) => entry.userId === participantUserId && !entry.isClone && entry.usedShield
-          )
-          const ownConsumed = didUseShield && !borrowedFromOther
+          const ownConsumed = activatedShieldUserIds.includes(participantUserId) && !borrowedFromOther
           const gotScarThisRace = finalVictimUserIds.includes(participantUserId)
 
           const isImmortal = isImmortalDuck({ name: user.name, shields: user.shields })
 
           if (ownConsumed && !isImmortal) {
-            await consumeOldestShield(tx, participantUserId)
+            const declaredShieldId = playerInputs.find((player) => player.userId === participantUserId && !player.isClone)?.shieldId
+            await consumeShield(tx, participantUserId, declaredShieldId)
           }
 
           const bossOutcome = bossUsers.some((boss: { id: number }) => boss.id === participantUserId)
@@ -560,34 +536,12 @@ async function executeRace(
           }
         }
 
-        for (const reward of postRace.shieldsToGrant) {
-          await createShield(tx, reward.userId, raceId)
-        }
-
-        const usersAfterRace = await tx.user.findMany({
-          where: { id: { in: Array.from(new Set(playerInputs.map((player) => player.userId))) } },
-        })
-
-        for (const user of usersAfterRace) {
-          if (user.scars >= 2) {
-            const shieldsToCreate = Math.floor(user.scars / 2)
-            const remainingScars = user.scars % 2
-
-            await tx.user.update({
-              where: { id: user.id },
-              data: { scars: remainingScars },
-            })
-
-            for (let index = 0; index < shieldsToCreate; index += 1) {
-              await createShield(tx, user.id, raceId)
-            }
-          }
-        }
-
         for (const shieldId of borrowedShieldIds) {
           const shield = await tx.shield.update({
             where: { id: shieldId },
             data: {
+              charges: 0,
+              weeksUnused: 3,
               status: 'used',
               consumedAt: new Date(),
             },
@@ -597,6 +551,20 @@ async function executeRace(
             where: { id: shield.ownerId },
             data: { shieldsUsed: { increment: 1 } },
           })
+        }
+
+        await tickShieldDecay(tx)
+
+        for (const reward of postRace.shieldsToGrant) {
+          await createShield(tx, reward.userId, raceId)
+        }
+
+        const usersAfterRace = await tx.user.findMany({
+          where: { id: { in: Array.from(new Set(playerInputs.map((player) => player.userId))) } },
+        })
+
+        for (const user of usersAfterRace) {
+          await craftShieldIfEligible(tx, user.id, raceId)
         }
 
         await tx.mysteryChest.updateMany({
@@ -619,7 +587,7 @@ async function executeRace(
           })
         }
 
-        await syncUserShieldCounters(
+        await syncShieldCounters(
           tx,
           playerInputs
             .map((player) => player.userId)

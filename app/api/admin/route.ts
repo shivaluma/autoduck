@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { isImmortalDuck } from '@/lib/immortal-duck'
+import { normalizeLegacyShieldState } from '@/lib/shield-decay'
 
 // Helper to check secret
 const checkSecret = (req: Request) => {
@@ -15,17 +16,20 @@ export async function GET(request: Request) {
   }
 
   try {
+    await normalizeLegacyShieldState(prisma)
+
     const rawUsers = await prisma.user.findMany({
       orderBy: { id: 'asc' },
       include: {
         ownedShields: {
           where: { status: 'active' },
-          select: { id: true },
+          orderBy: [{ charges: 'asc' }, { earnedAt: 'asc' }],
+          select: { id: true, charges: true },
         },
       },
     })
     const users = rawUsers.map((user: {
-      ownedShields: { id: number }[]
+      ownedShields: { id: number; charges: number }[]
       shields: number
       name: string
     }) => {
@@ -37,6 +41,7 @@ export async function GET(request: Request) {
         ...rest,
         legacyShields: rest.shields,
         activeShieldCount,
+        activeShieldCharges: ownedShields[0]?.charges ?? null,
         shields: isImmortal ? rest.shields : activeShieldCount,
       }
     })

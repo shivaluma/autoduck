@@ -224,7 +224,7 @@ export async function applyChestPreRace(
           ownerId: chest.targetUserId,
           status: 'active',
         },
-        orderBy: [{ weeksUnused: 'desc' }, { earnedAt: 'asc' }],
+        orderBy: [{ charges: 'asc' }, { earnedAt: 'asc' }],
       })
 
       if (!shield) {

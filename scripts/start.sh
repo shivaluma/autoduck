@@ -18,6 +18,11 @@ echo "✅ Database ready!"
 echo "🌱 Checking seed data..."
 node --import tsx prisma/seed.ts
 
-# 4. Start Next.js server
+# 4. Run idempotent app migrations
+echo "🧭 Running app migrations..."
+pnpm db:migrate:app
+echo "✅ App migrations ready!"
+
+# 5. Start Next.js server
 echo "🚀 Starting Next.js server on port ${PORT:-3000}..."
 exec node server.js

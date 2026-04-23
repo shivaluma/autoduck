@@ -44,13 +44,13 @@ export default function Dashboard() {
     () => players
       .flatMap((player) =>
         player.activeShields
-          .filter((shield) => shield.weeksUnused >= 2)
+          .filter((shield) => shield.charges <= 2)
           .map((shield) => ({
             player,
             shield,
           }))
       )
-      .sort((left, right) => right.shield.weeksUnused - left.shield.weeksUnused),
+      .sort((left, right) => left.shield.charges - right.shield.charges),
     [players]
   )
 
@@ -315,13 +315,13 @@ export default function Dashboard() {
                 <Image src="/assets/v2/shield-cracked.svg" alt="shield" width={32} height={32} className="animate-bob" unoptimized />
                 <div>
                   <div className="font-display text-xl text-white text-outlined leading-none">Khiên Sắp Hỏng</div>
-                  <div className="font-data text-[10px] uppercase tracking-widest text-white/50">3 tuần → vỡ • 5 tuần → mất</div>
+                  <div className="font-data text-[10px] uppercase tracking-widest text-white/50">3 → 2 → 1 charge • 0 = refund 1 sẹo</div>
                 </div>
               </div>
               <div className="space-y-2.5">
                 {fragileShields.length > 0 ? fragileShields.slice(0, 6).map(({ player, shield }) => {
-                  const danger = shield.weeksUnused >= 3
-                  const pct = Math.min(shield.weeksUnused / 5, 1) * 100
+                  const danger = shield.charges <= 1
+                  const pct = ((3 - shield.charges) / 3) * 100
                   return (
                     <div key={shield.id} className="stat-row">
                       <div className="stat-row-icon">
@@ -337,7 +337,7 @@ export default function Dashboard() {
                             {player.name} <span className="text-white/50 font-data text-[11px]">#{shield.id}</span>
                           </span>
                           <span className={`font-data text-[11px] font-black ${danger ? 'text-[var(--color-ggd-orange)]' : 'text-[var(--color-ggd-gold)]'}`}>
-                            {shield.weeksUnused}w {danger ? '⚠️' : ''}
+                            {shield.charges}c {danger ? '⚠️' : ''}
                           </span>
                         </div>
                         <div className="progress-track">
@@ -357,9 +357,9 @@ export default function Dashboard() {
               <div className="font-data text-sm text-[var(--color-ggd-muted)] space-y-2">
                 <div>🤕 2 người cuối = con dzịt (+1 Sẹo)</div>
                 <div>🛡️ Dùng Khiên trước trận để thoát kiếp</div>
-                <div>✨ 2 Sẹo → 1 Khiên (auto)</div>
-                <div>⏳ Khiên 3 tuần không dùng → vỡ thành 1 Sẹo</div>
-                <div>💀 Khiên 5 tuần không dùng → mất hẳn</div>
+                <div>✨ 2 Sẹo → 1 Khiên nếu đang không có khiên</div>
+                <div>⏳ Shield có 3 charge, sau race không dùng thì -1</div>
+                <div>💥 Về 0 charge → vỡ, refund +1 Sẹo</div>
                 <div>👑 3 tuần sạch → Boss Duck, race kế spawn 3 clone</div>
               </div>
             </div>

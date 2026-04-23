@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db'
 import type { ChestEffect } from '@/lib/types'
 import { isImmortalDuck } from '@/lib/immortal-duck'
 import { MYSTERY_CHESTS_ENABLED } from '@/lib/feature-flags'
+import { normalizeLegacyShieldState } from '@/lib/shield-decay'
 
 interface UserWithV2State {
   id: number
@@ -18,7 +19,7 @@ interface UserWithV2State {
   ownedShields: Array<{
     id: number
     ownerId: number
-    weeksUnused: number
+    charges: number
     status: string
     loanedToId?: number | null
   }>
@@ -37,12 +38,14 @@ interface UserWithV2State {
 // GET /api/users - Lấy danh sách tất cả người chơi
 export async function GET() {
   try {
+    await normalizeLegacyShieldState(prisma)
+
     const users = await prisma.user.findMany({
       orderBy: { name: 'asc' },
       include: {
         ownedShields: {
           where: { status: 'active' },
-          orderBy: [{ weeksUnused: 'desc' }, { earnedAt: 'asc' }],
+          orderBy: [{ charges: 'asc' }, { earnedAt: 'asc' }],
         },
         mysteryChests: {
           where: { status: 'active' },
@@ -75,7 +78,7 @@ export async function GET() {
           activeShields: user.ownedShields.map((shield) => ({
             id: shield.id,
             ownerId: shield.ownerId,
-            weeksUnused: shield.weeksUnused,
+            charges: shield.charges,
             status: shield.status,
             loanedToId: shield.loanedToId,
           })),

@@ -28,7 +28,7 @@ export interface RaceSetupPlayer {
 export interface ShieldData {
   id: number
   ownerId: number
-  weeksUnused: number
+  charges: number
   status: string
   loanedToId?: number | null
 }
@@ -64,7 +64,7 @@ export interface RaceMetaContext {
   }>
   shieldsAtRisk?: Array<{
     owner: string
-    weeksUnused: number
+    charges: number
   }>
   curseSwaps?: Array<{
     owner: string

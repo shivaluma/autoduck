@@ -66,6 +66,7 @@ model Shield {
   ownerId      Int
   earnedAt     DateTime  @default(now())
   earnedRaceId Int?
+  charges      Int       @default(3)
   weeksUnused  Int       @default(0)
   status       String    @default("active")
   consumedAt   DateTime?
@@ -104,6 +105,12 @@ model WeeklyTick {
   newBosses     Int      @default(0)
   chestsIssued  Int      @default(0)
   details       String?
+}
+
+model AppMigration {
+  id    String   @id
+  name  String
+  runAt DateTime @default(now())
 }
 
 model CommentaryLog {

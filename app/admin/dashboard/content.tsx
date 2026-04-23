@@ -13,6 +13,7 @@ interface UserRow {
   shields: number
   legacyShields?: number
   activeShieldCount?: number
+  activeShieldCharges?: number | null
   shieldsUsed: number
   totalKhaos: number
   cleanStreak?: number
@@ -39,7 +40,7 @@ interface ShieldSeasonRow {
   ownerName: string
   earnedAt: string
   earnedRaceId?: number | null
-  weeksUnused: number
+  charges: number
   status: string
 }
 
@@ -100,8 +101,7 @@ export function AdminDashboardContent({ secret }: Props) {
   const [activeTab, setActiveTab] = useState<'users' | 'races' | 'tools' | 'season'>('users')
   const [seasonTab, setSeasonTab] = useState<'boss' | 'shield' | 'active_chests' | 'chest_history' | 'weekly_tick'>('boss')
   const [shieldOwnerId, setShieldOwnerId] = useState('')
-  const [shieldGrantCount, setShieldGrantCount] = useState('1')
-  const [shieldWeeksUnused, setShieldWeeksUnused] = useState('0')
+  const [shieldCharges, setShieldCharges] = useState('3')
   const [msg, setMsg] = useState('')
 
   const fetchAdminData = useCallback(async () => {
@@ -236,7 +236,7 @@ export function AdminDashboardContent({ secret }: Props) {
     ownerName: string,
     action: 'break' | 'lose' | 'reset_age'
   ) => {
-    const label = action === 'break' ? 'Force Break' : action === 'lose' ? 'Force Lose' : 'Reset Age'
+    const label = action === 'break' ? 'Force Break' : action === 'lose' ? 'Force Lose' : 'Recharge 3c'
     setMsg(`🛡️ ${label} #${shieldId}...`)
     const response = await fetch(`/api/admin/shields/${shieldId}?secret=${secret}`, {
       method: 'POST',
@@ -262,12 +262,11 @@ export function AdminDashboardContent({ secret }: Props) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ownerId: Number(shieldOwnerId),
-        count: Number(shieldGrantCount),
-        weeksUnused: Number(shieldWeeksUnused),
+        charges: Number(shieldCharges),
       }),
     })
     const data = await response.json()
-    setMsg(response.ok ? `✅ Added ${data.created} shield(s), active=${data.activeCount}` : data.error || 'Grant shield failed')
+    setMsg(response.ok ? `✅ Added shield #${data.shield?.id ?? '?'} (${data.shield?.charges ?? shieldCharges}c)` : data.error || 'Grant shield failed')
     if (response.ok) {
       await fetchAdminData()
     }
@@ -350,7 +349,7 @@ export function AdminDashboardContent({ secret }: Props) {
                         <td className="px-4 py-3.5 min-w-[150px]">
                           <div className="flex items-center gap-2">
                             <span className="ggd-tag bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]">
-                              {isImmortal ? '∞ immortal' : `${activeShieldCount} active`}
+                              {isImmortal ? '∞ immortal' : activeShieldCount > 0 ? `1 shield · ${user.activeShieldCharges ?? '?'}c` : '0 shield'}
                             </span>
                             <button
                               onClick={() => {
@@ -476,7 +475,7 @@ export function AdminDashboardContent({ secret }: Props) {
                   <div>
                     <div className="font-display text-2xl text-white text-outlined">⏳ Shield Aging</div>
                     <div className="font-data text-xs text-[var(--color-ggd-muted)] mt-1">
-                      Manage bằng bảng Shield mới. Ô legacy User.shields chỉ còn là counter cache để UI cũ không lệch.
+                      Max 1 shield mỗi vịt. Shield có 3 charge, sau race không dùng thì -1, về 0 sẽ vỡ và refund 1 sẹo.
                     </div>
                   </div>
 
@@ -499,27 +498,15 @@ export function AdminDashboardContent({ secret }: Props) {
                         </select>
                       </label>
                       <label className="flex flex-col gap-1">
-                        <span className="ggd-col-header">Số lượng</span>
-                        <input
-                          type="number"
-                          min="1"
-                          max="20"
-                          value={shieldGrantCount}
-                          onChange={(event) => setShieldGrantCount(event.target.value)}
-                          className="bg-[var(--color-ggd-surface)] border-3 border-[var(--color-ggd-outline)] rounded-xl px-3 py-2 w-28 font-bold text-white outline-none"
-                        />
-                      </label>
-                      <label className="flex flex-col gap-1">
-                        <span className="ggd-col-header">Age</span>
+                        <span className="ggd-col-header">Charges</span>
                         <select
-                          value={shieldWeeksUnused}
-                          onChange={(event) => setShieldWeeksUnused(event.target.value)}
+                          value={shieldCharges}
+                          onChange={(event) => setShieldCharges(event.target.value)}
                           className="bg-[var(--color-ggd-surface)] border-3 border-[var(--color-ggd-outline)] rounded-xl px-3 py-2 font-bold text-white outline-none"
                         >
-                          <option value="0">0w fresh</option>
-                          <option value="1">1w fresh</option>
-                          <option value="2">2w cracked</option>
-                          <option value="3">3w breaking</option>
+                          <option value="3">3c fresh</option>
+                          <option value="2">2c cracked</option>
+                          <option value="1">1c danger</option>
                         </select>
                       </label>
                       <button
@@ -536,8 +523,8 @@ export function AdminDashboardContent({ secret }: Props) {
                       <div key={shield.id} className="rounded-xl border-3 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-4">
                         <div className="flex items-center justify-between gap-3">
                           <span className="font-body text-white font-black">🛡️ #{shield.id} - {shield.ownerName}</span>
-                          <span className={`ggd-tag ${shield.weeksUnused >= 3 ? 'bg-[var(--color-ggd-orange)] text-white' : shield.weeksUnused >= 2 ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' : 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]'}`}>
-                            {shield.weeksUnused}w
+                          <span className={`ggd-tag ${shield.charges <= 1 ? 'bg-[var(--color-ggd-orange)] text-white' : shield.charges <= 2 ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' : 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]'}`}>
+                            {shield.charges}c
                           </span>
                         </div>
                         <div className="font-data text-xs text-[var(--color-ggd-muted)] mt-2">
@@ -560,7 +547,7 @@ export function AdminDashboardContent({ secret }: Props) {
                             onClick={() => handleShieldAction(shield.id, shield.ownerName, 'reset_age')}
                             className="ggd-btn bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)] text-xs px-3 py-2"
                           >
-                            Reset Age
+                            Recharge 3c
                           </button>
                         </div>
                       </div>

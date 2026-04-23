@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { normalizeLegacyShieldState } from '@/lib/shield-decay'
 
 function checkSecret(req: Request) {
   const { searchParams } = new URL(req.url)
@@ -13,6 +14,8 @@ export async function GET(request: Request) {
   }
 
   try {
+    await normalizeLegacyShieldState(prisma)
+
     const [bosses, activeShields, activeChests, chestHistory, weeklyTicks] = await Promise.all([
       prisma.user.findMany({
         where: { isBoss: true },
@@ -21,7 +24,7 @@ export async function GET(request: Request) {
       prisma.shield.findMany({
         where: { status: 'active' },
         include: { owner: true },
-        orderBy: [{ weeksUnused: 'desc' }, { earnedAt: 'asc' }],
+        orderBy: [{ charges: 'asc' }, { earnedAt: 'asc' }],
       }),
       prisma.mysteryChest.findMany({
         where: { status: 'active' },
@@ -47,7 +50,7 @@ export async function GET(request: Request) {
         ownerId: number
         earnedAt: Date
         earnedRaceId?: number | null
-        weeksUnused: number
+        charges: number
         status: string
         owner: { name: string }
       }) => ({
@@ -56,7 +59,7 @@ export async function GET(request: Request) {
         ownerName: shield.owner.name,
         earnedAt: shield.earnedAt,
         earnedRaceId: shield.earnedRaceId,
-        weeksUnused: shield.weeksUnused,
+        charges: shield.charges,
         status: shield.status,
       })),
       activeChests: activeChests.map((chest: {

@@ -455,7 +455,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                             <ShieldChip
                               key={shield.id}
                               id={shield.id}
-                              weeksUnused={shield.weeksUnused}
+                              charges={shield.charges}
                               selected={player.selectedShieldId === shield.id}
                               disabled={!player.selected}
                               onClick={() => handleSelectShield(player.userId, shield.id)}
@@ -475,7 +475,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                                 {player.isImmortal
                                   ? 'Thomas auto-shield cho mọi cuộc đua.'
                                   : selectedShield
-                                    ? `Khiên #${selectedShield.id} · ${selectedShield.weeksUnused} tuần chưa dùng${selectedShield.weeksUnused >= 2 ? ' · nhớ là sắp già rồi đó.' : ' · còn tươi.'}`
+                                    ? `Khiên #${selectedShield.id} · còn ${selectedShield.charges} charge${selectedShield.charges <= 1 ? ' · sắp vỡ rồi đó.' : selectedShield.charges <= 2 ? ' · đang nứt nhẹ.' : ' · còn tươi.'}`
                                     : 'Khiên đã bật cho race này.'}
                               </div>
                             </div>
