@@ -3,7 +3,7 @@ import { isImmortalDuck } from '@/lib/immortal-duck'
 
 export interface BossSpawnPlan {
   ownerUserId: number
-  cloneCount: 3
+  cloneCount: number
 }
 
 interface BossStatusArgs {
@@ -46,7 +46,7 @@ export function evaluateBossStatus(args: BossStatusArgs): { newCleanStreak: numb
 
 export function expandBossParticipants(
   participants: RaceSetupPlayer[],
-  users: Array<{ id: number; name?: string; shields?: number | null; isBoss: boolean }>
+  users: Array<{ id: number; name?: string; shields?: number | null; isBoss: boolean; cleanStreak?: number | null }>
 ): RaceSetupPlayerWithBoss[] {
   const expanded: RaceSetupPlayerWithBoss[] = []
 
@@ -58,7 +58,8 @@ export function expandBossParticipants(
       continue
     }
 
-    for (let cloneIndex = 1; cloneIndex <= 3; cloneIndex += 1) {
+    const cloneCount = Math.max(user.cleanStreak ?? 3, 3)
+    for (let cloneIndex = 1; cloneIndex <= cloneCount; cloneIndex += 1) {
       expanded.push({
         ...participant,
         useShield: false,

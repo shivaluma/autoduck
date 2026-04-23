@@ -179,7 +179,7 @@ export default function Dashboard() {
                             )}
                             {player.cleanStreak > 0 && (
                               <span className={`ggd-tag ${player.cleanStreak >= 3 ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' : 'bg-[var(--color-ggd-panel)] text-[var(--color-ggd-neon-green)]'}`}>
-                                🔥 {Math.min(player.cleanStreak, 3)}/3 tuần sạch
+                                🔥 {player.cleanStreak}/3 tuần sạch
                               </span>
                             )}
                           </div>
@@ -277,13 +277,13 @@ export default function Dashboard() {
                 <Image src="/assets/v2/boss-crown.svg" alt="boss" width={32} height={32} className="animate-bob" unoptimized />
                 <div>
                   <div className="font-display text-xl text-[var(--color-ggd-gold)] text-outlined leading-none">Boss Watch</div>
-                  <div className="font-data text-[10px] uppercase tracking-widest text-white/50">3 tuần sạch → spawn 3 clone</div>
+                  <div className="font-data text-[10px] uppercase tracking-widest text-white/50">3 sạch mở Boss, càng sạch càng spawn nhiều clone</div>
                 </div>
               </div>
               <div className="space-y-2.5">
                 {bossWatch.length > 0 ? bossWatch.map((entry) => {
-                  const streak = Math.min(entry.cleanStreak, 3)
-                  const pct = (streak / 3) * 100
+                  const streak = entry.cleanStreak
+                  const pct = Math.min((Math.min(streak, 3) / 3) * 100, 100)
                   return (
                     <div key={entry.id} className="stat-row">
                       <div className="stat-row-icon" style={{ background: entry.isBoss ? 'linear-gradient(180deg, #ffd84d 0%, #f59e0b 100%)' : 'rgba(0,0,0,0.4)' }}>
@@ -360,7 +360,7 @@ export default function Dashboard() {
                 <div>✨ 2 Sẹo → 1 Khiên nếu đang không có khiên</div>
                 <div>⏳ Shield có 3 charge, sau race không dùng thì -1</div>
                 <div>💥 Về 0 charge → vỡ và mất luôn</div>
-                <div>👑 3 tuần sạch → Boss Duck, race kế spawn 3 clone</div>
+                <div>👑 3 tuần sạch → Boss Duck, từ đó mỗi tuần sạch thêm lại spawn thêm 1 clone</div>
               </div>
             </div>
           </div>

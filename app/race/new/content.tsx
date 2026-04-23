@@ -148,7 +148,9 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
     return []
   })
 
-  const extraBossEntries = selectedPlayers.filter((player) => player.isBoss).length * 3
+  const extraBossEntries = selectedPlayers
+    .filter((player) => player.isBoss)
+    .reduce((sum, player) => sum + Math.max(player.cleanStreak, 3), 0)
   const extraIdentityEntries = activeSelectedChests.filter(({ chest }) => chest.effect === 'IDENTITY_THEFT').length
   const borrowedShieldCount = activeSelectedChests.filter(({ chest }) => chest.effect === 'PUBLIC_SHIELD').length
   const totalEntries = selectedCount + extraBossEntries + extraIdentityEntries
@@ -411,7 +413,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                       {player.isBoss && (
                         <div className="rounded-xl border-3 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-gold)]/90 px-4 py-2 shadow-[0_4px_0_var(--color-ggd-outline)]">
                           <div><BossBadge streak={player.cleanStreak} /></div>
-                          <div className="font-data text-xs text-[var(--color-ggd-outline)]/80">Race này spawn 3 clone, chỉ cần 1 clone bét là Boss ăn sẹo.</div>
+                          <div className="font-data text-xs text-[var(--color-ggd-outline)]/80">Race này spawn {Math.max(player.cleanStreak, 3)} clone, chỉ cần 1 clone bét là Boss ăn sẹo.</div>
                         </div>
                       )}
 
@@ -423,7 +425,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                           <div className="flex flex-wrap items-center gap-2">
                             {player.cleanStreak > 0 && (
                               <span className={`ggd-tag ${player.cleanStreak >= 3 ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' : 'bg-[var(--color-ggd-panel)] text-[var(--color-ggd-neon-green)]'}`}>
-                                🔥 {Math.min(player.cleanStreak, 3)}/3 tuần sạch
+                                🔥 {player.cleanStreak}/3 tuần sạch
                               </span>
                             )}
                             {player.isImmortal && (
@@ -573,7 +575,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                 <div className="font-body text-white/85 mb-2">⚠ Drama đáng xem:</div>
                 <div className="font-data text-sm text-[var(--color-ggd-muted)] space-y-1">
                   {selectedPlayers.filter((player) => player.isBoss).map((player) => (
-                    <div key={`boss-${player.userId}`}>• Boss {player.name} cần né 2 vị trí cuối với 4 entries</div>
+                    <div key={`boss-${player.userId}`}>• Boss {player.name} cần né 2 vị trí cuối với {Math.max(player.cleanStreak, 3) + 1} entries</div>
                   ))}
                   {activeSelectedChests.map(({ ownerName, chest }) => (
                     <div key={`chest-${chest.id}`}>
