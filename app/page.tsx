@@ -190,21 +190,6 @@ export default function Dashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-        <div className="rounded-[26px] border-5 border-[var(--color-ggd-outline)] bg-[radial-gradient(circle_at_12%_18%,rgba(255,204,0,0.16),transparent_28%),radial-gradient(circle_at_84%_24%,rgba(61,255,143,0.14),transparent_28%),linear-gradient(135deg,rgba(33,24,76,0.96),rgba(16,12,34,0.98))] p-5 shadow-[0_8px_0_var(--color-ggd-outline),0_18px_34px_rgba(0,0,0,0.5)] animate-slide-up opacity-0" style={{ animationDelay: '0.06s' }}>
-          <div className="grid gap-4 md:grid-cols-3">
-            {[
-              ['👑 Boss Pressure', '3 tuần sạch là mở Boss Mode. Càng sống lâu càng spawn thêm Clone để bị săn.'],
-              ['🛡 Shield Decay', 'Khiên chạy theo charge 3 → 2 → 1 → vỡ, nên ôm đồ lâu cũng không an toàn.'],
-              ['🎁 Reward Chest', 'Hạ Boss sẽ nổ chest. Rare roll càng lúc càng tăng nếu Boss sống dai.'],
-            ].map(([title, text]) => (
-              <div key={title} className="rounded-2xl border-3 border-[var(--color-ggd-outline)] bg-black/20 p-4">
-                <div className="font-display text-lg text-white text-outlined">{title}</div>
-                <div className="mt-2 font-readable text-sm leading-relaxed text-white/72">{text}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 animate-slide-up opacity-0" style={{ animationDelay: '0.1s' }}>
           {statCards.map((stat, index) => (
             <div
@@ -226,8 +211,8 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 animate-slide-up opacity-0" style={{ animationDelay: '0.2s' }}>
-            <div className="ggd-card-green ggd-stripe">
-              <div className="ggd-panel-header bg-[var(--color-ggd-neon-green)]">
+            <div className="overflow-hidden rounded-2xl border-5 border-[var(--color-ggd-outline)] bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(0,0,0,0.16)),var(--color-ggd-surface)] bg-gradient-to-br from-[var(--color-ggd-neon-green)]/12 to-black/10 shadow-[inset_0_3px_0_rgba(255,255,255,0.08),0_8px_0_var(--color-ggd-outline),0_16px_30px_rgba(0,0,0,0.65)] ggd-stripe backdrop-blur-[2px]">
+              <div className="ggd-panel-header bg-[rgba(61,255,143,0.78)]">
                 <div className="skew-header">
                   <span className="text-[var(--color-ggd-outline)] text-2xl">🏆 BXH Sinh Tồn Bầy Vịt</span>
                 </div>
@@ -317,8 +302,8 @@ export default function Dashboard() {
           </div>
 
           <div className="animate-slide-up opacity-0 space-y-5" style={{ animationDelay: '0.35s' }}>
-            <div id="race-history" className="ggd-card ggd-stripe scroll-mt-6">
-              <div className="ggd-panel-header bg-[var(--color-ggd-panel)] rounded-t-[7px]">
+            <div id="race-history" className="overflow-hidden rounded-2xl border-5 border-[var(--color-ggd-outline)] bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(0,0,0,0.18)),var(--color-ggd-surface)] bg-gradient-to-br from-white/8 to-black/10 shadow-[inset_0_3px_0_rgba(255,255,255,0.08),0_8px_0_var(--color-ggd-outline),0_16px_30px_rgba(0,0,0,0.65)] ggd-stripe scroll-mt-6 backdrop-blur-[2px]">
+              <div className="ggd-panel-header bg-[rgba(24,18,52,0.82)] rounded-t-[7px]">
                 <span className="font-display text-xl text-white text-outlined">📜 Lịch Sử Thảm Họa</span>
                 <label className="flex items-center gap-2 cursor-pointer group">
                   <div className="relative">

@@ -24,6 +24,13 @@ export function BossBadge({ compact = false, streak }: BossBadgeProps) {
             className={`boss-crown-badge ${fireTierClass}`}
             style={compact ? { padding: '2px 8px 2px 3px', fontSize: 10 } : undefined}
           >
+            <span className="boss-fire-aura" aria-hidden="true">
+              <span className="boss-fire-tongue boss-fire-tongue-1" />
+              <span className="boss-fire-tongue boss-fire-tongue-2" />
+              <span className="boss-fire-tongue boss-fire-tongue-3" />
+              <span className="boss-fire-tongue boss-fire-tongue-4" />
+              <span className="boss-fire-tongue boss-fire-tongue-5" />
+            </span>
             <Image
               src="/assets/v2/boss-crown.svg"
               alt="Boss"
@@ -32,9 +39,9 @@ export function BossBadge({ compact = false, streak }: BossBadgeProps) {
               className="crown-svg"
               unoptimized
             />
-            <span>BOSS</span>
+            <span className="boss-crown-label">BOSS</span>
             {typeof streak === 'number' && (
-              <span className="opacity-80">{streak}/3</span>
+              <span className="boss-crown-label opacity-80">{streak}/3</span>
             )}
           </span>
         </TooltipTrigger>
