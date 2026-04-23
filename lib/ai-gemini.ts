@@ -227,7 +227,7 @@ function buildPrompt(
   const namesLine = participantNames ? `\nCÁC CON VỊT: ${participantNames}.` : ''
   const metaContext = context
     ? [
-        context.boss ? `👑 BOSS: ${context.boss.name} mang ${context.boss.cloneCount} clone, chỉ cần 1 clone về cuối là mất ngôi.` : '',
+        context.boss ? `👑 BOSS: ${context.boss.name} mang ${context.boss.cloneCount} clone. Nếu Boss/clone rơi nhóm cuối và mất ngôi, khịa đúng vibe: "mới gặp tý áp lực đã vụn vỡ".` : '',
         context.underdogs && context.underdogs.length > 0
           ? `🎁 UNDERDOG: ${context.underdogs.map((item) => `${item.name} cầm ${item.chest}${item.target ? ` -> ${item.target}` : ''}`).join(' | ')}`
           : '',

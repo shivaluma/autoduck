@@ -34,6 +34,16 @@ export interface ShieldData {
 }
 
 export type ChestEffect =
+  | 'BONUS_SCAR'
+  | 'FRAGILE_SHIELD'
+  | 'CLONE_CHAOS'
+  | 'SAFE_WEEK'
+  | 'REVERSE_RESULTS'
+  | 'LUCKY_CLONE'
+  | 'ANTI_SHIELD'
+  | 'CANT_PASS_THOMAS'
+  | 'GOLDEN_SHIELD'
+  | 'MORE_PEOPLE_MORE_FUN'
   | 'NOTHING'
   | 'CURSE_SWAP'
   | 'INSURANCE_FRAUD'

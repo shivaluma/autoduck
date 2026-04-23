@@ -5,12 +5,22 @@ import Image from 'next/image'
 import type { ChestEffect } from '@/lib/types'
 
 const effectMeta: Record<ChestEffect, { label: string; svg: string; rarity: 'trash' | 'common' | 'rare' | 'epic'; tagline: string }> = {
-  NOTHING: { label: 'Trống Trơn', svg: '/assets/v2/effect-nothing.svg', rarity: 'trash', tagline: 'Không có gì xảy ra' },
-  CURSE_SWAP: { label: 'Curse Swap', svg: '/assets/v2/effect-curse-swap.svg', rarity: 'common', tagline: 'Đổi tên với target' },
-  INSURANCE_FRAUD: { label: 'Insurance Fraud', svg: '/assets/v2/effect-insurance-fraud.svg', rarity: 'rare', tagline: 'Kéo target xuống nếu cùng làm dzịt' },
-  IDENTITY_THEFT: { label: 'Identity Theft', svg: '/assets/v2/effect-identity-theft.svg', rarity: 'rare', tagline: 'Spawn shadow clone, lấy rank tốt nhất' },
-  PUBLIC_SHIELD: { label: 'Public Shield', svg: '/assets/v2/effect-public-shield.svg', rarity: 'common', tagline: 'Mượn khiên của target' },
-  I_CHOOSE_YOU: { label: 'I Choose You', svg: '/assets/v2/effect-i-choose-you.svg', rarity: 'epic', tagline: 'Target P1 → tặng owner 1 khiên' },
+  BONUS_SCAR: { label: 'Bonus Scar', svg: '/assets/v2/chest-open.svg', rarity: 'common', tagline: '+1 sẹo ngay lập tức' },
+  FRAGILE_SHIELD: { label: 'Fragile Shield', svg: '/assets/v2/shield-cracked.svg', rarity: 'common', tagline: '+1 khiên tạm 1 charge' },
+  CLONE_CHAOS: { label: 'Clone Chaos', svg: '/assets/v2/chest-open.svg', rarity: 'common', tagline: 'Race sau toàn lobby +1 clone' },
+  SAFE_WEEK: { label: 'Safe Week', svg: '/assets/v2/shield-fresh.svg', rarity: 'common', tagline: 'Race sau shield không decay' },
+  REVERSE_RESULTS: { label: 'Reverse Results', svg: '/assets/v2/chest-open.svg', rarity: 'common', tagline: 'Race sau đảo ngược bảng kết quả' },
+  LUCKY_CLONE: { label: 'Lucky Clone', svg: '/assets/v2/chest-open.svg', rarity: 'rare', tagline: 'Race sau chủ rương +1 clone' },
+  ANTI_SHIELD: { label: 'Anti Shield', svg: '/assets/v2/shield-broken.svg', rarity: 'rare', tagline: 'Race sau toàn lobby cấm dùng shield' },
+  CANT_PASS_THOMAS: { label: "Can't Pass Thomas", svg: '/assets/v2/chest-open.svg', rarity: 'rare', tagline: 'Race sau ai vượt Thomas tính thua' },
+  GOLDEN_SHIELD: { label: 'Golden Shield', svg: '/assets/v2/shield-fresh.svg', rarity: 'rare', tagline: 'Nhận 1 shield full 3 charge' },
+  MORE_PEOPLE_MORE_FUN: { label: 'More People More Fun', svg: '/assets/v2/chest-open.svg', rarity: 'rare', tagline: 'Race sau số người thua tăng thành 3 hoặc 4' },
+  NOTHING: { label: 'Legacy Empty', svg: '/assets/v2/effect-nothing.svg', rarity: 'trash', tagline: 'Effect cũ đã ngưng dùng' },
+  CURSE_SWAP: { label: 'Legacy Curse Swap', svg: '/assets/v2/effect-curse-swap.svg', rarity: 'trash', tagline: 'Effect cũ đã ngưng dùng' },
+  INSURANCE_FRAUD: { label: 'Legacy Insurance', svg: '/assets/v2/effect-insurance-fraud.svg', rarity: 'trash', tagline: 'Effect cũ đã ngưng dùng' },
+  IDENTITY_THEFT: { label: 'Legacy Identity', svg: '/assets/v2/effect-identity-theft.svg', rarity: 'trash', tagline: 'Effect cũ đã ngưng dùng' },
+  PUBLIC_SHIELD: { label: 'Legacy Public Shield', svg: '/assets/v2/effect-public-shield.svg', rarity: 'trash', tagline: 'Effect cũ đã ngưng dùng' },
+  I_CHOOSE_YOU: { label: 'Legacy I Choose You', svg: '/assets/v2/effect-i-choose-you.svg', rarity: 'trash', tagline: 'Effect cũ đã ngưng dùng' },
 }
 
 interface ChestCardProps {
@@ -41,8 +51,8 @@ export function ChestCard({
 
   useEffect(() => {
     if (!animated || !opened) {
-      setRevealed(opened)
-      return
+      const timer = window.setTimeout(() => setRevealed(opened), 0)
+      return () => window.clearTimeout(timer)
     }
     const timer = window.setTimeout(() => setRevealed(true), 700)
     return () => window.clearTimeout(timer)

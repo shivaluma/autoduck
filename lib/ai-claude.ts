@@ -79,7 +79,7 @@ function buildPrompt(
   const namesInfo = participantNames ? `\nCASTING: ${participantNames}.` : ''
   const metaContext = context
     ? [
-        context.boss ? `\n👑 BOSS: ${context.boss.name} ôm ${context.boss.cloneCount} clone, chỉ cần 1 clone bét là sập ngai.` : '',
+        context.boss ? `\n👑 BOSS: ${context.boss.name} ôm ${context.boss.cloneCount} clone. Nếu Boss/clone rơi nhóm cuối và mất ngôi, khịa đúng vibe: "mới gặp tý áp lực đã vụn vỡ".` : '',
         context.underdogs && context.underdogs.length > 0
           ? `\n🎁 UNDERDOG: ${context.underdogs.map((item) => `${item.name}=${item.chest}${item.target ? `->${item.target}` : ''}`).join(' | ')}`
           : '',

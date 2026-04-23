@@ -42,20 +42,25 @@ interface ChestConfigState {
   targetUserId?: number
 }
 
-const TARGETED_EFFECTS = new Set<ChestEffect>([
-  'CURSE_SWAP',
-  'INSURANCE_FRAUD',
-  'PUBLIC_SHIELD',
-  'I_CHOOSE_YOU',
-])
+const TARGETED_EFFECTS = new Set<ChestEffect>()
 
 const EFFECT_DESCRIPTIONS: Record<ChestEffect, string> = {
-  NOTHING: 'Rương trống trơn, không cần cấu hình.',
-  CURSE_SWAP: 'Đổi display name trong race với một vịt khác.',
-  INSURANCE_FRAUD: 'Nếu chủ rương ăn sẹo, mục tiêu sẽ bị kéo chết theo.',
-  IDENTITY_THEFT: 'Spawn thêm 1 clone và lấy rank tốt hơn giữa 2 bản thể.',
-  PUBLIC_SHIELD: 'Mượn 1 khiên của người khác, khiên đó sẽ bị tiêu hao vĩnh viễn.',
-  I_CHOOSE_YOU: 'Nếu mục tiêu về P1, chủ rương được +1 khiên.',
+  BONUS_SCAR: '+1 sẹo ngay lập tức, có thể auto craft shield nếu đủ 2 sẹo.',
+  FRAGILE_SHIELD: '+1 khiên tạm 1 charge. Race sau không dùng là vỡ.',
+  CLONE_CHAOS: 'Race sau toàn lobby +1 clone, tạo một round hỗn loạn nhẹ.',
+  SAFE_WEEK: 'Race sau shield không decay sau khi resolve.',
+  REVERSE_RESULTS: 'Race sau đảo ngược bảng kết quả trước khi tính phạt.',
+  LUCKY_CLONE: 'Race sau chỉ chủ rương được +1 clone.',
+  ANTI_SHIELD: 'Race sau toàn lobby không được dùng shield thường.',
+  CANT_PASS_THOMAS: 'Race sau ai vượt Thomas sẽ bị tính thua.',
+  GOLDEN_SHIELD: 'Nhận ngay 1 shield full 3 charge.',
+  MORE_PEOPLE_MORE_FUN: 'Race sau số người thua tăng thành 3 hoặc 4.',
+  NOTHING: 'Legacy effect đã ngưng dùng.',
+  CURSE_SWAP: 'Legacy effect đã ngưng dùng.',
+  INSURANCE_FRAUD: 'Legacy effect đã ngưng dùng.',
+  IDENTITY_THEFT: 'Legacy effect đã ngưng dùng.',
+  PUBLIC_SHIELD: 'Legacy effect đã ngưng dùng.',
+  I_CHOOSE_YOU: 'Legacy effect đã ngưng dùng.',
 }
 
 export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; secretKey?: string }) {
@@ -151,9 +156,10 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
   const extraBossEntries = selectedPlayers
     .filter((player) => player.isBoss)
     .reduce((sum, player) => sum + Math.max(player.cleanStreak, 3), 0)
-  const extraIdentityEntries = activeSelectedChests.filter(({ chest }) => chest.effect === 'IDENTITY_THEFT').length
-  const borrowedShieldCount = activeSelectedChests.filter(({ chest }) => chest.effect === 'PUBLIC_SHIELD').length
-  const totalEntries = selectedCount + extraBossEntries + extraIdentityEntries
+  const hasCloneChaos = activeSelectedChests.some(({ chest }) => chest.effect === 'CLONE_CHAOS')
+  const luckyCloneEntries = activeSelectedChests.filter(({ chest }) => chest.effect === 'LUCKY_CLONE').length
+  const extraItemEntries = (hasCloneChaos ? selectedCount : 0) + luckyCloneEntries
+  const totalEntries = selectedCount + extraBossEntries + extraItemEntries
   const canStartRace = selectedCount >= 2 && chestConfigErrors.length === 0 && !starting
 
   const handleTogglePlayerRequest = (userId: number) => {
@@ -516,8 +522,8 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
         {activeSelectedChests.length > 0 && (
           <div className="ggd-card-orange animate-slide-up opacity-0" style={{ animationDelay: '0.2s' }}>
             <div className="px-5 py-3 border-b-3 border-[var(--color-ggd-outline)]/30">
-              <div className="font-display text-lg text-white text-outlined">Section B. Mandatory Chest Configuration</div>
-              <p className="font-body text-sm text-white/70 mt-1">Mọi rương active của người tham gia phải được cấu hình xong trước khi chạy đua.</p>
+              <div className="font-display text-lg text-white text-outlined">Section B. Pending Item Effects</div>
+              <p className="font-body text-sm text-white/70 mt-1">Item active sẽ tự kích hoạt trong race này, không cần chọn target cá nhân.</p>
             </div>
             <div className="p-5 space-y-4">
               {activeSelectedChests.map(({ ownerName, chest }) => {
@@ -525,9 +531,6 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                 const targetOptions = selectedPlayers.filter((player) => {
                   if (player.userId === chest.ownerId) {
                     return false
-                  }
-                  if (chest.effect === 'PUBLIC_SHIELD') {
-                    return player.activeShields.length > 0
                   }
                   return true
                 })
@@ -544,7 +547,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                     targetOptions={targetOptions.map((player) => ({
                       userId: player.userId,
                       name: player.name,
-                      shieldCount: chest.effect === 'PUBLIC_SHIELD' ? player.activeShields.length : undefined,
+                      shieldCount: undefined,
                     }))}
                     onTargetChange={(targetUserId?: number) =>
                       updateChestTarget(chest.id, chest.ownerId, chest.effect, targetUserId)
@@ -565,8 +568,8 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
             <div className="font-data text-sm text-[var(--color-ggd-muted)] space-y-1">
               <div>• {selectedCount} vịt selected</div>
               <div>• +{extraBossEntries} entries từ Boss Duck</div>
-              <div>• +{extraIdentityEntries} clone từ Identity Theft</div>
-              <div>• {shieldsInUse} khiên đang bật, {borrowedShieldCount} khiên mượn</div>
+              <div>• +{extraItemEntries} entries từ item clone</div>
+              <div>• {shieldsInUse} khiên đang bật</div>
               <div>• → {totalEntries} entries thật sẽ vào race</div>
             </div>
 

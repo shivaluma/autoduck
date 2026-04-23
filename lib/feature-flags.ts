@@ -1,1 +1,1 @@
-export const MYSTERY_CHESTS_ENABLED = false
+export const MYSTERY_CHESTS_ENABLED = true

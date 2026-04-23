@@ -4,8 +4,9 @@ import { runRaceWorker } from '@/lib/race-worker'
 import { calculatePenalties, dedupeVictimUserIds } from '@/lib/shield-logic'
 import { raceEventBus, RACE_EVENTS } from '@/lib/event-bus'
 import { expandBossParticipants, evaluateBossStatus, resolveBossOutcome } from '@/lib/boss-logic'
-import { applyChestPreRace, getActiveChestsForUsers, resolveChestPostRace, validateChestConfig } from '@/lib/mystery-chest'
-import { consumeShield, craftShieldIfEligible, createShield, normalizeLegacyShieldState, syncShieldCounters, tickShieldDecay } from '@/lib/shield-decay'
+import { applyChestPreRace, getActiveChestsForUsers, issueBossRewardChests, resolveChestPostRace, validateChestConfig } from '@/lib/mystery-chest'
+import { consumeShield, craftShieldIfEligible, normalizeLegacyShieldState, syncShieldCounters, tickShieldDecay } from '@/lib/shield-decay'
+import type { BossRewardInput, ItemRaceModifiers } from '@/lib/mystery-chest'
 import type { ChestEffect, RaceMetaContext } from '@/lib/types'
 import { isImmortalDuck } from '@/lib/immortal-duck'
 import { MYSTERY_CHESTS_ENABLED } from '@/lib/feature-flags'
@@ -193,24 +194,10 @@ export async function POST(request: Request) {
     }
 
     const chestConfigMap = new Map(chestConfigs.map((config) => [config.chestId, config]))
-    const configuredActiveChests = activeChests.map((chest: { id: number; ownerId: number; effect: ChestEffect }) => ({
+    const configuredActiveChests = activeChests.map((chest: { id: number; ownerId: number; effect: ChestEffect; rngSeed?: string }) => ({
       ...chest,
       targetUserId: chestConfigMap.get(chest.id)?.targetUserId ?? null,
     }))
-
-    for (const chest of configuredActiveChests) {
-      if (chest.effect !== 'PUBLIC_SHIELD' || !chest.targetUserId) {
-        continue
-      }
-
-      const targetUser = (users as UserWithActiveShields[]).find((candidate) => candidate.id === chest.targetUserId)
-      if (!targetUser || targetUser.ownedShields.length === 0) {
-        return NextResponse.json(
-          { error: `Public Shield cần target đang có ít nhất 1 khiên active` },
-          { status: 400 }
-        )
-      }
-    }
 
     const setupParticipants = participants.map((participant) => {
       const user = (users as UserWithActiveShields[]).find((candidate) => candidate.id === participant.userId)
@@ -280,7 +267,7 @@ export async function POST(request: Request) {
 
     playerInputs = playerInputs.sort(() => Math.random() - 0.5)
 
-    executeRace(race.id, playerInputs, configuredActiveChests, preRace.borrowedShieldIds).catch((error: unknown) => {
+    executeRace(race.id, playerInputs, configuredActiveChests, preRace.borrowedShieldIds, preRace.modifiers).catch((error: unknown) => {
       console.error('Race execution failed:', error)
     })
 
@@ -298,8 +285,9 @@ export async function POST(request: Request) {
 async function executeRace(
   raceId: number,
   playerInputs: WorkerPlayerInput[],
-  activeChests: Array<{ id: number; ownerId: number; effect: ChestEffect; targetUserId?: number | null }>,
-  borrowedShieldIds: number[]
+  activeChests: Array<{ id: number; ownerId: number; effect: ChestEffect; targetUserId?: number | null; rngSeed?: string }>,
+  borrowedShieldIds: number[],
+  itemModifiers: ItemRaceModifiers
 ) {
   try {
     await prisma.race.update({
@@ -372,7 +360,7 @@ async function executeRace(
       playersByName.set(player.displayName, queue)
     }
 
-    const raceResults = result.rawRanking.map((entry) => {
+    let raceResults = result.rawRanking.map((entry) => {
       const queue = playersByName.get(entry.name) ?? []
       const matched = queue.shift()
       return {
@@ -390,7 +378,25 @@ async function executeRace(
       }
     })
 
-    const penalties = calculatePenalties(raceResults)
+    if (itemModifiers.reverseResults) {
+      const totalRankedEntries = raceResults.length
+      raceResults = raceResults.map((entry) => ({
+        ...entry,
+        initialRank: totalRankedEntries + 1 - entry.initialRank,
+      }))
+    }
+
+    const thomasEntry = itemModifiers.cantPassThomas
+      ? raceResults.find((entry) => entry.isImmortal && !entry.isClone)
+      : null
+    const cantPassThomasVictims = thomasEntry
+      ? raceResults.filter((entry) => entry.initialRank < thomasEntry.initialRank && !entry.isImmortal)
+      : []
+
+    const penalties = calculatePenalties(raceResults, {
+      penaltiesNeeded: itemModifiers.morePeopleMoreFun ?? 2,
+      forcedVictims: cantPassThomasVictims,
+    })
     const shieldActivatedEntries = penalties.safeByShield
     const didActivateShield = (entry: { userId: number; cloneIndex?: number | null }) =>
       shieldActivatedEntries.some(
@@ -405,6 +411,8 @@ async function executeRace(
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const transactionSummary = await prisma.$transaction(async (tx: any) => {
+      const bossRewardInputs: BossRewardInput[] = []
+      let newChestsForThisRace: Array<{ ownerId: number; effect: ChestEffect }> = []
       const chestDisabledPostRace = {
         modifiedVictims: penalties.victims.map((victim) => ({
           userId: victim.userId,
@@ -515,6 +523,13 @@ async function executeRace(
               })
             : { bossLost: false }
 
+          if (bossOutcome.bossLost && user.isBoss) {
+            bossRewardInputs.push({
+              ownerId: participantUserId,
+              bossStreak: Math.max(user.cleanStreak, 3),
+            })
+          }
+
           const shouldCountScar = gotScarThisRace || bossOutcome.bossLost
           const bossStatus = evaluateBossStatus({
             name: user.name,
@@ -571,14 +586,24 @@ async function executeRace(
           })
         }
 
-        await tickShieldDecay(tx)
-
-        for (const reward of postRace.shieldsToGrant) {
-          await createShield(tx, reward.userId, raceId)
+        if (itemModifiers.safeWeek) {
+          await tickShieldDecay(tx, { skipDecayReason: 'SAFE_WEEK' })
+        } else {
+          await tickShieldDecay(tx)
         }
 
+        newChestsForThisRace = await issueBossRewardChests(tx, raceId, bossRewardInputs)
+
         const usersAfterRace = await tx.user.findMany({
-          where: { id: { in: Array.from(new Set(playerInputs.map((player) => player.userId))) } },
+          where: {
+            id: {
+              in: Array.from(new Set(
+                playerInputs
+                  .map((player) => player.userId)
+                  .concat(bossRewardInputs.map((reward) => reward.ownerId))
+              )),
+            },
+          },
         })
 
         for (const user of usersAfterRace) {
@@ -614,6 +639,7 @@ async function executeRace(
                 .map((chest) => chest.targetUserId)
                 .filter((userId): userId is number => typeof userId === 'number')
             )
+            .concat(bossRewardInputs.map((reward) => reward.ownerId))
         )
       }
 
@@ -629,16 +655,18 @@ async function executeRace(
 
       return {
         finalVictimUserIds,
-        newChestsForThisRace: postRace.newChestsForThisRace,
+        newChestsForThisRace,
       }
     })
 
     const finalVictimUserIds = transactionSummary.finalVictimUserIds
     const winner = raceResults.find((entry) => entry.initialRank === 1)
-    const [winnerDetails, victimDetails, chestsAwarded] = await Promise.all([
+    const chestsAwarded = transactionSummary.newChestsForThisRace
+    const chestAwardOwnerIds = Array.from(new Set(chestsAwarded.map((chest: { ownerId: number }) => chest.ownerId)))
+    const [winnerDetails, victimDetails, chestOwnerDetails] = await Promise.all([
       winner ? prisma.user.findUnique({ where: { id: winner.userId } }) : Promise.resolve(null),
       prisma.user.findMany({ where: { id: { in: finalVictimUserIds } } }),
-      Promise.resolve(transactionSummary.newChestsForThisRace),
+      chestAwardOwnerIds.length > 0 ? prisma.user.findMany({ where: { id: { in: chestAwardOwnerIds } } }) : Promise.resolve([]),
     ])
 
     raceEventBus.emit(RACE_EVENTS.FINISHED, {
@@ -652,7 +680,7 @@ async function executeRace(
         targetUserId: chest.targetUserId ?? null,
       })),
       chestsAwarded: chestsAwarded.map((chest: { ownerId: number; effect: ChestEffect }) => ({
-        ownerName: (victimDetails as RaceEventUser[]).find((victim) => victim.id === chest.ownerId)?.name ?? `User ${chest.ownerId}`,
+        ownerName: (chestOwnerDetails as RaceEventUser[]).find((owner) => owner.id === chest.ownerId)?.name ?? `User ${chest.ownerId}`,
         effect: chest.effect,
       })),
     })

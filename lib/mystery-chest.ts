@@ -1,23 +1,42 @@
 import { randomUUID } from 'crypto'
 import type { ChestEffect } from '@/lib/types'
+import { createShield, craftShieldIfEligible } from '@/lib/shield-decay'
 
-const CHEST_TABLE: Array<{ effect: ChestEffect; weight: number }> = [
-  { effect: 'NOTHING', weight: 50 },
-  { effect: 'CURSE_SWAP', weight: 10 },
-  { effect: 'INSURANCE_FRAUD', weight: 10 },
-  { effect: 'IDENTITY_THEFT', weight: 10 },
-  { effect: 'PUBLIC_SHIELD', weight: 10 },
-  { effect: 'I_CHOOSE_YOU', weight: 10 },
+export type ChestRarity = 'common' | 'rare'
+
+export const COMMON_CHEST_TABLE: Array<{ effect: ChestEffect; weight: number }> = [
+  { effect: 'BONUS_SCAR', weight: 28 },
+  { effect: 'FRAGILE_SHIELD', weight: 24 },
+  { effect: 'CLONE_CHAOS', weight: 18 },
+  { effect: 'SAFE_WEEK', weight: 15 },
+  { effect: 'REVERSE_RESULTS', weight: 15 },
 ]
 
-const EFFECTS_REQUIRING_TARGET = new Set<ChestEffect>([
+export const RARE_CHEST_TABLE: Array<{ effect: ChestEffect; weight: number }> = [
+  { effect: 'LUCKY_CLONE', weight: 28 },
+  { effect: 'ANTI_SHIELD', weight: 22 },
+  { effect: 'CANT_PASS_THOMAS', weight: 18 },
+  { effect: 'GOLDEN_SHIELD', weight: 17 },
+  { effect: 'MORE_PEOPLE_MORE_FUN', weight: 15 },
+]
+
+const INVENTORY_EFFECTS = new Set<ChestEffect>([
+  'BONUS_SCAR',
+  'FRAGILE_SHIELD',
+  'GOLDEN_SHIELD',
+])
+
+const LEGACY_EFFECTS = new Set<ChestEffect>([
+  'NOTHING',
   'CURSE_SWAP',
   'INSURANCE_FRAUD',
+  'IDENTITY_THEFT',
   'PUBLIC_SHIELD',
   'I_CHOOSE_YOU',
 ])
 
-export { CHEST_TABLE, EFFECTS_REQUIRING_TARGET }
+export const EFFECTS_REQUIRING_TARGET = new Set<ChestEffect>()
+export const CHEST_TABLE = COMMON_CHEST_TABLE
 
 type ParticipantInput = {
   userId: number
@@ -56,6 +75,22 @@ type ActiveChestRecord = {
   ownerId: number
   effect: ChestEffect
   targetUserId?: number | null
+  rngSeed?: string
+}
+
+export type ItemRaceModifiers = {
+  cloneChaos: boolean
+  safeWeek: boolean
+  reverseResults: boolean
+  antiShield: boolean
+  cantPassThomas: boolean
+  morePeopleMoreFun: number | null
+  luckyCloneOwnerIds: number[]
+}
+
+export type BossRewardInput = {
+  ownerId: number
+  bossStreak: number
 }
 
 function hashSeed(seed: string) {
@@ -67,21 +102,78 @@ function hashSeed(seed: string) {
   return (hash >>> 0) / 4294967295
 }
 
-export function rollChest(seed = randomUUID()): { effect: ChestEffect; seed: string } {
-  const totalWeight = CHEST_TABLE.reduce((sum, entry) => sum + entry.weight, 0)
+function rollWeighted<T extends string>(table: Array<{ effect: T; weight: number }>, seed: string): T {
+  const totalWeight = table.reduce((sum, entry) => sum + entry.weight, 0)
   const roll = hashSeed(seed) * totalWeight
   let cursor = 0
 
-  for (const entry of CHEST_TABLE) {
+  for (const entry of table) {
     cursor += entry.weight
     if (roll < cursor) {
-      return { effect: entry.effect, seed }
+      return entry.effect
     }
   }
 
-  return { effect: 'NOTHING', seed }
+  return table[table.length - 1].effect
 }
 
+function rareRateForBossStreak(streak: number) {
+  if (streak >= 7) return 70
+  if (streak >= 6) return 60
+  if (streak >= 5) return 50
+  if (streak >= 4) return 40
+  return 30
+}
+
+function rollRarity(streak: number, seed: string): ChestRarity {
+  return hashSeed(seed) * 100 < rareRateForBossStreak(streak) ? 'rare' : 'common'
+}
+
+export function getChestRarity(effect: ChestEffect): ChestRarity | 'legacy' {
+  if (COMMON_CHEST_TABLE.some((entry) => entry.effect === effect)) {
+    return 'common'
+  }
+  if (RARE_CHEST_TABLE.some((entry) => entry.effect === effect)) {
+    return 'rare'
+  }
+  return 'legacy'
+}
+
+export function isInventoryChestEffect(effect: ChestEffect) {
+  return INVENTORY_EFFECTS.has(effect)
+}
+
+export function isLegacyChestEffect(effect: ChestEffect) {
+  return LEGACY_EFFECTS.has(effect)
+}
+
+export function rollChest(
+  seed: string = randomUUID(),
+  options: { bossStreak?: number; excludedRareEffects?: Set<ChestEffect> } = {}
+): { effect: ChestEffect; seed: string; rarity: ChestRarity } {
+  const bossStreak = options.bossStreak ?? 3
+  const rarity = rollRarity(bossStreak, `${seed}:rarity`)
+
+  if (rarity === 'rare') {
+    const excludedRareEffects = options.excludedRareEffects ?? new Set<ChestEffect>()
+    const availableRareTable = RARE_CHEST_TABLE.filter((entry) => !excludedRareEffects.has(entry.effect))
+    if (availableRareTable.length > 0) {
+      return {
+        effect: rollWeighted(availableRareTable, `${seed}:rare`),
+        seed,
+        rarity,
+      }
+    }
+  }
+
+  return {
+    effect: rollWeighted(COMMON_CHEST_TABLE, `${seed}:common`),
+    seed,
+    rarity: 'common',
+  }
+}
+
+// Kept for old call sites/tests. New V2 rewards are issued by issueBossRewardChests.
 export async function issueChestsForVictims(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   prisma: any,
@@ -93,23 +185,77 @@ export async function issueChestsForVictims(
   const created = []
 
   for (const ownerId of dedupedVictims) {
-    const rolled = rollChest()
-    const status = options.forceVoid
-      ? 'void'
-      : rolled.effect === 'NOTHING'
-        ? 'void'
-        : 'active'
+    const rolled = rollChest(randomUUID(), { bossStreak: 3 })
     created.push(
       await prisma.mysteryChest.create({
         data: {
           ownerId,
           earnedFromRaceId: raceId,
           effect: rolled.effect,
-          rngSeed: rolled.seed,
-          status,
+          rngSeed: `${rolled.seed}|${rolled.rarity}`,
+          status: options.forceVoid ? 'void' : isInventoryChestEffect(rolled.effect) ? 'consumed' : 'active',
+          consumedRaceId: options.forceVoid || isInventoryChestEffect(rolled.effect) ? raceId : null,
+          consumedAt: options.forceVoid || isInventoryChestEffect(rolled.effect) ? new Date() : null,
         },
       })
     )
+  }
+
+  return created
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function issueBossRewardChests(prisma: any, raceId: number, rewards: BossRewardInput[], options: { forceVoid?: boolean } = {}) {
+  const dedupedRewards = Array.from(
+    new Map(rewards.map((reward) => [reward.ownerId, reward])).values()
+  )
+  const created = []
+  const rareRolledThisRace = new Set<ChestEffect>()
+  const now = new Date()
+
+  for (const reward of dedupedRewards) {
+    const rolled = rollChest(randomUUID(), {
+      bossStreak: reward.bossStreak,
+      excludedRareEffects: rareRolledThisRace,
+    })
+    if (rolled.rarity === 'rare') {
+      rareRolledThisRace.add(rolled.effect)
+    }
+
+    const forceVoid = options.forceVoid === true
+    const inventoryEffect = isInventoryChestEffect(rolled.effect)
+    const chest = await prisma.mysteryChest.create({
+      data: {
+        ownerId: reward.ownerId,
+        earnedFromRaceId: raceId,
+        effect: rolled.effect,
+        rngSeed: `${rolled.seed}|${rolled.rarity}|bossStreak:${reward.bossStreak}`,
+        status: forceVoid ? 'void' : inventoryEffect ? 'consumed' : 'active',
+        consumedRaceId: forceVoid || inventoryEffect ? raceId : null,
+        consumedAt: forceVoid || inventoryEffect ? now : null,
+      },
+    })
+    created.push(chest)
+
+    if (forceVoid) {
+      continue
+    }
+
+    if (rolled.effect === 'BONUS_SCAR') {
+      await prisma.user.update({
+        where: { id: reward.ownerId },
+        data: { scars: { increment: 1 } },
+      })
+      await craftShieldIfEligible(prisma, reward.ownerId, raceId)
+    }
+
+    if (rolled.effect === 'FRAGILE_SHIELD') {
+      await createShield(prisma, reward.ownerId, raceId, 1)
+    }
+
+    if (rolled.effect === 'GOLDEN_SHIELD') {
+      await createShield(prisma, reward.ownerId, raceId, 3)
+    }
   }
 
   return created
@@ -135,35 +281,12 @@ export function validateChestConfig(
   participants: ParticipantInput[],
   chestConfigs: Array<{ chestId: number; targetUserId?: number }>
 ) {
-  const errors: string[] = []
-  const participantIds = new Set(participants.map((participant) => participant.userId))
-  const configMap = new Map(chestConfigs.map((config) => [config.chestId, config]))
+  void participants
+  void chestConfigs
 
-  for (const chest of chests) {
-    const config = configMap.get(chest.id)
-    if (!config) {
-      errors.push(`Thiếu cấu hình cho rương #${chest.id}`)
-      continue
-    }
-
-    if (!EFFECTS_REQUIRING_TARGET.has(chest.effect)) {
-      continue
-    }
-
-    if (!config.targetUserId) {
-      errors.push(`Rương #${chest.id} cần chọn mục tiêu`)
-      continue
-    }
-
-    if (config.targetUserId === chest.ownerId) {
-      errors.push(`Rương #${chest.id} không thể chọn chính chủ rương`)
-      continue
-    }
-
-    if (!participantIds.has(config.targetUserId)) {
-      errors.push(`Mục tiêu của rương #${chest.id} phải nằm trong danh sách tham gia`)
-    }
-  }
+  const errors = chests
+    .filter((chest) => isLegacyChestEffect(chest.effect))
+    .map((chest) => `Rương #${chest.id} là effect cũ (${chest.effect}), hãy void/reroll trước khi chạy race.`)
 
   return {
     ok: errors.length === 0,
@@ -171,146 +294,109 @@ export function validateChestConfig(
   }
 }
 
+function summarizeItemModifiers(activeChests: ActiveChestRecord[]): ItemRaceModifiers {
+  const effects = new Set(activeChests.map((chest) => chest.effect))
+  const morePeopleChest = activeChests.find((chest) => chest.effect === 'MORE_PEOPLE_MORE_FUN')
+  const morePeopleRoll = morePeopleChest
+    ? hashSeed(`${morePeopleChest.rngSeed ?? morePeopleChest.id}:more-people`) < 0.5 ? 3 : 4
+    : null
+
+  return {
+    cloneChaos: effects.has('CLONE_CHAOS'),
+    safeWeek: effects.has('SAFE_WEEK'),
+    reverseResults: effects.has('REVERSE_RESULTS'),
+    antiShield: effects.has('ANTI_SHIELD'),
+    cantPassThomas: effects.has('CANT_PASS_THOMAS'),
+    morePeopleMoreFun: morePeopleRoll,
+    luckyCloneOwnerIds: activeChests
+      .filter((chest) => chest.effect === 'LUCKY_CLONE')
+      .map((chest) => chest.ownerId),
+  }
+}
+
 export async function applyChestPreRace(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  prisma: any,
+  _prisma: any,
   participants: ParticipantSetup[],
   activeChests: ActiveChestRecord[]
 ) {
-  const updatedParticipants = [...participants]
-  const borrowedShieldIds: number[] = []
+  const modifiers = summarizeItemModifiers(activeChests)
+  const updatedParticipants = participants.map((participant) => ({
+    ...participant,
+    useShield: modifiers.antiShield && !participant.isImmortal ? false : participant.useShield,
+    shieldId: modifiers.antiShield && !participant.isImmortal ? undefined : participant.shieldId,
+    chestEffect: activeChests.find((chest) => chest.ownerId === participant.userId && !participant.isClone)?.effect ?? participant.chestEffect ?? null,
+  }))
 
-  for (const chest of activeChests) {
-    const ownerIndex = updatedParticipants.findIndex((participant) => participant.userId === chest.ownerId && !participant.isClone)
-    if (ownerIndex === -1) {
-      continue
-    }
+  const cloneIndexByOwner = new Map<number, number>()
+  const nextCloneIndex = (ownerId: number, base: number) => {
+    const next = (cloneIndexByOwner.get(ownerId) ?? base) + 1
+    cloneIndexByOwner.set(ownerId, next)
+    return next
+  }
 
-    if (chest.effect === 'CURSE_SWAP' && chest.targetUserId) {
-      const targetIndex = updatedParticipants.findIndex((participant) => participant.userId === chest.targetUserId && !participant.isClone)
-      if (targetIndex !== -1) {
-        const ownerName = updatedParticipants[ownerIndex].displayName ?? updatedParticipants[ownerIndex].name
-        const targetName = updatedParticipants[targetIndex].displayName ?? updatedParticipants[targetIndex].name
-        updatedParticipants[ownerIndex] = {
-          ...updatedParticipants[ownerIndex],
-          displayName: targetName,
-          chestEffect: chest.effect,
-          chestTargetUserId: chest.targetUserId,
-        }
-        updatedParticipants[targetIndex] = {
-          ...updatedParticipants[targetIndex],
-          displayName: ownerName,
-        }
-      }
-    }
-
-    if (chest.effect === 'IDENTITY_THEFT') {
-      const owner = updatedParticipants[ownerIndex]
+  const originals = updatedParticipants.filter((participant) => !participant.isClone)
+  if (modifiers.cloneChaos) {
+    for (const owner of originals) {
       updatedParticipants.push({
         ...owner,
         useShield: false,
         shieldId: undefined,
         isClone: true,
         cloneOfUserId: owner.userId,
-        cloneIndex: 99,
-        displayName: `${owner.name} Shadow`,
-        chestEffect: chest.effect,
+        cloneIndex: nextCloneIndex(owner.userId, 200),
+        displayName: `${owner.name} Chaos`,
+        chestEffect: 'CLONE_CHAOS',
       })
     }
+  }
 
-    if (chest.effect === 'PUBLIC_SHIELD' && chest.targetUserId) {
-      const shield = await prisma.shield.findFirst({
-        where: {
-          ownerId: chest.targetUserId,
-          status: 'active',
-        },
-        orderBy: [{ charges: 'asc' }, { earnedAt: 'asc' }],
-      })
-
-      if (!shield) {
-        throw new Error(`Public Shield requires an active shield from user ${chest.targetUserId}`)
-      }
-
-      borrowedShieldIds.push(shield.id)
-      updatedParticipants[ownerIndex] = {
-        ...updatedParticipants[ownerIndex],
-        useShield: true,
-        borrowedShieldFromUserId: chest.targetUserId,
-        chestEffect: chest.effect,
-        chestTargetUserId: chest.targetUserId,
-      }
+  for (const ownerId of modifiers.luckyCloneOwnerIds) {
+    const owner = originals.find((participant) => participant.userId === ownerId)
+    if (!owner) {
+      continue
     }
 
-    if (chest.effect === 'INSURANCE_FRAUD' || chest.effect === 'I_CHOOSE_YOU') {
-      updatedParticipants[ownerIndex] = {
-        ...updatedParticipants[ownerIndex],
-        chestEffect: chest.effect,
-        chestTargetUserId: chest.targetUserId ?? null,
-      }
-    }
+    updatedParticipants.push({
+      ...owner,
+      useShield: false,
+      shieldId: undefined,
+      isClone: true,
+      cloneOfUserId: owner.userId,
+      cloneIndex: nextCloneIndex(owner.userId, 100),
+      displayName: `${owner.name} Lucky`,
+      chestEffect: 'LUCKY_CLONE',
+    })
   }
 
   return {
     participants: updatedParticipants,
-    borrowedShieldIds,
+    borrowedShieldIds: [] as number[],
+    modifiers,
   }
 }
 
 export async function resolveChestPostRace(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  prisma: any,
-  raceId: number,
-  ranking: RankingEntry[],
+  _prisma: any,
+  _raceId: number,
+  _ranking: RankingEntry[],
   victims: PenaltyVictim[],
   activeChests: ActiveChestRecord[],
   options: { forceVoid?: boolean } = {}
 ) {
-  const modifiedVictims = [...victims]
-  const shieldsToGrant: Array<{ userId: number }> = []
-  const outcomes: Array<{ chestId: number; ownerId: number; effect: ChestEffect; targetUserId?: number | null; outcome: 'success' | 'fizzled' }> = []
-
-  const isVictim = (userId: number) =>
-    modifiedVictims.some((victim) => victim.userId === userId || (victim.isClone && victim.cloneOfUserId === userId))
-
-  for (const chest of activeChests) {
-    if (chest.effect === 'INSURANCE_FRAUD' && chest.targetUserId) {
-      if (isVictim(chest.ownerId) && !modifiedVictims.some((victim) => victim.userId === chest.targetUserId)) {
-        modifiedVictims.push({
-          userId: chest.targetUserId,
-          initialRank: ranking.find((entry) => entry.userId === chest.targetUserId && !entry.isClone)?.rank ?? 999,
-        })
-        outcomes.push({ chestId: chest.id, ownerId: chest.ownerId, effect: chest.effect, targetUserId: chest.targetUserId, outcome: 'success' })
-      } else {
-        outcomes.push({ chestId: chest.id, ownerId: chest.ownerId, effect: chest.effect, targetUserId: chest.targetUserId, outcome: 'fizzled' })
-      }
-    }
-
-    if (chest.effect === 'I_CHOOSE_YOU' && chest.targetUserId) {
-      const targetRank = ranking.find((entry) => entry.userId === chest.targetUserId && !entry.isClone)?.rank
-      if (targetRank === 1) {
-        shieldsToGrant.push({ userId: chest.ownerId })
-        outcomes.push({ chestId: chest.id, ownerId: chest.ownerId, effect: chest.effect, targetUserId: chest.targetUserId, outcome: 'success' })
-      } else {
-        outcomes.push({ chestId: chest.id, ownerId: chest.ownerId, effect: chest.effect, targetUserId: chest.targetUserId, outcome: 'fizzled' })
-      }
-    }
-
-    if (chest.effect === 'CURSE_SWAP' || chest.effect === 'IDENTITY_THEFT' || chest.effect === 'PUBLIC_SHIELD') {
-      outcomes.push({ chestId: chest.id, ownerId: chest.ownerId, effect: chest.effect, targetUserId: chest.targetUserId ?? null, outcome: 'success' })
-    }
-  }
-
-  const newChestsForThisRace = await issueChestsForVictims(
-    prisma,
-    raceId,
-    modifiedVictims.map((victim) => ({ userId: victim.userId })),
-    { forceVoid: options.forceVoid }
-  )
+  void options
 
   return {
-    modifiedVictims,
-    shieldsToGrant,
-    outcomes,
-    newChestsForThisRace,
+    modifiedVictims: victims,
+    shieldsToGrant: [],
+    outcomes: activeChests.map((chest) => ({
+      chestId: chest.id,
+      ownerId: chest.ownerId,
+      effect: chest.effect,
+      targetUserId: null,
+      outcome: 'success' as const,
+    })),
+    newChestsForThisRace: [],
   }
 }

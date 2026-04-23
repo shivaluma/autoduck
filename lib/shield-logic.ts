@@ -25,6 +25,11 @@ export interface PenaltyResult {
   finalVerdict: string
 }
 
+interface PenaltyOptions {
+  penaltiesNeeded?: number
+  forcedVictims?: RaceResultInput[]
+}
+
 /**
  * IDENTITY_THEFT: owner spawn thêm 1 clone (cloneIndex=99). Theo spec lấy
  * min(rank gốc, rank clone) làm kết quả → drop entry tệ hơn trước khi xét phạt.
@@ -66,7 +71,7 @@ function applyIdentityTheftDedupe(results: RaceResultInput[]): RaceResultInput[]
     .concat(filtered)
 }
 
-export function calculatePenalties(results: RaceResultInput[]): PenaltyResult {
+export function calculatePenalties(results: RaceResultInput[], options: PenaltyOptions = {}): PenaltyResult {
   const dedupedResults = applyIdentityTheftDedupe(results)
   // Sắp xếp theo thứ hạng từ thấp đến cao (người về bét lên đầu)
   const sortedResults = [...dedupedResults].sort((a, b) => b.initialRank - a.initialRank)
@@ -74,7 +79,7 @@ export function calculatePenalties(results: RaceResultInput[]): PenaltyResult {
   const totalPlayers = sortedResults.length
   const victims: PenaltyResult['victims'] = []
   const safeByShield: PenaltyResult['safeByShield'] = []
-  const penaltiesNeeded = 2
+  const penaltiesNeeded = Math.max(1, options.penaltiesNeeded ?? 2)
   const effectiveVictimOwnerIds = new Set<number>()
   const effectiveSafeOwnerIds = new Set<number>()
 
@@ -152,13 +157,36 @@ export function calculatePenalties(results: RaceResultInput[]): PenaltyResult {
     }
   }
 
+  for (const player of options.forcedVictims ?? []) {
+    if (player.isImmortal) {
+      continue
+    }
+
+    const ownerId = effectiveOwnerId(player)
+    if (effectiveVictimOwnerIds.has(ownerId)) {
+      continue
+    }
+
+    victims.push({
+      name: player.name,
+      userId: player.userId,
+      initialRank: player.initialRank,
+      isClone: player.isClone,
+      cloneOfUserId: player.cloneOfUserId,
+      cloneIndex: player.cloneIndex,
+    })
+    effectiveVictimOwnerIds.add(ownerId)
+  }
+
   // Tạo câu chốt hạ
   const victimNames = victims.map(v => v.name)
-  const finalVerdict = victimNames.length === 2
-    ? `${victimNames[0]} và ${victimNames[1]} là 2 con dzịt tuần này! 🦆`
-    : victimNames.length === 1
-    ? `${victimNames[0]} là con dzịt tuần này! 🦆`
-    : 'Không ai bị phạt hôm nay!'
+  const finalVerdict = victimNames.length > 2
+    ? `${victimNames.slice(0, -1).join(', ')} và ${victimNames.at(-1)} là ${victimNames.length} con dzịt tuần này! 🦆`
+    : victimNames.length === 2
+      ? `${victimNames[0]} và ${victimNames[1]} là 2 con dzịt tuần này! 🦆`
+      : victimNames.length === 1
+        ? `${victimNames[0]} là con dzịt tuần này! 🦆`
+        : 'Không ai bị phạt hôm nay!'
 
   return {
     victims,

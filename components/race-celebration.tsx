@@ -212,10 +212,10 @@ export function RaceCelebration({
         <div className={`absolute top-[20%] left-1/2 -translate-x-1/2 z-20 transition-all duration-700 ${showBossFall ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-8'}`}>
           <div className="rounded-2xl border-4 border-[#4d0000] bg-[rgba(120,0,0,0.78)] px-8 py-5 shadow-[0_8px_0_#250000,0_22px_36px_rgba(0,0,0,0.55)]">
             <div className="font-display text-2xl md:text-3xl text-white text-outlined text-center">
-              👑💔 BOSS DUCK NGÃ NGỰA
+              👑💔 MỚI GẶP TÝ ÁP LỰC ĐÃ VỤN VỠ
             </div>
             <div className="font-data text-sm md:text-base text-white/85 text-center mt-2">
-              {bossFalls.join(' • ')} mất danh hiệu!
+              {bossFalls.join(' • ')} mất danh hiệu Boss!
             </div>
           </div>
         </div>

@@ -140,7 +140,7 @@ export async function normalizeLegacyShieldState(prisma: any, ownerIds?: number[
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function tickShieldDecay(prisma: any): Promise<{
+export async function tickShieldDecay(prisma: any, options: { skipDecayReason?: string } = {}): Promise<{
   broken: { shieldId: number; ownerId: number }[]
   lost: { shieldId: number; ownerId: number }[]
   weekKey: string
@@ -155,6 +155,18 @@ export async function tickShieldDecay(prisma: any): Promise<{
   }
 
   await normalizeLegacyShieldState(prisma)
+
+  if (options.skipDecayReason) {
+    await prisma.weeklyTick.create({
+      data: {
+        weekKey,
+        brokenShields: 0,
+        lostShields: 0,
+        details: JSON.stringify({ skipped: true, reason: options.skipDecayReason }),
+      },
+    })
+    return { broken: [], lost: [], weekKey }
+  }
 
   const activeShields = await prisma.shield.findMany({
     where: { status: 'active' },

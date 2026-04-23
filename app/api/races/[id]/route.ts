@@ -42,7 +42,10 @@ export async function GET(
 
     const [consumedChests, awardedChests] = MYSTERY_CHESTS_ENABLED ? await Promise.all([
       prisma.mysteryChest.findMany({
-        where: { consumedRaceId: raceId },
+        where: {
+          consumedRaceId: raceId,
+          earnedFromRaceId: { not: raceId },
+        },
         include: { owner: true },
         orderBy: { id: 'asc' },
       }),

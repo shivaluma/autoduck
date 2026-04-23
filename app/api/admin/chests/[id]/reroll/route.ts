@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { rollChest } from '@/lib/mystery-chest'
+import { isInventoryChestEffect, rollChest } from '@/lib/mystery-chest'
 
 function checkSecret(req: Request) {
   const { searchParams } = new URL(req.url)
@@ -35,7 +35,13 @@ export async function POST(
       return NextResponse.json({ error: 'Only active chests can be rerolled' }, { status: 400 })
     }
 
-    const rerolled = rollChest()
+    let rerolled = rollChest()
+    for (let attempt = 0; attempt < 10 && isInventoryChestEffect(rerolled.effect); attempt += 1) {
+      rerolled = rollChest(`${rerolled.seed}:active-reroll:${attempt}`)
+    }
+    if (isInventoryChestEffect(rerolled.effect)) {
+      rerolled = { effect: 'CLONE_CHAOS', seed: `${rerolled.seed}:fallback`, rarity: 'common' }
+    }
     const auditSeed = JSON.stringify({
       previousSeed: chest.rngSeed,
       previousEffect: chest.effect,
@@ -48,9 +54,9 @@ export async function POST(
       where: { id: chestId },
       data: {
         effect: rerolled.effect,
-        status: rerolled.effect === 'NOTHING' ? 'void' : 'active',
+        status: 'active',
         rngSeed: auditSeed,
-        targetUserId: rerolled.effect === 'NOTHING' ? null : chest.targetUserId,
+        targetUserId: null,
       },
     })
 

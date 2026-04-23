@@ -259,6 +259,33 @@ async function migrateThomasOutOfBoss(prisma: PrismaClient) {
   })
 }
 
+async function voidLegacyTargetedChests(prisma: PrismaClient) {
+  await prisma.mysteryChest.updateMany({
+    where: {
+      status: 'active',
+      effect: {
+        in: [
+          'NOTHING',
+          'CURSE_SWAP',
+          'INSURANCE_FRAUD',
+          'IDENTITY_THEFT',
+          'PUBLIC_SHIELD',
+          'I_CHOOSE_YOU',
+        ],
+      },
+    },
+    data: {
+      status: 'void',
+      consumedAt: new Date(),
+      targetUserId: null,
+      rngSeed: JSON.stringify({
+        migration: '2026-04-23-006-void-legacy-targeted-chests',
+        reason: 'Reward Chest V2 removes targeted legacy effects',
+      }),
+    },
+  })
+}
+
 const migrations: Migration[] = [
   {
     id: '2026-04-23-001-shield-charges-v1',
@@ -284,6 +311,11 @@ const migrations: Migration[] = [
     id: '2026-04-23-005-boss-watch-last-8-official-weeks',
     name: 'Rebuild boss watch from the latest 8 official race weeks',
     run: migrateBossWatchFromLast8OfficialWeeks,
+  },
+  {
+    id: '2026-04-23-006-void-legacy-targeted-chests',
+    name: 'Void active legacy targeted chests before Reward Chest V2',
+    run: voidLegacyTargetedChests,
   },
 ]
 
