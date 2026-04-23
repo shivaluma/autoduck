@@ -488,6 +488,27 @@ async function executeRace(
         })
       }
 
+      for (const participantUserId of Array.from(new Set(playerInputs.map((player) => player.userId)))) {
+        const bossUser = bossUsers.find((boss: { id: number }) => boss.id === participantUserId)
+        if (bossUser) {
+          const bossOutcome = resolveBossOutcome({
+            bossUserId: participantUserId,
+            raceVictims: postRace.modifiedVictims.map((victim) => ({
+              userId: victim.userId,
+              isClone: victim.isClone ?? false,
+              cloneOfUserId: victim.cloneOfUserId ?? null,
+            })),
+          })
+
+          if (bossOutcome.bossLost) {
+            bossRewardInputs.push({
+              ownerId: participantUserId,
+              bossStreak: Math.max(bossUser.cleanStreak, 3),
+            })
+          }
+        }
+      }
+
       if (!isTest) {
         for (const participantUserId of Array.from(new Set(playerInputs.map((player) => player.userId)))) {
           const user = await tx.user.findUnique({ where: { id: participantUserId } })
@@ -522,13 +543,6 @@ async function executeRace(
                 })),
               })
             : { bossLost: false }
-
-          if (bossOutcome.bossLost && user.isBoss) {
-            bossRewardInputs.push({
-              ownerId: participantUserId,
-              bossStreak: Math.max(user.cleanStreak, 3),
-            })
-          }
 
           const shouldCountScar = gotScarThisRace || bossOutcome.bossLost
           const bossStatus = evaluateBossStatus({
@@ -641,6 +655,10 @@ async function executeRace(
             )
             .concat(bossRewardInputs.map((reward) => reward.ownerId))
         )
+      }
+
+      if (isTest) {
+        newChestsForThisRace = await issueBossRewardChests(tx, raceId, bossRewardInputs, { forceVoid: true })
       }
 
       await tx.race.update({
