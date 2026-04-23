@@ -1,4 +1,5 @@
 import type { RaceSetupPlayer } from '@/lib/types'
+import { isImmortalDuck } from '@/lib/immortal-duck'
 
 export interface BossSpawnPlan {
   ownerUserId: number
@@ -6,6 +7,8 @@ export interface BossSpawnPlan {
 }
 
 interface BossStatusArgs {
+  name?: string
+  shields?: number | null
   userId: number
   gotScarThisRace: boolean
   currentCleanStreak: number
@@ -20,6 +23,13 @@ interface RaceSetupPlayerWithBoss extends RaceSetupPlayer {
 }
 
 export function evaluateBossStatus(args: BossStatusArgs): { newCleanStreak: number; newIsBoss: boolean } {
+  if (isImmortalDuck({ name: args.name ?? '', shields: args.shields })) {
+    return {
+      newCleanStreak: 0,
+      newIsBoss: false,
+    }
+  }
+
   if (args.gotScarThisRace) {
     return {
       newCleanStreak: 0,
@@ -36,7 +46,7 @@ export function evaluateBossStatus(args: BossStatusArgs): { newCleanStreak: numb
 
 export function expandBossParticipants(
   participants: RaceSetupPlayer[],
-  users: Array<{ id: number; isBoss: boolean }>
+  users: Array<{ id: number; name?: string; shields?: number | null; isBoss: boolean }>
 ): RaceSetupPlayerWithBoss[] {
   const expanded: RaceSetupPlayerWithBoss[] = []
 
@@ -44,7 +54,7 @@ export function expandBossParticipants(
     expanded.push(participant)
 
     const user = users.find((candidate) => candidate.id === participant.userId)
-    if (!user?.isBoss) {
+    if (!user?.isBoss || isImmortalDuck({ name: user.name ?? '', shields: user.shields })) {
       continue
     }
 

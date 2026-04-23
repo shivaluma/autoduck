@@ -475,7 +475,7 @@ export function AdminDashboardContent({ secret }: Props) {
                   <div>
                     <div className="font-display text-2xl text-white text-outlined">⏳ Shield Aging</div>
                     <div className="font-data text-xs text-[var(--color-ggd-muted)] mt-1">
-                      Max 1 shield mỗi vịt. Shield có 3 charge, sau race không dùng thì -1, về 0 sẽ vỡ và refund 1 sẹo.
+                      Max 1 shield mỗi vịt. Shield có 3 charge, sau race không dùng thì -1, về 0 sẽ vỡ và mất luôn.
                     </div>
                   </div>
 

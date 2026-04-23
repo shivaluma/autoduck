@@ -128,6 +128,22 @@ export async function POST(request: Request) {
       },
     })
 
+    for (const user of users as UserWithActiveShields[]) {
+      if (isImmortalDuck({ name: user.name, shields: user.shields }) && user.isBoss) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            cleanStreak: 0,
+            isBoss: false,
+            bossSince: null,
+          },
+        })
+        user.cleanStreak = 0
+        user.isBoss = false
+        user.bossSince = null
+      }
+    }
+
     if (users.length !== participants.length) {
       return NextResponse.json({ error: 'Một số người chơi không tồn tại' }, { status: 400 })
     }
@@ -501,6 +517,8 @@ async function executeRace(
 
           const shouldCountScar = gotScarThisRace || bossOutcome.bossLost
           const bossStatus = evaluateBossStatus({
+            name: user.name,
+            shields: user.shields,
             userId: participantUserId,
             gotScarThisRace: shouldCountScar,
             currentCleanStreak: user.cleanStreak,

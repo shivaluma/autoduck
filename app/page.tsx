@@ -315,7 +315,7 @@ export default function Dashboard() {
                 <Image src="/assets/v2/shield-cracked.svg" alt="shield" width={32} height={32} className="animate-bob" unoptimized />
                 <div>
                   <div className="font-display text-xl text-white text-outlined leading-none">Khiên Sắp Hỏng</div>
-                  <div className="font-data text-[10px] uppercase tracking-widest text-white/50">3 → 2 → 1 charge • 0 = refund 1 sẹo</div>
+                  <div className="font-data text-[10px] uppercase tracking-widest text-white/50">3 → 2 → 1 charge • 0 = vỡ luôn</div>
                 </div>
               </div>
               <div className="space-y-2.5">
@@ -359,7 +359,7 @@ export default function Dashboard() {
                 <div>🛡️ Dùng Khiên trước trận để thoát kiếp</div>
                 <div>✨ 2 Sẹo → 1 Khiên nếu đang không có khiên</div>
                 <div>⏳ Shield có 3 charge, sau race không dùng thì -1</div>
-                <div>💥 Về 0 charge → vỡ, refund +1 Sẹo</div>
+                <div>💥 Về 0 charge → vỡ và mất luôn</div>
                 <div>👑 3 tuần sạch → Boss Duck, race kế spawn 3 clone</div>
               </div>
             </div>

@@ -75,25 +75,37 @@ export function calculatePenalties(results: RaceResultInput[]): PenaltyResult {
   const victims: PenaltyResult['victims'] = []
   const safeByShield: PenaltyResult['safeByShield'] = []
   const penaltiesNeeded = 2
+  const effectiveVictimOwnerIds = new Set<number>()
+  const effectiveSafeOwnerIds = new Set<number>()
+
+  const effectiveOwnerId = (player: RaceResultInput) => player.cloneOfUserId ?? player.userId
 
   // Phase 1: Duyệt từ dưới lên, tìm 2 người không dùng khiên
   for (let i = 0; i < totalPlayers && victims.length < penaltiesNeeded; i++) {
     const player = sortedResults[i]
+    const ownerId = effectiveOwnerId(player)
 
     if (player.isImmortal) {
       continue
     }
 
+    if (effectiveVictimOwnerIds.has(ownerId)) {
+      continue
+    }
+
     if (player.usedShield) {
       // Người này dùng khiên → An toàn, ghi nhận
-      safeByShield.push({
-        name: player.name,
-        userId: player.userId,
-        initialRank: player.initialRank,
-        isClone: player.isClone,
-        cloneOfUserId: player.cloneOfUserId,
-        cloneIndex: player.cloneIndex,
-      })
+      if (!effectiveSafeOwnerIds.has(ownerId)) {
+        safeByShield.push({
+          name: player.name,
+          userId: player.userId,
+          initialRank: player.initialRank,
+          isClone: player.isClone,
+          cloneOfUserId: player.cloneOfUserId,
+          cloneIndex: player.cloneIndex,
+        })
+        effectiveSafeOwnerIds.add(ownerId)
+      }
       continue
     }
 
@@ -106,6 +118,7 @@ export function calculatePenalties(results: RaceResultInput[]): PenaltyResult {
       cloneOfUserId: player.cloneOfUserId,
       cloneIndex: player.cloneIndex,
     })
+    effectiveVictimOwnerIds.add(ownerId)
   }
 
   // Phase 2: Nếu không tìm đủ 2 người (gần như cả team dùng khiên)
@@ -113,18 +126,18 @@ export function calculatePenalties(results: RaceResultInput[]): PenaltyResult {
   if (victims.length < penaltiesNeeded) {
     for (let i = 0; i < totalPlayers && victims.length < penaltiesNeeded; i++) {
       const player = sortedResults[i]
+      const ownerId = effectiveOwnerId(player)
       if (player.isImmortal) {
         continue
       }
-      const alreadyVictim = victims.some(
-        (v) => v.userId === player.userId && (v.cloneIndex ?? null) === (player.cloneIndex ?? null)
-      )
+      const alreadyVictim = effectiveVictimOwnerIds.has(ownerId)
       if (!alreadyVictim) {
-        // Remove from safe list if they were there
+        // Remove from safe list if this owner had already been marked safe
         const safeIdx = safeByShield.findIndex(
-          (s) => s.userId === player.userId && (s.cloneIndex ?? null) === (player.cloneIndex ?? null)
+          (s) => (s.cloneOfUserId ?? s.userId) === ownerId
         )
         if (safeIdx !== -1) safeByShield.splice(safeIdx, 1)
+        effectiveSafeOwnerIds.delete(ownerId)
         
         victims.push({
           name: player.name,
@@ -134,6 +147,7 @@ export function calculatePenalties(results: RaceResultInput[]): PenaltyResult {
           cloneOfUserId: player.cloneOfUserId,
           cloneIndex: player.cloneIndex,
         })
+        effectiveVictimOwnerIds.add(ownerId)
       }
     }
   }

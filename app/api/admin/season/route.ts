@@ -18,7 +18,7 @@ export async function GET(request: Request) {
 
     const [bosses, activeShields, activeChests, chestHistory, weeklyTicks] = await Promise.all([
       prisma.user.findMany({
-        where: { isBoss: true },
+        where: { isBoss: true, name: { not: 'Thomas' } },
         orderBy: [{ cleanStreak: 'desc' }, { name: 'asc' }],
       }),
       prisma.shield.findMany({

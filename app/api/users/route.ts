@@ -72,8 +72,8 @@ export async function GET() {
           shields: displayShieldCount,
           shieldsUsed: user.shieldsUsed,
           totalKhaos: user.totalKhaos,
-          cleanStreak: user.cleanStreak,
-          isBoss: user.isBoss,
+          cleanStreak: immortal ? 0 : user.cleanStreak,
+          isBoss: immortal ? false : user.isBoss,
           bossSince: user.bossSince,
           activeShields: user.ownedShields.map((shield) => ({
             id: shield.id,

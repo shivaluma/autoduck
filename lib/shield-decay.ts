@@ -11,7 +11,6 @@ export { getIsoWeekKey }
 
 export const SHIELD_INITIAL_CHARGES = 3
 export const SHIELD_CRAFT_COST = 2
-export const SHIELD_EXPIRE_REFUND = 1
 export const SHIELD_MAX_ACTIVE = 1
 
 type ShieldCounterRow = { ownerId: number; _count: { _all: number } }
@@ -121,13 +120,6 @@ export async function normalizeLegacyShieldState(prisma: any, ownerIds?: number[
         const extras = sortedShields.slice(SHIELD_MAX_ACTIVE)
 
         if (extras.length > 0) {
-          await tx.user.update({
-            where: { id: ownerId },
-            data: {
-              scars: { increment: extras.length * SHIELD_EXPIRE_REFUND },
-            },
-          })
-
           for (const shield of extras) {
             await tx.shield.update({
               where: { id: shield.id },
@@ -186,13 +178,6 @@ export async function tickShieldDecay(prisma: any): Promise<{
             weeksUnused: SHIELD_INITIAL_CHARGES,
             status: 'broken',
             consumedAt: now,
-          },
-        })
-
-        await tx.user.update({
-          where: { id: shield.ownerId },
-          data: {
-            scars: { increment: 1 },
           },
         })
 
