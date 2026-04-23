@@ -35,6 +35,10 @@ const LEGACY_EFFECTS = new Set<ChestEffect>([
   'I_CHOOSE_YOU',
 ])
 
+const MUTUALLY_EXCLUSIVE_RARE_EFFECTS: Array<Set<ChestEffect>> = [
+  new Set(['CANT_PASS_THOMAS', 'MORE_PEOPLE_MORE_FUN']),
+]
+
 export const EFFECTS_REQUIRING_TARGET = new Set<ChestEffect>()
 export const CHEST_TABLE = COMMON_CHEST_TABLE
 
@@ -147,6 +151,18 @@ export function isLegacyChestEffect(effect: ChestEffect) {
   return LEGACY_EFFECTS.has(effect)
 }
 
+function expandExcludedRareEffects(excludedRareEffects: Set<ChestEffect>) {
+  const expanded = new Set(excludedRareEffects)
+  for (const group of MUTUALLY_EXCLUSIVE_RARE_EFFECTS) {
+    if ([...group].some((effect) => excludedRareEffects.has(effect))) {
+      for (const effect of group) {
+        expanded.add(effect)
+      }
+    }
+  }
+  return expanded
+}
+
 export function rollChest(
   seed: string = randomUUID(),
   options: { bossStreak?: number; excludedRareEffects?: Set<ChestEffect> } = {}
@@ -155,7 +171,7 @@ export function rollChest(
   const rarity = rollRarity(bossStreak, `${seed}:rarity`)
 
   if (rarity === 'rare') {
-    const excludedRareEffects = options.excludedRareEffects ?? new Set<ChestEffect>()
+    const excludedRareEffects = expandExcludedRareEffects(options.excludedRareEffects ?? new Set<ChestEffect>())
     const availableRareTable = RARE_CHEST_TABLE.filter((entry) => !excludedRareEffects.has(entry.effect))
     if (availableRareTable.length > 0) {
       return {

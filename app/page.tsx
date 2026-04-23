@@ -68,12 +68,26 @@ export default function Dashboard() {
               </h1>
               <div className="flex items-center gap-2 mt-1">
                 <div className="w-3 h-3 bg-[var(--color-ggd-neon-green)] rounded-full animate-pulse shadow-[0_0_8px_rgba(61,255,143,0.6)]" />
-                <p className="font-data text-sm text-[var(--color-ggd-lavender)]">Quack Quack Club V2.0</p>
+                <p className="font-data text-sm text-[var(--color-ggd-lavender)]">🦆 QUACK QUACK CLUB v2.0</p>
               </div>
+              <p className="font-readable text-sm text-white/60 mt-1">Nơi định mệnh sáng thứ 2 được quyết định bằng vịt</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 animate-slide-right">
+          <div className="flex flex-wrap items-center justify-end gap-3 animate-slide-right">
+            <a href="#race-history">
+              <button
+                className="font-display text-base tracking-widest uppercase px-5 py-3
+                  border-[5px] border-[var(--color-ggd-outline)] rounded-xl cursor-pointer
+                  transition-all duration-100
+                  bg-[var(--color-ggd-surface)] text-white
+                  shadow-[inset_0_3px_0_rgba(255,255,255,0.12),0_6px_0_var(--color-ggd-outline),0_12px_24px_rgba(0,0,0,0.45)]
+                  hover:-translate-y-1 hover:text-[var(--color-ggd-gold)]
+                  active:translate-y-[4px] active:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_2px_0_var(--color-ggd-outline)]"
+              >
+                Lịch Sử Thảm Họa
+              </button>
+            </a>
             <Link href="/rules">
               <button
                 className="font-display text-lg tracking-widest uppercase px-6 py-3
@@ -84,7 +98,7 @@ export default function Dashboard() {
                   hover:-translate-y-1 hover:shadow-[inset_0_3px_0_rgba(255,255,255,0.35),0_8px_0_#7a6000,0_16px_30px_rgba(255,204,0,0.28)]
                   active:translate-y-[4px] active:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_2px_0_#7a6000]"
               >
-                📜 Rules V2
+                Xem Luật
               </button>
             </Link>
             <Link href="/race/new">
@@ -110,10 +124,10 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 animate-slide-up opacity-0" style={{ animationDelay: '0.1s' }}>
           {[
-            { label: '🦆 BẦY VỊT', value: players.length.toString(), accent: 'text-white' },
-            { label: '🏁 SỐ TRẬN', value: totalRaces.toString(), accent: 'text-white' },
-            { label: '💀 LÀM DZỊT', value: totalKhaos.toString(), accent: 'text-[var(--color-ggd-gold)]' },
-            { label: '👑 DZỊT NHẤT', value: mostKhaos?.name?.replace('Zịt ', '') || '—', accent: 'text-[var(--color-ggd-orange)]' },
+            { label: '🐥 Tổng Vịt', value: players.length.toString(), accent: 'text-white' },
+            { label: '🏁 Tổng Race', value: totalRaces.toString(), accent: 'text-white' },
+            { label: '💀 Tổng Lần Làm Dzịt', value: totalKhaos.toString(), accent: 'text-[var(--color-ggd-gold)]' },
+            { label: '👑 Vịt Thống Trị', value: mostKhaos?.name?.replace('Zịt ', '') || '—', accent: 'text-[var(--color-ggd-orange)]' },
           ].map((stat, index) => (
             <div
               key={stat.label}
@@ -136,13 +150,13 @@ export default function Dashboard() {
             <div className="ggd-card-green ggd-stripe">
               <div className="ggd-panel-header bg-[var(--color-ggd-neon-green)]">
                 <div className="skew-header">
-                  <span className="text-[var(--color-ggd-outline)] text-2xl">🏆 Bảng Xếp Hạng Bầy Vịt</span>
+                  <span className="text-[var(--color-ggd-outline)] text-2xl">🏆 BXH Sinh Tồn Bầy Vịt</span>
                 </div>
-                <span className="font-data text-sm text-[var(--color-ggd-outline)]/70 font-black tracking-wider">Boss & Shield Decay</span>
+                <span className="font-data text-sm text-[var(--color-ggd-outline)]/70 font-black tracking-wider">Sẹo càng nhiều chưa chắc càng yếu.</span>
               </div>
 
               <div className="grid grid-cols-[60px_1.4fr_90px_180px_90px_100px] gap-0 px-5 py-3 border-b-[3px] border-black bg-[var(--color-ggd-panel)]">
-                {['#', 'VỊT 🦆', 'SẸO', 'KHIÊN', 'ĐÃ DÙNG', 'DZỊT'].map((header, index) => (
+                {['#', '🐥 Vịt', '🩹 Sẹo', '🛡 Khiên', '🔥 Đã Xài', '💀 Số Lần Dzịt'].map((header, index) => (
                   <div key={header} className={`ggd-col-header ${index >= 2 && index <= 4 ? 'text-center' : index === 5 ? 'text-right' : ''}`}>{header}</div>
                 ))}
               </div>
@@ -224,9 +238,9 @@ export default function Dashboard() {
           </div>
 
           <div className="animate-slide-up opacity-0 space-y-5" style={{ animationDelay: '0.35s' }}>
-            <div className="ggd-card ggd-stripe">
+            <div id="race-history" className="ggd-card ggd-stripe scroll-mt-6">
               <div className="ggd-panel-header bg-[var(--color-ggd-panel)] rounded-t-[7px]">
-                <span className="font-display text-xl text-white text-outlined">📜 Lịch Sử</span>
+                <span className="font-display text-xl text-white text-outlined">📜 Lịch Sử Thảm Họa</span>
                 <label className="flex items-center gap-2 cursor-pointer group">
                   <div className="relative">
                     <input
@@ -281,8 +295,10 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <div className="px-5 py-12 text-center">
-                  <div className="text-5xl mb-3 animate-bob">🦆</div>
-                  <p className="font-data text-base text-[var(--color-ggd-muted)]">Chưa có trận nào!</p>
+                  <div className="text-5xl mb-3 animate-bob">💤</div>
+                  <p className="font-display text-xl text-white text-outlined">Chưa có race nào.</p>
+                  <p className="font-readable text-sm text-[var(--color-ggd-muted)] mt-2">Bầy vịt vẫn đang ngủ.</p>
+                  <p className="font-readable text-sm text-[var(--color-ggd-muted)]">Hãy bắt đầu tuần mới bằng hỗn loạn.</p>
                 </div>
               )}
             </div>
@@ -291,10 +307,11 @@ export default function Dashboard() {
               <div className="flex items-center gap-3 mb-4">
                 <Image src="/assets/v2/boss-crown.svg" alt="boss" width={32} height={32} className="animate-bob" unoptimized />
                 <div>
-                  <div className="font-display text-xl text-[var(--color-ggd-gold)] text-outlined leading-none">Boss Watch</div>
-                  <div className="font-data text-[10px] uppercase tracking-widest text-white/50">3 sạch mở Boss, càng sạch càng spawn nhiều clone</div>
+                  <div className="font-display text-xl text-[var(--color-ggd-gold)] text-outlined leading-none">👑 Boss Watch</div>
+                  <div className="font-data text-[10px] uppercase tracking-widest text-white/50">3 tuần sạch mở Boss Mode.</div>
                 </div>
               </div>
+              <p className="font-readable text-sm text-white/70 mb-4">Càng sống lâu càng bị spawn thêm clone để săn.</p>
               <div className="space-y-2.5">
                 {bossWatch.length > 0 ? bossWatch.map((entry) => {
                   const streak = entry.cleanStreak
@@ -320,7 +337,7 @@ export default function Dashboard() {
                     </div>
                   )
                 }) : (
-                  <div className="font-data text-sm text-[var(--color-ggd-muted)] italic">Chưa có ai chạm mốc 2/3 tuần sạch.</div>
+                  <div className="font-data text-sm text-[var(--color-ggd-muted)] italic">Chưa ai đủ trình thành Boss.</div>
                 )}
               </div>
             </div>
@@ -329,8 +346,8 @@ export default function Dashboard() {
               <div className="flex items-center gap-3 mb-4">
                 <Image src="/assets/v2/shield-cracked.svg" alt="shield" width={32} height={32} className="animate-bob" unoptimized />
                 <div>
-                  <div className="font-display text-xl text-white text-outlined leading-none">Khiên Sắp Hỏng</div>
-                  <div className="font-data text-[10px] uppercase tracking-widest text-white/50">3 → 2 → 1 charge • 0 = vỡ luôn</div>
+                  <div className="font-display text-xl text-white text-outlined leading-none">🛡 Khiên Sắp Hỏng</div>
+                  <div className="font-data text-[10px] uppercase tracking-widest text-white/50">Khiên sống theo charge: 3 → 2 → 1 → vỡ</div>
                 </div>
               </div>
               <div className="space-y-2.5">
@@ -362,20 +379,28 @@ export default function Dashboard() {
                     </div>
                   )
                 }) : (
-                  <div className="font-data text-sm text-[var(--color-ggd-muted)] italic">Chưa có khiên nào ở ngưỡng cảnh báo.</div>
+                  <div className="font-data text-sm text-[var(--color-ggd-muted)] italic">Chưa có khiên nào sắp nổ.</div>
                 )}
               </div>
             </div>
 
             <div className="ggd-card p-6">
               <div className="font-display text-2xl text-white text-outlined mb-4">📖 Luật Chơi v2</div>
-              <div className="font-data text-sm text-[var(--color-ggd-muted)] space-y-2">
-                <div>🤕 2 người cuối = con dzịt (+1 Sẹo)</div>
-                <div>🛡️ Dùng Khiên trước trận để thoát kiếp</div>
-                <div>✨ 2 Sẹo → 1 Khiên nếu đang không có khiên</div>
-                <div>⏳ Shield có 3 charge, sau race không dùng thì -1</div>
-                <div>💥 Về 0 charge → vỡ và mất luôn</div>
-                <div>👑 3 tuần sạch → Boss Duck, từ đó mỗi tuần sạch thêm lại spawn thêm 1 clone</div>
+              <div className="space-y-3">
+                {[
+                  { icon: '💀', title: 'Thua Cuộc', lines: ['2 vịt cuối bảng = Làm Dzịt', 'Bao nước, nhận +1 Sẹo'] },
+                  { icon: '🛡', title: 'Khiên', lines: ['2 Sẹo = auto ghép 1 Khiên', 'Declare trước race để kích hoạt', 'Cứu 1 lần rồi biến mất'] },
+                  { icon: '⏳', title: 'Shield Decay', lines: ['Không dùng sau race sẽ -1 charge', '0 charge = vỡ'] },
+                  { icon: '👑', title: 'Boss Duck', lines: ['3 tuần liên tiếp không Dzịt = Boss', 'Boss spawn nhiều clone hơn mỗi tuần', 'Clone chết = Boss chết'] },
+                  { icon: '🎁', title: 'Reward Chest', lines: ['Hạ Boss sẽ nhận chest', 'Streak càng cao, loot càng ngon'] },
+                ].map((rule) => (
+                  <div key={rule.title} className="rounded-xl border-2 border-[var(--color-ggd-outline)]/35 bg-black/20 p-3">
+                    <div className="font-display text-lg text-white text-outlined">{rule.icon} {rule.title}</div>
+                    <div className="font-data text-xs text-[var(--color-ggd-muted)] space-y-1 mt-2">
+                      {rule.lines.map((line) => <div key={line}>• {line}</div>)}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -383,7 +408,9 @@ export default function Dashboard() {
 
         <footer className="border-t-4 border-[var(--color-ggd-outline)] pt-6 pb-4 flex items-center justify-between animate-fade-in opacity-0" style={{ animationDelay: '0.6s' }}>
           <div className="font-data text-sm text-[var(--color-ggd-muted)]">AUTODUCK v2.0 🦆 Quack Quack!</div>
-          <div className="font-data text-sm text-[var(--color-ggd-muted)]">Team Web • Sáng thứ 2 hàng tuần</div>
+          <div className="font-data text-sm text-[var(--color-ggd-muted)] text-right">
+            Built for Team Web. Phá hủy tình đồng nghiệp từ mỗi sáng thứ 2.
+          </div>
         </footer>
       </main>
     </div>
