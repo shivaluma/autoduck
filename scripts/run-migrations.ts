@@ -1,7 +1,7 @@
 import path from 'path'
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 import { PrismaClient } from '../prisma/generated/prisma/client'
-import { normalizeLegacyShieldState } from '../lib/shield-decay'
+import { getIsoWeekKey, normalizeLegacyShieldState } from '../lib/shield-decay'
 
 type Migration = {
   id: string
@@ -147,12 +147,100 @@ async function rebuildBossWatchFromOfficialRaces(prisma: PrismaClient, raceCount
   }
 }
 
+async function rebuildBossWatchFromOfficialWeeks(prisma: PrismaClient, weekCount: number) {
+  const candidateRaces = await prisma.race.findMany({
+    where: {
+      status: 'finished',
+      isTest: false,
+    },
+    orderBy: [{ finishedAt: 'desc' }, { id: 'desc' }],
+    include: {
+      participants: {
+        select: {
+          userId: true,
+          gotScar: true,
+        },
+      },
+    },
+  })
+
+  const racesByWeek = new Map<string, typeof candidateRaces[number]>()
+  for (const race of candidateRaces) {
+    const weekKey = getIsoWeekKey(race.finishedAt ?? race.createdAt)
+    if (!racesByWeek.has(weekKey)) {
+      racesByWeek.set(weekKey, race)
+    }
+    if (racesByWeek.size >= weekCount) {
+      break
+    }
+  }
+
+  const orderedRaces = Array.from(racesByWeek.values()).reverse()
+  const users = await prisma.user.findMany({
+    select: {
+      id: true,
+      name: true,
+      isBoss: true,
+      bossSince: true,
+    },
+  })
+
+  for (const user of users) {
+    if (user.name === 'Thomas' || user.id === 127) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          cleanStreak: 0,
+          isBoss: false,
+          bossSince: null,
+        },
+      })
+      continue
+    }
+
+    let streak = 0
+    let bossSince: Date | null = null
+
+    for (const race of orderedRaces) {
+      const entries = race.participants.filter((participant) => participant.userId === user.id)
+      if (entries.length === 0) {
+        continue
+      }
+
+      const gotScar = entries.some((participant) => participant.gotScar)
+      if (gotScar) {
+        streak = 0
+        bossSince = null
+        continue
+      }
+
+      streak += 1
+      if (streak >= 3) {
+        bossSince = race.finishedAt ?? race.createdAt
+      }
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        cleanStreak: streak,
+        isBoss: streak >= 3,
+        bossSince: streak >= 3 ? (bossSince ?? user.bossSince ?? new Date()) : null,
+      },
+    })
+  }
+}
+
 async function migrateBossWatchFromOfficialRaces(prisma: PrismaClient) {
   await rebuildBossWatchFromOfficialRaces(prisma, 5)
 }
 
 async function migrateBossWatchFromLast8OfficialRaces(prisma: PrismaClient) {
   await rebuildBossWatchFromOfficialRaces(prisma, 8)
+}
+
+async function migrateBossWatchFromLast8OfficialWeeks(prisma: PrismaClient) {
+  await rebuildBossWatchFromOfficialWeeks(prisma, 8)
 }
 
 async function migrateThomasOutOfBoss(prisma: PrismaClient) {
@@ -191,6 +279,11 @@ const migrations: Migration[] = [
     id: '2026-04-23-004-boss-watch-last-8-official',
     name: 'Rebuild boss watch from the latest 8 official finished races',
     run: migrateBossWatchFromLast8OfficialRaces,
+  },
+  {
+    id: '2026-04-23-005-boss-watch-last-8-official-weeks',
+    name: 'Rebuild boss watch from the latest 8 official race weeks',
+    run: migrateBossWatchFromLast8OfficialWeeks,
   },
 ]
 

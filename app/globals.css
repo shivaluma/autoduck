@@ -993,22 +993,15 @@
   gap: 4px;
   padding: 3px 10px 3px 4px;
   border-radius: 999px;
-  border: 2px solid rgba(70, 23, 0, 0.92);
-  background:
-    radial-gradient(circle at 20% 92%, rgba(255, 238, 142, 0.9) 0 14%, transparent 31%),
-    linear-gradient(180deg, #ff9f16 0%, #ff7a00 58%, #ffc324 100%);
+  border: 3px solid var(--color-ggd-outline);
+  background: linear-gradient(180deg, #ffd84d 0%, #f59e0b 100%);
   color: var(--color-ggd-outline);
   font-family: var(--font-quicksand), sans-serif;
   font-weight: 900;
   font-size: 11px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  box-shadow:
-    0 3px 0 rgba(0, 0, 0, 0.9),
-    0 0 18px rgba(255, 120, 0, 0.55),
-    inset 0 2px 0 rgba(255, 245, 165, 0.35);
-  isolation: isolate;
-  overflow: visible;
+  box-shadow: 0 3px 0 var(--color-ggd-outline), 0 0 18px rgba(255, 204, 0, 0.5);
 }
 
 .boss-crown-badge .crown-svg {
@@ -1016,129 +1009,6 @@
   height: 22px;
   filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.3));
   animation: bob 2.2s ease-in-out infinite;
-}
-
-.boss-crown-badge::before,
-.boss-crown-badge::after {
-  content: '';
-  position: absolute;
-  pointer-events: none;
-}
-
-.boss-crown-badge::before {
-  z-index: -1;
-  inset: -13px -17px -7px -17px;
-  border-radius: 32px 32px 18px 18px;
-  background:
-    radial-gradient(circle at 5% 58%, #ff6f00 0 13px, transparent 14px),
-    radial-gradient(circle at 13% 34%, #ff7a00 0 17px, transparent 18px),
-    radial-gradient(circle at 23% 22%, #ff8d00 0 10px, transparent 11px),
-    radial-gradient(circle at 78% 24%, #ff8d00 0 16px, transparent 17px),
-    radial-gradient(circle at 91% 36%, #ff6f00 0 18px, transparent 19px),
-    radial-gradient(circle at 98% 61%, #ff6f00 0 12px, transparent 13px),
-    linear-gradient(180deg, #ff7a00 0%, #ff9100 54%, #ffc21f 100%);
-  filter: drop-shadow(0 0 12px rgba(255, 94, 0, 0.78));
-  transform-origin: center bottom;
-  animation: boss-fire-blob-soft 1.8s ease-in-out infinite;
-}
-
-.boss-crown-badge::after {
-  z-index: 0;
-  inset: 3px 7px auto 14px;
-  height: 55%;
-  border-radius: 999px;
-  background:
-    radial-gradient(circle at 0% 80%, rgba(255, 255, 174, 0.72) 0 18%, transparent 40%),
-    linear-gradient(90deg, rgba(255, 246, 150, 0.65), rgba(255, 255, 255, 0.12) 54%, transparent);
-  mix-blend-mode: screen;
-  opacity: 0.78;
-}
-
-.boss-crown-badge > * {
-  position: relative;
-  z-index: 1;
-}
-
-.boss-crown-badge.boss-fire-tier-1::before {
-  opacity: 0.88;
-}
-
-.boss-crown-badge.boss-fire-tier-2::before {
-  inset: -17px -21px -8px -21px;
-  opacity: 0.96;
-  filter: drop-shadow(0 0 16px rgba(255, 94, 0, 0.88)) saturate(1.08);
-  animation: boss-fire-blob-mid 1.05s ease-in-out infinite;
-}
-
-.boss-crown-badge.boss-fire-tier-3::before {
-  inset: -22px -26px -10px -26px;
-  opacity: 1;
-  filter: drop-shadow(0 0 22px rgba(255, 73, 0, 0.95)) saturate(1.22);
-  animation: boss-fire-blob-hot 0.62s ease-in-out infinite;
-}
-
-.boss-crown-badge.boss-fire-tier-2 {
-  box-shadow:
-    0 3px 0 rgba(0, 0, 0, 0.9),
-    0 0 24px rgba(255, 105, 0, 0.78),
-    inset 0 2px 0 rgba(255, 245, 165, 0.42);
-}
-
-.boss-crown-badge.boss-fire-tier-3 {
-  box-shadow:
-    0 3px 0 rgba(0, 0, 0, 0.9),
-    0 0 32px rgba(255, 76, 0, 0.96),
-    0 0 48px rgba(255, 191, 36, 0.38),
-    inset 0 2px 0 rgba(255, 245, 165, 0.48);
-  animation: boss-badge-hot-breathe 0.78s ease-in-out infinite;
-}
-
-@keyframes boss-fire-blob-soft {
-  0%,
-  100% {
-    transform: translateY(0) scaleX(1) scaleY(1);
-  }
-
-  50% {
-    transform: translateY(-1px) scaleX(1.025) scaleY(1.04);
-  }
-}
-
-@keyframes boss-fire-blob-mid {
-  0%,
-  100% {
-    transform: translateY(0) scaleX(1) scaleY(1);
-  }
-
-  50% {
-    transform: translateY(-2px) scaleX(1.045) scaleY(1.09);
-  }
-}
-
-@keyframes boss-fire-blob-hot {
-  0%,
-  100% {
-    transform: translateY(0) scaleX(1) scaleY(1);
-  }
-
-  35% {
-    transform: translateY(-3px) scaleX(1.065) scaleY(1.14) skewX(-2deg);
-  }
-
-  70% {
-    transform: translateY(-1px) scaleX(1.035) scaleY(1.06) skewX(2deg);
-  }
-}
-
-@keyframes boss-badge-hot-breathe {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-1px);
-  }
 }
 
 /* Shield chip aged states */
