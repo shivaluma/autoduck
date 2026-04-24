@@ -44,10 +44,16 @@ WORKDIR /app
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/node_modules/.pnpm/@prisma+adapter-better-sqlite3@7.7.0 ./node_modules/.pnpm/@prisma+adapter-better-sqlite3@7.7.0
+COPY --from=builder /app/node_modules/.pnpm/@prisma+driver-adapter-utils@7.7.0 ./node_modules/.pnpm/@prisma+driver-adapter-utils@7.7.0
 
 # Prisma config is evaluated at startup and imports packages not traced by Next.
-RUN ln -s "$(npm root -g)/prisma" ./node_modules/prisma && \
-    ln -s "$(npm root -g)/dotenv" ./node_modules/dotenv
+RUN mkdir -p ./node_modules/@prisma && \
+    PRISMA_CLIENT_DIR="$(find ./node_modules/.pnpm -maxdepth 1 -type d -name '@prisma+client@7.7.0_*' | head -n 1)" && \
+    ln -s "$(npm root -g)/prisma" ./node_modules/prisma && \
+    ln -s "$(npm root -g)/dotenv" ./node_modules/dotenv && \
+    ln -s "../.pnpm/$(basename "$PRISMA_CLIENT_DIR")/node_modules/@prisma/client" ./node_modules/@prisma/client && \
+    ln -s "../.pnpm/@prisma+adapter-better-sqlite3@7.7.0/node_modules/@prisma/adapter-better-sqlite3" ./node_modules/@prisma/adapter-better-sqlite3
 
 # Copy Prisma files used by startup migrations and the generated client.
 COPY --from=builder /app/prisma ./prisma
