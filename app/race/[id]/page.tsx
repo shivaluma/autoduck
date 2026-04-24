@@ -74,8 +74,8 @@ export default function RaceDetailPage({
   const consumedChestByOwnerId = new Map(MYSTERY_CHESTS_ENABLED ? (race.consumedChests ?? []).map((chest) => [chest.ownerId, chest]) : [])
   const awardedChestByOwnerId = new Map(MYSTERY_CHESTS_ENABLED ? (race.awardedChests ?? []).map((chest) => [chest.ownerId, chest]) : [])
   const resultGridClass = MYSTERY_CHESTS_ENABLED
-    ? 'grid-cols-[56px_minmax(0,1fr)_110px_minmax(0,1.4fr)_140px_minmax(0,1fr)]'
-    : 'grid-cols-[56px_minmax(0,1fr)_110px_140px]'
+    ? 'grid-cols-[56px_minmax(0,1.35fr)_132px_110px_minmax(0,1.15fr)]'
+    : 'grid-cols-[56px_minmax(0,1.35fr)_132px_110px]'
   const bossFalls = Array.from(
     new Set(
       sortedParticipants
@@ -84,6 +84,45 @@ export default function RaceDetailPage({
         .filter((name): name is string => Boolean(name))
     )
   )
+  const victims = sortedParticipants.filter((participant) => participant.gotScar)
+  const winner = sortedParticipants.find((participant) => participant.initialRank === 1)
+  const thomasWinner = winner?.name.toLowerCase() === 'thomas'
+  const bossOwnerIds = Array.from(new Set(sortedParticipants.filter((participant) => participant.isClone && typeof participant.cloneOfUserId === 'number').map((participant) => participant.cloneOfUserId as number)))
+  const bossNames = bossOwnerIds
+    .map((bossOwnerId) => sortedParticipants.find((participant) => participant.userId === bossOwnerId && !participant.isClone)?.name)
+    .filter((name): name is string => Boolean(name))
+  const activeModifiers = Array.from(new Set((race.consumedChests ?? []).map((chest) => chest.effect.replaceAll('_', ' '))))
+  const cleanDuckName = (name: string) => name.replace(/^Zịt\s+/i, '')
+  const heroHeadline = (() => {
+    if (victims.length >= 4) return '☠️ THẢM HỌA TẬP THỂ'
+    if (bossFalls.length > 0) return '👑 TRIỀU ĐẠI ĐÃ SỤP ĐỔ'
+    if (thomasWinner) return '🦆 Thomas vừa làm điều không ai tin nổi'
+    if (victims.length > 0) {
+      const names = victims.map((victim) => cleanDuckName(victim.displayName ?? victim.name))
+      const renderedNames = names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} và ${names.at(-1)}`
+      return `💀 ${renderedNames} đã ngã xuống.`
+    }
+    return '🏁 Race đã chốt sổ.'
+  })()
+  const heroSubline = (() => {
+    if (bossFalls.length > 0) return `${bossFalls.map(cleanDuckName).join(', ')} mất ngôi Boss ngay trong race này.`
+    if (victims.length >= 4) return `${victims.length} con dzịt cùng rơi khỏi vùng an toàn.`
+    return race.finalVerdict ?? 'Kết quả chính thức đã được ghi nhận.'
+  })()
+  const getParticipantStatus = (participant: typeof sortedParticipants[number], index: number) => {
+    if (participant.gotScar && participant.isClone && typeof participant.cloneOfUserId === 'number') return 'Boss Down'
+    if (participant.gotScar) return 'Dzịt'
+    if (index === 0) return 'Winner'
+    return 'Safe'
+  }
+  const shortCommentary = (content: string) => {
+    const sentences = content
+      .replace(/\s+/g, ' ')
+      .split(/(?<=[.!?。！？])\s+/)
+      .filter(Boolean)
+    const shortText = sentences.slice(0, 2).join(' ') || content
+    return shortText.length > 150 ? `${shortText.slice(0, 147)}...` : shortText
+  }
 
   return (
     <div className="min-h-screen bg-transparent bubble-bg">
@@ -128,7 +167,7 @@ export default function RaceDetailPage({
           <>
             <RaceCelebration
               allPlayers={sortedParticipants.map(p => ({ name: p.displayName ?? p.name, avatarUrl: p.avatarUrl, gotScar: p.gotScar, usedShield: p.usedShield, initialRank: p.initialRank }))}
-              victims={sortedParticipants.filter(p => p.gotScar).map(p => ({ name: p.displayName ?? p.name, avatarUrl: p.avatarUrl }))}
+              victims={victims.map(p => ({ name: p.displayName ?? p.name, avatarUrl: p.avatarUrl }))}
               verdict={race.finalVerdict} duration={3000}
               bossFalls={bossFalls}
               consumedChests={MYSTERY_CHESTS_ENABLED ? race.consumedChests : []}
@@ -136,16 +175,30 @@ export default function RaceDetailPage({
               raceId={Number(raceId)}
             />
             {race.finalVerdict && (
-              <div className="ggd-card-gold ggd-stripe animate-slide-up opacity-0" style={{ animationDelay: '0.1s' }}>
-                <div className="relative px-4 py-8 text-center sm:px-8 sm:py-10">
+              <div className={`ggd-card-gold ggd-stripe animate-slide-up opacity-0 overflow-hidden ${bossFalls.length > 0 ? 'shadow-[0_0_35px_rgba(255,204,0,0.35),0_8px_0_var(--color-ggd-outline)]' : victims.length >= 4 ? 'shadow-[0_0_42px_rgba(255,87,51,0.45),0_8px_0_var(--color-ggd-outline)]' : ''}`} style={{ animationDelay: '0.1s' }}>
+                <div className="relative px-4 py-7 text-center sm:px-8 sm:py-9">
                   <div className="flex justify-center gap-3 mb-6">
-                    {['🎉', '🦆', '🏆', '🦆', '🎉'].map((emoji, i) => (
+                    {(victims.length >= 4 ? ['🚨', '💀', '☠️', '💀', '🚨'] : bossFalls.length > 0 ? ['👑', '💔', '⚡', '💔', '👑'] : ['🎉', '🦆', '🏆', '🦆', '🎉']).map((emoji, i) => (
                       <div key={i} className="text-3xl animate-bob" style={{ animationDelay: `${i * 0.15}s` }}>{emoji}</div>
                     ))}
                   </div>
                   <div className="font-display text-lg text-[var(--color-ggd-gold)] glow-gold mb-3">✨ Kết Quả Chính Thức ✨</div>
-                  <h2 className="font-display text-3xl text-white leading-tight text-outlined md:text-5xl">{race.finalVerdict}</h2>
-                  <div className="font-data text-base text-[var(--color-ggd-muted)] mt-4">🦆 2 con dzịt đã lộ diện! Quack!</div>
+                  <h2 className="font-display text-4xl text-white leading-tight text-outlined md:text-6xl">{heroHeadline}</h2>
+                  <p className="mx-auto mt-4 max-w-3xl font-readable text-lg text-white/88 leading-relaxed md:text-xl">{heroSubline}</p>
+                  <div className="mt-6 flex flex-wrap justify-center gap-2">
+                    <span className="ggd-tag bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]">{sortedParticipants.length} vịt</span>
+                    <span className="ggd-tag bg-[var(--color-ggd-orange)] text-white">{victims.length} losers</span>
+                    <span className="ggd-tag bg-[var(--color-ggd-panel)] text-white">Boss: {bossNames.length > 0 ? bossNames.map(cleanDuckName).join(', ') : 'Không'}</span>
+                    {activeModifiers.slice(0, 2).map((modifier) => (
+                      <span key={modifier} className="ggd-tag bg-[var(--color-ggd-hot-pink)] text-white">{modifier}</span>
+                    ))}
+                    {race.awardedChests?.some((chest) => chest.effect === 'GOLDEN_SHIELD') && (
+                      <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)]">🛡 Legendary defense</span>
+                    )}
+                    {race.awardedChests?.some((chest) => chest.effect !== 'NOTHING') && (
+                      <span className="ggd-tag bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]">✨ Chest dropped</span>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -161,12 +214,11 @@ export default function RaceDetailPage({
               </div>
 
               <div className={`grid ${resultGridClass} min-w-[920px] gap-2 px-5 py-3 border-b-[3px] border-[var(--color-ggd-outline)]/40 bg-[var(--color-ggd-panel)]`}>
-                <div className="ggd-col-header">#</div>
+                <div className="ggd-col-header">Rank</div>
                 <div className="ggd-col-header">VỊT 🦆</div>
+                <div className="ggd-col-header">Status</div>
                 <div className="ggd-col-header text-center">KHIÊN</div>
-                {MYSTERY_CHESTS_ENABLED && <div className="ggd-col-header">CHEST DÙNG</div>}
-                <div className="ggd-col-header text-right">KẾT QUẢ</div>
-                {MYSTERY_CHESTS_ENABLED && <div className="ggd-col-header">RƯƠNG MỚI 🎁</div>}
+                {MYSTERY_CHESTS_ENABLED && <div className="ggd-col-header">Loot / Chest</div>}
               </div>
 
               {hasResults ? (
@@ -176,6 +228,12 @@ export default function RaceDetailPage({
                     const awardedChest = p.gotScar && !p.isClone ? awardedChestByOwnerId.get(p.userId) : undefined
 
                     const totalSlots = sortedParticipants.length
+                    const status = getParticipantStatus(p, idx)
+                    const rowBadges = [
+                      p.isClone ? 'Clone' : null,
+                      p.isImmortal ? 'Immortal' : null,
+                      p.chestEffect ? p.chestEffect.replaceAll('_', ' ') : null,
+                    ].filter((badge): badge is string => Boolean(badge)).slice(0, 2)
                     return (
                     <div
                       key={`${p.userId}-${p.cloneIndex ?? 0}-${p.initialRank ?? idx}`}
@@ -188,7 +246,7 @@ export default function RaceDetailPage({
                         <span className={`position-number text-3xl ${p.gotScar ? 'text-[var(--color-ggd-orange)] glow-orange' :
                           idx === 0 ? 'text-[var(--color-ggd-gold)] glow-gold' : idx === 1 ? 'text-white/80' :
                             idx === 2 ? 'text-[var(--color-ggd-neon-green)] glow-green' : 'text-[var(--color-ggd-muted)]/40'}`}>
-                          {String((p.initialRank ?? idx + 1)).padStart(2, '0')}
+                          {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : String((p.initialRank ?? idx + 1)).padStart(2, '0')}
                         </span>
                       </div>
                       <div className="flex items-center gap-3 min-w-0">
@@ -199,10 +257,27 @@ export default function RaceDetailPage({
                             <div className="font-body text-base font-extrabold text-white truncate">
                               {p.displayName ?? p.name}
                             </div>
-                            {p.isClone && <span className="ggd-tag bg-[var(--color-ggd-panel)] text-white/70 text-[10px] px-2 py-0">clone</span>}
+                            {rowBadges.map((badge) => (
+                              <span key={badge} className="ggd-tag bg-[var(--color-ggd-panel)] text-white/75 text-[10px] px-2 py-0">{badge}</span>
+                            ))}
                           </div>
                           {idx === 0 && isFinished && <div className="font-display text-xs text-[var(--color-ggd-gold)] glow-gold mt-0.5">👑 VỊT THẮNG CUỘC</div>}
                         </div>
+                      </div>
+                      <div>
+                        {status === 'Dzịt' ? (
+                          <span className="font-display text-xl text-[var(--color-ggd-orange)] glow-orange">💀 Dzịt</span>
+                        ) : status === 'Boss Down' ? (
+                          <span className="font-display text-base text-[var(--color-ggd-gold)] glow-gold">👑 Boss Down</span>
+                        ) : status === 'Winner' ? (
+                          <span className="font-display text-xl text-[var(--color-ggd-gold)] glow-gold">Winner</span>
+                        ) : p.usedShield && (p.initialRank ?? 0) >= totalSlots - 1 ? (
+                          <span className="font-display text-base text-[var(--color-ggd-sky)] glow-sky">🛡 Thoát</span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 font-data text-[11px] uppercase tracking-wider text-white/68 font-black">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-ggd-neon-green)]/75" /> Safe
+                          </span>
+                        )}
                       </div>
                       <div className="flex justify-center">
                         {p.usedShield ? (
@@ -214,8 +289,10 @@ export default function RaceDetailPage({
                       </div>
                       {MYSTERY_CHESTS_ENABLED && (
                         <div className="min-w-0">
-                          {consumedChest ? (
-                            <div className="flex flex-col gap-1 min-w-0">
+                          {consumedChest || awardedChest ? (
+                            <div className="flex flex-col gap-2 min-w-0">
+                              {consumedChest && (
+                                <>
                               <ChestCard effect={consumedChest.effect} size="sm" opened animated={false} />
                               <div className="font-data text-[10px] text-[var(--color-ggd-muted)] truncate flex items-center gap-1">
                                 <span className={consumedChest.outcome === 'success' ? 'text-[var(--color-ggd-neon-green)]' : 'text-[var(--color-ggd-orange)]'}>
@@ -223,32 +300,17 @@ export default function RaceDetailPage({
                                 </span>
                                 {consumedChest.targetName && <span className="opacity-70">→ {consumedChest.targetName}</span>}
                               </div>
+                                </>
+                              )}
+                              {awardedChest && (
+                                <ChestReveal
+                                  chestId={awardedChest.id}
+                                  effect={awardedChest.effect}
+                                  compact
+                                  animated
+                                />
+                              )}
                             </div>
-                          ) : (<span className="empty-cell">—</span>)}
-                        </div>
-                      )}
-                      <div className="text-right">
-                        {p.gotScar ? (
-                          <span className="font-display text-lg text-[var(--color-ggd-orange)] glow-orange">CON DZỊT 🦆</span>
-                        ) : p.usedShield && (p.initialRank ?? 0) >= totalSlots - 1 ? (
-                          <span className="font-display text-base text-[var(--color-ggd-sky)] glow-sky">🛡️ Thoát!</span>
-                        ) : idx === 0 ? (
-                          <span className="font-display text-lg text-[var(--color-ggd-gold)] glow-gold">🏆 P1</span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 font-data text-[11px] uppercase tracking-wider text-[var(--color-ggd-muted)]/55 font-black">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-ggd-muted)]/40" /> An toàn
-                          </span>
-                        )}
-                      </div>
-                      {MYSTERY_CHESTS_ENABLED && (
-                        <div>
-                          {awardedChest ? (
-                            <ChestReveal
-                              chestId={awardedChest.id}
-                              effect={awardedChest.effect}
-                              compact
-                              animated
-                            />
                           ) : (<span className="empty-cell">—</span>)}
                         </div>
                       )}
@@ -276,23 +338,33 @@ export default function RaceDetailPage({
           </div>
 
           {!isRunning && (
-            <div className="animate-slide-up opacity-0" style={{ animationDelay: '0.35s' }}>
-              <div className="ggd-card ggd-stripe">
+            <div className="animate-slide-up opacity-0 lg:sticky lg:top-4 lg:self-start" style={{ animationDelay: '0.35s' }}>
+              <div className="ggd-card ggd-stripe overflow-hidden">
                 <div className="px-5 py-3 bg-[var(--color-ggd-panel)] rounded-t-[6px] flex items-center justify-between">
                   <span className="font-display text-lg text-white text-outlined">🎤 MC Vịt</span>
-                  {isRunning && <span className="ggd-tag bg-[var(--color-ggd-orange)] text-white text-xs animate-pulse">LIVE</span>}
+                  <span className="ggd-tag bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)] text-xs">TIMELINE</span>
                 </div>
                 <ScrollArea className="h-[360px] sm:h-[520px]">
                   {race.commentaries.length > 0 ? (
-                    <div className="py-2">
+                    <div className="relative py-3 pl-5 pr-3">
+                      <div className="absolute left-[31px] top-5 bottom-5 w-0.5 bg-gradient-to-b from-[var(--color-ggd-neon-green)] via-[var(--color-ggd-gold)] to-[var(--color-ggd-orange)]/70" />
                       {race.commentaries.map((c, idx) => (
-                        <div key={idx} className="px-4 py-3 mx-2 my-1 rounded-xl hover:bg-[var(--color-ggd-neon-green)]/5 transition-colors animate-slide-right opacity-0"
+                        <div key={idx} className="relative ml-7 mb-3 rounded-xl border-2 border-[var(--color-ggd-outline)]/35 bg-black/30 px-4 py-3 shadow-[0_4px_0_rgba(0,0,0,0.55)] transition-colors hover:bg-[var(--color-ggd-neon-green)]/8 animate-slide-right opacity-0"
                           style={{ animationDelay: `${0.4 + idx * 0.05}s` }}>
-                          <div className="flex items-center gap-2 mb-1.5">
-                            <span className="ggd-tag bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)] text-[10px] py-0.5">⏱️ {formatTime(c.timestamp)}</span>
-                            <div className="flex-1 h-px bg-[var(--color-ggd-outline)]/30" />
+                          <div className="absolute -left-[38px] top-4 h-4 w-4 rounded-full border-2 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-gold)] shadow-[0_0_12px_rgba(255,204,0,0.55)]" />
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="font-data text-xs font-black text-[var(--color-ggd-neon-green)]">{formatTime(c.timestamp)}</span>
+                            <div className="h-px flex-1 bg-white/12" />
                           </div>
-                          <p className="font-readable text-base text-white/90 leading-relaxed">{c.content}</p>
+                          <p className="font-readable text-base text-white/92 leading-snug">{shortCommentary(c.content)}</p>
+                        </div>
+                      ))}
+                      {victims.map((victim, index) => (
+                        <div key={`victim-${victim.userId}-${victim.cloneIndex ?? index}`} className="relative ml-7 mb-3 rounded-xl border-2 border-[var(--color-ggd-orange)]/70 bg-[rgba(255,87,51,0.18)] px-4 py-3 shadow-[0_4px_0_rgba(0,0,0,0.65)] animate-slide-right opacity-0"
+                          style={{ animationDelay: `${0.45 + (race.commentaries.length + index) * 0.05}s` }}>
+                          <div className="absolute -left-[38px] top-4 h-4 w-4 rounded-full border-2 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-orange)] shadow-[0_0_14px_rgba(255,87,51,0.65)]" />
+                          <div className="font-data text-xs font-black text-[var(--color-ggd-orange)]">FINAL</div>
+                          <p className="mt-1 font-display text-lg text-white text-outlined">☠️ {cleanDuckName(victim.displayName ?? victim.name)} bị loại.</p>
                         </div>
                       ))}
                     </div>

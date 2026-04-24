@@ -196,9 +196,9 @@ export default function Dashboard() {
       detail: mostUnluckyDuck ? `${mostUnluckyDuck.totalKhaos} lần làm dzịt` : 'Chưa xác định',
     },
     {
-      label: '💀 Total Khaos',
+      label: '💀 Tổng Dzịt',
       value: totalKhaos.toString(),
-      detail: 'Tổng sẹo toàn chuồng',
+      detail: 'Tổng lần làm dzịt toàn chuồng',
     },
   ]
 

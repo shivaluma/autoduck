@@ -31,6 +31,8 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
   const [raceData, setRaceData] = useState<RaceStatus | null>(null)
   const imgRef = useRef<HTMLImageElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const pendingFrameRef = useRef<string | null>(null)
+  const lastPaintRef = useRef(0)
 
   useEffect(() => {
     const evtSource = new EventSource(`/api/races/${raceId}/live`)
@@ -44,10 +46,7 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
     evtSource.addEventListener('frame', (event) => {
       try {
         const data = JSON.parse(event.data) as { image: string }
-        if (imgRef.current) {
-          imgRef.current.src = `data:image/jpeg;base64,${data.image}`
-          imgRef.current.style.display = 'block'
-        }
+        pendingFrameRef.current = `data:image/jpeg;base64,${data.image}`
         setStatus('live')
       } catch (error) {
         console.error('Frame parse error', error)
@@ -62,8 +61,47 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
       }
     })
 
+    evtSource.addEventListener('commentary', (event) => {
+      try {
+        const data = JSON.parse(event.data) as { text: string; timestamp: number }
+        setCommentaries((previous) => {
+          if (previous.some((item) => item.timestamp === data.timestamp && item.text === data.text)) {
+            return previous
+          }
+
+          return [
+            ...previous,
+            {
+              id: Date.now() + Math.random(),
+              text: data.text,
+              timestamp: data.timestamp,
+            },
+          ].sort((left, right) => left.timestamp - right.timestamp)
+        })
+      } catch (error) {
+        console.error('Commentary parse error', error)
+      }
+    })
+
     return () => evtSource.close()
   }, [raceId])
+
+  useEffect(() => {
+    let animationFrameId = 0
+    const paintFrame = (now: number) => {
+      if (pendingFrameRef.current && imgRef.current && now - lastPaintRef.current >= 100) {
+        imgRef.current.src = pendingFrameRef.current
+        imgRef.current.style.display = 'block'
+        pendingFrameRef.current = null
+        lastPaintRef.current = now
+      }
+
+      animationFrameId = window.requestAnimationFrame(paintFrame)
+    }
+
+    animationFrameId = window.requestAnimationFrame(paintFrame)
+    return () => window.cancelAnimationFrame(animationFrameId)
+  }, [])
 
   useEffect(() => {
     const fetchRaceData = async () => {

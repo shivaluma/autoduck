@@ -291,10 +291,13 @@ export async function runRaceWorker(players: PlayerInput[], raceId?: number, met
       try {
         const client = await context.newCDPSession(page)
         console.log('🎥 Starting live stream CDP session...')
+        const LIVE_FRAME_INTERVAL_MS = 125
+        const LIVE_BROADCAST_DELAY_MS = 650
+        let lastFrameSentAt = 0
 
         await client.send('Page.startScreencast', {
           format: 'jpeg',
-          quality: 80,
+          quality: 68,
           maxWidth: 1280,
           maxHeight: 720,
           everyNthFrame: 1 // Capture every frame
@@ -305,12 +308,20 @@ export async function runRaceWorker(players: PlayerInput[], raceId?: number, met
           // Ack the frame to receive the next one
           await client.send('Page.screencastFrameAck', { sessionId })
 
-          // Broadcast to event bus
-          raceEventBus.emit(RACE_EVENTS.FRAME, {
-            raceId,
-            data,
-            timestamp: metadata.timestamp
-          })
+          const now = Date.now()
+          if (now - lastFrameSentAt < LIVE_FRAME_INTERVAL_MS) {
+            return
+          }
+          lastFrameSentAt = now
+
+          setTimeout(() => {
+            raceEventBus.emit(RACE_EVENTS.FRAME, {
+              raceId,
+              data,
+              timestamp: metadata.timestamp,
+              sentAt: Date.now()
+            })
+          }, LIVE_BROADCAST_DELAY_MS)
         })
       } catch (e) {
         console.error('❌ Failed to start live stream:', e)
@@ -490,26 +501,26 @@ export async function runRaceWorker(players: PlayerInput[], raceId?: number, met
     let checkCount = 0
     const maxChecks = 150 // Max ~45 seconds (0.3s * 150)
 
-    // Timestamps to capture commentary (seconds) - 8 key moments across 36s race
-    // 0: Start, 5: Early, 10: Building, 15: Mid, 20: Heating up, 25: Tension, 30: Final push, 33: Last seconds
-    const CAPTURE_TIMESTAMPS = [0, 5, 10, 15, 20, 25, 30, 33]
+    // Timestamps to capture commentary. Fewer, better-spaced jobs keep live
+    // commentary closer to the action instead of building a provider backlog.
+    const CAPTURE_TIMESTAMPS = [2, 8, 14, 20, 26, 32]
     const capturedTimestamps = new Set<number>()
 
     console.log('🎙️ Race in progress, monitoring...')
 
-    // IMMEDIATELY capture t=0 screenshot before the loop begins
+    // Capture an opening beat shortly after the ducks are actually moving.
     try {
-      console.log('📸 Capturing screenshot for 0s mark (start)...')
+      await page.waitForTimeout(900)
+      console.log('📸 Capturing screenshot for opening beat...')
       const screenshotBuf = await page.screenshot({ type: 'jpeg', quality: 70 })
       const base64 = screenshotBuf.toString('base64')
       if (raceId) {
-        recordCommentary(raceId, 0, base64, false, playerNames.join(', '), undefined, metaContext)
+        recordCommentary(raceId, 1, base64, false, playerNames.join(', '), undefined, metaContext)
         commentaryJobsQueued++
-        capturedTimestamps.add(0)
-        console.log('  [0s] 📝 Queued for AI commentary')
+        console.log('  [1s] 📝 Queued for AI commentary')
       }
     } catch (error) {
-      console.error('  t=0 screenshot failed:', error)
+      console.error('  opening beat screenshot failed:', error)
     }
 
     while (!raceFinished && checkCount < maxChecks) {

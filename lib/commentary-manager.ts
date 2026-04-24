@@ -12,8 +12,9 @@ const AI_PROVIDER = process.env.AI_PROVIDER || 'gemini'
 // Mapping raceId -> Array of CommentaryHistory
 const commentaryMemory: Record<number, CommentaryHistory[]> = {}
 
-// Promise chains to ensure sequential processing per race
-const commentaryChains: Record<number, Promise<void>> = {}
+// In-flight commentary tasks per race. They run independently so live comments
+// do not queue behind a slow provider response.
+const commentaryTasks: Record<number, Promise<void>[]> = {}
 
 async function generateCommentary(
   screenshotB64: string,
@@ -51,31 +52,31 @@ export function recordCommentary(
   if (!commentaryMemory[raceId]) {
     commentaryMemory[raceId] = []
   }
-  if (!commentaryChains[raceId]) {
-    commentaryChains[raceId] = Promise.resolve()
+  if (!commentaryTasks[raceId]) {
+    commentaryTasks[raceId] = []
   }
 
   console.log(`📝 Scheduled commentary job for race ${raceId} at ${timestamp}s${isRaceEnd ? ' (RACE END)' : ''}`)
 
-  // Chain the new task to the existing promise chain for this race
-  commentaryChains[raceId] = commentaryChains[raceId].then(async () => {
+  const task = (async () => {
     try {
       console.log(`🎙️ [${AI_PROVIDER.toUpperCase()}] Processing commentary for race ${raceId} at ${timestamp}s${isRaceEnd ? ' (END)' : ''}`)
 
-      const history = commentaryMemory[raceId]
+      const historySnapshot = [...commentaryMemory[raceId]]
 
       const commentaryText = await generateCommentary(
         screenshotB64,
         timestamp,
         isRaceEnd,
         participantNames,
-        history,
+        historySnapshot,
         raceResults,
         context
       )
 
       // Add to memory
-      history.push({ timestamp, text: commentaryText })
+      commentaryMemory[raceId].push({ timestamp, text: commentaryText })
+      commentaryMemory[raceId].sort((left, right) => left.timestamp - right.timestamp)
 
       // Also create a CommentaryLog entry for the race for future reference
       await prisma.commentaryLog.create({
@@ -98,9 +99,11 @@ export function recordCommentary(
     } catch (error) {
       console.error(`❌ Commentary generation failed for race ${raceId} at ${timestamp}s:`, error)
     }
-  }).catch(err => {
+  })().catch(err => {
     console.error(`❌ Fatal error in commentary chain for race ${raceId}:`, err)
   })
+
+  commentaryTasks[raceId].push(task)
 }
 
 /**
@@ -108,11 +111,11 @@ export function recordCommentary(
  * and clean up the in-memory structures.
  */
 export async function waitForCommentaryAndCleanup(raceId: number): Promise<void> {
-  if (commentaryChains[raceId] !== undefined) {
+  if (commentaryTasks[raceId] !== undefined) {
     console.log(`🧹 Waiting for final commentaries to finish for race ${raceId}...`)
-    await commentaryChains[raceId]
+    await Promise.allSettled(commentaryTasks[raceId])
     console.log(`🧹 Cleaning up memory for race ${raceId}`)
-    delete commentaryChains[raceId]
+    delete commentaryTasks[raceId]
     delete commentaryMemory[raceId]
   }
 }
