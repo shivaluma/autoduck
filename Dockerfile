@@ -46,6 +46,7 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/node_modules/.pnpm/@prisma+adapter-better-sqlite3@7.7.0 ./node_modules/.pnpm/@prisma+adapter-better-sqlite3@7.7.0
 COPY --from=builder /app/node_modules/.pnpm/@prisma+driver-adapter-utils@7.7.0 ./node_modules/.pnpm/@prisma+driver-adapter-utils@7.7.0
+COPY --from=builder /app/node_modules/.pnpm/@prisma+debug@7.7.0 ./node_modules/.pnpm/@prisma+debug@7.7.0
 
 # Prisma config is evaluated at startup and imports packages not traced by Next.
 RUN mkdir -p ./node_modules/@prisma && \
