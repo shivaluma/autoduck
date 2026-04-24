@@ -21,12 +21,6 @@ export default function RaceDetailPage({
   const [race, setRace] = useState<RaceStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [polling, setPolling] = useState(true)
-  const [celebrationSeen] = useState(() => {
-    if (typeof window === 'undefined') {
-      return false
-    }
-    return window.sessionStorage.getItem(`race-celebration:${raceId}`) === 'done'
-  })
 
   useEffect(() => {
     const fetchRace = async () => {
@@ -135,7 +129,7 @@ export default function RaceDetailPage({
             <RaceCelebration
               allPlayers={sortedParticipants.map(p => ({ name: p.displayName ?? p.name, avatarUrl: p.avatarUrl, gotScar: p.gotScar, usedShield: p.usedShield, initialRank: p.initialRank }))}
               victims={sortedParticipants.filter(p => p.gotScar).map(p => ({ name: p.displayName ?? p.name, avatarUrl: p.avatarUrl }))}
-              verdict={race.finalVerdict} duration={celebrationSeen ? 0 : 6000}
+              verdict={race.finalVerdict} duration={3000}
               bossFalls={bossFalls}
               consumedChests={MYSTERY_CHESTS_ENABLED ? race.consumedChests : []}
               awardedChests={MYSTERY_CHESTS_ENABLED ? race.awardedChests : []}
@@ -253,7 +247,7 @@ export default function RaceDetailPage({
                               chestId={awardedChest.id}
                               effect={awardedChest.effect}
                               compact
-                              animated={!celebrationSeen}
+                              animated
                             />
                           ) : (<span className="empty-cell">—</span>)}
                         </div>

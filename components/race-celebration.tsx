@@ -35,31 +35,23 @@ interface Props {
 }
 
 export function RaceCelebration({
-  raceId,
   allPlayers,
   victims,
   verdict,
   bossFalls = [],
   consumedChests = [],
   awardedChests = [],
-  duration = 6000,
+  duration = 3000,
 }: Props) {
-  // duration > 0  ⇒ lần đầu xem: ẩn rồi stagger reveal + auto-fade
-  // duration === 0 ⇒ replay/reload race detail: không render overlay nữa
-  const isFirstView = duration > 0
-  const [visible, setVisible] = useState(isFirstView)
+  const [visible, setVisible] = useState(duration > 0)
   const [fading, setFading] = useState(false)
-  const [showText, setShowText] = useState(!isFirstView)
-  const [showVictims, setShowVictims] = useState(!isFirstView)
-  const [showPlayers, setShowPlayers] = useState(!isFirstView)
-  const [showChestReport, setShowChestReport] = useState(!isFirstView)
-  const [showBossFall, setShowBossFall] = useState(!isFirstView)
+  const [showText, setShowText] = useState(false)
+  const [showVictims, setShowVictims] = useState(false)
+  const [showPlayers, setShowPlayers] = useState(false)
+  const [showChestReport, setShowChestReport] = useState(false)
+  const [showBossFall, setShowBossFall] = useState(false)
 
   useEffect(() => {
-    if (raceId && typeof window !== 'undefined') {
-      window.sessionStorage.setItem(`race-celebration:${raceId}`, 'done')
-    }
-
     if (duration <= 0) {
       return
     }
@@ -79,12 +71,7 @@ export function RaceCelebration({
     timers.push(fadeTimer)
 
     return () => timers.forEach((timer) => clearTimeout(timer))
-  }, [duration, raceId])
-
-  const handleSkip = () => {
-    setFading(true)
-    setTimeout(() => setVisible(false), 300)
-  }
+  }, [duration])
 
   if (!visible) return null
 
@@ -95,13 +82,6 @@ export function RaceCelebration({
       className={`fixed inset-0 z-50 flex flex-col items-center justify-between overflow-hidden transition-opacity duration-800 ${fading ? 'opacity-0' : 'opacity-100'}`}
       style={{ pointerEvents: 'none', height: '100dvh' }}
     >
-      <button
-        onClick={handleSkip}
-        className="absolute top-5 right-5 z-50 ggd-btn bg-[var(--color-ggd-panel)] text-white text-sm px-4 py-2 border-2 border-white/40 hover:bg-white/10"
-        style={{ pointerEvents: 'auto' }}
-      >
-        ✕ Bỏ qua
-      </button>
       {/* Background — dark with red/orange atmospheric glow like GGD */}
       <div className="absolute inset-0 bg-black">
         {/* Top red glow */}
