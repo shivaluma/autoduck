@@ -11,16 +11,16 @@ sleep 1
 
 # 2. Run Prisma DB push (auto-create/migrate tables)
 echo "🗄️  Running Prisma DB push..."
-npx prisma db push
+prisma db push
 echo "✅ Database ready!"
 
 # 3. Seed data (only if DB is empty)
 echo "🌱 Checking seed data..."
-node --import tsx prisma/seed.ts
+tsx prisma/seed.ts
 
 # 4. Run idempotent app migrations
 echo "🧭 Running app migrations..."
-pnpm db:migrate:app
+tsx scripts/run-migrations.ts
 echo "✅ App migrations ready!"
 
 # 5. Start Next.js server

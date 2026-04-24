@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7
 # ============================================
 # AutoDuck - Duck Racing System
 # Multi-stage Dockerfile for Dokploy deployment
@@ -6,25 +7,22 @@
 # --- Stage 1: Dependencies (Node 22 for Prisma compat) ---
 FROM node:22-slim AS deps
 
-RUN npm install -g pnpm
+RUN corepack enable && corepack prepare pnpm@10.20.0 --activate
 
-# Install build tools for native modules (better-sqlite3)
+# Install build tools for native modules (better-sqlite3).
 RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+    pnpm config set store-dir /pnpm/store && \
+    pnpm install --frozen-lockfile
 
 # --- Stage 2: Build Next.js ---
-FROM node:22-slim AS builder
+FROM deps AS builder
 
-RUN npm install -g pnpm
-
-WORKDIR /app
-
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Generate Prisma client
@@ -36,12 +34,12 @@ RUN pnpm build
 # --- Stage 3: Runner (Playwright for browser automation) ---
 FROM mcr.microsoft.com/playwright:v1.59.1-noble AS runner
 
-# Install Xvfb + build tools for native module rebuild
+# Install Xvfb + build tools for native module rebuild.
 RUN apt-get update && apt-get install -y \
     xvfb python3 make g++ \
     && rm -rf /var/lib/apt/lists/*
 
-RUN npm install -g pnpm tsx
+RUN npm install -g prisma@7.7.0 tsx@4.21.0 dotenv@17.4.2
 
 WORKDIR /app
 
@@ -50,17 +48,20 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
-# Copy Prisma files + all node_modules
+# Prisma config is evaluated at startup and imports packages not traced by Next.
+RUN ln -s "$(npm root -g)/prisma" ./node_modules/prisma && \
+    ln -s "$(npm root -g)/dotenv" ./node_modules/dotenv
+
+# Copy Prisma files used by startup migrations and the generated client.
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
-COPY --from=builder /app/node_modules ./node_modules
 
 # Copy commentary worker + AI modules
 COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/lib ./lib
 COPY --from=builder /app/package.json ./package.json
 
-# Rebuild native modules for this platform's Node version
+# Rebuild the traced native module for the runner image's Node runtime.
 RUN npm rebuild better-sqlite3
 
 # Copy startup script
