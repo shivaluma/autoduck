@@ -283,7 +283,7 @@ export default function RaceDetailPage({
                         {p.usedShield ? (
                           <span className="shield-chip shield-tier-fresh">
                             <Image src="/assets/v2/shield-cracked.svg" alt="shield" width={18} height={18} className="shield-chip-icon" unoptimized />
-                            <span>USED</span>
+                            <span>Tao có khiên</span>
                           </span>
                         ) : (<span className="empty-cell">—</span>)}
                       </div>
