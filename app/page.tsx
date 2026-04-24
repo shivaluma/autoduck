@@ -8,10 +8,32 @@ import { BossBadge } from '@/components/boss-badge'
 import { ShieldAgingStack } from '@/components/shield-aging-stack'
 import { MYSTERY_CHESTS_ENABLED } from '@/lib/feature-flags'
 
+interface DashboardRaceItem {
+  id: number
+  status: string
+  finalVerdict: string | null
+  createdAt: string
+  isTest?: boolean
+}
+
+interface DashboardRaceLists {
+  recentAll: DashboardRaceItem[]
+  recentOfficial: DashboardRaceItem[]
+  totalAll: number
+  totalOfficial: number
+}
+
+const emptyRaceLists: DashboardRaceLists = {
+  recentAll: [],
+  recentOfficial: [],
+  totalAll: 0,
+  totalOfficial: 0,
+}
+
 export default function Dashboard() {
   const [players, setPlayers] = useState<PlayerData[]>([])
   const [loading, setLoading] = useState(true)
-  const [races, setRaces] = useState<{ id: number; status: string; finalVerdict: string | null; createdAt: string; isTest?: boolean }[]>([])
+  const [races, setRaces] = useState<DashboardRaceLists>(emptyRaceLists)
   const [summary, setSummary] = useState<{
     rareRolledCount: number
     bossesDefeated: number
@@ -21,22 +43,19 @@ export default function Dashboard() {
   const [showTestRaces, setShowTestRaces] = useState(false)
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/users').then((response) => response.json()),
-      fetch('/api/races').then((response) => response.json()),
-      fetch('/api/dashboard/summary').then((response) => response.json()),
-    ])
-      .then(([usersData, racesData, summaryData]) => {
-        setPlayers(usersData)
-        setRaces(racesData)
-        setSummary(summaryData)
+    fetch('/api/dashboard')
+      .then((response) => response.json())
+      .then((dashboardData) => {
+        setPlayers(dashboardData.players)
+        setRaces(dashboardData.races)
+        setSummary(dashboardData.summary)
         setLoading(false)
       })
       .catch(() => setLoading(false))
   }, [])
 
-  const displayedRaces = showTestRaces ? races : races.filter((race) => !race.isTest)
-  const totalRaces = displayedRaces.length
+  const displayedRaces = showTestRaces ? races.recentAll : races.recentOfficial
+  const totalRaces = showTestRaces ? races.totalAll : races.totalOfficial
   const totalKhaos = players.reduce((sum, player) => sum + player.totalKhaos, 0)
   const sortedPlayers = [...players].sort((left, right) => right.totalKhaos - left.totalKhaos)
   const mostUnluckyDuck = summary?.mostUnluckyDuck ?? null

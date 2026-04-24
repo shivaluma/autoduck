@@ -6,13 +6,12 @@ export async function GET() {
   try {
     const races = await prisma.race.findMany({
       orderBy: { createdAt: 'desc' },
-      include: {
-        participants: {
-          include: { user: true },
-        },
-        commentaries: {
-          orderBy: { timestamp: 'asc' },
-        },
+      select: {
+        id: true,
+        status: true,
+        finalVerdict: true,
+        createdAt: true,
+        isTest: true,
       },
     })
     return NextResponse.json(races)
