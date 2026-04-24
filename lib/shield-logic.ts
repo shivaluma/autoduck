@@ -178,21 +178,22 @@ export function calculatePenalties(results: RaceResultInput[], options: PenaltyO
     effectiveVictimOwnerIds.add(ownerId)
   }
 
-  // Tạo câu chốt hạ
-  const victimNames = victims.map(v => v.name)
-  const finalVerdict = victimNames.length > 2
+  return {
+    victims,
+    safeByShield,
+    finalVerdict: buildPenaltyVerdict(victims),
+  }
+}
+
+export function buildPenaltyVerdict(victims: Array<{ name: string }>) {
+  const victimNames = victims.map((victim) => victim.name)
+  return victimNames.length > 2
     ? `${victimNames.slice(0, -1).join(', ')} và ${victimNames.at(-1)} là ${victimNames.length} con dzịt tuần này! 🦆`
     : victimNames.length === 2
       ? `${victimNames[0]} và ${victimNames[1]} là 2 con dzịt tuần này! 🦆`
       : victimNames.length === 1
         ? `${victimNames[0]} là con dzịt tuần này! 🦆`
         : 'Không ai bị phạt hôm nay!'
-
-  return {
-    victims,
-    safeByShield,
-    finalVerdict,
-  }
 }
 
 export function dedupeVictimUserIds(victims: Array<{ userId: number; cloneOfUserId?: number | null }>) {

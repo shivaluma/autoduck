@@ -23,7 +23,7 @@ const commonItems = [
 ]
 
 const rareItems = [
-  { icon: '🐥', name: 'Lucky Clone', rate: '28%', effect: 'Race kế tiếp chỉ người nhận có thêm 1 Clone.', tone: 'from-yellow-300/35 to-orange-950/25' },
+  { icon: '🎭', name: 'Last Laugh', rate: '28%', effect: 'Nếu chủ item thành dzịt, kéo người an toàn gần nhất xuống làm dzịt theo.', tone: 'from-yellow-300/35 to-orange-950/25' },
   { icon: '🚫', name: 'Anti Shield', rate: '22%', effect: 'Race kế tiếp toàn lobby không ai được dùng Khiên.', tone: 'from-red-500/35 to-rose-950/25' },
   { icon: '👑', name: "Can't Pass Thomas", rate: '18%', effect: 'Race kế tiếp ai về trước Thomas sẽ bị tính thua.', tone: 'from-amber-300/35 to-stone-950/25' },
   { icon: '✨', name: 'Golden Shield', rate: '17%', effect: 'Nhận ngay 1 Khiên full 3 charge.', tone: 'from-yellow-300/45 to-yellow-900/20' },

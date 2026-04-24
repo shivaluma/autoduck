@@ -49,11 +49,12 @@ const EFFECT_DESCRIPTIONS: Record<ChestEffect, string> = {
   CLONE_CHAOS: 'Race sau toàn lobby +1 clone, tạo một round hỗn loạn nhẹ.',
   SAFE_WEEK: 'Race sau shield không decay sau khi resolve.',
   REVERSE_RESULTS: 'Race sau đảo ngược bảng kết quả trước khi tính phạt.',
-  LUCKY_CLONE: 'Race sau chỉ chủ rương được +1 clone.',
+  LAST_LAUGH: 'Nếu chủ rương thành dzịt, kéo người an toàn gần nhất xuống làm dzịt theo.',
   ANTI_SHIELD: 'Race sau toàn lobby không được dùng shield thường.',
   CANT_PASS_THOMAS: 'Race sau ai vượt Thomas sẽ bị tính thua.',
   GOLDEN_SHIELD: 'Nhận ngay 1 shield full 3 charge.',
   MORE_PEOPLE_MORE_FUN: 'Race sau số người thua tăng thành 3 hoặc 4.',
+  LUCKY_CLONE: 'Legacy effect đã ngưng dùng.',
   NOTHING: 'Legacy effect đã ngưng dùng.',
   CURSE_SWAP: 'Legacy effect đã ngưng dùng.',
   INSURANCE_FRAUD: 'Legacy effect đã ngưng dùng.',
@@ -72,7 +73,6 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
   const [countdown, setCountdown] = useState<number | null>(null)
   const [playerToRemove, setPlayerToRemove] = useState<number | null>(null)
   const [confirmStartOpen, setConfirmStartOpen] = useState(false)
-  const [expandedPlayers, setExpandedPlayers] = useState<Record<number, boolean>>({})
   const [chestConfigs, setChestConfigs] = useState<Record<number, ChestConfigState>>({})
 
   useEffect(() => {
@@ -158,8 +158,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
     .filter((player) => player.isBoss)
     .reduce((sum, player) => sum + Math.max(player.cleanStreak, 3), 0)
   const hasCloneChaos = activeSelectedChests.some(({ chest }) => chest.effect === 'CLONE_CHAOS')
-  const luckyCloneEntries = activeSelectedChests.filter(({ chest }) => chest.effect === 'LUCKY_CLONE').length
-  const extraItemEntries = (hasCloneChaos ? selectedCount : 0) + luckyCloneEntries
+  const extraItemEntries = hasCloneChaos ? selectedCount : 0
   const totalEntries = selectedCount + extraBossEntries + extraItemEntries
   const canStartRace = selectedCount >= 2 && chestConfigErrors.length === 0 && !starting
   const bossCount = selectedPlayers.filter((player) => player.isBoss).length
@@ -198,13 +197,6 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
     }
 
     togglePlayerRef(userId)
-  }
-
-  const toggleExpandedPlayer = (userId: number) => {
-    setExpandedPlayers((previous) => ({
-      ...previous,
-      [userId]: !previous[userId],
-    }))
   }
 
   const handleStartRaceRequest = () => {
@@ -379,11 +371,11 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
               </div>
               <div className="font-body text-2xl text-white/70 mt-4 font-bold">🦆 Chạy đi các vịt ơiiiii! 🦆</div>
             </>
-          )}
-        </div>
-      </div>
-    )
-  }
+	          )}
+	        </div>
+	      </div>
+	    )
+	  }
 
   return (
     <div className="min-h-screen bg-transparent bubble-bg">
@@ -448,12 +440,6 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
           ) : (
             <div className="py-1">
               {orderedPlayers.map((player, index) => {
-                const selectedShield = player.selectedShieldId
-                  ? player.activeShields.find((shield) => shield.id === player.selectedShieldId)
-                  : null
-                const isExpanded = Boolean(expandedPlayers[player.userId])
-                const cloneEntries = player.isBoss ? Math.max(player.cleanStreak, 3) : 0
-
                 return (
                   <div
                     key={player.userId}
@@ -464,7 +450,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                     `}
                     style={{ animationDelay: `${0.15 + index * 0.05}s` }}
                   >
-                    <div className="grid grid-cols-1 gap-2 items-center sm:grid-cols-[38px_minmax(0,1fr)_auto]">
+                    <div className="grid grid-cols-1 gap-2 items-center sm:grid-cols-[38px_minmax(0,1fr)_minmax(180px,auto)]">
                       <div>
                         <div className={`w-8 h-8 flex items-center justify-center rounded-lg border-3 border-[var(--color-ggd-outline)] transition-colors
                           shadow-[inset_0_2px_0_rgba(255,255,255,0.1),0_2px_0_var(--color-ggd-outline)]
@@ -484,8 +470,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
                               <div className="font-body text-base font-extrabold text-white tracking-wide">{player.name}</div>
-                              {player.isBoss && <span className="ggd-tag bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)] text-[10px] px-2 py-0" title="Any clone loses = fall">👑 Boss {player.cleanStreak}</span>}
-                              {player.isBoss && <span className="ggd-tag bg-[var(--color-ggd-panel)] text-white/80 text-[10px] px-2 py-0">🐥 +{cloneEntries} entries</span>}
+                              {player.isBoss && <span className="ggd-tag bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)] text-[10px] px-2 py-0">👑 Boss {player.cleanStreak}</span>}
                               {player.isImmortal && <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)] text-[10px] px-2 py-0">∞ Auto Shield ON</span>}
                               {player.cleanStreak > 0 && (
                                 <span className={`ggd-tag text-[10px] px-2 py-0 ${player.cleanStreak >= 3 ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' : 'bg-[var(--color-ggd-panel)] text-[var(--color-ggd-neon-green)]'}`}>
@@ -496,77 +481,52 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                               <span className="font-data text-xs text-[var(--color-ggd-muted)]">
                                 {player.scars > 0 ? <span className="text-[var(--color-ggd-orange)]">🤕 {player.scars} Sẹo</span> : 'Sạch sẽ ✨'}
                               </span>
-                              {player.activeShields.length > 0 && !player.isImmortal && (
-                                <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)] text-[10px] px-2 py-0">
-                                  🛡 {player.activeShields.length}({player.activeShields.map((shield) => `${shield.charges}c`).join('/')})
-                                </span>
-                              )}
                             </div>
                           </div>
                         </div>
+                      </div>
 
-                        {isExpanded && player.isBoss && (
-                          <div className="rounded-lg border-2 border-[var(--color-ggd-outline)]/45 bg-[var(--color-ggd-gold)]/18 px-3 py-2">
-                            <div className="font-data text-xs text-white/80">👑 Boss {player.cleanStreak} · 🐥 +{cloneEntries} entries · 💀 clone bét là sụp</div>
-                          </div>
-                        )}
-
-                        {isExpanded && (
-                          <div onClick={(event) => event.stopPropagation()}>
-                            <div className="flex items-center gap-2 mb-2">
-                              <div className="font-data text-[10px] uppercase text-[var(--color-ggd-muted)]">Shield Chips</div>
-                              {player.useShield && player.selected && (
-                                <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)] text-[10px] animate-pulse">
-                                  Đang bật khiên
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {player.isImmortal ? (
-                                <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)]">♾️ Tự động bật khiên mỗi race</span>
-                              ) : player.activeShields.length > 0 ? player.activeShields.map((shield) => (
+                      <div className="flex flex-wrap items-center gap-2 text-left sm:justify-end" onClick={(event) => event.stopPropagation()}>
+                        {player.selected ? (
+                          player.isImmortal ? (
+                            <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)] text-[10px] px-2 py-0">♾ Auto shield</span>
+                          ) : player.activeShields.length > 0 ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (player.selectedShieldId) {
+                                    handleSelectShield(player.userId, player.selectedShieldId)
+                                  }
+                                }}
+                                className={`rounded-full border-2 border-[var(--color-ggd-outline)] px-3 py-1 font-data text-[11px] font-black transition-colors
+                                  ${player.useShield
+                                    ? 'bg-[var(--color-ggd-panel)] text-white/55 hover:text-white'
+                                    : 'bg-white/12 text-white'
+                                  }`}
+                              >
+                                Không khiên
+                              </button>
+                              {player.activeShields.map((shield) => (
                                 <ShieldChip
                                   key={shield.id}
                                   id={shield.id}
                                   charges={shield.charges}
                                   selected={player.selectedShieldId === shield.id}
-                                  disabled={!player.selected}
                                   onClick={() => handleSelectShield(player.userId, shield.id)}
                                 />
-                              )) : (
-                                <span className="font-data text-xs text-[var(--color-ggd-muted)]/70">Không có khiên active</span>
-                              )}
-                            </div>
-                            {player.useShield && player.selected && (
-                              <div className="mt-2 rounded-lg border-2 border-[var(--color-ggd-sky)]/45 bg-[var(--color-ggd-sky)]/10 px-3 py-2">
-                                <div className="font-data text-xs text-white/80">
-                                  {player.isImmortal
-                                    ? 'Thomas auto-shield cho mọi cuộc đua.'
-                                    : selectedShield
-                                      ? `Khiên #${selectedShield.id} · còn ${selectedShield.charges} charge${selectedShield.charges <= 1 ? ' · sắp vỡ rồi đó.' : selectedShield.charges <= 2 ? ' · đang nứt nhẹ.' : ' · còn tươi.'}`
-                                      : 'Khiên đã bật cho race này.'}
-                                </div>
-                              </div>
-                            )}
-                          </div>
+                              ))}
+                            </>
+                          ) : (
+                            <span className="font-data text-xs text-[var(--color-ggd-muted)]/70">Không có khiên</span>
+                          )
+                        ) : (
+                          <span className="font-data text-xs font-black uppercase text-white/40">OUT</span>
                         )}
+                      </div>
                     </div>
-
-                    <div className="flex flex-wrap items-center gap-2 text-left sm:justify-end sm:text-right" onClick={(event) => event.stopPropagation()}>
-                      <span className={`ggd-tag text-[10px] px-2 py-0 ${player.selected ? 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]' : 'bg-[var(--color-ggd-panel)] text-white/55'}`}>
-                        {player.selected ? '✅ READY' : 'OUT'}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => toggleExpandedPlayer(player.userId)}
-                        className="font-data text-xs font-black uppercase tracking-wider text-white/70 hover:text-white"
-                      >
-                        {isExpanded ? 'Thu gọn' : 'Chi tiết'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                )
+	                  </div>
+	                )
               })}
             </div>
           )}
@@ -656,22 +616,22 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
           </div>
         )}
 
-        <div className="flex flex-col gap-4 pt-2 animate-slide-up opacity-0 sm:flex-row sm:items-center sm:justify-between" style={{ animationDelay: '0.4s' }}>
+        <div className="flex flex-col gap-3 pt-1 animate-slide-up opacity-0 sm:flex-row sm:items-center sm:justify-between" style={{ animationDelay: '0.4s' }}>
           <Link href="/" className="w-full sm:w-auto">
-            <button className="w-full font-display text-lg text-[var(--color-ggd-muted)] hover:text-white transition-colors px-4 py-3 sm:w-auto">
+            <button className="w-full font-display text-base text-[var(--color-ggd-muted)] hover:text-white transition-colors px-3 py-2 sm:w-auto">
               ← Hủy
             </button>
           </Link>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <Link href="/rules" className="w-full sm:w-auto">
               <button
-                className="w-full font-display text-lg tracking-widest uppercase px-6 py-3 sm:w-auto
-                  border-[5px] border-[var(--color-ggd-outline)] rounded-xl cursor-pointer
+                className="w-full font-display text-base tracking-widest uppercase px-5 py-2.5 sm:w-auto
+                  border-4 border-[var(--color-ggd-outline)] rounded-lg cursor-pointer
                   transition-all duration-100
                   bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]
-                  shadow-[inset_0_3px_0_rgba(255,255,255,0.35),0_6px_0_#7a6000,0_12px_24px_rgba(0,0,0,0.45)]
-                  hover:-translate-y-1 hover:shadow-[inset_0_3px_0_rgba(255,255,255,0.35),0_8px_0_#7a6000,0_16px_30px_rgba(255,204,0,0.28)]
-                  active:translate-y-[4px] active:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_2px_0_#7a6000]"
+                  shadow-[inset_0_2px_0_rgba(255,255,255,0.35),0_4px_0_#7a6000,0_8px_18px_rgba(0,0,0,0.35)]
+                  hover:-translate-y-0.5 hover:shadow-[inset_0_2px_0_rgba(255,255,255,0.35),0_5px_0_#7a6000,0_10px_20px_rgba(255,204,0,0.2)]
+                  active:translate-y-[3px] active:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_1px_0_#7a6000]"
               >
                 📜 Rules V2
               </button>
@@ -680,13 +640,13 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
               onClick={handleStartRaceRequest}
               disabled={!canStartRace}
               title={!canStartRace ? chestConfigErrors[0] ?? 'Cần ít nhất 2 người chơi' : undefined}
-              className={`w-full font-display text-xl tracking-widest uppercase px-6 py-4 sm:w-auto sm:text-2xl sm:px-14
-                border-[5px] border-[var(--color-ggd-outline)] rounded-xl cursor-pointer
+              className={`w-full font-display text-lg tracking-widest uppercase px-6 py-3 sm:w-auto sm:px-8
+                border-4 border-[var(--color-ggd-outline)] rounded-lg cursor-pointer
                 transition-all duration-100
                 disabled:opacity-25 disabled:cursor-not-allowed disabled:shadow-none
                 ${starting
-                  ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)] shadow-[inset_0_3px_0_rgba(255,255,255,0.35),0_7px_0_#7a6000,0_12px_24px_rgba(0,0,0,0.5)]'
-                  : 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)] shadow-[inset_0_3px_0_rgba(255,255,255,0.45),0_7px_0_#007a3a,0_12px_28px_rgba(61,255,143,0.35)] hover:-translate-y-1 hover:shadow-[inset_0_3px_0_rgba(255,255,255,0.45),0_9px_0_#007a3a,0_16px_32px_rgba(61,255,143,0.45)] active:translate-y-[5px] active:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_2px_0_#007a3a]'
+                  ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)] shadow-[inset_0_2px_0_rgba(255,255,255,0.35),0_4px_0_#7a6000,0_8px_18px_rgba(0,0,0,0.4)]'
+                  : 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)] shadow-[inset_0_2px_0_rgba(255,255,255,0.45),0_4px_0_#007a3a,0_8px_20px_rgba(61,255,143,0.28)] hover:-translate-y-0.5 hover:shadow-[inset_0_2px_0_rgba(255,255,255,0.45),0_5px_0_#007a3a,0_10px_22px_rgba(61,255,143,0.32)] active:translate-y-[3px] active:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_1px_0_#007a3a]'
                 }`}
             >
               <span className="flex items-center gap-3">

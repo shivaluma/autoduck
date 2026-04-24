@@ -39,6 +39,7 @@ export type ChestEffect =
   | 'CLONE_CHAOS'
   | 'SAFE_WEEK'
   | 'REVERSE_RESULTS'
+  | 'LAST_LAUGH'
   | 'LUCKY_CLONE'
   | 'ANTI_SHIELD'
   | 'CANT_PASS_THOMAS'

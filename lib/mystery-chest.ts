@@ -13,7 +13,7 @@ export const COMMON_CHEST_TABLE: Array<{ effect: ChestEffect; weight: number }> 
 ]
 
 export const RARE_CHEST_TABLE: Array<{ effect: ChestEffect; weight: number }> = [
-  { effect: 'LUCKY_CLONE', weight: 28 },
+  { effect: 'LAST_LAUGH', weight: 28 },
   { effect: 'ANTI_SHIELD', weight: 22 },
   { effect: 'CANT_PASS_THOMAS', weight: 18 },
   { effect: 'GOLDEN_SHIELD', weight: 17 },
@@ -27,6 +27,7 @@ const INVENTORY_EFFECTS = new Set<ChestEffect>([
 ])
 
 const LEGACY_EFFECTS = new Set<ChestEffect>([
+  'LUCKY_CLONE',
   'NOTHING',
   'CURSE_SWAP',
   'INSURANCE_FRAUD',
@@ -65,9 +66,13 @@ type RankingEntry = {
   rank: number
   isClone: boolean
   cloneOfUserId?: number | null
+  isImmortal?: boolean
+  name?: string
+  cloneIndex?: number | null
 }
 
 type PenaltyVictim = {
+  name?: string
   userId: number
   initialRank: number
   isClone?: boolean
@@ -89,7 +94,7 @@ export type ItemRaceModifiers = {
   antiShield: boolean
   cantPassThomas: boolean
   morePeopleMoreFun: number | null
-  luckyCloneOwnerIds: number[]
+  lastLaughOwnerIds: number[]
 }
 
 export type BossRewardInput = {
@@ -324,8 +329,8 @@ function summarizeItemModifiers(activeChests: ActiveChestRecord[]): ItemRaceModi
     antiShield: effects.has('ANTI_SHIELD'),
     cantPassThomas: effects.has('CANT_PASS_THOMAS'),
     morePeopleMoreFun: morePeopleRoll,
-    luckyCloneOwnerIds: activeChests
-      .filter((chest) => chest.effect === 'LUCKY_CLONE')
+    lastLaughOwnerIds: activeChests
+      .filter((chest) => chest.effect === 'LAST_LAUGH')
       .map((chest) => chest.ownerId),
   }
 }
@@ -367,24 +372,6 @@ export async function applyChestPreRace(
     }
   }
 
-  for (const ownerId of modifiers.luckyCloneOwnerIds) {
-    const owner = originals.find((participant) => participant.userId === ownerId)
-    if (!owner) {
-      continue
-    }
-
-    updatedParticipants.push({
-      ...owner,
-      useShield: false,
-      shieldId: undefined,
-      isClone: true,
-      cloneOfUserId: owner.userId,
-      cloneIndex: nextCloneIndex(owner.userId, 100),
-      displayName: `${owner.name} Lucky`,
-      chestEffect: 'LUCKY_CLONE',
-    })
-  }
-
   return {
     participants: updatedParticipants,
     borrowedShieldIds: [] as number[],
@@ -396,15 +383,43 @@ export async function resolveChestPostRace(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   _prisma: any,
   _raceId: number,
-  _ranking: RankingEntry[],
+  ranking: RankingEntry[],
   victims: PenaltyVictim[],
   activeChests: ActiveChestRecord[],
   options: { forceVoid?: boolean } = {}
 ) {
   void options
+  const modifiedVictims = [...victims]
+  const victimOwnerIds = new Set(victims.map((victim) => victim.cloneOfUserId ?? victim.userId))
+  const lastLaughOwnerIds = activeChests
+    .filter((chest) => chest.effect === 'LAST_LAUGH' && victimOwnerIds.has(chest.ownerId))
+    .map((chest) => chest.ownerId)
+
+  if (lastLaughOwnerIds.length > 0) {
+    const rankedFromBottom = [...ranking].sort((left, right) => right.rank - left.rank)
+    for (const ownerId of lastLaughOwnerIds) {
+      const dragged = rankedFromBottom.find((entry) => {
+        const effectiveOwnerId = entry.cloneOfUserId ?? entry.userId
+        return effectiveOwnerId !== ownerId && !victimOwnerIds.has(effectiveOwnerId) && !entry.isImmortal
+      })
+
+      if (!dragged) {
+        continue
+      }
+
+      modifiedVictims.push({
+        name: dragged.name,
+        userId: dragged.userId,
+        initialRank: dragged.rank,
+        isClone: dragged.isClone,
+        cloneOfUserId: dragged.cloneOfUserId ?? undefined,
+      })
+      victimOwnerIds.add(dragged.cloneOfUserId ?? dragged.userId)
+    }
+  }
 
   return {
-    modifiedVictims: victims,
+    modifiedVictims,
     shieldsToGrant: [],
     outcomes: activeChests.map((chest) => ({
       chestId: chest.id,

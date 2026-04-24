@@ -106,6 +106,10 @@ export async function GET(
           outcome = targetParticipant?.initialRank === 1 ? 'success' : 'fizzled'
         }
 
+        if (chest.effect === 'LAST_LAUGH') {
+          outcome = ownerParticipant?.gotScar ? 'success' : 'fizzled'
+        }
+
         return {
           id: chest.id,
           ownerId: chest.ownerId,

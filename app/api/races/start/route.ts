@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { runRaceWorker } from '@/lib/race-worker'
-import { calculatePenalties, dedupeVictimUserIds } from '@/lib/shield-logic'
+import { buildPenaltyVerdict, calculatePenalties, dedupeVictimUserIds } from '@/lib/shield-logic'
 import { raceEventBus, RACE_EVENTS } from '@/lib/event-bus'
 import { expandBossParticipants, evaluateBossStatus, resolveBossOutcome } from '@/lib/boss-logic'
 import { applyChestPreRace, getActiveChestsForUsers, issueBossRewardChests, resolveChestPostRace, validateChestConfig } from '@/lib/mystery-chest'
@@ -415,6 +415,7 @@ async function executeRace(
       let newChestsForThisRace: Array<{ ownerId: number; effect: ChestEffect }> = []
       const chestDisabledPostRace = {
         modifiedVictims: penalties.victims.map((victim) => ({
+          name: victim.name,
           userId: victim.userId,
           initialRank: victim.initialRank,
           isClone: victim.isClone ?? false,
@@ -435,12 +436,16 @@ async function executeRace(
             tx,
             raceId,
             raceResults.map((entry) => ({
+              name: entry.name,
               userId: entry.userId,
               rank: entry.initialRank,
               isClone: entry.isClone,
               cloneOfUserId: entry.cloneOfUserId,
+              cloneIndex: entry.cloneIndex,
+              isImmortal: entry.isImmortal,
             })),
             penalties.victims.map((victim) => ({
+              name: victim.name,
               userId: victim.userId,
               initialRank: victim.initialRank,
               isClone: victim.isClone ?? false,
@@ -453,12 +458,16 @@ async function executeRace(
             tx,
             raceId,
             raceResults.map((entry) => ({
+              name: entry.name,
               userId: entry.userId,
               rank: entry.initialRank,
               isClone: entry.isClone,
               cloneOfUserId: entry.cloneOfUserId,
+              cloneIndex: entry.cloneIndex,
+              isImmortal: entry.isImmortal,
             })),
             penalties.victims.map((victim) => ({
+              name: victim.name,
               userId: victim.userId,
               initialRank: victim.initialRank,
               isClone: victim.isClone ?? false,
@@ -468,6 +477,9 @@ async function executeRace(
           )
 
       const finalVictimUserIds = dedupeVictimUserIds(postRace.modifiedVictims)
+      const finalVerdict = buildPenaltyVerdict(postRace.modifiedVictims.map((victim) => ({
+        name: victim.name ?? raceResults.find((entry) => (entry.cloneOfUserId ?? entry.userId) === (victim.cloneOfUserId ?? victim.userId))?.name ?? `User ${victim.cloneOfUserId ?? victim.userId}`,
+      })))
 
       for (const resultEntry of raceResults) {
         const effectiveUserId = resultEntry.cloneOfUserId ?? resultEntry.userId
@@ -666,18 +678,20 @@ async function executeRace(
         data: {
           status: 'finished',
           videoUrl: result.videoUrl,
-          finalVerdict: penalties.finalVerdict,
+          finalVerdict,
           finishedAt: new Date(),
         },
       })
 
       return {
         finalVictimUserIds,
+        finalVerdict,
         newChestsForThisRace,
       }
     })
 
     const finalVictimUserIds = transactionSummary.finalVictimUserIds
+    const finalVerdict = transactionSummary.finalVerdict
     const winner = raceResults.find((entry) => entry.initialRank === 1)
     const chestsAwarded = transactionSummary.newChestsForThisRace
     const chestAwardOwnerIds = Array.from(new Set(chestsAwarded.map((chest: { ownerId: number }) => chest.ownerId)))
@@ -691,7 +705,7 @@ async function executeRace(
       raceId,
       winner: winnerDetails ? { name: winnerDetails.name, avatarUrl: winnerDetails.avatarUrl } : null,
       victims: (victimDetails as RaceEventUser[]).map((victim) => ({ name: victim.name, avatarUrl: victim.avatarUrl })),
-      verdict: penalties.finalVerdict,
+      verdict: finalVerdict,
       chestsConsumed: activeChests.map((chest) => ({
         ownerId: chest.ownerId,
         effect: chest.effect,
@@ -703,7 +717,7 @@ async function executeRace(
       })),
     })
 
-    console.log(`Race ${raceId} completed! ${penalties.finalVerdict}`)
+    console.log(`Race ${raceId} completed! ${finalVerdict}`)
   } catch (error) {
     console.error(`Race ${raceId} failed:`, error)
     await prisma.race.update({
