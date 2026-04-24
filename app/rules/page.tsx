@@ -94,7 +94,7 @@ export default function RulesPage() {
       <div className="neon-divider" />
 
       <header className="border-b-4 border-[var(--color-ggd-outline)]">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-5">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-5 sm:px-6">
           <Link href="/" className="font-data text-sm text-[var(--color-ggd-muted)] transition-colors hover:text-white">
             ← Về Chuồng
           </Link>
@@ -107,12 +107,12 @@ export default function RulesPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-6 py-8 space-y-8">
-        <section className="relative overflow-hidden rounded-[28px] border-5 border-[var(--color-ggd-outline)] bg-[radial-gradient(circle_at_12%_18%,rgba(255,204,0,0.22),transparent_30%),radial-gradient(circle_at_84%_24%,rgba(61,255,143,0.18),transparent_28%),linear-gradient(135deg,rgba(33,24,76,0.94),rgba(17,13,38,0.98))] p-7 shadow-[0_10px_0_var(--color-ggd-outline),0_26px_50px_rgba(0,0,0,0.55)]">
+      <main className="mx-auto max-w-7xl px-4 py-6 space-y-6 sm:px-6 sm:py-8 sm:space-y-8">
+        <section className="relative overflow-hidden rounded-[20px] border-5 border-[var(--color-ggd-outline)] bg-[radial-gradient(circle_at_12%_18%,rgba(255,204,0,0.22),transparent_30%),radial-gradient(circle_at_84%_24%,rgba(61,255,143,0.18),transparent_28%),linear-gradient(135deg,rgba(33,24,76,0.94),rgba(17,13,38,0.98))] p-5 shadow-[0_10px_0_var(--color-ggd-outline),0_26px_50px_rgba(0,0,0,0.55)] sm:rounded-[28px] sm:p-7">
           <div className="grid gap-8 lg:items-center">
             <div>
               <div className="ggd-tag inline-flex bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]">🎁 Reward Chest System</div>
-              <h1 className="mt-5 font-display text-5xl leading-none text-white text-outlined md:text-7xl">
+              <h1 className="mt-5 font-display text-4xl leading-none text-white text-outlined sm:text-5xl md:text-7xl">
                 Duck Race <span className="text-[var(--color-ggd-neon-green)]">V2.0</span>
               </h1>
               <p className="mt-5 max-w-2xl font-readable text-lg leading-relaxed text-white/78">
@@ -135,7 +135,7 @@ export default function RulesPage() {
           </div>
         </section>
 
-        <section className="ggd-card p-6">
+        <section className="ggd-card p-5 sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <div className="font-display text-3xl text-[var(--color-ggd-sky)] text-outlined">🛡 Shield Decay</div>
@@ -176,7 +176,7 @@ export default function RulesPage() {
         </section>
 
         <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-          <div className="ggd-card-gold ggd-stripe p-6">
+          <div className="ggd-card-gold ggd-stripe p-5 sm:p-6">
             <div className="font-display text-3xl text-[var(--color-ggd-gold)] text-outlined">👑 Boss Streak Rate</div>
             <p className="mt-2 font-readable text-sm text-white/70">Boss càng sống lâu, reward càng dễ nổ Rare.</p>
             <div className="mt-5 space-y-4">
@@ -196,7 +196,7 @@ export default function RulesPage() {
             </div>
           </div>
 
-          <div className="ggd-card-green p-6">
+          <div className="ggd-card-green p-5 sm:p-6">
             <div className="font-display text-3xl text-[var(--color-ggd-neon-green)] text-outlined">🧭 Weekly Flow</div>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               {flowSteps.map((step) => (
@@ -218,7 +218,7 @@ export default function RulesPage() {
           </div>
         </section>
 
-        <section className="ggd-card p-6">
+        <section className="ggd-card p-5 sm:p-6">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <div className="font-display text-3xl text-[var(--color-ggd-neon-green)] text-outlined">🎁 Common Chest</div>

@@ -156,9 +156,9 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
 
   return (
     <div className="relative">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[700px] lg:h-[760px]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:h-[760px]">
         <div className="lg:col-span-2 flex flex-col gap-4">
-          <Card className="flex-1 bg-black/60 flex items-center justify-center overflow-hidden relative border-4 border-[var(--color-ggd-neon-green)] rounded-2xl shadow-[0_0_25px_rgba(61,255,143,0.2),0_6px_0_var(--color-ggd-outline)]">
+          <Card className="min-h-[260px] flex-1 bg-black/60 flex items-center justify-center overflow-hidden relative border-4 border-[var(--color-ggd-neon-green)] rounded-2xl shadow-[0_0_25px_rgba(61,255,143,0.2),0_6px_0_var(--color-ggd-outline)] sm:min-h-[420px]">
             {status === 'connecting' && (
               <div className="text-[var(--color-ggd-neon-green)] animate-pulse flex flex-col items-center">
                 <span className="text-4xl animate-bob">📡</span>
@@ -192,7 +192,7 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
             </div>
           )}
 
-          <div className="ggd-card p-4 flex justify-between items-center">
+          <div className="ggd-card p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="font-display text-lg text-white text-outlined">{result ? '🏆 Đã Kết Thúc' : '📺 Trực Tiếp'}</div>
             <div className="flex items-center gap-2 font-data text-sm">
               <div className={`w-3 h-3 rounded-full shadow-[0_0_8px] ${status === 'live' ? 'bg-[var(--color-ggd-neon-green)] shadow-[var(--color-ggd-neon-green)]' : 'bg-[var(--color-ggd-orange)] shadow-[var(--color-ggd-orange)]'}`} />
@@ -203,8 +203,8 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
           </div>
         </div>
 
-        <div className="lg:col-span-1 flex flex-col gap-4 h-full">
-          <Card className="ggd-card flex flex-col h-[360px] overflow-hidden">
+        <div className="lg:col-span-1 flex flex-col gap-4 lg:h-full">
+          <Card className="ggd-card flex flex-col h-[320px] overflow-hidden sm:h-[360px]">
             <div className="px-5 py-3 bg-[var(--color-ggd-panel)] rounded-t-[6px] flex items-center justify-between">
               <span className="font-display text-lg text-white text-outlined">🎤 MC Vịt</span>
               {status === 'live' && !result && <span className="w-3 h-3 bg-[var(--color-ggd-neon-green)] rounded-full animate-ping" />}

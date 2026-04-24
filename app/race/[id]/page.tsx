@@ -97,9 +97,9 @@ export default function RaceDetailPage({
         isFinished ? 'neon-divider' : isFailed ? 'bg-[var(--color-ggd-orange)]' : 'bg-[var(--color-ggd-muted)]/20'}`} />
 
       <header className="border-b-4 border-[var(--color-ggd-outline)]">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col gap-3 sm:px-6 sm:flex-row sm:items-center sm:justify-between">
           <Link href="/" className="font-data text-sm text-[var(--color-ggd-muted)] hover:text-white transition-colors">← Về Chuồng</Link>
-          <div className="flex items-center gap-4 animate-slide-right">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 animate-slide-right">
             <div className="font-display text-2xl text-white text-outlined">
               🦆 Trận <span className="text-[var(--color-ggd-neon-green)]">#{raceId}</span>
             </div>
@@ -113,17 +113,17 @@ export default function RaceDetailPage({
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-8 space-y-6">
+      <main className="max-w-7xl mx-auto px-4 py-6 space-y-6 sm:px-6 sm:py-8">
         {isRunning && (
           <div className="space-y-6">
-            <div className="ggd-card-green p-8 ggd-stripe">
-              <div className="flex items-center justify-center gap-6">
-                <div className="text-5xl animate-bob">🦆</div>
+            <div className="ggd-card-green p-5 ggd-stripe sm:p-8">
+              <div className="flex items-center justify-center gap-3 sm:gap-6">
+                <div className="hidden text-5xl animate-bob sm:block">🦆</div>
                 <div className="text-center">
-                  <div className="font-display text-4xl text-[var(--color-ggd-neon-green)] text-outlined">ĐANG ĐUA! 🏃💨</div>
+                  <div className="font-display text-3xl text-[var(--color-ggd-neon-green)] text-outlined sm:text-4xl">ĐANG ĐUA! 🏃💨</div>
                   <div className="font-data text-sm text-[var(--color-ggd-muted)] mt-1">Phát trực tiếp...</div>
                 </div>
-                <div className="text-5xl animate-bob" style={{ animationDelay: '0.3s' }}>🦆</div>
+                <div className="hidden text-5xl animate-bob sm:block" style={{ animationDelay: '0.3s' }}>🦆</div>
               </div>
             </div>
             <div className="animate-slide-up"><RaceLiveView raceId={parseInt(raceId)} /></div>
@@ -143,14 +143,14 @@ export default function RaceDetailPage({
             />
             {race.finalVerdict && (
               <div className="ggd-card-gold ggd-stripe animate-slide-up opacity-0" style={{ animationDelay: '0.1s' }}>
-                <div className="relative px-8 py-10 text-center">
+                <div className="relative px-4 py-8 text-center sm:px-8 sm:py-10">
                   <div className="flex justify-center gap-3 mb-6">
                     {['🎉', '🦆', '🏆', '🦆', '🎉'].map((emoji, i) => (
                       <div key={i} className="text-3xl animate-bob" style={{ animationDelay: `${i * 0.15}s` }}>{emoji}</div>
                     ))}
                   </div>
                   <div className="font-display text-lg text-[var(--color-ggd-gold)] glow-gold mb-3">✨ Kết Quả Chính Thức ✨</div>
-                  <h2 className="font-display text-4xl md:text-5xl text-white leading-tight text-outlined">{race.finalVerdict}</h2>
+                  <h2 className="font-display text-3xl text-white leading-tight text-outlined md:text-5xl">{race.finalVerdict}</h2>
                   <div className="font-data text-base text-[var(--color-ggd-muted)] mt-4">🦆 2 con dzịt đã lộ diện! Quack!</div>
                 </div>
               </div>
@@ -160,13 +160,13 @@ export default function RaceDetailPage({
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className={`${isRunning ? 'lg:col-span-3' : 'lg:col-span-2'} animate-slide-up opacity-0`} style={{ animationDelay: '0.2s' }}>
-            <div className="ggd-card-green ggd-stripe">
+            <div className="ggd-card-green ggd-stripe overflow-x-auto">
               <div className="bg-[var(--color-ggd-neon-green)] px-5 py-3 rounded-t-[6px] flex items-center justify-between">
                 <span className="font-display text-lg text-[var(--color-ggd-outline)]">🏆 Bảng Xếp Hạng</span>
                 <span className="font-data text-sm text-[var(--color-ggd-outline)]/70">{sortedParticipants.length} vịt</span>
               </div>
 
-              <div className={`grid ${resultGridClass} gap-2 px-5 py-3 border-b-[3px] border-[var(--color-ggd-outline)]/40 bg-[var(--color-ggd-panel)]`}>
+              <div className={`grid ${resultGridClass} min-w-[920px] gap-2 px-5 py-3 border-b-[3px] border-[var(--color-ggd-outline)]/40 bg-[var(--color-ggd-panel)]`}>
                 <div className="ggd-col-header">#</div>
                 <div className="ggd-col-header">VỊT 🦆</div>
                 <div className="ggd-col-header text-center">KHIÊN</div>
@@ -185,7 +185,7 @@ export default function RaceDetailPage({
                     return (
                     <div
                       key={`${p.userId}-${p.cloneIndex ?? 0}-${p.initialRank ?? idx}`}
-                      className={`grid ${resultGridClass} gap-2 items-center px-5 py-3.5 duck-row
+                      className={`grid ${resultGridClass} min-w-[920px] gap-2 items-center px-5 py-3.5 duck-row
                         ${p.gotScar ? 'loser' : p.usedShield ? 'shielded' : idx < 3 ? 'winner' : ''}
                         animate-slide-right opacity-0`}
                       style={{ animationDelay: `${0.3 + idx * 0.08}s` }}
@@ -288,7 +288,7 @@ export default function RaceDetailPage({
                   <span className="font-display text-lg text-white text-outlined">🎤 MC Vịt</span>
                   {isRunning && <span className="ggd-tag bg-[var(--color-ggd-orange)] text-white text-xs animate-pulse">LIVE</span>}
                 </div>
-                <ScrollArea className="h-[520px]">
+                <ScrollArea className="h-[360px] sm:h-[520px]">
                   {race.commentaries.length > 0 ? (
                     <div className="py-2">
                       {race.commentaries.map((c, idx) => (
@@ -314,11 +314,11 @@ export default function RaceDetailPage({
           )}
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t-4 border-[var(--color-ggd-outline)] animate-fade-in opacity-0" style={{ animationDelay: '0.7s' }}>
-          <Link href="/" className="font-display text-lg text-[var(--color-ggd-muted)] hover:text-white transition-colors px-4 py-3">← Về Chuồng</Link>
+        <div className="flex flex-col gap-3 pt-4 border-t-4 border-[var(--color-ggd-outline)] animate-fade-in opacity-0 sm:flex-row sm:items-center sm:justify-between" style={{ animationDelay: '0.7s' }}>
+          <Link href="/" className="font-display text-lg text-[var(--color-ggd-muted)] hover:text-white transition-colors px-4 py-3 text-center sm:text-left">← Về Chuồng</Link>
           {isFinished && (
-            <Link href="/race/new">
-              <button className="ggd-btn bg-[var(--color-ggd-orange)] text-white text-lg px-10 py-3">Trận Tiếp → 🦆</button>
+            <Link href="/race/new" className="w-full sm:w-auto">
+              <button className="ggd-btn w-full bg-[var(--color-ggd-orange)] text-white text-lg px-10 py-3 sm:w-auto">Trận Tiếp → 🦆</button>
             </Link>
           )}
         </div>

@@ -350,11 +350,11 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
       <div className="neon-divider" />
 
       <header className="border-b-4 border-[var(--color-ggd-outline)]">
-        <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 py-5 flex flex-col gap-3 sm:px-6 sm:flex-row sm:items-center sm:justify-between">
           <Link href="/" className="font-data text-sm text-[var(--color-ggd-muted)] hover:text-white transition-colors">
             ← Về Chuồng
           </Link>
-          <div className="flex items-center gap-3 animate-slide-right">
+          <div className="flex flex-wrap items-center gap-3 animate-slide-right">
             <div className="font-display text-2xl text-white text-outlined">
               🦆 Setup <span className="text-[var(--color-ggd-neon-green)]">Race V2</span>
             </div>
@@ -367,10 +367,10 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-8 space-y-6">
+      <main className="max-w-6xl mx-auto px-4 py-6 space-y-6 sm:px-6 sm:py-8">
         <div className="ggd-card-green ggd-stripe animate-slide-up opacity-0" style={{ animationDelay: '0.1s' }}>
-          <div className="flex items-center justify-between px-5 py-3 bg-[var(--color-ggd-neon-green)] rounded-t-[6px]">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col gap-3 px-4 py-3 bg-[var(--color-ggd-neon-green)] rounded-t-[6px] sm:px-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4">
               <span className="font-display text-lg text-[var(--color-ggd-outline)]">Section A. Danh Sách Vịt</span>
               <span className="ggd-tag bg-[var(--color-ggd-outline)] text-[var(--color-ggd-neon-green)]">
                 {selectedCount} đã chọn
@@ -402,7 +402,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                     `}
                     style={{ animationDelay: `${0.15 + index * 0.05}s` }}
                   >
-                    <div className="grid grid-cols-[50px_1fr_190px] gap-4 items-start">
+                    <div className="grid grid-cols-1 gap-4 items-start sm:grid-cols-[50px_minmax(0,1fr)_190px]">
                     <div className="pt-2">
                       <div className={`w-9 h-9 flex items-center justify-center rounded-xl border-3 border-[var(--color-ggd-outline)] transition-colors
                         shadow-[inset_0_2px_0_rgba(255,255,255,0.1),0_2px_0_var(--color-ggd-outline)]
@@ -492,7 +492,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                       </div>
                     </div>
 
-                    <div className="pt-2 text-right">
+                    <div className="pt-2 text-left sm:text-right">
                       <div className="font-data text-xs uppercase text-[var(--color-ggd-muted)] mb-2">Tình Trạng</div>
                       <div className="space-y-2">
                         <div className={`font-data text-sm ${player.selected ? 'text-[var(--color-ggd-neon-green)]' : 'text-[var(--color-ggd-muted)]'}`}>
@@ -611,16 +611,16 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
           </div>
         )}
 
-        <div className="flex items-center justify-between pt-2 animate-slide-up opacity-0" style={{ animationDelay: '0.4s' }}>
-          <Link href="/">
-            <button className="font-display text-lg text-[var(--color-ggd-muted)] hover:text-white transition-colors px-4 py-3">
+        <div className="flex flex-col gap-4 pt-2 animate-slide-up opacity-0 sm:flex-row sm:items-center sm:justify-between" style={{ animationDelay: '0.4s' }}>
+          <Link href="/" className="w-full sm:w-auto">
+            <button className="w-full font-display text-lg text-[var(--color-ggd-muted)] hover:text-white transition-colors px-4 py-3 sm:w-auto">
               ← Hủy
             </button>
           </Link>
-          <div className="flex items-center gap-3">
-            <Link href="/rules">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Link href="/rules" className="w-full sm:w-auto">
               <button
-                className="font-display text-lg tracking-widest uppercase px-6 py-3
+                className="w-full font-display text-lg tracking-widest uppercase px-6 py-3 sm:w-auto
                   border-[5px] border-[var(--color-ggd-outline)] rounded-xl cursor-pointer
                   transition-all duration-100
                   bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]
@@ -635,7 +635,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
               onClick={handleStartRace}
               disabled={!canStartRace}
               title={!canStartRace ? chestConfigErrors[0] ?? 'Cần ít nhất 2 người chơi' : undefined}
-              className={`font-display text-2xl tracking-widest uppercase px-14 py-4
+              className={`w-full font-display text-xl tracking-widest uppercase px-6 py-4 sm:w-auto sm:text-2xl sm:px-14
                 border-[5px] border-[var(--color-ggd-outline)] rounded-xl cursor-pointer
                 transition-all duration-100
                 disabled:opacity-25 disabled:cursor-not-allowed disabled:shadow-none

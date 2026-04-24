@@ -277,15 +277,15 @@ export function AdminDashboardContent({ secret }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-transparent bubble-bg text-white font-body p-8">
-      <header className="flex justify-between items-center mb-8 border-b-[5px] border-[var(--color-ggd-outline)] pb-5">
-        <h1 className="font-display text-4xl text-[var(--color-ggd-gold)] text-outlined">🦆 QUẢN LÝ BẦY VỊT ⚡</h1>
-        <div className="flex gap-3">
+    <div className="min-h-screen bg-transparent bubble-bg text-white font-body p-4 sm:p-8">
+      <header className="flex flex-col gap-4 mb-8 border-b-[5px] border-[var(--color-ggd-outline)] pb-5 lg:flex-row lg:items-center lg:justify-between">
+        <h1 className="font-display text-3xl text-[var(--color-ggd-gold)] text-outlined sm:text-4xl">🦆 QUẢN LÝ BẦY VỊT ⚡</h1>
+        <div className="flex gap-3 overflow-x-auto pb-2 lg:overflow-visible lg:pb-0">
           {(['users', 'races', 'tools', 'season'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`ggd-btn text-base px-6 py-2.5 ${
+              className={`ggd-btn shrink-0 text-base px-6 py-2.5 ${
                 activeTab === tab
                   ? 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]'
                   : 'bg-[var(--color-ggd-surface)] text-[var(--color-ggd-muted)]'
@@ -294,7 +294,7 @@ export function AdminDashboardContent({ secret }: Props) {
               {tab === 'users' ? '🦆 VỊT' : tab === 'races' ? '🏁 TRẬN' : tab === 'tools' ? '🔧 TOOLS' : '⚙️ SEASON'}
             </button>
           ))}
-          <Link href="/" className="ggd-btn bg-[var(--color-ggd-surface)] text-[var(--color-ggd-muted)] text-base px-6 py-2.5">🚰 THOÁT</Link>
+          <Link href="/" className="ggd-btn shrink-0 bg-[var(--color-ggd-surface)] text-[var(--color-ggd-muted)] text-base px-6 py-2.5">🚰 THOÁT</Link>
         </div>
       </header>
 
@@ -315,7 +315,7 @@ export function AdminDashboardContent({ secret }: Props) {
               <div className="ggd-panel-header bg-[var(--color-ggd-neon-green)] rounded-t-[7px]">
                 <span className="text-[var(--color-ggd-outline)] text-xl">🦆 Danh Sách Bầy Vịt</span>
               </div>
-              <table className="w-full text-left">
+              <table className="min-w-[980px] w-full text-left">
                 <thead>
                   <tr className="border-b-[3px] border-black bg-[var(--color-ggd-panel)]">
                     {['ID', 'Tên', 'Avatar', 'Sẹo', 'Khiên mới', 'Đã Dùng', 'Dzịt', 'Streak', 'Boss', ''].map((header) => (
@@ -384,13 +384,13 @@ export function AdminDashboardContent({ secret }: Props) {
           {activeTab === 'races' && (
             <div className="space-y-3">
               {races.map((race) => (
-                <div key={race.id} className="ggd-card p-5 flex justify-between items-center">
-                  <div className="flex items-center gap-4">
+                <div key={race.id} className="ggd-card p-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                     <span className="font-display text-2xl text-[var(--color-ggd-muted)]">#{race.id}</span>
                     <span className={`ggd-tag text-sm font-black ${race.status === 'finished' ? 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]' : 'bg-[var(--color-ggd-orange)] text-white'}`}>{race.status.toUpperCase()}</span>
                     <span className="text-sm text-[var(--color-ggd-muted)] font-data font-bold">{new Date(race.createdAt).toLocaleString()}</span>
                   </div>
-                  <div className="text-base text-white/70 font-readable italic">{race.finalVerdict || '—'}</div>
+                  <div className="text-base text-white/70 font-readable italic break-words sm:text-right">{race.finalVerdict || '—'}</div>
                 </div>
               ))}
             </div>
@@ -411,7 +411,7 @@ export function AdminDashboardContent({ secret }: Props) {
 
           {activeTab === 'season' && season && (
             <div className="space-y-6">
-              <div className="ggd-card-gold ggd-stripe p-6 flex items-center justify-between">
+              <div className="ggd-card-gold ggd-stripe p-5 flex flex-col gap-4 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <div className="font-display text-3xl text-[var(--color-ggd-gold)] text-outlined">⚙️ Season Control</div>
                   <div className="font-data text-sm text-[var(--color-ggd-muted)] mt-1">Theo dõi Boss, shield aging và weekly tick.</div>

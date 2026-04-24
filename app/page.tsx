@@ -30,6 +30,64 @@ const emptyRaceLists: DashboardRaceLists = {
   totalOfficial: 0,
 }
 
+function getRaceSignal(race: DashboardRaceItem) {
+  const verdict = (race.finalVerdict ?? '').toLowerCase()
+
+  if (race.status === 'failed') {
+    return {
+      className: 'race-signal race-signal-danger',
+      label: '💀 Failed',
+      headline: 'Race bị lỗi',
+    }
+  }
+
+  if (race.status === 'running') {
+    return {
+      className: 'race-signal race-signal-active',
+      label: '🔥 Live',
+      headline: 'Đang chạy',
+    }
+  }
+
+  if (verdict.includes('boss')) {
+    return {
+      className: 'race-signal race-signal-boss',
+      label: '⛑ Boss',
+      headline: race.finalVerdict || 'Boss đã đổi trạng thái',
+    }
+  }
+
+  if (verdict.includes('rare') || verdict.includes('chest')) {
+    return {
+      className: 'race-signal race-signal-rare',
+      label: '🎁 Rare',
+      headline: race.finalVerdict || 'Rare chest opened',
+    }
+  }
+
+  if (verdict.includes('4') || verdict.includes('bốn') || verdict.includes('bon')) {
+    return {
+      className: 'race-signal race-signal-danger',
+      label: '💀 Heavy',
+      headline: race.finalVerdict || 'Nhiều con dzịt cùng chết',
+    }
+  }
+
+  if (verdict.includes('thomas')) {
+    return {
+      className: 'race-signal race-signal-normal',
+      label: '🐥 Pace',
+      headline: race.finalVerdict || 'Thomas giữ pace line',
+    }
+  }
+
+  return {
+    className: 'race-signal race-signal-normal',
+    label: race.status === 'finished' ? '💀 Done' : '⏳ Pending',
+    headline: race.finalVerdict || `Trận #${race.id}`,
+  }
+}
+
 export default function Dashboard() {
   const [players, setPlayers] = useState<PlayerData[]>([])
   const [loading, setLoading] = useState(true)
@@ -60,6 +118,9 @@ export default function Dashboard() {
   const sortedPlayers = [...players].sort((left, right) => right.totalKhaos - left.totalKhaos)
   const mostUnluckyDuck = summary?.mostUnluckyDuck ?? null
   const pendingItemsCount = players.filter((player) => player.activeChest).length
+  const activeChestEffects = players
+    .map((player) => player.activeChest?.effect)
+    .filter((effect): effect is NonNullable<PlayerData['activeChest']>['effect'] => Boolean(effect))
 
   const bossWatch = useMemo(
     () => players
@@ -82,71 +143,90 @@ export default function Dashboard() {
     [players]
   )
 
-  const statCards = [
+  const currentBoss = bossWatch.find((player) => player.isBoss) ?? null
+  const topShieldThreat = fragileShields[0] ?? null
+  const weeklyHeadline = currentBoss
+    ? `WEEK ${Math.max(totalRaces, 1)}: SĂN BOSS ${currentBoss.name.replace('Zịt ', '')}`
+    : topShieldThreat
+      ? `WEEK ${Math.max(totalRaces, 1)}: KHIÊN ${topShieldThreat.player.name.replace('Zịt ', '')} SẮP NỔ`
+      : pendingItemsCount > 0
+        ? `WEEK ${Math.max(totalRaces, 1)}: ITEM ĐANG CHỜ NỔ`
+        : `WEEK ${Math.max(totalRaces, 1)}: BẦY VỊT TẠM YÊN`
+
+  const primaryStats = [
     {
-      label: '🐥 Tổng Vịt',
-      value: players.length.toString(),
-      accent: 'text-white',
-      detail: 'Tổng dân số trong chuồng',
-      cardClass: 'from-white/8 to-black/10',
+      icon: '⛑',
+      label: 'Current Boss',
+      value: currentBoss ? currentBoss.name.replace('Zịt ', '') : 'Clear',
+      detail: currentBoss ? `Boss level ${currentBoss.cleanStreak}` : `${bossWatch.length} vịt đang vào tầm ngắm`,
+      tone: 'primary-kpi-gold',
     },
     {
-      label: '🏁 Tổng Race',
-      value: totalRaces.toString(),
-      accent: 'text-white',
-      detail: showTestRaces ? 'Đang tính cả race test' : 'Đang tính race official',
-      cardClass: 'from-[var(--color-ggd-sky)]/18 to-black/10',
-    },
-    {
-      label: '💀 Tổng Lần Làm Dzịt',
-      value: totalKhaos.toString(),
-      accent: 'text-[var(--color-ggd-gold)]',
-      detail: 'Tổng số lần cả bầy dính sẹo',
-      cardClass: 'from-[var(--color-ggd-orange)]/18 to-black/10',
-    },
-    {
-      label: '🎁 Pending Items',
+      icon: '🎁',
+      label: 'Pending Effects',
       value: String(MYSTERY_CHESTS_ENABLED ? pendingItemsCount : 0),
-      accent: 'text-[var(--color-ggd-gold)]',
-      detail: MYSTERY_CHESTS_ENABLED ? 'Đang chờ nổ ở Race kế tiếp' : 'Hệ item đang tắt',
-      cardClass: 'from-[var(--color-ggd-gold)]/18 to-black/10',
+      detail: MYSTERY_CHESTS_ENABLED ? 'Sẽ nổ ở race kế tiếp' : 'Hệ item đang tắt',
+      tone: 'primary-kpi-rare',
     },
     {
-      label: '✨ Rare Rolled',
-      value: String(summary?.rareRolledCount ?? 0),
-      accent: 'text-[var(--color-ggd-gold)]',
-      detail: 'Số lần rare chest đã nổ',
-      cardClass: 'from-[var(--color-ggd-gold)]/22 to-black/10',
+      icon: '🛡',
+      label: 'Shield Risk',
+      value: topShieldThreat ? `${topShieldThreat.shield.charges}c` : 'Safe',
+      detail: topShieldThreat ? `${topShieldThreat.player.name.replace('Zịt ', '')} sắp vỡ khiên` : 'Chưa có khiên nguy hiểm',
+      tone: topShieldThreat?.shield.charges === 1 ? 'primary-kpi-danger' : 'primary-kpi-blue',
     },
     {
-      label: '👑 Bosses Defeated',
-      value: String(summary?.bossesDefeated ?? 0),
-      accent: 'text-[var(--color-ggd-neon-green)]',
-      detail: 'Số Boss đã bị kéo xuống',
-      cardClass: 'from-[var(--color-ggd-neon-green)]/20 to-black/10',
+      icon: '🏁',
+      label: 'Total Race',
+      value: totalRaces.toString(),
+      detail: showTestRaces ? 'Đang tính cả race test' : 'Race official',
+      tone: 'primary-kpi-green',
     },
+  ]
+
+  const secondaryStats = [
     {
       label: '🔥 Longest Streak',
       value: String(summary?.longestStreak.value ?? 0),
-      accent: 'text-[var(--color-ggd-orange)]',
-      detail: summary?.longestStreak.ownerName ? `${summary.longestStreak.ownerName}` : 'Chưa có chuỗi đáng kể',
-      cardClass: 'from-[var(--color-ggd-gold)]/16 to-black/10',
+      detail: summary?.longestStreak.ownerName ? summary.longestStreak.ownerName.replace('Zịt ', '') : 'Chưa có chuỗi đáng kể',
     },
     {
-      label: '☠️ Most Unlucky Duck',
-      value: mostUnluckyDuck?.name?.replace('Zịt ', '') || '—',
-      accent: 'text-[var(--color-ggd-orange)]',
+      label: '💀 Most Unlucky',
+      value: mostUnluckyDuck?.name?.replace('Zịt ', '') || '-',
       detail: mostUnluckyDuck ? `${mostUnluckyDuck.totalKhaos} lần làm dzịt` : 'Chưa xác định',
-      cardClass: 'from-[var(--color-ggd-orange)]/22 to-black/10',
+    },
+    {
+      label: '💀 Total Khaos',
+      value: totalKhaos.toString(),
+      detail: 'Tổng sẹo toàn chuồng',
+    },
+  ]
+
+  const metaItems = [
+    {
+      label: 'Losers',
+      value: activeChestEffects.includes('MORE_PEOPLE_MORE_FUN') ? '3+' : '2',
+    },
+    {
+      label: 'Anti Shield',
+      value: activeChestEffects.includes('ANTI_SHIELD') ? 'ON' : 'OFF',
+    },
+    {
+      label: 'Thomas Mode',
+      value: activeChestEffects.includes('CANT_PASS_THOMAS') ? 'ON' : 'OFF',
+    },
+    {
+      label: 'Boss',
+      value: currentBoss ? `LV ${currentBoss.cleanStreak}` : 'OFF',
     },
   ]
 
   return (
-    <div className="min-h-screen bg-transparent bubble-bg">
+    <div className="min-h-screen bg-transparent bubble-bg dashboard-shell">
       <div className="neon-divider" />
 
-      <header className="relative border-b-4 border-[var(--color-ggd-outline)]">
-        <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
+      <header className="relative border-b-4 border-[var(--color-ggd-outline)] dashboard-hero">
+        <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-5 animate-slide-left">
             <div className="duck-mascot">🦆</div>
             <div>
@@ -155,16 +235,16 @@ export default function Dashboard() {
               </h1>
               <div className="flex items-center gap-2 mt-1">
                 <div className="w-3 h-3 bg-[var(--color-ggd-neon-green)] rounded-full animate-pulse shadow-[0_0_8px_rgba(61,255,143,0.6)]" />
-                <p className="font-data text-sm text-[var(--color-ggd-lavender)]">🦆 QUACK QUACK CLUB v2.0</p>
+                <p className="font-data text-sm text-[var(--color-ggd-lavender)]">🐥 QUACK QUACK CLUB v2.1</p>
               </div>
               <p className="font-readable text-sm text-white/60 mt-1">Nơi định mệnh sáng thứ 2 được quyết định bằng vịt</p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-end gap-3 animate-slide-right">
-            <a href="#race-history">
+          <div className="flex w-full flex-col gap-3 animate-slide-right sm:flex-row sm:flex-wrap lg:w-auto lg:items-center lg:justify-end">
+            <a href="#race-history" className="w-full sm:w-auto">
               <button
-                className="font-display text-base tracking-widest uppercase px-5 py-3
+                className="w-full font-display text-base tracking-widest uppercase px-5 py-3
                   border-[5px] border-[var(--color-ggd-outline)] rounded-xl cursor-pointer
                   transition-all duration-100
                   bg-[var(--color-ggd-surface)] text-white
@@ -175,9 +255,9 @@ export default function Dashboard() {
                 Lịch Sử Thảm Họa
               </button>
             </a>
-            <Link href="/rules">
+            <Link href="/rules" className="w-full sm:w-auto">
               <button
-                className="font-display text-lg tracking-widest uppercase px-6 py-3
+                className="w-full font-display text-lg tracking-widest uppercase px-6 py-3
                   border-[5px] border-[var(--color-ggd-outline)] rounded-xl cursor-pointer
                   transition-all duration-100
                   bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]
@@ -188,9 +268,9 @@ export default function Dashboard() {
                 Xem Luật
               </button>
             </Link>
-            <Link href="/race/new">
+            <Link href="/race/new" className="w-full sm:w-auto">
               <button
-                className="font-display text-2xl tracking-widest uppercase px-12 py-4
+                className="w-full font-display text-2xl tracking-widest uppercase px-8 py-4 xl:px-12
                   border-[5px] border-[var(--color-ggd-outline)] rounded-xl cursor-pointer
                   transition-all duration-100
                   bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]
@@ -208,37 +288,56 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 animate-slide-up opacity-0" style={{ animationDelay: '0.1s' }}>
-          {statCards.map((stat, index) => (
-            <div
-              key={stat.label}
-              className={`bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(0,0,0,0.18)),var(--color-ggd-surface)] bg-gradient-to-br ${stat.cardClass} border-5 border-[var(--color-ggd-outline)] rounded-2xl p-5 text-center
-                shadow-[inset_0_3px_0_rgba(255,255,255,0.1),0_8px_0_var(--color-ggd-outline),0_16px_30px_rgba(0,0,0,0.7)]
-                animate-bounce-in opacity-0 ggd-stripe`}
-              style={{
-                animationDelay: `${0.15 + index * 0.08}s`,
-                transform: `rotate(${index % 2 === 0 ? '-1' : '1'}deg)`,
-              }}
-            >
-              <div className="font-data text-xs text-[var(--color-ggd-lavender)] mb-2 uppercase tracking-widest font-black">{stat.label}</div>
-              <div className={`font-display text-5xl ${stat.accent} text-outlined`}>{stat.value}</div>
-              <div className="mt-2 font-readable text-xs text-white/62 min-h-[32px] leading-relaxed">{stat.detail}</div>
+      <main className="max-w-7xl mx-auto px-6 py-8 space-y-8 dashboard-main">
+        <div className="dashboard-command animate-slide-up opacity-0" style={{ animationDelay: '0.1s' }}>
+          <div className="min-w-0">
+            <div className="font-data text-xs uppercase tracking-widest text-[var(--color-ggd-neon-green)]">This Week Meta</div>
+            <div className="font-display text-4xl text-white text-outlined leading-tight mt-1">{weeklyHeadline}</div>
+          </div>
+          <div className="flex flex-wrap gap-2 justify-start lg:justify-end">
+            {metaItems.map((item) => (
+              <div key={item.label} className={`meta-pill ${item.value === 'ON' ? 'meta-pill-hot' : ''}`}>
+                <span>{item.label}</span>
+                <strong>{item.value}</strong>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 animate-slide-up opacity-0" style={{ animationDelay: '0.16s' }}>
+          {primaryStats.map((stat) => (
+            <div key={stat.label} className={`primary-kpi ${stat.tone}`}>
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-data text-xs uppercase tracking-widest text-white/55">{stat.label}</span>
+                <span className="text-2xl">{stat.icon}</span>
+              </div>
+              <div className="font-display text-4xl text-white text-outlined mt-3 truncate">{stat.value}</div>
+              <div className="font-readable text-xs text-white/68 mt-1 min-h-8 leading-relaxed">{stat.detail}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 animate-slide-up opacity-0" style={{ animationDelay: '0.2s' }}>
+          {secondaryStats.map((stat) => (
+            <div key={stat.label} className="secondary-kpi">
+              <span className="font-data text-[11px] uppercase tracking-widest text-white/45">{stat.label}</span>
+              <strong className="font-display text-2xl text-white text-outlined truncate">{stat.value}</strong>
+              <span className="font-readable text-xs text-white/52 truncate">{stat.detail}</span>
             </div>
           ))}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 animate-slide-up opacity-0" style={{ animationDelay: '0.2s' }}>
-            <div className="overflow-hidden rounded-2xl border-5 border-[var(--color-ggd-outline)] bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(0,0,0,0.16)),var(--color-ggd-surface)] bg-gradient-to-br from-[var(--color-ggd-neon-green)]/12 to-black/10 shadow-[inset_0_3px_0_rgba(255,255,255,0.08),0_8px_0_var(--color-ggd-outline),0_16px_30px_rgba(0,0,0,0.65)] ggd-stripe backdrop-blur-[2px]">
+            <div className="dashboard-table-panel overflow-x-auto overflow-y-hidden rounded-2xl border-5 border-[var(--color-ggd-outline)] ggd-stripe">
               <div className="ggd-panel-header bg-[rgba(61,255,143,0.78)]">
                 <div className="skew-header">
-                  <span className="text-[var(--color-ggd-outline)] text-2xl">🏆 BXH Sinh Tồn Bầy Vịt</span>
+                  <span className="text-[var(--color-ggd-outline)] text-2xl">💀 BXH Sinh Tồn</span>
                 </div>
                 <span className="font-data text-sm text-[var(--color-ggd-outline)]/70 font-black tracking-wider">Sẹo càng nhiều chưa chắc càng yếu.</span>
               </div>
 
-              <div className="grid grid-cols-[60px_1.4fr_90px_180px_90px_100px] gap-0 px-5 py-3 border-b-[3px] border-black bg-[var(--color-ggd-panel)]">
+              <div className="grid min-w-[760px] grid-cols-[60px_1.4fr_90px_180px_90px_100px] gap-0 px-5 py-3 border-b-[3px] border-black bg-[var(--color-ggd-panel)]">
                 {['#', '🐥 Vịt', '🩹 Sẹo', '🛡 Khiên', '🔥 Đã Xài', '💀 Số Lần Dzịt'].map((header, index) => (
                   <div key={header} className={`ggd-col-header ${index >= 2 && index <= 4 ? 'text-center' : index === 5 ? 'text-right' : ''}`}>{header}</div>
                 ))}
@@ -253,7 +352,7 @@ export default function Dashboard() {
                   {sortedPlayers.map((player, index) => (
                     <div
                       key={player.id}
-                      className={`grid grid-cols-[60px_1.4fr_90px_180px_90px_100px] gap-0 items-center px-5 py-4 duck-row
+                      className={`grid min-w-[760px] grid-cols-[60px_1.4fr_90px_180px_90px_100px] gap-0 items-center px-5 py-4 duck-row
                         ${index === 0 ? 'loser' : ''}
                         animate-slide-right opacity-0`}
                       style={{ animationDelay: `${0.3 + index * 0.06}s` }}
@@ -265,8 +364,9 @@ export default function Dashboard() {
                               index === 2 ? 'text-[var(--color-ggd-neon-green)] glow-green' :
                                 'text-[var(--color-ggd-muted)]'
                             }`}
+                          title={index === 0 ? '👑 Current champion' : undefined}
                         >
-                          {String(index + 1).padStart(2, '0')}
+                          {index === 0 ? '👑' : String(index + 1).padStart(2, '0')}
                         </span>
                       </div>
 
@@ -279,20 +379,17 @@ export default function Dashboard() {
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
                             <div className="font-body text-lg font-black text-white tracking-wide truncate">{player.name}</div>
-                            {player.isImmortal && <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)]">♾️ Immortal</span>}
                             {player.isBoss && <BossBadge compact streak={player.cleanStreak} />}
-                            {MYSTERY_CHESTS_ENABLED && player.activeChest && (
-                              <span className="ggd-tag bg-[var(--color-ggd-orange)] text-white">🎁 Chest</span>
-                            )}
-                          </div>
-                          <div className="flex flex-wrap items-center gap-2 mt-1">
-                            {index === 0 && (
-                              <span className="font-display text-sm text-[var(--color-ggd-orange)] glow-orange">👑 CON DZỊT SỐ 1</span>
-                            )}
                             {player.cleanStreak > 0 && (
                               <span className={`ggd-tag ${player.cleanStreak >= 3 ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' : 'bg-[var(--color-ggd-panel)] text-[var(--color-ggd-neon-green)]'}`}>
                                 🔥 {player.cleanStreak}/3 tuần sạch
                               </span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2 mt-1 text-[11px] font-data text-white/45">
+                            {player.isImmortal && <span title="Immortal duck">♾ Immortal</span>}
+                            {MYSTERY_CHESTS_ENABLED && player.activeChest && (
+                              <span title={`Pending reward: ${player.activeChest.effect}`}>🎁 Pending reward</span>
                             )}
                           </div>
                         </div>
@@ -321,7 +418,7 @@ export default function Dashboard() {
           </div>
 
           <div className="animate-slide-up opacity-0 space-y-5" style={{ animationDelay: '0.35s' }}>
-            <div id="race-history" className="overflow-hidden rounded-2xl border-5 border-[var(--color-ggd-outline)] bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(0,0,0,0.18)),var(--color-ggd-surface)] bg-gradient-to-br from-white/8 to-black/10 shadow-[inset_0_3px_0_rgba(255,255,255,0.08),0_8px_0_var(--color-ggd-outline),0_16px_30px_rgba(0,0,0,0.65)] ggd-stripe scroll-mt-6 backdrop-blur-[2px]">
+            <div id="race-history" className="dashboard-sidebar-panel overflow-hidden rounded-2xl border-5 border-[var(--color-ggd-outline)] ggd-stripe scroll-mt-6">
               <div className="ggd-panel-header bg-[rgba(24,18,52,0.82)] rounded-t-[7px]">
                 <span className="font-display text-xl text-white text-outlined">📜 Lịch Sử Thảm Họa</span>
                 <label className="flex items-center gap-2 cursor-pointer group">
@@ -341,40 +438,37 @@ export default function Dashboard() {
 
               {displayedRaces.length > 0 ? (
                 <div className="py-1">
-                  {displayedRaces.slice(0, 8).map((race, index) => (
-                    <Link
-                      key={race.id}
-                      href={`/race/${race.id}`}
-                      className="block mx-2 my-1.5 px-4 py-3.5 rounded-xl hover:bg-[var(--color-ggd-neon-green)]/8 transition-all hover:translate-x-2 animate-slide-right opacity-0 border-b-2 border-black/20"
-                      style={{ animationDelay: `${0.4 + index * 0.05}s` }}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-display text-lg text-white flex items-center gap-2">
-                          Trận #{race.id}
-                          {race.isTest && (
-                            <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)] text-[10px]">TEST</span>
-                          )}
-                        </span>
-                        <span className={`ggd-tag text-[11px] font-black ${race.status === 'finished' ? 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]' :
-                          race.status === 'running' ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' :
-                            race.status === 'failed' ? 'bg-[var(--color-ggd-orange)] text-white' :
-                              'bg-[var(--color-ggd-muted)]/30 text-[var(--color-ggd-muted)]'
-                          }`}>
-                          {race.status === 'finished' ? '✅' : race.status === 'running' ? '🏃' : race.status === 'failed' ? '💥' : '⏳'} {race.status}
-                        </span>
-                      </div>
-                      {race.finalVerdict && <p className="font-readable text-sm text-[var(--color-ggd-lavender)] truncate">{race.finalVerdict}</p>}
-                      <p className="font-data text-xs text-[var(--color-ggd-muted)]/60 mt-1 font-bold">
-                        {new Date(race.createdAt).toLocaleDateString('vi-VN', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </p>
-                    </Link>
-                  ))}
+                  {displayedRaces.slice(0, 8).map((race, index) => {
+                    const signal = getRaceSignal(race)
+
+                    return (
+                      <Link
+                        key={race.id}
+                        href={`/race/${race.id}`}
+                        className={`${signal.className} block mx-2 my-1.5 px-4 py-3.5 rounded-xl transition-all hover:translate-x-2 animate-slide-right opacity-0 border-b-2 border-black/20`}
+                        style={{ animationDelay: `${0.4 + index * 0.05}s` }}
+                      >
+                        <div className="flex items-center justify-between gap-3 mb-1">
+                          <span className="font-display text-lg text-white flex items-center gap-2 min-w-0">
+                            <span className="truncate">{signal.headline}</span>
+                            {race.isTest && (
+                              <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)] text-[10px]">TEST</span>
+                            )}
+                          </span>
+                          <span className="race-signal-label">{signal.label}</span>
+                        </div>
+                        <p className="font-data text-xs text-[var(--color-ggd-muted)]/70 mt-1 font-bold">
+                          Trận #{race.id} · {new Date(race.createdAt).toLocaleDateString('vi-VN', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </p>
+                      </Link>
+                    )
+                  })}
                 </div>
               ) : (
                 <div className="px-5 py-12 text-center">
@@ -390,7 +484,7 @@ export default function Dashboard() {
               <div className="flex items-center gap-3 mb-4">
                 <Image src="/assets/v2/boss-crown.svg" alt="boss" width={32} height={32} className="animate-bob" unoptimized />
                 <div>
-                  <div className="font-display text-xl text-[var(--color-ggd-gold)] text-outlined leading-none">👑 Boss Watch</div>
+                  <div className="font-display text-xl text-[var(--color-ggd-gold)] text-outlined leading-none">⛑ Boss Watch</div>
                   <div className="font-data text-[10px] uppercase tracking-widest text-white/50">3 tuần sạch mở Boss Mode.</div>
                 </div>
               </div>
@@ -474,7 +568,7 @@ export default function Dashboard() {
                   { icon: '💀', title: 'Thua Cuộc', lines: ['2 vịt cuối bảng = Làm Dzịt', 'Bao nước, nhận +1 Sẹo'] },
                   { icon: '🛡', title: 'Khiên', lines: ['2 Sẹo = auto ghép 1 Khiên', 'Declare trước race để kích hoạt', 'Cứu 1 lần rồi biến mất'] },
                   { icon: '⏳', title: 'Shield Decay', lines: ['Không dùng sau race sẽ -1 charge', '0 charge = vỡ'] },
-                  { icon: '👑', title: 'Boss Duck', lines: ['3 tuần liên tiếp không Dzịt = Boss', 'Boss spawn nhiều clone hơn mỗi tuần', 'Clone chết = Boss chết'] },
+                  { icon: '⛑', title: 'Boss Duck', lines: ['3 tuần liên tiếp không Dzịt = Boss', 'Boss spawn nhiều clone hơn mỗi tuần', 'Clone chết = Boss chết'] },
                   { icon: '🎁', title: 'Reward Chest', lines: ['Hạ Boss sẽ nhận chest', 'Streak càng cao, loot càng ngon'] },
                 ].map((rule) => (
                   <div key={rule.title} className="rounded-xl border-2 border-[var(--color-ggd-outline)]/35 bg-black/20 p-3">
@@ -486,10 +580,28 @@ export default function Dashboard() {
                 ))}
               </div>
             </div>
+
+            <details className="deep-stats">
+              <summary>Deep Stats</summary>
+              <div className="grid grid-cols-3 gap-2 mt-3">
+                <div>
+                  <span>🐥 Total Duck</span>
+                  <strong>{players.length}</strong>
+                </div>
+                <div>
+                  <span>🎁 Rare Rolled</span>
+                  <strong>{summary?.rareRolledCount ?? 0}</strong>
+                </div>
+                <div>
+                  <span>⛑ Boss Down</span>
+                  <strong>{summary?.bossesDefeated ?? 0}</strong>
+                </div>
+              </div>
+            </details>
           </div>
         </div>
 
-        <footer className="border-t-4 border-[var(--color-ggd-outline)] pt-6 pb-4 flex items-center justify-between animate-fade-in opacity-0" style={{ animationDelay: '0.6s' }}>
+        <footer className="border-t-4 border-[var(--color-ggd-outline)] pt-6 pb-4 flex flex-col gap-2 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left animate-fade-in opacity-0" style={{ animationDelay: '0.6s' }}>
           <div className="font-data text-sm text-[var(--color-ggd-muted)]">AUTODUCK v2.0 🦆 Quack Quack!</div>
           <div className="font-data text-sm text-[var(--color-ggd-muted)] text-right">
             Built for Team Web. Phá hủy tình đồng nghiệp từ mỗi sáng thứ 2.
