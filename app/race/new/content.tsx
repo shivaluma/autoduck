@@ -72,6 +72,8 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
   const [error, setError] = useState<string | null>(null)
   const [countdown, setCountdown] = useState<number | null>(null)
   const [playerToRemove, setPlayerToRemove] = useState<number | null>(null)
+  const [confirmStartOpen, setConfirmStartOpen] = useState(false)
+  const [expandedPlayers, setExpandedPlayers] = useState<Record<number, boolean>>({})
   const [chestConfigs, setChestConfigs] = useState<Record<number, ChestConfigState>>({})
 
   useEffect(() => {
@@ -161,6 +163,29 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
   const extraItemEntries = (hasCloneChaos ? selectedCount : 0) + luckyCloneEntries
   const totalEntries = selectedCount + extraBossEntries + extraItemEntries
   const canStartRace = selectedCount >= 2 && chestConfigErrors.length === 0 && !starting
+  const bossCount = selectedPlayers.filter((player) => player.isBoss).length
+  const armedShieldCount = selectedPlayers.filter((player) => player.useShield && !player.isImmortal).length
+  const highScarPlayers = selectedPlayers.filter((player) => player.scars >= 6)
+  const cleanDuckName = (name: string) => name.replace(/^Zịt\s+/i, '')
+  const riskScore = (player: ParticipantSetup) =>
+    (player.selected ? 1000 : 0) +
+    (player.isBoss ? 600 : 0) +
+    (player.useShield && !player.isImmortal ? 260 : 0) +
+    (player.activeChest ? 180 : 0) +
+    (player.scars * 24) +
+    (player.cleanStreak * 18) +
+    (player.isImmortal ? -80 : 0)
+  const orderedPlayers = useMemo(
+    () => [...players].sort((left, right) => riskScore(right) - riskScore(left)),
+    [players]
+  )
+  const dramaWatch = [
+    ...selectedPlayers
+      .filter((player) => player.isBoss)
+      .map((player) => `Boss ${cleanDuckName(player.name)} phải né top 2 cuối với ${Math.max(player.cleanStreak, 3) + 1} entries`),
+    ...highScarPlayers.map((player) => `${cleanDuckName(player.name)} đang giữ ${player.scars} sẹo, chỉ chờ thêm drama`),
+    ...activeSelectedChests.map(({ ownerName, chest }) => `${cleanDuckName(ownerName)} mang modifier ${chest.effect.replaceAll('_', ' ')}`),
+  ].slice(0, 5)
 
   const handleTogglePlayerRequest = (userId: number) => {
     const player = players.find((candidate) => candidate.userId === userId)
@@ -174,6 +199,22 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
     }
 
     togglePlayerRef(userId)
+  }
+
+  const toggleExpandedPlayer = (userId: number) => {
+    setExpandedPlayers((previous) => ({
+      ...previous,
+      [userId]: !previous[userId],
+    }))
+  }
+
+  const handleStartRaceRequest = () => {
+    if (!canStartRace) {
+      setError(chestConfigErrors[0] ?? 'Cần ít nhất 2 người chơi')
+      return
+    }
+
+    setConfirmStartOpen(true)
   }
 
   const confirmRemovePlayer = () => {
@@ -368,15 +409,37 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-6 space-y-6 sm:px-6 sm:py-8">
+        <div className="sticky top-0 z-30 -mx-4 border-y-4 border-[var(--color-ggd-outline)] bg-[rgba(16,18,35,0.94)] px-4 py-3 shadow-[0_8px_0_rgba(0,0,0,0.42),0_18px_30px_rgba(0,0,0,0.45)] backdrop-blur sm:-mx-6 sm:px-6">
+          <div className="mx-auto flex max-w-6xl flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="ggd-tag bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]">🐥 {selectedCount} Ducks Ready</span>
+              <span className="ggd-tag bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]">🎟 {totalEntries} entries</span>
+              <span className="ggd-tag bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]">👑 {bossCount} boss active</span>
+              <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)]">🛡 {armedShieldCount} Shield Armed</span>
+              {activeSelectedChests.length > 0 && (
+                <span className="ggd-tag bg-[var(--color-ggd-hot-pink)] text-white">⚙ {activeSelectedChests.length} modifiers</span>
+              )}
+            </div>
+            <button
+              onClick={handleStartRaceRequest}
+              disabled={!canStartRace}
+              title={!canStartRace ? chestConfigErrors[0] ?? 'Cần ít nhất 2 người chơi' : undefined}
+              className="ggd-btn bg-[var(--color-ggd-neon-green)] px-6 py-3 font-display text-lg text-[var(--color-ggd-outline)] disabled:cursor-not-allowed disabled:opacity-30"
+            >
+              {starting ? '🥚 Đang Khởi Động...' : '🚀 RUN IT'}
+            </button>
+          </div>
+        </div>
+
         <div className="ggd-card-green ggd-stripe animate-slide-up opacity-0" style={{ animationDelay: '0.1s' }}>
           <div className="flex flex-col gap-3 px-4 py-3 bg-[var(--color-ggd-neon-green)] rounded-t-[6px] sm:px-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-              <span className="font-display text-lg text-[var(--color-ggd-outline)]">Section A. Danh Sách Vịt</span>
+              <span className="font-display text-lg text-[var(--color-ggd-outline)]">🐥 Chọn Đội Hình</span>
               <span className="ggd-tag bg-[var(--color-ggd-outline)] text-[var(--color-ggd-neon-green)]">
-                {selectedCount} đã chọn
+                ✅ {selectedCount} Ready
               </span>
               {shieldsInUse > 0 && (
-                <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)]">🛡️ {shieldsInUse} khiên bật</span>
+                <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)]">🛡️ {shieldsInUse} Shield ON</span>
               )}
             </div>
           </div>
@@ -387,10 +450,14 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
             </div>
           ) : (
             <div className="py-1">
-              {players.map((player, index) => {
+              {orderedPlayers.map((player, index) => {
                 const selectedShield = player.selectedShieldId
                   ? player.activeShields.find((shield) => shield.id === player.selectedShieldId)
                   : null
+                const autoExpanded = player.isBoss || (!player.isImmortal && player.useShield) || Boolean(player.activeChest)
+                const isExpanded = autoExpanded || expandedPlayers[player.userId]
+                const cloneEntries = player.isBoss ? Math.max(player.cleanStreak, 3) : 0
+                const riskPercent = Math.min(100, Math.max(12, Math.round((riskScore(player) - (player.selected ? 1000 : 0)) / 10)))
 
                 return (
                   <div
@@ -402,8 +469,8 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                     `}
                     style={{ animationDelay: `${0.15 + index * 0.05}s` }}
                   >
-                    <div className="grid grid-cols-1 gap-4 items-start sm:grid-cols-[50px_minmax(0,1fr)_190px]">
-                    <div className="pt-2">
+                    <div className="grid grid-cols-1 gap-3 items-center sm:grid-cols-[44px_minmax(0,1fr)_auto]">
+                    <div>
                       <div className={`w-9 h-9 flex items-center justify-center rounded-xl border-3 border-[var(--color-ggd-outline)] transition-colors
                         shadow-[inset_0_2px_0_rgba(255,255,255,0.1),0_2px_0_var(--color-ggd-outline)]
                         ${player.selected ? 'bg-[var(--color-ggd-neon-green)]' : 'bg-[var(--color-ggd-panel)]'}`}>
@@ -415,38 +482,51 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                       </div>
                     </div>
 
-                    <div className="space-y-3">
-                      {player.isBoss && (
-                        <div className="rounded-xl border-3 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-gold)]/90 px-4 py-2 shadow-[0_4px_0_var(--color-ggd-outline)]">
-                          <div><BossBadge streak={player.cleanStreak} /></div>
-                          <div className="font-data text-xs text-[var(--color-ggd-outline)]/80">Race này spawn {Math.max(player.cleanStreak, 3)} clone, chỉ cần 1 clone bét là Boss ăn sẹo.</div>
-                        </div>
-                      )}
-
+                    <div className="min-w-0 space-y-2">
                       <div className="flex items-start gap-3">
-                        <div className={`w-2 h-14 rounded-full ${player.useShield ? 'bg-[var(--color-ggd-sky)] shadow-[0_0_6px_rgba(61,200,255,0.5)]' :
+                        <div className={`w-2 h-12 rounded-full ${player.useShield ? 'bg-[var(--color-ggd-sky)] shadow-[0_0_6px_rgba(61,200,255,0.5)]' :
                           player.selected ? 'bg-[var(--color-ggd-neon-green)] shadow-[0_0_6px_rgba(61,255,143,0.3)]' : 'bg-[var(--color-ggd-muted)]/20'}`} />
-                        <div className="space-y-2">
-                          <div className="font-body text-base font-extrabold text-white tracking-wide">{player.name}</div>
+                        <div className="min-w-0 flex-1 space-y-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <div className="font-body text-base font-extrabold text-white tracking-wide">{player.name}</div>
+                            {player.isBoss && <span className="ggd-tag bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)] text-[10px] px-2 py-0" title="Any clone loses = fall">👑 Boss {player.cleanStreak}</span>}
+                            {player.isBoss && <span className="ggd-tag bg-[var(--color-ggd-panel)] text-white/80 text-[10px] px-2 py-0">🐥 +{cloneEntries} entries</span>}
+                            {player.isImmortal && <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)] text-[10px] px-2 py-0">∞ Auto Shield ON</span>}
+                          </div>
                           <div className="flex flex-wrap items-center gap-2">
                             {player.cleanStreak > 0 && (
                               <span className={`ggd-tag ${player.cleanStreak >= 3 ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' : 'bg-[var(--color-ggd-panel)] text-[var(--color-ggd-neon-green)]'}`}>
-                                🔥 {player.cleanStreak}/3 tuần sạch
-                              </span>
-                            )}
-                            {player.isImmortal && (
-                              <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)]">
-                                ♾️ IMMORTAL AUTO SHIELD
+                                🔥 {player.cleanStreak} streak
                               </span>
                             )}
                             {MYSTERY_CHESTS_ENABLED && player.activeChest && <ChestIcon effect={player.activeChest.effect} compact />}
                             <span className="font-data text-xs text-[var(--color-ggd-muted)]">
                               {player.scars > 0 ? <span className="text-[var(--color-ggd-orange)]">🤕 {player.scars} Sẹo</span> : 'Sạch sẽ ✨'}
                             </span>
+                            {player.activeShields.length > 0 && !player.isImmortal && (
+                              <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)] text-[10px] px-2 py-0">
+                                🛡 {player.activeShields.length}({player.activeShields.map((shield) => `${shield.charges}c`).join('/')})
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
 
+                      <div className="h-2 overflow-hidden rounded-full border-2 border-[var(--color-ggd-outline)] bg-black/30">
+                        <div
+                          className={`h-full ${player.isBoss ? 'bg-[var(--color-ggd-gold)]' : player.useShield ? 'bg-[var(--color-ggd-sky)]' : player.scars >= 6 ? 'bg-[var(--color-ggd-orange)]' : 'bg-[var(--color-ggd-neon-green)]'}`}
+                          style={{ width: `${riskPercent}%` }}
+                        />
+                      </div>
+
+                      {isExpanded && player.isBoss && (
+                        <div className="rounded-xl border-3 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-gold)]/90 px-4 py-2 shadow-[0_4px_0_var(--color-ggd-outline)]">
+                          <div><BossBadge streak={player.cleanStreak} /></div>
+                          <div className="font-data text-xs text-[var(--color-ggd-outline)]/80">💀 Any clone loses = fall</div>
+                        </div>
+                      )}
+
+                      {isExpanded && (
                       <div onClick={(event) => event.stopPropagation()}>
                         <div className="flex items-center gap-2 mb-2">
                           <div className="font-data text-[10px] uppercase text-[var(--color-ggd-muted)]">Shield Chips</div>
@@ -490,26 +570,35 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                           </div>
                         )}
                       </div>
+                      )}
                     </div>
 
-                    <div className="pt-2 text-left sm:text-right">
-                      <div className="font-data text-xs uppercase text-[var(--color-ggd-muted)] mb-2">Tình Trạng</div>
-                      <div className="space-y-2">
-                        <div className={`font-data text-sm ${player.selected ? 'text-[var(--color-ggd-neon-green)]' : 'text-[var(--color-ggd-muted)]'}`}>
-                          {player.selected ? 'Đã vào race' : 'Đang nghỉ'}
-                        </div>
-                        <div className={`font-data text-xs ${player.useShield ? 'text-[var(--color-ggd-sky)] font-black' : 'text-[var(--color-ggd-muted)]'}`}>
-                          {player.useShield
-                            ? player.isImmortal
-                              ? '♾️ AUTO SHIELD ĐANG BẬT'
-                              : `🛡️ ĐANG DÙNG KHIÊN #${player.selectedShieldId ?? '?'}`
-                            : player.isImmortal
-                              ? '♾️ Shield vô hạn'
-                              : player.availableShields > 0
-                                ? `🛡️ ${player.availableShields} khiên`
-                                : 'Không khiên'}
-                        </div>
-                      </div>
+                    <div className="flex flex-wrap items-center gap-2 text-left sm:justify-end sm:text-right" onClick={(event) => event.stopPropagation()}>
+                      <span className={`ggd-tag text-[10px] ${player.selected ? 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]' : 'bg-[var(--color-ggd-panel)] text-white/55'}`}>
+                        {player.selected ? '✅ READY' : 'OUT'}
+                      </span>
+                      {player.useShield && (
+                        <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)] text-[10px]">
+                          🛡 SHIELD ON
+                        </span>
+                      )}
+                      {player.activeShields.some((shield) => shield.charges <= 1) && (
+                        <span className="ggd-tag bg-[var(--color-ggd-orange)] text-white text-[10px]">⚠ DECAY 1C</span>
+                      )}
+                      {player.isBoss && (
+                        <span className="ggd-tag bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)] text-[10px]">👑 BOSS ACTIVE</span>
+                      )}
+                      {autoExpanded ? (
+                        <span className="font-data text-xs font-black uppercase tracking-wider text-[var(--color-ggd-gold)]">Focus</span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => toggleExpandedPlayer(player.userId)}
+                          className="font-data text-xs font-black uppercase tracking-wider text-white/70 hover:text-white"
+                        >
+                          {isExpanded ? 'Thu gọn' : 'Chi tiết'}
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -522,8 +611,8 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
         {activeSelectedChests.length > 0 && (
           <div className="ggd-card-orange animate-slide-up opacity-0" style={{ animationDelay: '0.2s' }}>
             <div className="px-5 py-3 border-b-3 border-[var(--color-ggd-outline)]/30">
-              <div className="font-display text-lg text-white text-outlined">Section B. Pending Item Effects</div>
-              <p className="font-body text-sm text-white/70 mt-1">Item active sẽ tự kích hoạt trong race này, không cần chọn target cá nhân.</p>
+              <div className="font-display text-lg text-white text-outlined">⚙️ Tình Trạng Trước Race</div>
+              <p className="font-body text-sm text-white/70 mt-1">Modifier đang armed, race vào là tự nổ.</p>
             </div>
             <div className="p-5 space-y-4">
               {activeSelectedChests.map(({ ownerName, chest }) => {
@@ -561,32 +650,24 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
 
         <div className="ggd-card animate-slide-up opacity-0" style={{ animationDelay: '0.3s' }}>
           <div className="px-5 py-3 border-b-3 border-[var(--color-ggd-outline)]/30">
-            <div className="font-display text-lg text-white text-outlined">Section C. Pre-race Summary</div>
+            <div className="font-display text-lg text-white text-outlined">🎬 Tổng Quan Drama Tuần Này</div>
           </div>
           <div className="p-5 space-y-3">
-            <div className="font-body text-white/85">🎬 Tổng quan race:</div>
+            <div className="font-body text-white/85">🎬 Race Intel</div>
             <div className="font-data text-sm text-[var(--color-ggd-muted)] space-y-1">
-              <div>• {selectedCount} vịt selected</div>
-              <div>• +{extraBossEntries} entries từ Boss Duck</div>
-              <div>• +{extraItemEntries} entries từ item clone</div>
-              <div>• {shieldsInUse} khiên đang bật</div>
-              <div>• → {totalEntries} entries thật sẽ vào race</div>
+              <div>🐥 {selectedCount} vịt tham chiến</div>
+              <div>👑 +{extraBossEntries} clone từ Boss system</div>
+              <div>⚙️ +{extraItemEntries} entries từ item clone</div>
+              <div>🛡 {shieldsInUse} khiên đang armed</div>
+              <div>🎟 Tổng {totalEntries} entries vào race</div>
             </div>
 
-            {(selectedPlayers.some((player) => player.isBoss) || activeSelectedChests.length > 0) && (
+            {dramaWatch.length > 0 && (
               <div className="pt-3 border-t border-[var(--color-ggd-outline)]/30">
-                <div className="font-body text-white/85 mb-2">⚠ Drama đáng xem:</div>
+                <div className="font-body text-white/85 mb-2">⚠ Drama Watch</div>
                 <div className="font-data text-sm text-[var(--color-ggd-muted)] space-y-1">
-                  {selectedPlayers.filter((player) => player.isBoss).map((player) => (
-                    <div key={`boss-${player.userId}`}>• Boss {player.name} cần né 2 vị trí cuối với {Math.max(player.cleanStreak, 3) + 1} entries</div>
-                  ))}
-                  {activeSelectedChests.map(({ ownerName, chest }) => (
-                    <div key={`chest-${chest.id}`}>
-                      • {ownerName}: {chest.effect}
-                      {chestConfigs[chest.id]?.targetUserId
-                        ? ` → ${players.find((player) => player.userId === chestConfigs[chest.id]?.targetUserId)?.name ?? 'đã chọn target'}`
-                        : ''}
-                    </div>
+                  {dramaWatch.map((line) => (
+                    <div key={line}>• {line}</div>
                   ))}
                 </div>
               </div>
@@ -632,7 +713,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
               </button>
             </Link>
             <button
-              onClick={handleStartRace}
+              onClick={handleStartRaceRequest}
               disabled={!canStartRace}
               title={!canStartRace ? chestConfigErrors[0] ?? 'Cần ít nhất 2 người chơi' : undefined}
               className={`w-full font-display text-xl tracking-widest uppercase px-6 py-4 sm:w-auto sm:text-2xl sm:px-14
@@ -668,6 +749,33 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
             </AlertDialogCancel>
             <AlertDialogAction onClick={confirmRemovePlayer} className="ggd-btn bg-[var(--color-ggd-orange)] text-white text-sm">
               Bỏ Ra 🦆
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirmStartOpen} onOpenChange={setConfirmStartOpen}>
+        <AlertDialogContent className="bg-[var(--color-ggd-surface)] border-4 border-[var(--color-ggd-outline)] text-white rounded-2xl shadow-[0_6px_0_var(--color-ggd-outline),0_12px_30px_rgba(0,0,0,0.6)]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-[var(--color-ggd-neon-green)] font-display text-3xl text-outlined">
+              Ready to unleash chaos?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-[var(--color-ggd-lavender)] text-base">
+              {selectedCount} vịt, {totalEntries} entries, {bossCount} Boss active, {shieldsInUse} khiên armed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="rounded-xl border-3 border-[var(--color-ggd-outline)] bg-black/25 p-4 font-data text-sm text-white/78 space-y-1">
+            <div>🐥 {selectedCount} Ducks Ready</div>
+            <div>🎟 {totalEntries} entries vào race</div>
+            <div>👑 {bossCount} Boss active</div>
+            <div>🛡 {shieldsInUse} Shield Armed</div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="ggd-btn bg-[var(--color-ggd-panel)] text-[var(--color-ggd-muted)] hover:bg-[var(--color-ggd-surface-2)] text-sm">
+              Khoan
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleStartRace} className="ggd-btn bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)] text-sm">
+              RUN IT 🦆
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
