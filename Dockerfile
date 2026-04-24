@@ -4,13 +4,15 @@
 # Multi-stage Dockerfile for Dokploy deployment
 # ============================================
 
-# --- Stage 1: Dependencies (Node 22 for Prisma compat) ---
-FROM node:22-slim AS deps
+# --- Stage 1: Dependencies (same Node/runtime as Playwright runner) ---
+FROM mcr.microsoft.com/playwright:v1.59.1-noble AS deps
 
 RUN corepack enable && corepack prepare pnpm@10.20.0 --activate
 
 # Install build tools for native modules (better-sqlite3).
-RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y \
+    xvfb python3 make g++ \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -34,11 +36,6 @@ RUN pnpm build
 # --- Stage 3: Runner (Playwright for browser automation) ---
 FROM mcr.microsoft.com/playwright:v1.59.1-noble AS runner
 
-# Install Xvfb + build tools for native module rebuild.
-RUN apt-get update && apt-get install -y \
-    xvfb python3 make g++ \
-    && rm -rf /var/lib/apt/lists/*
-
 RUN npm install -g prisma@7.7.0 tsx@4.21.0 dotenv@17.4.2
 
 WORKDIR /app
@@ -60,9 +57,6 @@ COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/lib ./lib
 COPY --from=builder /app/package.json ./package.json
-
-# Rebuild the traced native module for the runner image's Node runtime.
-RUN npm rebuild better-sqlite3
 
 # Copy startup script
 COPY scripts/start.sh ./start.sh
