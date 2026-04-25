@@ -35,13 +35,13 @@ function sanitizeBriefText(text: string) {
     .trim()
 }
 
-function buildFacts(players: PlayerData[], races: DashboardRaceLists, summary: DashboardSummary) {
+function buildFacts(players: PlayerData[], races: DashboardRaceLists, _summary: DashboardSummary) {
   const activeEffects = players
     .map((player) => player.activeChest?.effect)
     .filter((effect): effect is NonNullable<PlayerData['activeChest']>['effect'] => Boolean(effect))
-  const currentBoss = players
+  const currentBosses = players
     .filter((player) => player.isBoss)
-    .sort((left, right) => right.cleanStreak - left.cleanStreak)[0] ?? null
+    .sort((left, right) => right.cleanStreak - left.cleanStreak)
   const shieldRisk = players
     .flatMap((player) => player.activeShields.map((shield) => ({ player, shield })))
     .filter((entry) => entry.shield.charges <= 2)
@@ -49,74 +49,75 @@ function buildFacts(players: PlayerData[], races: DashboardRaceLists, summary: D
   const pendingOwners = players
     .filter((player) => player.activeChest)
     .map((player) => `${cleanDuckName(player.name)}:${effectLabel(player.activeChest!.effect)}`)
+  const activeShieldOwners = players
+    .filter((player) => player.activeShields.length > 0)
+    .map((player) => cleanDuckName(player.name))
   const latestRace = races.recentOfficial[0] ?? null
 
   return {
-    week: Math.max(races.totalOfficial, 1),
+    nextRaceNumber: Math.max(races.totalOfficial + 1, 1),
     latestOfficialRaceId: latestRace?.id ?? 0,
-    currentBoss: currentBoss
-      ? { name: cleanDuckName(currentBoss.name), level: currentBoss.cleanStreak }
+    briefGoal: 'preview_next_race',
+    currentBosses: currentBosses.map((boss) => ({
+      name: cleanDuckName(boss.name),
+      level: boss.cleanStreak,
+    })),
+    topBoss: currentBosses[0]
+      ? { name: cleanDuckName(currentBosses[0].name), level: currentBosses[0].cleanStreak }
       : null,
     pendingEffects: activeEffects.map(effectLabel),
     pendingOwners,
-    losers: activeEffects.includes('MORE_PEOPLE_MORE_FUN') ? '3 hoặc 4' : '2',
+    activeShieldOwners,
+    expectedLosers: activeEffects.includes('MORE_PEOPLE_MORE_FUN') ? '3 hoặc 4' : '2',
     antiShield: activeEffects.includes('ANTI_SHIELD'),
     thomasMode: activeEffects.includes('CANT_PASS_THOMAS'),
     lastLaugh: activeEffects.includes('LAST_LAUGH'),
     shieldRisk: shieldRisk
       ? { name: cleanDuckName(shieldRisk.player.name), charges: shieldRisk.shield.charges }
       : null,
-    longestStreak: {
-      name: cleanDuckName(summary.longestStreak.ownerName),
-      value: summary.longestStreak.value,
-    },
-    mostUnlucky: summary.mostUnluckyDuck
-      ? { name: cleanDuckName(summary.mostUnluckyDuck.name), totalLosses: summary.mostUnluckyDuck.totalKhaos }
-      : null,
-    latestVerdict: latestRace?.finalVerdict ?? null,
   }
 }
 
 function buildCacheKey(facts: ReturnType<typeof buildFacts>) {
-  return `dashboard-brief:v2:after-race-${facts.latestOfficialRaceId}:total-${facts.week}`
+  return `dashboard-brief:v3:after-race-${facts.latestOfficialRaceId}:next-${facts.nextRaceNumber}`
 }
 
 function fallbackBrief(facts: ReturnType<typeof buildFacts>): DashboardBrief {
-  if (facts.currentBoss) {
-    return {
-      headline: `WEEK ${facts.week}: SĂN BOSS ${facts.currentBoss.name}`,
-      subline: `Boss Lv${facts.currentBoss.level}${facts.lastLaugh ? ', Last Laugh đang chờ kéo chân' : ''}.`,
-      source: 'fallback',
-    }
-  }
-
   if (facts.antiShield) {
     return {
-      headline: `WEEK ${facts.week}: KHIÊN HẾT QUYỀN LỰC`,
-      subline: `Anti Shield bật, ${facts.losers} dzịt sẽ tự lo bằng chân trần.`,
-      source: 'fallback',
-    }
-  }
-
-  if (facts.shieldRisk) {
-    return {
-      headline: `WEEK ${facts.week}: KHIÊN ${facts.shieldRisk.name} SẮP NỔ`,
-      subline: `Còn ${facts.shieldRisk.charges} charge, một tuần nữa là nghe tiếng nứt.`,
+      headline: `RACE #${facts.nextRaceNumber}: KHIÊN HẾT QUYỀN LỰC`,
+      subline: `Anti Shield đã armed, ${facts.expectedLosers} dzịt phải tự bơi tuần này.`,
       source: 'fallback',
     }
   }
 
   if (facts.pendingEffects.length > 0) {
     return {
-      headline: `WEEK ${facts.week}: ITEM ĐANG CHỜ NỔ`,
+      headline: `RACE #${facts.nextRaceNumber}: ITEM ĐANG CHỜ NỔ`,
       subline: `${facts.pendingEffects.slice(0, 2).join(' + ')} đã armed cho race kế tiếp.`,
       source: 'fallback',
     }
   }
 
+  if (facts.topBoss) {
+    return {
+      headline: `RACE #${facts.nextRaceNumber}: SĂN BOSS ${facts.topBoss.name}`,
+      subline: `Boss Lv${facts.topBoss.level}${facts.lastLaugh ? ', Last Laugh đang chờ kéo chân' : ''}.`,
+      source: 'fallback',
+    }
+  }
+
+  if (facts.shieldRisk) {
+    return {
+      headline: `RACE #${facts.nextRaceNumber}: KHIÊN ${facts.shieldRisk.name} SẮP NỔ`,
+      subline: `Còn ${facts.shieldRisk.charges} charge, race tới không khéo nghe tiếng nứt.`,
+      source: 'fallback',
+    }
+  }
+
   return {
-    headline: `WEEK ${facts.week}: BẦY VỊT TẠM YÊN`,
-    subline: 'Không modifier lớn, nhưng lịch sử chứng minh bình yên chỉ là loading screen.',
+    headline: `RACE #${facts.nextRaceNumber}: BẦY VỊT TẠM YÊN`,
+    subline: 'Không modifier lớn, nhưng bình yên ở chuồng này thường chỉ là loading screen.',
     source: 'fallback',
   }
 }
@@ -142,7 +143,11 @@ async function generateAiBrief(facts: ReturnType<typeof buildFacts>): Promise<Da
             role: 'system',
             content: [
               'Mày viết dashboard brief cho game đua vịt AutoDuck.',
+              'Nhiệm vụ: preview race sắp tới, không recap race cũ.',
               'Chỉ được dùng facts được đưa, không bịa luật, không bịa tên.',
+              'Headline và subline phải tập trung vào thứ sắp xảy ra: Boss hiện tại, item đang armed, khiên nguy hiểm, số dzịt dự kiến.',
+              'Không chúc mừng, không kể lại ai bét bảng trận trước, không dùng thông tin lịch sử làm trọng tâm.',
+              'Không khẳng định chắc ai sẽ thua; chỉ nói nguy cơ, áp lực, hoặc drama đang chờ.',
               'Giọng meme Việt, sắc, ngắn, hơi cà khịa.',
               'Không bao giờ dùng từ Khao, khaos, totalKhaos. Nếu nói về field totalLosses thì gọi là lần thua hoặc sẹo.',
               'Trả về JSON hợp lệ: {"headline":"...","subline":"..."}',
@@ -151,7 +156,7 @@ async function generateAiBrief(facts: ReturnType<typeof buildFacts>): Promise<Da
           },
           {
             role: 'user',
-            content: `Facts tuần này:\n${JSON.stringify(facts, null, 2)}`,
+            content: `Facts cho preview race kế tiếp:\n${JSON.stringify(facts, null, 2)}`,
           },
         ],
         temperature: 0.85,
