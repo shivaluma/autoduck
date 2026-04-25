@@ -44,7 +44,7 @@ const headlineTemplates = {
   shieldSave: [
     'Khiên của {name} vừa cứu một mạng.',
     '{name} thoát án nhờ khiên phút chót.',
-    'Shield proc đúng lúc, {name} sống sót.',
+    'Khiên bật đúng chỗ, {name} sống sót.',
     'Không có khiên thì {name} đã xong.',
     'Lobby cay đắng nhìn {name} sống tiếp.',
   ],
@@ -177,8 +177,37 @@ export default function RaceDetailPage({
   const winnerName = winner ? cleanDuckName(winner.displayName ?? winner.name) : 'Không rõ'
   const victimNames = victims.map((victim) => cleanDuckName(victim.displayName ?? victim.name))
   const renderedVictims = formatNameList(victimNames)
-  const shieldSavedParticipants = sortedParticipants.filter((participant) => participant.usedShield && !participant.gotScar)
+  const participantKey = (participant: typeof sortedParticipants[number]) => `${participant.userId}:${participant.cloneIndex ?? 'main'}`
+  const effectiveShieldKeys = new Set<string>()
+  const shieldScanVictimOwnerIds = new Set<number>()
+  const shieldScanSafeOwnerIds = new Set<number>()
+  const shieldScanPenaltySlots = Math.max(1, Math.min(victims.length || 2, sortedParticipants.length))
+  const shieldScanEntries = [...sortedParticipants]
+    .filter((participant) => typeof participant.initialRank === 'number')
+    .sort((left, right) => (right.initialRank ?? 0) - (left.initialRank ?? 0))
+
+  for (const participant of shieldScanEntries) {
+    if (shieldScanVictimOwnerIds.size >= shieldScanPenaltySlots) break
+    if (participant.isImmortal) continue
+
+    const ownerId = participant.cloneOfUserId ?? participant.userId
+    if (shieldScanVictimOwnerIds.has(ownerId)) continue
+
+    if (participant.usedShield) {
+      if (!shieldScanSafeOwnerIds.has(ownerId)) {
+        effectiveShieldKeys.add(participantKey(participant))
+        shieldScanSafeOwnerIds.add(ownerId)
+      }
+      continue
+    }
+
+    shieldScanVictimOwnerIds.add(ownerId)
+  }
+
+  const shieldSavedParticipants = sortedParticipants.filter((participant) => effectiveShieldKeys.has(participantKey(participant)) && !participant.gotScar)
+  const decorativeShieldParticipants = sortedParticipants.filter((participant) => participant.usedShield && !effectiveShieldKeys.has(participantKey(participant)) && !participant.gotScar)
   const shieldSavedName = shieldSavedParticipants[0] ? cleanDuckName(shieldSavedParticipants[0].displayName ?? shieldSavedParticipants[0].name) : ''
+  const decorativeShieldNames = decorativeShieldParticipants.map((participant) => cleanDuckName(participant.displayName ?? participant.name))
   const thomasEntry = sortedParticipants.find((participant) => participant.name.toLowerCase() === 'thomas' && !participant.isClone)
   const thomasTopThree = typeof thomasEntry?.initialRank === 'number' && thomasEntry.initialRank <= 3
   const cloneCountByBoss = new Map<number, number>()
@@ -232,8 +261,10 @@ export default function RaceDetailPage({
       lines: [
         primaryBossName ? `Boss ${primaryBossName} bước vào race với ${primaryBossCloneCount} clone.` : 'Không có Boss active trong race này.',
         shieldSavedParticipants.length > 0
-          ? `${shieldSavedParticipants.length} khiên đã proc đúng lúc trong trận.`
-          : 'Không có cú cứu mạng bằng khiên nào được ghi nhận.',
+          ? `${shieldSavedParticipants.length} khiên thật sự cứu mạng: ${formatNameList(shieldSavedParticipants.map((participant) => cleanDuckName(participant.displayName ?? participant.name)))}.`
+          : decorativeShieldParticipants.length > 0
+            ? `${formatNameList(decorativeShieldNames)} có bật khiên, nhưng lần này khiên chủ yếu đi du lịch.`
+            : 'Không có cú cứu mạng bằng khiên nào được ghi nhận.',
         `Tổng cộng ${sortedParticipants.length} entries tham chiến${activeModifiers.length > 0 ? `, kèm ${activeModifiers.slice(0, 2).join(' + ')}.` : '.'}`,
       ],
     },
@@ -438,7 +469,6 @@ export default function RaceDetailPage({
                     const consumedChest = !p.isClone ? consumedChestByOwnerId.get(p.userId) : undefined
                     const awardedChest = p.gotScar && !p.isClone ? awardedChestByOwnerId.get(p.userId) : undefined
 
-                    const totalSlots = sortedParticipants.length
                     const status = getParticipantStatus(p, idx)
                     const rowBadges = [
                       p.isClone ? 'Clone' : null,
@@ -482,7 +512,7 @@ export default function RaceDetailPage({
                           <span className="font-display text-base text-[var(--color-ggd-gold)] glow-gold">👑 Boss Down</span>
                         ) : status === 'Winner' ? (
                           <span className="font-display text-xl text-[var(--color-ggd-gold)] glow-gold">Winner</span>
-                        ) : p.usedShield && (p.initialRank ?? 0) >= totalSlots - 1 ? (
+                        ) : effectiveShieldKeys.has(participantKey(p)) ? (
                           <span className="font-display text-base text-[var(--color-ggd-sky)] glow-sky">🛡 Thoát</span>
                         ) : (
                           <span className="inline-flex items-center gap-1.5 font-data text-[11px] uppercase tracking-wider text-white/68 font-black">
