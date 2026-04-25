@@ -11,6 +11,74 @@ import { ChestCard } from '@/components/chest-card'
 import { ChestReveal } from '@/components/chest-reveal'
 import { MYSTERY_CHESTS_ENABLED } from '@/lib/feature-flags'
 
+const RARE_CHEST_EFFECTS = new Set([
+  'LAST_LAUGH',
+  'ANTI_SHIELD',
+  'CANT_PASS_THOMAS',
+  'GOLDEN_SHIELD',
+  'MORE_PEOPLE_MORE_FUN',
+])
+
+const headlineTemplates = {
+  bossDown: [
+    'Triều đại Boss {name} đã sụp đổ sau {cloneCount} clone.',
+    'Boss {name} gục ngã, lobby mở hội ăn mừng.',
+    'Sau chuỗi thống trị, {name} cuối cùng cũng ngã.',
+    '{cloneCount} clone là chưa đủ, {name} vẫn thua.',
+    'Cuộc săn Boss thành công, {name} bị hạ.',
+  ],
+  rareChest: [
+    'Rare Chest xuất hiện, tuần sau chuẩn bị hỗn loạn.',
+    'Rare loot đã nổ, lobby bắt đầu lo lắng.',
+    'Một chiếc Rare Chest vừa thay đổi meta.',
+    'Race kết thúc nhưng hỗn loạn mới bắt đầu.',
+    'Tuần sau sẽ không yên ổn nữa.',
+  ],
+  disaster: [
+    'Có tới {loserCount} con dzịt cùng xuất hiện tuần này.',
+    'Thảm họa tập thể, {loserCount} người cùng lãnh án.',
+    'Lobby vừa chứng kiến vụ tai nạn hàng loạt.',
+    '{loserCount} vịt rơi xuống đáy cùng lúc.',
+    'Sáng thứ 2 đẫm máu.',
+  ],
+  shieldSave: [
+    'Khiên của {name} vừa cứu một mạng.',
+    '{name} thoát án nhờ khiên phút chót.',
+    'Shield proc đúng lúc, {name} sống sót.',
+    'Không có khiên thì {name} đã xong.',
+    'Lobby cay đắng nhìn {name} sống tiếp.',
+  ],
+  thomas: [
+    'Thomas tiếp tục khiến logic đầu hàng.',
+    'Thomas lại sống sót như chưa từng có gì.',
+    'Không ai hiểu vì sao Thomas vẫn top đầu.',
+    'Thomas vận hành ngoài quy luật.',
+    'Khoa học vẫn chưa giải thích được Thomas.',
+  ],
+  bossSurvived: [
+    'Boss {name} vượt ải và tiếp tục thống trị.',
+    '{name} tiếp tục thống trị lobby.',
+    'Boss {name} sống sót sau áp lực {cloneCount} clone.',
+    'Chuỗi thống trị của {name} chưa dừng lại.',
+    'Lobby lại bất lực nhìn {name} sống tiếp.',
+  ],
+  normal: [
+    '{losers} lãnh án trong một race không khoan nhượng.',
+    'Race khép lại, {losers} rơi khỏi vùng an toàn.',
+    '{winner} thắng cuộc, {losers} nhận phần drama.',
+    'Một tuần nữa, bảng án lại gọi tên {losers}.',
+    'Không có phép màu cho {losers}.',
+  ],
+}
+
+function pickTemplate(templates: string[], seed: number) {
+  return templates[Math.abs(seed) % templates.length]
+}
+
+function fillTemplate(template: string, values: Record<string, string | number>) {
+  return template.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? ''))
+}
+
 export default function RaceDetailPage({
   params,
 }: {
@@ -93,6 +161,117 @@ export default function RaceDetailPage({
     .filter((name): name is string => Boolean(name))
   const activeModifiers = Array.from(new Set((race.consumedChests ?? []).map((chest) => chest.effect.replaceAll('_', ' '))))
   const cleanDuckName = (name: string) => name.replace(/^Zịt\s+/i, '')
+  const formatNameList = (names: string[]) => {
+    if (names.length === 0) return 'không ai'
+    if (names.length === 1) return names[0]
+    return `${names.slice(0, -1).join(', ')} và ${names.at(-1)}`
+  }
+  const shortCommentary = (content: string) => {
+    const sentences = content
+      .replace(/\s+/g, ' ')
+      .split(/(?<=[.!?。！？])\s+/)
+      .filter(Boolean)
+    const shortText = sentences.slice(0, 2).join(' ') || content
+    return shortText.length > 150 ? `${shortText.slice(0, 147)}...` : shortText
+  }
+  const winnerName = winner ? cleanDuckName(winner.displayName ?? winner.name) : 'Không rõ'
+  const victimNames = victims.map((victim) => cleanDuckName(victim.displayName ?? victim.name))
+  const renderedVictims = formatNameList(victimNames)
+  const shieldSavedParticipants = sortedParticipants.filter((participant) => participant.usedShield && !participant.gotScar)
+  const shieldSavedName = shieldSavedParticipants[0] ? cleanDuckName(shieldSavedParticipants[0].displayName ?? shieldSavedParticipants[0].name) : ''
+  const thomasEntry = sortedParticipants.find((participant) => participant.name.toLowerCase() === 'thomas' && !participant.isClone)
+  const thomasTopThree = typeof thomasEntry?.initialRank === 'number' && thomasEntry.initialRank <= 3
+  const cloneCountByBoss = new Map<number, number>()
+  for (const participant of sortedParticipants) {
+    if (participant.isClone && typeof participant.cloneOfUserId === 'number') {
+      cloneCountByBoss.set(participant.cloneOfUserId, (cloneCountByBoss.get(participant.cloneOfUserId) ?? 0) + 1)
+    }
+  }
+  const primaryBossOwnerId = bossOwnerIds[0]
+  const primaryBossName = primaryBossOwnerId
+    ? cleanDuckName(sortedParticipants.find((participant) => participant.userId === primaryBossOwnerId && !participant.isClone)?.name ?? bossNames[0] ?? 'Boss')
+    : ''
+  const primaryBossCloneCount = primaryBossOwnerId ? cloneCountByBoss.get(primaryBossOwnerId) ?? 0 : 0
+  const bossSurvived = bossNames.length > 0 && bossFalls.length === 0
+  const awardedChests = race.awardedChests ?? []
+  const awardedRareChests = awardedChests.filter((chest) => RARE_CHEST_EFFECTS.has(chest.effect))
+  const awardedCommonChests = awardedChests.filter((chest) => !RARE_CHEST_EFFECTS.has(chest.effect) && chest.effect !== 'NOTHING')
+  const narrativeKind = (() => {
+    if (bossFalls.length > 0) return 'bossDown'
+    if (awardedRareChests.length > 0) return 'rareChest'
+    if (victims.length >= 4) return 'disaster'
+    if (shieldSavedParticipants.length > 0) return 'shieldSave'
+    if (thomasTopThree) return 'thomas'
+    if (bossSurvived) return 'bossSurvived'
+    return 'normal'
+  })()
+  const headlineNameSource = (bossFalls[0] ?? primaryBossName) || shieldSavedName || winnerName
+  const matchHeadline = fillTemplate(
+    pickTemplate(headlineTemplates[narrativeKind], Number(raceId) + victims.length + awardedChests.length),
+    {
+      name: cleanDuckName(headlineNameSource),
+      cloneCount: primaryBossCloneCount,
+      loserCount: victims.length,
+      losers: renderedVictims,
+      winner: winnerName,
+    }
+  )
+  const narrativeIcon = {
+    bossDown: '👑',
+    rareChest: '✨',
+    disaster: '☠️',
+    shieldSave: '🛡',
+    thomas: '🦆',
+    bossSurvived: '🔥',
+    normal: '📰',
+  }[narrativeKind]
+  const reportBlocks = [
+    {
+      icon: '📋',
+      title: 'Trước Race',
+      lines: [
+        primaryBossName ? `Boss ${primaryBossName} bước vào race với ${primaryBossCloneCount} clone.` : 'Không có Boss active trong race này.',
+        shieldSavedParticipants.length > 0
+          ? `${shieldSavedParticipants.length} khiên đã proc đúng lúc trong trận.`
+          : 'Không có cú cứu mạng bằng khiên nào được ghi nhận.',
+        `Tổng cộng ${sortedParticipants.length} entries tham chiến${activeModifiers.length > 0 ? `, kèm ${activeModifiers.slice(0, 2).join(' + ')}.` : '.'}`,
+      ],
+    },
+    {
+      icon: '🎬',
+      title: 'Diễn Biến',
+      lines: [
+        `${winnerName} cán đích đầu tiên và giữ vị trí thắng cuộc.`,
+        thomasTopThree ? 'Thomas tiếp tục len vào top an toàn như thể luật vật lý chỉ là gợi ý.' : 'Nhóm giữa race giằng co cho tới đoạn cuối.',
+        race.commentaries[0] ? shortCommentary(race.commentaries[0].content) : `${renderedVictims} tụt khỏi vùng an toàn ở đoạn quyết định.`,
+      ],
+    },
+    {
+      icon: '🏁',
+      title: 'Kết Quả',
+      lines: [
+        `${renderedVictims} ${victims.length === 1 ? 'là con dzịt' : `là ${victims.length} con dzịt`} tuần này.`,
+        bossFalls.length > 0
+          ? `Boss ${bossFalls.map(cleanDuckName).join(', ')} mất ngôi sau nhiều tuần thống trị.`
+          : bossSurvived
+            ? `Boss ${primaryBossName} né án thành công và tiếp tục thống trị.`
+            : 'Không có triều đại Boss nào sụp đổ trong trận này.',
+        awardedRareChests.length > 0
+          ? 'Rare Chest đã được mở, meta tuần sau bắt đầu có mùi bất ổn.'
+          : awardedCommonChests.length > 0
+            ? 'Common Chest rơi ra sau trận đấu.'
+            : 'Không có chest nào xuất hiện.',
+      ],
+    },
+  ]
+  const narrativeTags = [
+    bossFalls.length > 0 ? 'Boss Down' : null,
+    bossSurvived ? 'Boss Survived' : null,
+    awardedRareChests.length > 0 ? 'Rare Chest' : null,
+    victims.length >= 4 ? 'Disaster Round' : null,
+    shieldSavedParticipants.length > 0 ? 'Shield Saved' : null,
+    thomasTopThree ? 'Thomas Incident' : null,
+  ].filter((tag): tag is string => Boolean(tag))
   const heroHeadline = (() => {
     if (victims.length >= 4) return '☠️ THẢM HỌA TẬP THỂ'
     if (bossFalls.length > 0) return '👑 TRIỀU ĐẠI ĐÃ SỤP ĐỔ'
@@ -115,15 +294,6 @@ export default function RaceDetailPage({
     if (index === 0) return 'Winner'
     return 'Safe'
   }
-  const shortCommentary = (content: string) => {
-    const sentences = content
-      .replace(/\s+/g, ' ')
-      .split(/(?<=[.!?。！？])\s+/)
-      .filter(Boolean)
-    const shortText = sentences.slice(0, 2).join(' ') || content
-    return shortText.length > 150 ? `${shortText.slice(0, 147)}...` : shortText
-  }
-
   return (
     <div className="min-h-screen bg-transparent bubble-bg">
       <div className={`h-2 ${isRunning ? 'bg-[var(--color-ggd-neon-green)] animate-pulse shadow-[0_0_15px_rgba(61,255,143,0.5)]' :
@@ -201,6 +371,47 @@ export default function RaceDetailPage({
                   </div>
                 </div>
               </div>
+            )}
+
+            {hasResults && (
+              <>
+                <section className="ggd-card animate-slide-up opacity-0 overflow-hidden" style={{ animationDelay: '0.18s' }}>
+                  <div className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                    <div className="flex min-w-0 items-start gap-4">
+                      <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl border-3 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-gold)] text-3xl shadow-[0_4px_0_var(--color-ggd-outline)]">
+                        {narrativeIcon}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-data text-xs font-black uppercase tracking-widest text-[var(--color-ggd-gold)]">📰 Match Headline · Trận #{raceId}</div>
+                        <h3 className="mt-1 font-display text-2xl leading-tight text-white text-outlined sm:text-3xl">{matchHeadline}</h3>
+                      </div>
+                    </div>
+                    {narrativeTags.length > 0 && (
+                      <div className="flex flex-wrap gap-2 sm:justify-end">
+                        {narrativeTags.map((tag) => (
+                          <span key={tag} className="ggd-tag bg-[var(--color-ggd-panel)] text-white/82">{tag}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </section>
+
+                <section className="grid grid-cols-1 gap-4 animate-slide-up opacity-0 md:grid-cols-3" style={{ animationDelay: '0.24s' }}>
+                  {reportBlocks.map((block) => (
+                    <article key={block.title} className="rounded-xl border-4 border-[var(--color-ggd-outline)] bg-[rgba(16,18,35,0.82)] p-5 shadow-[0_5px_0_var(--color-ggd-outline),0_14px_26px_rgba(0,0,0,0.42)]">
+                      <div className="flex items-center gap-3 border-b-2 border-[var(--color-ggd-outline)]/25 pb-3">
+                        <span className="text-2xl">{block.icon}</span>
+                        <h3 className="font-display text-lg text-white text-outlined">{block.title}</h3>
+                      </div>
+                      <div className="mt-4 space-y-3">
+                        {block.lines.map((line) => (
+                          <p key={line} className="font-readable text-sm leading-relaxed text-white/78">{line}</p>
+                        ))}
+                      </div>
+                    </article>
+                  ))}
+                </section>
+              </>
             )}
           </>
         )}
