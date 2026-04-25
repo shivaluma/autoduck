@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -24,14 +23,24 @@ interface RaceFinishedEvent {
   verdict: string
 }
 
+interface LiveFrame {
+  src: string
+  timestamp?: number
+}
+
 export function RaceLiveView({ raceId }: RaceLiveViewProps) {
   const [status, setStatus] = useState<'connecting' | 'live' | 'offline'>('connecting')
   const [commentaries, setCommentaries] = useState<Commentary[]>([])
   const [result, setResult] = useState<RaceFinishedEvent | null>(null)
   const [raceData, setRaceData] = useState<RaceStatus | null>(null)
-  const imgRef = useRef<HTMLImageElement>(null)
+  const [hasLiveFrame, setHasLiveFrame] = useState(false)
+  const frameRefs = useRef<[HTMLImageElement | null, HTMLImageElement | null]>([null, null])
+  const activeFrameIndexRef = useRef(0)
+  const isDecodingFrameRef = useRef(false)
+  const frameDecodeTicketRef = useRef(0)
+  const hasLiveFrameRef = useRef(false)
   const bottomRef = useRef<HTMLDivElement>(null)
-  const pendingFrameRef = useRef<string | null>(null)
+  const pendingFrameRef = useRef<LiveFrame | null>(null)
   const lastPaintRef = useRef(0)
 
   useEffect(() => {
@@ -45,8 +54,11 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
 
     evtSource.addEventListener('frame', (event) => {
       try {
-        const data = JSON.parse(event.data) as { image: string }
-        pendingFrameRef.current = `data:image/jpeg;base64,${data.image}`
+        const data = JSON.parse(event.data) as { image: string; timestamp?: number }
+        pendingFrameRef.current = {
+          src: `data:image/jpeg;base64,${data.image}`,
+          timestamp: data.timestamp,
+        }
         setStatus('live')
       } catch (error) {
         console.error('Frame parse error', error)
@@ -89,18 +101,82 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
   useEffect(() => {
     let animationFrameId = 0
     const paintFrame = (now: number) => {
-      if (pendingFrameRef.current && imgRef.current && now - lastPaintRef.current >= 100) {
-        imgRef.current.src = pendingFrameRef.current
-        imgRef.current.style.display = 'block'
-        pendingFrameRef.current = null
-        lastPaintRef.current = now
+      const nextFrame = pendingFrameRef.current
+      if (nextFrame && !isDecodingFrameRef.current && now - lastPaintRef.current >= 90) {
+        const currentIndex = activeFrameIndexRef.current
+        const nextIndex = currentIndex === 0 ? 1 : 0
+        const currentImage = frameRefs.current[currentIndex]
+        const nextImage = frameRefs.current[nextIndex]
+
+        if (nextImage) {
+          const ticket = frameDecodeTicketRef.current + 1
+          const nextSrc = nextFrame.src
+          frameDecodeTicketRef.current = ticket
+          pendingFrameRef.current = null
+          isDecodingFrameRef.current = true
+
+          const finishSwap = () => {
+            if (frameDecodeTicketRef.current !== ticket || nextImage.src !== nextSrc) {
+              return
+            }
+
+            nextImage.onload = null
+            nextImage.onerror = null
+            nextImage.style.opacity = '1'
+            nextImage.style.visibility = 'visible'
+
+            if (currentImage) {
+              currentImage.style.opacity = '0'
+              currentImage.style.visibility = 'visible'
+            }
+
+            activeFrameIndexRef.current = nextIndex
+            isDecodingFrameRef.current = false
+            lastPaintRef.current = performance.now()
+
+            if (!hasLiveFrameRef.current) {
+              hasLiveFrameRef.current = true
+              setHasLiveFrame(true)
+            }
+          }
+
+          const failSwap = () => {
+            if (frameDecodeTicketRef.current === ticket) {
+              isDecodingFrameRef.current = false
+            }
+          }
+
+          nextImage.onload = () => {
+            if (typeof nextImage.decode === 'function') {
+              void nextImage.decode().then(finishSwap).catch(finishSwap)
+              return
+            }
+
+            finishSwap()
+          }
+          nextImage.onerror = failSwap
+          nextImage.src = nextSrc
+        }
+      }
+
+      if (isDecodingFrameRef.current && pendingFrameRef.current) {
+        frameDecodeTicketRef.current += 1
+        isDecodingFrameRef.current = false
       }
 
       animationFrameId = window.requestAnimationFrame(paintFrame)
     }
 
     animationFrameId = window.requestAnimationFrame(paintFrame)
-    return () => window.cancelAnimationFrame(animationFrameId)
+    return () => {
+      window.cancelAnimationFrame(animationFrameId)
+      frameRefs.current.forEach((image) => {
+        if (image) {
+          image.onload = null
+          image.onerror = null
+        }
+      })
+    }
   }, [])
 
   useEffect(() => {
@@ -197,10 +273,12 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:h-[760px]">
         <div className="lg:col-span-2 flex flex-col gap-4">
           <Card className="min-h-[260px] flex-1 bg-black/60 flex items-center justify-center overflow-hidden relative border-4 border-[var(--color-ggd-neon-green)] rounded-2xl shadow-[0_0_25px_rgba(61,255,143,0.2),0_6px_0_var(--color-ggd-outline)] sm:min-h-[420px]">
-            {status === 'connecting' && (
-              <div className="text-[var(--color-ggd-neon-green)] animate-pulse flex flex-col items-center">
+            {!hasLiveFrame && (
+              <div className="absolute inset-0 z-[1] text-[var(--color-ggd-neon-green)] animate-pulse flex flex-col items-center justify-center">
                 <span className="text-4xl animate-bob">📡</span>
-                <p className="mt-2 text-base font-data text-[var(--color-ggd-muted)]">Đang kết nối...</p>
+                <p className="mt-2 text-base font-data text-[var(--color-ggd-muted)]">
+                  {status === 'offline' ? 'Stream chưa sẵn sàng...' : 'Đang nạp hình...'}
+                </p>
               </div>
             )}
             <div className="absolute top-4 left-4 z-10 flex gap-2">
@@ -209,7 +287,23 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
                 {result ? '🏁 KẾT THÚC' : '🔴 LIVE'}
               </div>
             </div>
-            <Image ref={imgRef} alt="Live" src="/next.svg" width={1200} height={800} unoptimized className="w-full h-full object-contain" style={{ display: 'none' }} />
+            <img
+              ref={(node) => { frameRefs.current[0] = node }}
+              alt="Live duck race stream"
+              decoding="async"
+              draggable={false}
+              className="absolute inset-0 h-full w-full object-contain opacity-0 transition-opacity duration-75 ease-linear will-change-[opacity]"
+              style={{ visibility: 'hidden' }}
+            />
+            <img
+              ref={(node) => { frameRefs.current[1] = node }}
+              alt=""
+              aria-hidden="true"
+              decoding="async"
+              draggable={false}
+              className="absolute inset-0 h-full w-full object-contain opacity-0 transition-opacity duration-75 ease-linear will-change-[opacity]"
+              style={{ visibility: 'hidden' }}
+            />
           </Card>
 
           {bossArc.length > 0 && (

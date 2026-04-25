@@ -291,15 +291,15 @@ export async function runRaceWorker(players: PlayerInput[], raceId?: number, met
       try {
         const client = await context.newCDPSession(page)
         console.log('🎥 Starting live stream CDP session...')
-        const LIVE_FRAME_INTERVAL_MS = 125
-        const LIVE_BROADCAST_DELAY_MS = 650
+        const LIVE_FRAME_INTERVAL_MS = 100
+        const LIVE_BROADCAST_DELAY_MS = 350
         let lastFrameSentAt = 0
 
         await client.send('Page.startScreencast', {
           format: 'jpeg',
-          quality: 68,
-          maxWidth: 1280,
-          maxHeight: 720,
+          quality: 58,
+          maxWidth: 960,
+          maxHeight: 540,
           everyNthFrame: 1 // Capture every frame
         })
 
