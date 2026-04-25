@@ -23,6 +23,12 @@ interface DashboardRaceLists {
   totalOfficial: number
 }
 
+interface DashboardBrief {
+  headline: string
+  subline: string
+  source: 'ai' | 'fallback'
+}
+
 const emptyRaceLists: DashboardRaceLists = {
   recentAll: [],
   recentOfficial: [],
@@ -98,6 +104,7 @@ export default function Dashboard() {
     longestStreak: { value: number; ownerName: string }
     mostUnluckyDuck: { name: string; totalKhaos: number } | null
   } | null>(null)
+  const [brief, setBrief] = useState<DashboardBrief | null>(null)
   const [showTestRaces, setShowTestRaces] = useState(false)
 
   useEffect(() => {
@@ -107,6 +114,7 @@ export default function Dashboard() {
         setPlayers(dashboardData.players)
         setRaces(dashboardData.races)
         setSummary(dashboardData.summary)
+        setBrief(dashboardData.brief ?? null)
         setLoading(false)
       })
       .catch(() => setLoading(false))
@@ -145,13 +153,15 @@ export default function Dashboard() {
 
   const currentBoss = bossWatch.find((player) => player.isBoss) ?? null
   const topShieldThreat = fragileShields[0] ?? null
-  const weeklyHeadline = currentBoss
+  const fallbackWeeklyHeadline = currentBoss
     ? `WEEK ${Math.max(totalRaces, 1)}: SĂN BOSS ${currentBoss.name.replace('Zịt ', '')}`
     : topShieldThreat
       ? `WEEK ${Math.max(totalRaces, 1)}: KHIÊN ${topShieldThreat.player.name.replace('Zịt ', '')} SẮP NỔ`
       : pendingItemsCount > 0
         ? `WEEK ${Math.max(totalRaces, 1)}: ITEM ĐANG CHỜ NỔ`
         : `WEEK ${Math.max(totalRaces, 1)}: BẦY VỊT TẠM YÊN`
+  const weeklyHeadline = brief?.headline || fallbackWeeklyHeadline
+  const weeklySubline = brief?.subline || 'Meta tuần này được tính từ boss, item, khiên và lịch sử thảm họa.'
 
   const primaryStats = [
     {
@@ -291,8 +301,11 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-8 dashboard-main">
         <div className="dashboard-command animate-slide-up opacity-0" style={{ animationDelay: '0.1s' }}>
           <div className="min-w-0">
-            <div className="font-data text-xs uppercase tracking-widest text-[var(--color-ggd-neon-green)]">This Week Meta</div>
+            <div className="font-data text-xs uppercase tracking-widest text-[var(--color-ggd-neon-green)]">
+              Drama Brief {brief?.source === 'ai' ? '· AI' : '· Logic'}
+            </div>
             <div className="font-display text-4xl text-white text-outlined leading-tight mt-1">{weeklyHeadline}</div>
+            <div className="font-readable text-sm text-white/65 mt-2 max-w-3xl">{weeklySubline}</div>
           </div>
           <div className="flex flex-wrap gap-2 justify-start lg:justify-end">
             {metaItems.map((item) => (
