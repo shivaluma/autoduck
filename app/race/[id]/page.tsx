@@ -21,53 +21,46 @@ const RARE_CHEST_EFFECTS = new Set([
 
 const headlineTemplates = {
   bossDown: [
-    'Triều đại Boss {name} đã sụp đổ sau {cloneCount} clone.',
-    'Boss {name} gục ngã, lobby mở hội ăn mừng.',
-    'Sau chuỗi thống trị, {name} cuối cùng cũng ngã.',
-    '{cloneCount} clone là chưa đủ, {name} vẫn thua.',
-    'Cuộc săn Boss thành công, {name} bị hạ.',
+    'Triều đại Boss {name} chính thức sụp đổ.',
+    '{name} ôm {cloneCount} clone vẫn không qua nổi cửa tử.',
+    'Cuộc săn Boss thành công, {name} bị kéo xuống đất.',
+    '{name} ngã ngựa sau nhiều tuần thu thuế lobby.',
+    'Boss {name} hết phép, ngai vàng đổi chủ.',
   ],
   rareChest: [
-    'Rare Chest xuất hiện, tuần sau chuẩn bị hỗn loạn.',
-    'Rare loot đã nổ, lobby bắt đầu lo lắng.',
-    'Một chiếc Rare Chest vừa thay đổi meta.',
-    'Race kết thúc nhưng hỗn loạn mới bắt đầu.',
-    'Tuần sau sẽ không yên ổn nữa.',
+    'Rare Chest rơi xuống, tuần sau khỏi ai ngủ ngon.',
+    'Loot tím đã nổ, meta chuẩn bị méo mó.',
+    'Race vừa xong, hỗn loạn vừa bắt đầu.',
+    'Rare Chest mở ra, lòng người đóng lại.',
+    'Có người ngã xuống và loot ngon xuất hiện.',
   ],
   disaster: [
-    'Có tới {loserCount} con dzịt cùng xuất hiện tuần này.',
-    'Thảm họa tập thể, {loserCount} người cùng lãnh án.',
-    'Lobby vừa chứng kiến vụ tai nạn hàng loạt.',
-    '{loserCount} vịt rơi xuống đáy cùng lúc.',
-    'Sáng thứ 2 đẫm máu.',
+    '{loserCount} con dzịt cùng ra đi trong một buổi sáng đen tối.',
+    'Lobby vừa chứng kiến tai nạn dây chuyền.',
+    '{loserCount} người lãnh án, nước uống tuần này có biến.',
+    'Không phải race, đây là thanh lọc nhân sự.',
+    'Sáng thứ 2 đẫm lệ với {loserCount} nạn nhân.',
   ],
   shieldSave: [
-    'Khiên của {name} vừa cứu một mạng.',
-    '{name} thoát án nhờ khiên phút chót.',
-    'Khiên bật đúng chỗ, {name} sống sót.',
-    'Không có khiên thì {name} đã xong.',
-    'Lobby cay đắng nhìn {name} sống tiếp.',
-  ],
-  thomas: [
-    'Thomas tiếp tục khiến logic đầu hàng.',
-    'Thomas lại sống sót như chưa từng có gì.',
-    'Không ai hiểu vì sao Thomas vẫn top đầu.',
-    'Thomas vận hành ngoài quy luật.',
-    'Khoa học vẫn chưa giải thích được Thomas.',
+    'Khiên của {name} vừa làm lobby mất ngủ.',
+    '{name} thoát án bằng công nghệ phòng thủ.',
+    'Một pha proc đúng sách giáo khoa từ {name}.',
+    '{name} suýt chết, rồi nhớ ra mình có khiên.',
+    'Cả chuồng nhìn {name} sống tiếp trong cay đắng.',
   ],
   bossSurvived: [
-    'Boss {name} vượt ải và tiếp tục thống trị.',
-    '{name} tiếp tục thống trị lobby.',
-    'Boss {name} sống sót sau áp lực {cloneCount} clone.',
-    'Chuỗi thống trị của {name} chưa dừng lại.',
-    'Lobby lại bất lực nhìn {name} sống tiếp.',
+    'Boss {name} vượt ải và cộng thêm một tuần thống trị.',
+    '{name} sống tiếp, lobby thêm một tuần nhịn nhục.',
+    '{cloneCount} clone vẫn không đủ kéo {name} xuống.',
+    'Boss {name} qua cửa tử, streak tiếp tục tăng.',
+    '{name} lại thoát. Chuồng bắt đầu mất niềm tin.',
   ],
   normal: [
     '{losers} lãnh án trong một race không khoan nhượng.',
-    'Race khép lại, {losers} rơi khỏi vùng an toàn.',
     '{winner} thắng cuộc, {losers} nhận phần drama.',
     'Một tuần nữa, bảng án lại gọi tên {losers}.',
     'Không có phép màu cho {losers}.',
+    'Race khép lại, {losers} rơi khỏi vùng an toàn.',
   ],
 }
 
@@ -154,7 +147,6 @@ export default function RaceDetailPage({
   )
   const victims = sortedParticipants.filter((participant) => participant.gotScar)
   const winner = sortedParticipants.find((participant) => participant.initialRank === 1)
-  const thomasWinner = winner?.name.toLowerCase() === 'thomas'
   const bossOwnerIds = Array.from(new Set(sortedParticipants.filter((participant) => participant.isClone && typeof participant.cloneOfUserId === 'number').map((participant) => participant.cloneOfUserId as number)))
   const bossNames = bossOwnerIds
     .map((bossOwnerId) => sortedParticipants.find((participant) => participant.userId === bossOwnerId && !participant.isClone)?.name)
@@ -230,7 +222,6 @@ export default function RaceDetailPage({
     if (awardedRareChests.length > 0) return 'rareChest'
     if (victims.length >= 4) return 'disaster'
     if (shieldSavedParticipants.length > 0) return 'shieldSave'
-    if (thomasTopThree) return 'thomas'
     if (bossSurvived) return 'bossSurvived'
     return 'normal'
   })()
@@ -250,7 +241,6 @@ export default function RaceDetailPage({
     rareChest: '✨',
     disaster: '☠️',
     shieldSave: '🛡',
-    thomas: '🦆',
     bossSurvived: '🔥',
     normal: '📰',
   }[narrativeKind]
@@ -301,12 +291,10 @@ export default function RaceDetailPage({
     awardedRareChests.length > 0 ? 'Rare Chest' : null,
     victims.length >= 4 ? 'Disaster Round' : null,
     shieldSavedParticipants.length > 0 ? 'Shield Saved' : null,
-    thomasTopThree ? 'Thomas Incident' : null,
   ].filter((tag): tag is string => Boolean(tag))
   const heroHeadline = (() => {
     if (victims.length >= 4) return '☠️ THẢM HỌA TẬP THỂ'
     if (bossFalls.length > 0) return '👑 TRIỀU ĐẠI ĐÃ SỤP ĐỔ'
-    if (thomasWinner) return '🦆 Thomas vừa làm điều không ai tin nổi'
     if (victims.length > 0) {
       const names = victims.map((victim) => cleanDuckName(victim.displayName ?? victim.name))
       const renderedNames = names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} và ${names.at(-1)}`

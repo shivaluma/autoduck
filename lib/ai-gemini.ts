@@ -15,28 +15,41 @@ const MODEL = 'google/gemini-3-flash-preview'
 // SYSTEM PROMPT
 // ---------------------------------------------------------------------------
 
-const SYSTEM_PROMPT = `Mày là BLV đua vịt mỏ hỗn đang live trên sóng.
+const SYSTEM_PROMPT = `Mày là BLV game đua vịt AutoDuck.
 
-LUẬT SỐ 1 — KHÔNG THỂ PHÁ VỠ:
-Câu 1 PHẢI mô tả diễn biến thật của cuộc đua: ai đang dẫn, ai bị tụt, ai vừa vượt, ai đứng hình, khoảng cách thế nào.
-Nếu câu 1 không nói rõ điều gì đang xảy ra trên đường đua → toàn bộ bình luận bị tính là hỏng, phải làm lại.
+Viết live commentary theo timestamp.
 
-LUẬT SỐ 2 — CẤU TRÚC BẮT BUỘC:
-- ĐÚNG 2 câu, tổng 30–50 từ.
-- Câu 1: Tường thuật diễn biến đường đua — cụ thể, sắc, như đang nhìn thấy.
-- Câu 2: Ẩn dụ / phán xét / punchline bằng concept được giao để nâng drama.
+Tone:
+Bình luận viên bóng đá + caster esports + meme văn phòng Việt.
 
-LUẬT SỐ 3 — PHONG CÁCH:
-- Giọng BLV esports đang livestream: sắc, ngắn, phản xạ ngay.
-- Châm biếm thông minh, ẩn dụ bất ngờ — nhưng ẩn dụ KHÔNG được thay thế tường thuật.
-- Không triết học dài dòng. Không truyện ngắn. Không metaphor trừu tượng mà quên mất đang đua vịt.
+Mỗi line:
+- tối đa 22 từ
+- có nhịp nhanh
+- quan sát được từ ranking/event/frame
+- hơi cà khịa
 
-LUẬT SỐ 4 — CẤM:
-- Mở đầu bằng: Nhìn, Trong khi, Trời ơi, Ồ, Wow.
-- Lặp lại cấu trúc câu hoặc punchline từ lịch sử bình luận.
-- Viết bình luận có thể dán vào bất kỳ cuộc đua nào mà vẫn đúng → đó là bình luận rác.
+Ưu tiên:
+vượt mặt, tụt hạng, boss nguy hiểm, shield cứu mạng, survival vô lý.
 
-Kiểm tra trước khi xuất: đọc lại câu 1, nếu không thấy ai đang làm gì trên đường đua → viết lại ngay.`
+Cấu trúc:
+setup ngắn → tension → punchline.
+
+Cấm:
+- viết paragraph dài
+- lặp ý
+- generic như "cuộc đua rất gay cấn"
+- dùng các cụm: gay cấn, hấp dẫn, kịch tính, rất nóng, đầy bất ngờ
+- mở đầu bằng: Nhìn, Trong khi, Trời ơi, Ồ, Wow
+- viết câu có thể dán vào bất kỳ race nào mà vẫn đúng
+
+Humor đến từ irony, humiliation, overconfidence, survival vô lý.
+Không đến từ spam meme vô nghĩa.
+
+Ví dụ:
+Tuấn tăng tốc lane trái, lobby bắt đầu khó thở.
+Một clone Boss vừa rơi xuống vùng đỏ.
+Khiên bật sáng, Minh từ bị án thành người tử tế.
+Tâm tụt hai hạng liên tiếp, chân có vẻ hết pin.`
 
 // ---------------------------------------------------------------------------
 // CONCEPT SPACES — grouped by domain for anti-repeat tracking
@@ -305,10 +318,11 @@ function buildPrompt(
       `🎯 CONCEPT: "${concept}"`,
       historyBlock,
       '',
-      'NHIỆM VỤ: Viết 1 đoạn chốt hạ, ĐÚNG 2 CÂU (30–50 từ).',
-      '- Câu 1: Tường thuật ai thắng/thua và điều gì xảy ra ở khoảnh khắc kết thúc.',
-      `- Câu 2: Ẩn dụ qua lăng kính "${concept}" để chốt drama.`,
+      'NHIỆM VỤ: Viết 1 line chốt hạ, tối đa 22 từ.',
+      '- Phải nói ai thắng/thua và có punchline sắc.',
+      `- Có thể mượn nhẹ lăng kính "${concept}", nhưng không được dài dòng.`,
       '- Không mở đầu bằng "Nhìn", "Trời ơi".',
+      '- Không dùng: gay cấn, hấp dẫn, kịch tính, rất nóng, đầy bất ngờ.',
       '- Không lặp cấu trúc câu từ lịch sử.',
       '',
       'VIẾT NGAY:',
@@ -342,10 +356,11 @@ function buildPrompt(
     '',
     'HÌNH ẢNH: Phân tích ảnh chụp đường đua → xác định ai đang ở đâu, khoảng cách thế nào.',
     '',
-    'NHIỆM VỤ: Viết 1 bình luận, ĐÚNG 2 CÂU (30–50 từ).',
-    '- Câu 1: Nêu rõ diễn biến đường đua — tên cụ thể, vị trí cụ thể, hành động cụ thể.',
-    `- Câu 2: Ẩn dụ hoặc phán xét bằng lăng kính "${concept}", gắt và hài.`,
+    'NHIỆM VỤ: Viết 1 line commentary, tối đa 22 từ.',
+    '- Nêu rõ diễn biến đường đua: tên cụ thể, vị trí/hành động cụ thể.',
+    `- Chốt bằng một punchline gắt, có thể mượn nhẹ lăng kính "${concept}".`,
     '- Cấm mở đầu bằng: Nhìn, Trong khi, Trời ơi, Ồ, Wow.',
+    '- Không dùng: gay cấn, hấp dẫn, kịch tính, rất nóng, đầy bất ngờ.',
     '- Cấm viết câu có thể copy-paste sang bất kỳ cuộc đua nào mà vẫn đúng.',
     '- Không lặp cấu trúc/punchline từ lịch sử bình luận.',
     '',
@@ -364,6 +379,11 @@ function isGenericOutput(text: string): boolean {
     /không ai (biết|ngờ)/i,
     /vậy là/i,
     /thật (không thể tin|sự)/i,
+    /gay cấn/i,
+    /hấp dẫn/i,
+    /kịch tính/i,
+    /rất nóng/i,
+    /đầy bất ngờ/i,
   ]
   return genericPatterns.some(p => p.test(text))
 }

@@ -76,7 +76,6 @@ function buildFacts(players: PlayerData[], races: DashboardRaceLists, _summary: 
     activeShieldOwners,
     expectedLosers: activeEffects.includes('MORE_PEOPLE_MORE_FUN') ? '3 hoặc 4' : '2',
     antiShield: activeEffects.includes('ANTI_SHIELD'),
-    thomasMode: activeEffects.includes('CANT_PASS_THOMAS'),
     lastLaugh: activeEffects.includes('LAST_LAUGH'),
     shieldRisk: shieldRisk
       ? { name: cleanDuckName(shieldRisk.player.name), charges: shieldRisk.shield.charges }
@@ -95,16 +94,16 @@ function fallbackBrief(facts: ReturnType<typeof buildFacts>): DashboardBrief {
 
   if (facts.antiShield) {
     return {
-      headline: `RACE #${facts.nextRaceNumber}: KHIÊN HẾT QUYỀN LỰC`,
-      subline: `Anti Shield đã armed, ${facts.expectedLosers} dzịt phải tự bơi tuần này.`,
+      headline: `RACE #${facts.nextRaceNumber}: KHIÊN BỊ TƯỚC QUYỀN`,
+      subline: `Không ai được cứu. ${facts.expectedLosers} ghế nóng đã bật đèn.`,
       source: 'fallback',
     }
   }
 
   if (bossCount >= 2) {
     return {
-      headline: `RACE #${facts.nextRaceNumber}: ${bossCount} BOSS CÙNG RA CHUỒNG`,
-      subline: `${bossNames} cùng giữ ngai. ${topBoss ? `${topBoss.name} Lv${topBoss.level} căng nhất, ` : ''}một clone bét là drama nổ.`,
+      headline: `RACE #${facts.nextRaceNumber}: ${bossCount} BOSS CÙNG LÊN THỚT`,
+      subline: `${bossNames} cùng giữ ngai, chỉ cần một cú trượt là nổ chuồng.`,
       source: 'fallback',
     }
   }
@@ -112,30 +111,30 @@ function fallbackBrief(facts: ReturnType<typeof buildFacts>): DashboardBrief {
   if (topBoss) {
     return {
       headline: `RACE #${facts.nextRaceNumber}: SĂN BOSS ${topBoss.name}`,
-      subline: `Boss Lv${topBoss.level} bước vào race với bảng tên trên lưng${facts.lastLaugh ? ', Last Laugh đang chờ kéo chân' : ''}.`,
+      subline: `Lv${topBoss.level} đã lên bảng giá. Lobby đang mài dao tinh thần.`,
       source: 'fallback',
     }
   }
 
   if (facts.pendingEffects.length > 0) {
     return {
-      headline: `RACE #${facts.nextRaceNumber}: ITEM ĐANG CHỜ NỔ`,
-      subline: `${facts.pendingEffects.slice(0, 2).join(' + ')} đã armed, lobby chuẩn bị nghe tiếng đồ rơi.`,
+      headline: `RACE #${facts.nextRaceNumber}: ITEM ĐANG GÀI CHỐT`,
+      subline: `${facts.pendingEffects.slice(0, 2).join(' + ')} chờ kích hoạt. Tuần này khó chạy đường thẳng.`,
       source: 'fallback',
     }
   }
 
   if (facts.shieldRisk) {
     return {
-      headline: `RACE #${facts.nextRaceNumber}: KHIÊN ${facts.shieldRisk.name} SẮP NỔ`,
-      subline: `Còn ${facts.shieldRisk.charges} charge, race tới không khéo nghe tiếng nứt.`,
+      headline: `RACE #${facts.nextRaceNumber}: KHIÊN ${facts.shieldRisk.name} NỨT RỒI`,
+      subline: `Còn ${facts.shieldRisk.charges} charge. Một cú hụt chân là nghe tiếng vỡ.`,
       source: 'fallback',
     }
   }
 
   return {
-    headline: `RACE #${facts.nextRaceNumber}: BẦY VỊT TẠM YÊN`,
-    subline: 'Không modifier lớn, nhưng bình yên ở chuồng này thường chỉ là loading screen.',
+    headline: `RACE #${facts.nextRaceNumber}: CHUỒNG ĐANG QUÁ YÊN`,
+    subline: 'Kinh nghiệm cho thấy yên tĩnh ở đây thường rất đắt.',
     source: 'fallback',
   }
 }
@@ -160,21 +159,32 @@ async function generateAiBrief(facts: ReturnType<typeof buildFacts>): Promise<Da
           {
             role: 'system',
             content: [
-              'Mày viết dashboard brief cho game đua vịt AutoDuck.',
-              'Nhiệm vụ: preview race sắp tới, không recap race cũ.',
+              'Mày là biên tập viên chuyên viết banner trang chủ cho game đua vịt AutoDuck.',
+              'Nhiệm vụ: Viết preview cho race kế tiếp, KHÔNG recap race cũ.',
+              'Mục tiêu: Headline phải khiến người ta muốn bấm xem race ngay. Subline phải gợi drama sắp xảy ra.',
               'Chỉ được dùng facts được đưa, không bịa luật, không bịa tên.',
-              'Headline và subline phải tập trung vào thứ sắp xảy ra: Boss hiện tại, item đang armed, khiên nguy hiểm, số dzịt dự kiến.',
-              'Không chúc mừng, không kể lại ai bét bảng trận trước, không dùng thông tin lịch sử làm trọng tâm.',
+              'Chỉ nói: áp lực, nguy cơ, boss đang bị săn, item sắp nổ, khiên sắp vỡ, số người dự kiến lãnh án, lobby sắp loạn.',
               'Không khẳng định chắc ai sẽ thua; chỉ nói nguy cơ, áp lực, hoặc drama đang chờ.',
-              'Giọng meme Việt, sắc, ngắn, hơi cà khịa.',
-              'Không bao giờ dùng từ Khao, khaos, totalKhaos. Nếu nói về field totalLosses thì gọi là lần thua hoặc sẹo.',
+              'Tone: Thể thao + báo lá cải + meme văn phòng Việt. Sắc, ngắn, tự tin, cà khịa vừa đủ.',
+              'Headline style: như báo thể thao, có tension, có chữ đắt, tránh generic.',
+              'Subline style: một câu phụ sắc bén, tăng tò mò, có punchline cuối càng tốt.',
+              'Cấm: chúc mừng, kể chuyện trận trước, đạo đức giả, dùng từ khao/khaos/totalKhaos, lặp lại headline bằng wording khác, câu vô thưởng vô phạt.',
+              'Ưu tiên event: 1 Anti Shield, 2 Boss cấp cao, 3 Pending rare item, 4 Shield sắp vỡ, 5 Số dzịt tăng, 6 Bình yên giả tạo.',
+              'Cấm dùng cụm generic: gay cấn, hấp dẫn, kịch tính, rất nóng, đầy bất ngờ.',
+              'Humor đến từ irony, humiliation, overconfidence, survival vô lý. Không đến từ spam meme vô nghĩa.',
               'Trả về JSON hợp lệ: {"headline":"...","subline":"..."}',
-              'headline tối đa 11 từ, uppercase được. subline tối đa 22 từ.',
+              'Rules: headline tối đa 11 từ, subline tối đa 22 từ, headline nên viết HOA một phần nếu hợp, mỗi output phải khác nhau về wording.',
             ].join(' '),
           },
           {
             role: 'user',
-            content: `Facts cho preview race kế tiếp:\n${JSON.stringify(facts, null, 2)}`,
+            content: [
+              'Facts cho preview race kế tiếp:',
+              JSON.stringify(facts, null, 2),
+              'Viết headline và subline theo prompt.',
+              'Nếu nhiều event cùng lúc, chọn event căng nhất.',
+              'Nếu không có gì lớn, biến sự yên tĩnh thành cảm giác trước bão.',
+            ].join('\n\n'),
           },
         ],
         temperature: 0.85,
