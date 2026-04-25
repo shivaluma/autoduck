@@ -27,6 +27,12 @@ function effectLabel(effect: string) {
   return effect.replaceAll('_', ' ')
 }
 
+function formatNameList(names: string[]) {
+  if (names.length === 0) return ''
+  if (names.length === 1) return names[0]
+  return `${names.slice(0, -1).join(', ')} và ${names.at(-1)}`
+}
+
 function sanitizeBriefText(text: string) {
   return text
     .replace(/\bcú\s+khao\b/gi, 'lần thua')
@@ -83,6 +89,10 @@ function buildCacheKey(facts: ReturnType<typeof buildFacts>) {
 }
 
 function fallbackBrief(facts: ReturnType<typeof buildFacts>): DashboardBrief {
+  const bossCount = facts.currentBosses.length
+  const bossNames = formatNameList(facts.currentBosses.slice(0, 3).map((boss) => boss.name))
+  const topBoss = facts.topBoss
+
   if (facts.antiShield) {
     return {
       headline: `RACE #${facts.nextRaceNumber}: KHIÊN HẾT QUYỀN LỰC`,
@@ -91,18 +101,26 @@ function fallbackBrief(facts: ReturnType<typeof buildFacts>): DashboardBrief {
     }
   }
 
-  if (facts.pendingEffects.length > 0) {
+  if (bossCount >= 2) {
     return {
-      headline: `RACE #${facts.nextRaceNumber}: ITEM ĐANG CHỜ NỔ`,
-      subline: `${facts.pendingEffects.slice(0, 2).join(' + ')} đã armed cho race kế tiếp.`,
+      headline: `RACE #${facts.nextRaceNumber}: ${bossCount} BOSS CÙNG RA CHUỒNG`,
+      subline: `${bossNames} cùng giữ ngai. ${topBoss ? `${topBoss.name} Lv${topBoss.level} căng nhất, ` : ''}một clone bét là drama nổ.`,
       source: 'fallback',
     }
   }
 
-  if (facts.topBoss) {
+  if (topBoss) {
     return {
-      headline: `RACE #${facts.nextRaceNumber}: SĂN BOSS ${facts.topBoss.name}`,
-      subline: `Boss Lv${facts.topBoss.level}${facts.lastLaugh ? ', Last Laugh đang chờ kéo chân' : ''}.`,
+      headline: `RACE #${facts.nextRaceNumber}: SĂN BOSS ${topBoss.name}`,
+      subline: `Boss Lv${topBoss.level} bước vào race với bảng tên trên lưng${facts.lastLaugh ? ', Last Laugh đang chờ kéo chân' : ''}.`,
+      source: 'fallback',
+    }
+  }
+
+  if (facts.pendingEffects.length > 0) {
+    return {
+      headline: `RACE #${facts.nextRaceNumber}: ITEM ĐANG CHỜ NỔ`,
+      subline: `${facts.pendingEffects.slice(0, 2).join(' + ')} đã armed, lobby chuẩn bị nghe tiếng đồ rơi.`,
       source: 'fallback',
     }
   }
