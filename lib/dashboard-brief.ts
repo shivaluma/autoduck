@@ -27,6 +27,14 @@ function effectLabel(effect: string) {
   return effect.replaceAll('_', ' ')
 }
 
+function sanitizeBriefText(text: string) {
+  return text
+    .replace(/\bcú\s+khao\b/gi, 'lần thua')
+    .replace(/\bkhaos?\b/gi, 'lần thua')
+    .replace(/\btotalKhaos\b/gi, 'totalLosses')
+    .trim()
+}
+
 function buildFacts(players: PlayerData[], races: DashboardRaceLists, summary: DashboardSummary) {
   const activeEffects = players
     .map((player) => player.activeChest?.effect)
@@ -63,14 +71,14 @@ function buildFacts(players: PlayerData[], races: DashboardRaceLists, summary: D
       value: summary.longestStreak.value,
     },
     mostUnlucky: summary.mostUnluckyDuck
-      ? { name: cleanDuckName(summary.mostUnluckyDuck.name), totalKhaos: summary.mostUnluckyDuck.totalKhaos }
+      ? { name: cleanDuckName(summary.mostUnluckyDuck.name), totalLosses: summary.mostUnluckyDuck.totalKhaos }
       : null,
     latestVerdict: latestRace?.finalVerdict ?? null,
   }
 }
 
 function buildCacheKey(facts: ReturnType<typeof buildFacts>) {
-  return `dashboard-brief:after-race-${facts.latestOfficialRaceId}:total-${facts.week}`
+  return `dashboard-brief:v2:after-race-${facts.latestOfficialRaceId}:total-${facts.week}`
 }
 
 function fallbackBrief(facts: ReturnType<typeof buildFacts>): DashboardBrief {
@@ -136,6 +144,7 @@ async function generateAiBrief(facts: ReturnType<typeof buildFacts>): Promise<Da
               'Mày viết dashboard brief cho game đua vịt AutoDuck.',
               'Chỉ được dùng facts được đưa, không bịa luật, không bịa tên.',
               'Giọng meme Việt, sắc, ngắn, hơi cà khịa.',
+              'Không bao giờ dùng từ Khao, khaos, totalKhaos. Nếu nói về field totalLosses thì gọi là lần thua hoặc sẹo.',
               'Trả về JSON hợp lệ: {"headline":"...","subline":"..."}',
               'headline tối đa 11 từ, uppercase được. subline tối đa 22 từ.',
             ].join(' '),
@@ -168,8 +177,8 @@ async function generateAiBrief(facts: ReturnType<typeof buildFacts>): Promise<Da
     }
 
     return {
-      headline: parsed.headline.trim().slice(0, 90),
-      subline: parsed.subline.trim().slice(0, 160),
+      headline: sanitizeBriefText(parsed.headline).slice(0, 90),
+      subline: sanitizeBriefText(parsed.subline).slice(0, 160),
       source: 'ai',
     }
   } catch (error) {
@@ -191,7 +200,12 @@ export async function getDashboardBrief(
     return cached.brief
   }
 
-  const brief = (await generateAiBrief(facts)) ?? fallbackBrief(facts)
+  const generatedBrief = (await generateAiBrief(facts)) ?? fallbackBrief(facts)
+  const brief = {
+    ...generatedBrief,
+    headline: sanitizeBriefText(generatedBrief.headline),
+    subline: sanitizeBriefText(generatedBrief.subline),
+  }
   briefCache.set(cacheKey, {
     brief,
     expiresAt: Date.now() + CACHE_TTL_MS,

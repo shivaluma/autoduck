@@ -127,7 +127,7 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
 
             if (currentImage) {
               currentImage.style.opacity = '0'
-              currentImage.style.visibility = 'visible'
+              currentImage.style.visibility = 'hidden'
             }
 
             activeFrameIndexRef.current = nextIndex
@@ -292,7 +292,7 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
               alt="Live duck race stream"
               decoding="async"
               draggable={false}
-              className="absolute inset-0 h-full w-full object-contain opacity-0 transition-opacity duration-75 ease-linear will-change-[opacity]"
+              className="absolute inset-0 h-full w-full object-contain opacity-0"
               style={{ visibility: 'hidden' }}
             />
             <img
@@ -301,7 +301,7 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
               aria-hidden="true"
               decoding="async"
               draggable={false}
-              className="absolute inset-0 h-full w-full object-contain opacity-0 transition-opacity duration-75 ease-linear will-change-[opacity]"
+              className="absolute inset-0 h-full w-full object-contain opacity-0"
               style={{ visibility: 'hidden' }}
             />
           </Card>

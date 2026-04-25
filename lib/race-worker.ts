@@ -297,7 +297,7 @@ export async function runRaceWorker(players: PlayerInput[], raceId?: number, met
 
         await client.send('Page.startScreencast', {
           format: 'jpeg',
-          quality: 58,
+          quality: 64,
           maxWidth: 960,
           maxHeight: 540,
           everyNthFrame: 1 // Capture every frame
