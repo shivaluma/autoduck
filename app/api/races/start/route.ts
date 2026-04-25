@@ -149,6 +149,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Một số người chơi không tồn tại' }, { status: 400 })
     }
 
+    const activeChests = MYSTERY_CHESTS_ENABLED ? await getActiveChestsForUsers(prisma, userIds) : []
+    const antiShieldActive = activeChests.some((chest: { effect: ChestEffect }) => chest.effect === 'ANTI_SHIELD')
+
     for (const participant of participants) {
       if (!participant.useShield) {
         continue
@@ -156,6 +159,9 @@ export async function POST(request: Request) {
 
       const user = (users as UserWithActiveShields[]).find((candidate) => candidate.id === participant.userId)
       if (user && isImmortalDuck({ name: user.name, shields: user.shields })) {
+        continue
+      }
+      if (antiShieldActive) {
         continue
       }
       if (!user || user.ownedShields.length <= 0) {
@@ -166,7 +172,6 @@ export async function POST(request: Request) {
       }
     }
 
-    const activeChests = MYSTERY_CHESTS_ENABLED ? await getActiveChestsForUsers(prisma, userIds) : []
     const chestValidation = validateChestConfig(activeChests, participants, chestConfigs)
     if (!chestValidation.ok) {
       return NextResponse.json(
@@ -451,7 +456,7 @@ async function executeRace(
               isClone: victim.isClone ?? false,
               cloneOfUserId: victim.cloneOfUserId ?? undefined,
             })),
-            [],
+            activeChests,
             { forceVoid: true }
           )
         : await resolveChestPostRace(
