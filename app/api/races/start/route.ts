@@ -402,12 +402,6 @@ async function executeRace(
       penaltiesNeeded: itemModifiers.morePeopleMoreFun ?? 2,
       forcedVictims: cantPassThomasVictims,
     })
-    const shieldActivatedEntries = penalties.safeByShield
-    const didActivateShield = (entry: { userId: number; cloneIndex?: number | null }) =>
-      shieldActivatedEntries.some(
-        (safe) => safe.userId === entry.userId && (safe.cloneIndex ?? null) === (entry.cloneIndex ?? null)
-      )
-    const activatedShieldUserIds = dedupeVictimUserIds(shieldActivatedEntries)
     const race = await prisma.race.findUnique({ where: { id: raceId } })
     const isTest = race?.isTest ?? false
     const bossUsers = await prisma.user.findMany({
@@ -489,7 +483,6 @@ async function executeRace(
       for (const resultEntry of raceResults) {
         const effectiveUserId = resultEntry.cloneOfUserId ?? resultEntry.userId
         const isVictim = finalVictimUserIds.includes(effectiveUserId)
-        const shieldActivated = didActivateShield(resultEntry)
 
         await tx.raceParticipant.updateMany({
           where: {
@@ -500,7 +493,7 @@ async function executeRace(
           data: {
             initialRank: resultEntry.initialRank,
             gotScar: isVictim,
-            usedShield: shieldActivated,
+            usedShield: resultEntry.usedShield,
           },
         })
       }
@@ -540,12 +533,12 @@ async function executeRace(
           )
           const borrowedFromOther = !!ownerEntry?.borrowedShieldFromUserId
 
-          const ownConsumed = activatedShieldUserIds.includes(participantUserId) && !borrowedFromOther
+          const declaredOwnShield = !!ownerEntry?.useShield && !borrowedFromOther
           const gotScarThisRace = finalVictimUserIds.includes(participantUserId)
 
           const isImmortal = isImmortalDuck({ name: user.name, shields: user.shields })
 
-          if (ownConsumed && !isImmortal) {
+          if (declaredOwnShield && !isImmortal) {
             const declaredShieldId = playerInputs.find((player) => player.userId === participantUserId && !player.isClone)?.shieldId
             await consumeShield(tx, participantUserId, declaredShieldId)
           }
@@ -575,7 +568,7 @@ async function executeRace(
             where: { id: participantUserId },
             data: {
               scars: shouldCountScar ? { increment: 1 } : undefined,
-              shieldsUsed: ownConsumed && !isImmortal ? { increment: 1 } : undefined,
+              shieldsUsed: declaredOwnShield && !isImmortal ? { increment: 1 } : undefined,
               totalKhaos: shouldCountScar ? { increment: 1 } : undefined,
               cleanStreak: bossStatus.newCleanStreak,
               isBoss: bossStatus.newIsBoss,
