@@ -11,7 +11,7 @@ export { getIsoWeekKey }
 
 export const SHIELD_INITIAL_CHARGES = 3
 export const SHIELD_CRAFT_COST = 2
-export const SHIELD_MAX_ACTIVE = 1
+export const SHIELD_MAX_ACTIVE = 12
 
 type ShieldCounterRow = { ownerId: number; _count: { _all: number } }
 
@@ -286,17 +286,22 @@ export async function consumeShield(prisma: any, ownerId: number, shieldId?: num
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function createShield(prisma: any, ownerId: number, earnedRaceId?: number, charges = SHIELD_INITIAL_CHARGES) {
-  const existingShield = await prisma.shield.findFirst({
+  const activeCount = await prisma.shield.count({
     where: {
       ownerId,
       status: 'active',
     },
-    orderBy: [{ charges: 'asc' }, { earnedAt: 'asc' }],
   })
 
-  if (existingShield) {
+  if (activeCount >= SHIELD_MAX_ACTIVE) {
     await syncOwnerShieldCount(prisma, ownerId)
-    return existingShield
+    return prisma.shield.findFirst({
+      where: {
+        ownerId,
+        status: 'active',
+      },
+      orderBy: [{ charges: 'asc' }, { earnedAt: 'asc' }],
+    })
   }
 
   const normalizedCharges = Math.min(Math.max(charges, 1), SHIELD_INITIAL_CHARGES)
@@ -329,14 +334,14 @@ export async function craftShieldIfEligible(prisma: any, ownerId: number, earned
     return null
   }
 
-  const existingShield = await prisma.shield.findFirst({
+  const activeShieldCount = await prisma.shield.count({
     where: {
       ownerId,
       status: 'active',
     },
   })
 
-  if (existingShield) {
+  if (activeShieldCount >= SHIELD_MAX_ACTIVE) {
     await syncOwnerShieldCount(prisma, ownerId)
     return null
   }

@@ -349,7 +349,7 @@ export function AdminDashboardContent({ secret }: Props) {
                         <td className="px-4 py-3.5 min-w-[150px]">
                           <div className="flex items-center gap-2">
                             <span className="ggd-tag bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]">
-                              {isImmortal ? '∞ immortal' : activeShieldCount > 0 ? `1 shield · ${user.activeShieldCharges ?? '?'}c` : '0 shield'}
+                              {isImmortal ? '∞ immortal' : activeShieldCount > 0 ? `${activeShieldCount} shield${activeShieldCount > 1 ? 's' : ` · ${user.activeShieldCharges ?? '?'}c`}` : '0 shield'}
                             </span>
                             <button
                               onClick={() => {
@@ -475,7 +475,7 @@ export function AdminDashboardContent({ secret }: Props) {
                   <div>
                     <div className="font-display text-2xl text-white text-outlined">⏳ Shield Aging</div>
                     <div className="font-data text-xs text-[var(--color-ggd-muted)] mt-1">
-                      Max 1 shield mỗi vịt. Shield có 3 charge, sau race không dùng thì -1, về 0 sẽ vỡ và mất luôn.
+                      Tối đa 12 shield mỗi vịt. Mỗi shield có 3 charge, sau race không dùng thì -1, về 0 sẽ vỡ và mất luôn.
                     </div>
                   </div>
 

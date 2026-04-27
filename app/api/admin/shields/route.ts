@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { isImmortalDuck } from '@/lib/immortal-duck'
-import { SHIELD_INITIAL_CHARGES, createShield, normalizeLegacyShieldState, syncOwnerShieldCount } from '@/lib/shield-decay'
+import { SHIELD_INITIAL_CHARGES, SHIELD_MAX_ACTIVE, createShield, normalizeLegacyShieldState, syncOwnerShieldCount } from '@/lib/shield-decay'
 
 function checkSecret(req: Request) {
   const { searchParams } = new URL(req.url)
@@ -45,16 +45,16 @@ export async function POST(request: Request) {
 
     await normalizeLegacyShieldState(prisma, [ownerId])
 
-    const existingShield = await prisma.shield.findFirst({
+    const activeShieldCount = await prisma.shield.count({
       where: {
         ownerId,
         status: 'active',
       },
     })
 
-    if (existingShield) {
+    if (activeShieldCount >= SHIELD_MAX_ACTIVE) {
       return NextResponse.json(
-        { error: 'Player already has an active shield. Max 1 shield per player.' },
+        { error: `Player already has ${SHIELD_MAX_ACTIVE} active shields.` },
         { status: 409 }
       )
     }
