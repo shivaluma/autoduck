@@ -611,9 +611,9 @@ async function executeRace(
         }
 
         if (itemModifiers.safeWeek) {
-          await tickShieldDecay(tx, { skipDecayReason: 'SAFE_WEEK' })
+          await tickShieldDecay(tx, { skipDecayReason: 'SAFE_WEEK', currentRaceId: raceId })
         } else {
-          await tickShieldDecay(tx)
+          await tickShieldDecay(tx, { currentRaceId: raceId })
         }
 
         newChestsForThisRace = await issueBossRewardChests(tx, raceId, bossRewardInputs)

@@ -2,10 +2,17 @@ import { NextResponse } from 'next/server'
 import { getDashboardUsers } from '@/lib/dashboard-data'
 import { prisma } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // GET /api/users - Lấy danh sách tất cả người chơi
 export async function GET() {
   try {
-    return NextResponse.json(await getDashboardUsers(prisma))
+    return NextResponse.json(await getDashboardUsers(prisma), {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      },
+    })
   } catch (error) {
     console.error('Failed to fetch users:', error)
     return NextResponse.json(

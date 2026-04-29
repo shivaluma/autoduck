@@ -3,6 +3,9 @@ import { getDashboardBrief } from '@/lib/dashboard-brief'
 import { getDashboardRaceLists, getDashboardSummary, getDashboardUsers } from '@/lib/dashboard-data'
 import { prisma } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export async function GET() {
   try {
     const [players, races, summary] = await Promise.all([
@@ -17,6 +20,10 @@ export async function GET() {
       races,
       summary,
       brief,
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      },
     })
   } catch (error) {
     console.error('Failed to fetch dashboard:', error)

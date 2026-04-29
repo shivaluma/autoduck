@@ -30,6 +30,8 @@ export interface ShieldData {
   ownerId: number
   charges: number
   status: string
+  earnedRaceId?: number | null
+  earnedAt?: string | null
   loanedToId?: number | null
 }
 

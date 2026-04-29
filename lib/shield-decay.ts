@@ -21,6 +21,7 @@ type ActiveShieldRecord = {
   charges: number
   weeksUnused: number
   earnedAt: Date
+  earnedRaceId?: number | null
 }
 
 function chargesToLegacyWeeks(charges: number) {
@@ -140,7 +141,7 @@ export async function normalizeLegacyShieldState(prisma: any, ownerIds?: number[
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function tickShieldDecay(prisma: any, options: { skipDecayReason?: string } = {}): Promise<{
+export async function tickShieldDecay(prisma: any, options: { skipDecayReason?: string; currentRaceId?: number } = {}): Promise<{
   broken: { shieldId: number; ownerId: number }[]
   lost: { shieldId: number; ownerId: number }[]
   weekKey: string
@@ -169,7 +170,17 @@ export async function tickShieldDecay(prisma: any, options: { skipDecayReason?: 
   }
 
   const activeShields = await prisma.shield.findMany({
-    where: { status: 'active' },
+    where: {
+      status: 'active',
+      ...(typeof options.currentRaceId === 'number'
+        ? {
+            OR: [
+              { earnedRaceId: null },
+              { earnedRaceId: { not: options.currentRaceId } },
+            ],
+          }
+        : {}),
+    },
     orderBy: [{ ownerId: 'asc' }, { charges: 'asc' }, { earnedAt: 'asc' }],
   })
 
@@ -238,7 +249,7 @@ export async function tickShieldDecay(prisma: any, options: { skipDecayReason?: 
         weekKey,
         brokenShields: broken.length,
         lostShields: 0,
-        details: JSON.stringify({ decayed, broken }),
+        details: JSON.stringify({ decayed, broken, exemptRaceId: options.currentRaceId ?? null }),
       },
     })
   })

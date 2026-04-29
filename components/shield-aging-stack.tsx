@@ -7,6 +7,7 @@ interface ShieldAgingStackProps {
   shields: ShieldData[]
   maxVisible?: number
   legacyCount?: number
+  highlightRaceId?: number | null
 }
 
 function shieldVisual(charges: number) {
@@ -33,7 +34,7 @@ function shieldVisual(charges: number) {
   }
 }
 
-export function ShieldAgingStack({ shields, maxVisible = 12, legacyCount = 0 }: ShieldAgingStackProps) {
+export function ShieldAgingStack({ shields, maxVisible = 12, legacyCount = 0, highlightRaceId = null }: ShieldAgingStackProps) {
   if (shields.length === 0) {
     if (legacyCount > 0) {
       if (legacyCount > 100) {
@@ -92,11 +93,12 @@ export function ShieldAgingStack({ shields, maxVisible = 12, legacyCount = 0 }: 
     <div className="flex flex-wrap justify-center gap-1 px-2">
       {visible.map((shield) => {
         const visual = shieldVisual(shield.charges)
+        const isFreshReward = typeof highlightRaceId === 'number' && shield.earnedRaceId === highlightRaceId
         return (
           <div
             key={shield.id}
-            className={`group relative flex h-8 w-8 items-center justify-center rounded-lg border-2 transition-transform duration-150 hover:-translate-y-1 hover:scale-110 ${visual.className}`}
-            title={`Khiên #${shield.id}: còn ${shield.charges} charge, ${visual.label}.`}
+            className={`group relative flex h-8 w-8 items-center justify-center rounded-lg border-2 transition-transform duration-150 hover:-translate-y-1 hover:scale-110 ${visual.className} ${isFreshReward ? 'ring-2 ring-[var(--color-ggd-gold)] ring-offset-2 ring-offset-[var(--color-ggd-panel)]' : ''}`}
+            title={`Khiên #${shield.id}: còn ${shield.charges} charge, ${visual.label}.${shield.earnedRaceId ? ` Nhận từ race #${shield.earnedRaceId}.` : ''}`}
           >
             <Image
               src={visual.src}
@@ -109,6 +111,11 @@ export function ShieldAgingStack({ shields, maxVisible = 12, legacyCount = 0 }: 
             <span className="absolute -bottom-1 -right-1 rounded bg-[var(--color-ggd-outline)] px-1 font-data text-[8px] font-black text-white">
               {shield.charges}c
             </span>
+            {isFreshReward && (
+              <span className="absolute -top-2 -left-2 rounded bg-[var(--color-ggd-gold)] px-1 font-data text-[8px] font-black text-[var(--color-ggd-outline)] shadow-[0_1px_0_var(--color-ggd-outline)]">
+                NEW
+              </span>
+            )}
           </div>
         )
       })}

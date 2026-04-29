@@ -57,6 +57,8 @@ interface UserWithDashboardState {
     ownerId: number
     charges: number
     status: string
+    earnedRaceId?: number | null
+    earnedAt: Date
     loanedToId?: number | null
   }>
   mysteryChests: Array<{
@@ -93,6 +95,8 @@ export async function getDashboardUsers(prisma: PrismaClient): Promise<PlayerDat
           ownerId: true,
           charges: true,
           status: true,
+          earnedRaceId: true,
+          earnedAt: true,
           loanedToId: true,
         },
       },
@@ -140,6 +144,8 @@ export async function getDashboardUsers(prisma: PrismaClient): Promise<PlayerDat
         ownerId: shield.ownerId,
         charges: shield.charges,
         status: shield.status,
+        earnedRaceId: shield.earnedRaceId,
+        earnedAt: shield.earnedAt.toISOString(),
         loanedToId: shield.loanedToId,
       })),
       activeChest: MYSTERY_CHESTS_ENABLED && user.mysteryChests[0]

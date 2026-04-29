@@ -19,6 +19,8 @@ const RARE_CHEST_EFFECTS = new Set([
   'MORE_PEOPLE_MORE_FUN',
 ])
 
+const SHIELD_REWARD_EFFECTS = new Set(['FRAGILE_SHIELD', 'GOLDEN_SHIELD'])
+
 const headlineTemplates = {
   bossDown: [
     'Triều đại Boss {name} chính thức sụp đổ.',
@@ -456,6 +458,7 @@ export default function RaceDetailPage({
                   {sortedParticipants.map((p, idx) => {
                     const consumedChest = !p.isClone ? consumedChestByOwnerId.get(p.userId) : undefined
                     const awardedChest = p.gotScar && !p.isClone ? awardedChestByOwnerId.get(p.userId) : undefined
+                    const awardedShield = awardedChest && SHIELD_REWARD_EFFECTS.has(awardedChest.effect) ? awardedChest : undefined
 
                     const status = getParticipantStatus(p, idx)
                     const rowBadges = [
@@ -508,13 +511,38 @@ export default function RaceDetailPage({
                           </span>
                         )}
                       </div>
-                      <div className="flex justify-center">
+                      <div className="flex flex-col items-center justify-center gap-1.5">
                         {p.usedShield ? (
                           <span className="shield-chip shield-tier-fresh">
                             <Image src="/assets/v2/shield-cracked.svg" alt="shield" width={18} height={18} className="shield-chip-icon" unoptimized />
                             <span>Tao có khiên</span>
                           </span>
+                        ) : awardedShield ? (
+                          <span className={`shield-chip ${awardedShield.effect === 'GOLDEN_SHIELD' ? 'shield-tier-fresh' : 'shield-tier-cracked'}`}>
+                            <Image
+                              src={awardedShield.effect === 'GOLDEN_SHIELD' ? '/assets/v2/shield-fresh.svg' : '/assets/v2/shield-cracked.svg'}
+                              alt="shield reward"
+                              width={18}
+                              height={18}
+                              className="shield-chip-icon"
+                              unoptimized
+                            />
+                            <span>Được tặng khiên</span>
+                          </span>
                         ) : (<span className="empty-cell">—</span>)}
+                        {p.usedShield && awardedShield && (
+                          <span className={`shield-chip ${awardedShield.effect === 'GOLDEN_SHIELD' ? 'shield-tier-fresh' : 'shield-tier-cracked'}`}>
+                            <Image
+                              src={awardedShield.effect === 'GOLDEN_SHIELD' ? '/assets/v2/shield-fresh.svg' : '/assets/v2/shield-cracked.svg'}
+                              alt="shield reward"
+                              width={18}
+                              height={18}
+                              className="shield-chip-icon"
+                              unoptimized
+                            />
+                            <span>+1 khiên</span>
+                          </span>
+                        )}
                       </div>
                       {MYSTERY_CHESTS_ENABLED && (
                         <div className="min-w-0">

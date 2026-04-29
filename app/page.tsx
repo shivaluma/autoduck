@@ -108,7 +108,7 @@ export default function Dashboard() {
   const [showTestRaces, setShowTestRaces] = useState(false)
 
   useEffect(() => {
-    fetch('/api/dashboard')
+    fetch('/api/dashboard', { cache: 'no-store' })
       .then((response) => response.json())
       .then((dashboardData) => {
         setPlayers(dashboardData.players)
@@ -122,6 +122,7 @@ export default function Dashboard() {
 
   const displayedRaces = showTestRaces ? races.recentAll : races.recentOfficial
   const totalRaces = showTestRaces ? races.totalAll : races.totalOfficial
+  const latestOfficialRaceId = races.recentOfficial[0]?.id ?? null
   const totalKhaos = players.reduce((sum, player) => sum + player.totalKhaos, 0)
   const sortedPlayers = [...players].sort((left, right) => right.totalKhaos - left.totalKhaos)
   const mostUnluckyDuck = summary?.mostUnluckyDuck ?? null
@@ -414,7 +415,7 @@ export default function Dashboard() {
                         </span>
                       </div>
 
-                      <ShieldAgingStack shields={player.activeShields} legacyCount={player.shields} />
+                      <ShieldAgingStack shields={player.activeShields} legacyCount={player.shields} highlightRaceId={latestOfficialRaceId} />
 
                       <div className="text-center">
                         <span className="font-data text-2xl font-black text-[var(--color-ggd-muted)]/50">{player.shieldsUsed}</span>
