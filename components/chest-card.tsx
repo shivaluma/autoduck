@@ -5,16 +5,16 @@ import Image from 'next/image'
 import type { ChestEffect } from '@/lib/types'
 
 const effectMeta: Record<ChestEffect, { label: string; svg: string; rarity: 'trash' | 'common' | 'rare' | 'epic'; tagline: string }> = {
-  BONUS_SCAR: { label: 'Bonus Scar', svg: '/assets/v2/chest-open.svg', rarity: 'common', tagline: '+1 sẹo ngay lập tức' },
-  FRAGILE_SHIELD: { label: 'Fragile Shield', svg: '/assets/v2/shield-cracked.svg', rarity: 'common', tagline: '+1 khiên mỏng, race sau không dùng là vỡ' },
+  BONUS_SCAR: { label: 'Bonus Scar', svg: '/assets/v2/chest-open.svg', rarity: 'rare', tagline: '+1 sẹo ngay lập tức' },
+  FRAGILE_SHIELD: { label: 'Fragile Shield', svg: '/assets/v2/shield-cracked.svg', rarity: 'rare', tagline: '+1 khiên mỏng, race sau không dùng là vỡ' },
   CLONE_CHAOS: { label: 'Clone Chaos', svg: '/assets/v2/chest-open.svg', rarity: 'common', tagline: 'Race sau toàn lobby +1 clone' },
   SAFE_WEEK: { label: 'Safe Week', svg: '/assets/v2/shield-fresh.svg', rarity: 'common', tagline: 'Race sau shield không già đi' },
   REVERSE_RESULTS: { label: 'Reverse Results', svg: '/assets/v2/chest-open.svg', rarity: 'common', tagline: 'Race sau đảo ngược bảng kết quả' },
   LAST_LAUGH: { label: 'Last Laugh', svg: '/assets/v2/chest-open.svg', rarity: 'rare', tagline: 'Nếu chủ rương thành dzịt, kéo người sát nút xuống theo' },
   ANTI_SHIELD: { label: 'Anti Shield', svg: '/assets/v2/shield-broken.svg', rarity: 'rare', tagline: 'Race sau toàn lobby cấm dùng shield' },
-  CANT_PASS_THOMAS: { label: "Can't Pass Thomas", svg: '/assets/v2/chest-open.svg', rarity: 'rare', tagline: 'Race sau ai vượt Thomas tính thua' },
+  CANT_PASS_THOMAS: { label: "Can't Pass Thomas", svg: '/assets/v2/chest-open.svg', rarity: 'common', tagline: 'Race sau ai vượt Thomas tính thua' },
   GOLDEN_SHIELD: { label: 'Golden Shield', svg: '/assets/v2/shield-fresh.svg', rarity: 'rare', tagline: 'Nhận 1 shield mới tinh, tuổi thọ 5 race' },
-  MORE_PEOPLE_MORE_FUN: { label: 'More People More Fun', svg: '/assets/v2/chest-open.svg', rarity: 'rare', tagline: 'Race sau số người thua tăng thành 3 hoặc 4' },
+  MORE_PEOPLE_MORE_FUN: { label: 'More People More Fun', svg: '/assets/v2/chest-open.svg', rarity: 'common', tagline: 'Race sau số người thua tăng thành 3 hoặc 4' },
   LUCKY_CLONE: { label: 'Legacy Lucky Clone', svg: '/assets/v2/chest-open.svg', rarity: 'trash', tagline: 'Effect cũ đã ngưng dùng' },
   NOTHING: { label: 'Legacy Empty', svg: '/assets/v2/effect-nothing.svg', rarity: 'trash', tagline: 'Effect cũ đã ngưng dùng' },
   CURSE_SWAP: { label: 'Legacy Curse Swap', svg: '/assets/v2/effect-curse-swap.svg', rarity: 'trash', tagline: 'Effect cũ đã ngưng dùng' },

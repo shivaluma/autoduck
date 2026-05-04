@@ -12,11 +12,11 @@ import { ChestReveal } from '@/components/chest-reveal'
 import { MYSTERY_CHESTS_ENABLED } from '@/lib/feature-flags'
 
 const RARE_CHEST_EFFECTS = new Set([
+  'BONUS_SCAR',
+  'FRAGILE_SHIELD',
   'LAST_LAUGH',
   'ANTI_SHIELD',
-  'CANT_PASS_THOMAS',
   'GOLDEN_SHIELD',
-  'MORE_PEOPLE_MORE_FUN',
 ])
 
 const SHIELD_REWARD_EFFECTS = new Set(['FRAGILE_SHIELD', 'GOLDEN_SHIELD'])

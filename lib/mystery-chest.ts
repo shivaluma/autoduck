@@ -5,19 +5,19 @@ import { SHIELD_INITIAL_CHARGES, createShield, craftShieldIfEligible } from '@/l
 export type ChestRarity = 'common' | 'rare'
 
 export const COMMON_CHEST_TABLE: Array<{ effect: ChestEffect; weight: number }> = [
-  { effect: 'BONUS_SCAR', weight: 28 },
-  { effect: 'FRAGILE_SHIELD', weight: 24 },
-  { effect: 'CLONE_CHAOS', weight: 18 },
-  { effect: 'SAFE_WEEK', weight: 15 },
-  { effect: 'REVERSE_RESULTS', weight: 15 },
+  { effect: 'CLONE_CHAOS', weight: 24 },
+  { effect: 'SAFE_WEEK', weight: 20 },
+  { effect: 'REVERSE_RESULTS', weight: 20 },
+  { effect: 'CANT_PASS_THOMAS', weight: 18 },
+  { effect: 'MORE_PEOPLE_MORE_FUN', weight: 18 },
 ]
 
 export const RARE_CHEST_TABLE: Array<{ effect: ChestEffect; weight: number }> = [
-  { effect: 'LAST_LAUGH', weight: 28 },
-  { effect: 'ANTI_SHIELD', weight: 22 },
-  { effect: 'CANT_PASS_THOMAS', weight: 18 },
-  { effect: 'GOLDEN_SHIELD', weight: 17 },
-  { effect: 'MORE_PEOPLE_MORE_FUN', weight: 15 },
+  { effect: 'BONUS_SCAR', weight: 30 },
+  { effect: 'LAST_LAUGH', weight: 24 },
+  { effect: 'FRAGILE_SHIELD', weight: 20 },
+  { effect: 'ANTI_SHIELD', weight: 20 },
+  { effect: 'GOLDEN_SHIELD', weight: 6 },
 ]
 
 const INVENTORY_EFFECTS = new Set<ChestEffect>([
@@ -36,9 +36,7 @@ const LEGACY_EFFECTS = new Set<ChestEffect>([
   'I_CHOOSE_YOU',
 ])
 
-const MUTUALLY_EXCLUSIVE_RARE_EFFECTS: Array<Set<ChestEffect>> = [
-  new Set(['CANT_PASS_THOMAS', 'MORE_PEOPLE_MORE_FUN']),
-]
+const MUTUALLY_EXCLUSIVE_RARE_EFFECTS: Array<Set<ChestEffect>> = []
 
 export const EFFECTS_REQUIRING_TARGET = new Set<ChestEffect>()
 export const CHEST_TABLE = COMMON_CHEST_TABLE

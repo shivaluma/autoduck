@@ -15,19 +15,19 @@ const tierRates = [
 ]
 
 const commonItems = [
-  { icon: '🤕', name: 'Bonus Scar', rate: '28%', effect: 'Nhận ngay +1 Sẹo.', tone: 'from-orange-500/35 to-red-900/25' },
-  { icon: '🛡️', name: 'Fragile Shield', rate: '24%', effect: 'Nhận ngay 1 Khiên mỏng. Không dùng ở Race kế tiếp sẽ vỡ.', tone: 'from-sky-400/35 to-cyan-950/25' },
-  { icon: '🐣', name: 'Clone Chaos', rate: '18%', effect: 'Race kế tiếp toàn lobby có thêm 1 Clone.', tone: 'from-lime-400/30 to-emerald-950/25' },
-  { icon: '🌿', name: 'Safe Week', rate: '15%', effect: 'Race kế tiếp Khiên không già đi.', tone: 'from-green-400/30 to-teal-950/25' },
-  { icon: '🌀', name: 'Reverse Results', rate: '15%', effect: 'Race kế tiếp đảo ngược bảng xếp hạng cuối cùng.', tone: 'from-indigo-400/30 to-violet-950/25' },
+  { icon: '🐣', name: 'Clone Chaos', rate: '24%', effect: 'Race kế tiếp toàn lobby có thêm 1 Clone.', tone: 'from-lime-400/30 to-emerald-950/25' },
+  { icon: '🌿', name: 'Safe Week', rate: '20%', effect: 'Race kế tiếp Khiên không già đi.', tone: 'from-green-400/30 to-teal-950/25' },
+  { icon: '🌀', name: 'Reverse Results', rate: '20%', effect: 'Race kế tiếp đảo ngược bảng xếp hạng cuối cùng.', tone: 'from-indigo-400/30 to-violet-950/25' },
+  { icon: '👑', name: "Can't Pass Thomas", rate: '18%', effect: 'Race kế tiếp ai về trước Thomas sẽ bị tính thua.', tone: 'from-amber-300/35 to-stone-950/25' },
+  { icon: '🎪', name: 'More People More Fun', rate: '18%', effect: 'Race kế tiếp sẽ có 3 hoặc 4 người cùng thua thay vì 2.', tone: 'from-pink-400/35 to-fuchsia-950/25' },
 ]
 
 const rareItems = [
-  { icon: '🎭', name: 'Last Laugh', rate: '28%', effect: 'Nếu chủ item thành dzịt, kéo người an toàn gần nhất xuống làm dzịt theo.', tone: 'from-yellow-300/35 to-orange-950/25' },
-  { icon: '🚫', name: 'Anti Shield', rate: '22%', effect: 'Race kế tiếp toàn lobby không ai được dùng Khiên.', tone: 'from-red-500/35 to-rose-950/25' },
-  { icon: '👑', name: "Can't Pass Thomas", rate: '18%', effect: 'Race kế tiếp ai về trước Thomas sẽ bị tính thua.', tone: 'from-amber-300/35 to-stone-950/25' },
-  { icon: '✨', name: 'Golden Shield', rate: '17%', effect: 'Nhận ngay 1 Khiên mới tinh, tuổi thọ 5 race.', tone: 'from-yellow-300/45 to-yellow-900/20' },
-  { icon: '🎪', name: 'More People More Fun', rate: '15%', effect: 'Race kế tiếp sẽ có 3 hoặc 4 người cùng thua thay vì 2.', tone: 'from-pink-400/35 to-fuchsia-950/25' },
+  { icon: '🤕', name: 'Bonus Scar', rate: '30%', effect: 'Nhận ngay +1 Sẹo.', tone: 'from-orange-500/35 to-red-900/25' },
+  { icon: '🎭', name: 'Last Laugh', rate: '24%', effect: 'Nếu chủ item thành dzịt, kéo người an toàn gần nhất xuống làm dzịt theo.', tone: 'from-yellow-300/35 to-orange-950/25' },
+  { icon: '🛡️', name: 'Fragile Shield', rate: '20%', effect: 'Nhận ngay 1 Khiên mỏng. Không dùng ở Race kế tiếp sẽ vỡ.', tone: 'from-sky-400/35 to-cyan-950/25' },
+  { icon: '🚫', name: 'Anti Shield', rate: '20%', effect: 'Race kế tiếp toàn lobby không ai được dùng Khiên.', tone: 'from-red-500/35 to-rose-950/25' },
+  { icon: '✨', name: 'Golden Shield', rate: '6%', effect: 'Nhận ngay 1 Khiên mới tinh, tuổi thọ 5 race.', tone: 'from-yellow-300/45 to-yellow-900/20' },
 ]
 
 const flowSteps = [
