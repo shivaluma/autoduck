@@ -32,7 +32,7 @@ const rareItems = [
 ]
 
 const flowSteps = [
-  { step: '01', title: 'Boss bị hạ', text: 'Boss hoặc Clone Boss bị tính thua thì Boss mất ngôi.' },
+  { step: '01', title: 'Boss bị hạ', text: 'Bất kỳ entry nào của Boss lọt top 2 cuối thì Boss mất ngôi.' },
   { step: '02', title: 'Roll chest theo streak', text: 'Streak càng cao thì Rare rate càng lớn.' },
   { step: '03', title: 'Nhận item / lưu modifier', text: 'Item inventory nhận ngay. Modifier được lưu cho Race kế tiếp.' },
   { step: '04', title: 'Race kế tiếp kích hoạt effect', text: 'Modifier tự kích hoạt khi Race kế tiếp bắt đầu.' },
@@ -122,8 +122,8 @@ export default function RulesPage() {
               <div className="mt-6 grid gap-3 sm:grid-cols-3">
                 {[
                   ['🔥', 'Boss Streak là gì?', 'Số Race liên tiếp một vịt không bị tính thua.'],
-                  ['👑', 'Mở Boss Mode', 'Đạt Streak 3 thì thành Boss Duck.'],
-                  ['🐣', 'Sống càng lâu càng căng', 'Streak càng cao Boss càng spawn nhiều Clone và chest càng dễ ra Rare.'],
+                  ['👑', 'Mở Boss Mode', 'Đạt Streak 4 thì thành Boss Duck.'],
+                  ['🐣', 'Sống càng lâu càng căng', 'Boss Level = streak, extra clone cap tối đa 3.'],
                 ].map(([icon, title, text]) => (
                   <div key={title} className="rounded-2xl border-3 border-[var(--color-ggd-outline)] bg-black/25 p-4 shadow-[inset_0_2px_0_rgba(255,255,255,0.1)]">
                     <div className="text-2xl">{icon}</div>

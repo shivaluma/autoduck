@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { getBossExtraEntries, getBossTotalEntries } from '@/lib/boss-logic'
 
 interface BossBadgeProps {
   compact?: boolean
@@ -10,10 +11,11 @@ interface BossBadgeProps {
 
 export function BossBadge({ compact = false, streak }: BossBadgeProps) {
   const crownSize = compact ? 18 : 24
-  const cloneCount = Math.max(streak ?? 3, 3)
-  const tierClass = cloneCount >= 10
+  const cloneCount = getBossExtraEntries(streak)
+  const totalEntries = getBossTotalEntries(streak)
+  const tierClass = cloneCount >= 3
     ? 'boss-tier-3'
-    : cloneCount >= 6
+    : cloneCount >= 2
       ? 'boss-tier-2'
       : 'boss-tier-1'
   return (
@@ -49,7 +51,7 @@ export function BossBadge({ compact = false, streak }: BossBadgeProps) {
           </span>
         </TooltipTrigger>
         <TooltipContent sideOffset={6} className="max-w-[220px] bg-[var(--color-ggd-panel)] text-white border-2 border-[var(--color-ggd-outline)]">
-          Race kế tiếp sẽ spawn {cloneCount} clone. Chỉ cần 1 clone về nhóm cuối là Boss mất ngôi.
+          Race kế tiếp có {totalEntries} entries ({cloneCount} clone). Chỉ cần 1 entry lọt top 2 cuối là Boss mất ngôi.
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

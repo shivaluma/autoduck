@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db'
 import { runRaceWorker } from '@/lib/race-worker'
 import { buildPenaltyVerdict, calculatePenalties, dedupeVictimUserIds } from '@/lib/shield-logic'
 import { raceEventBus, RACE_EVENTS } from '@/lib/event-bus'
-import { expandBossParticipants, evaluateBossStatus, resolveBossOutcome } from '@/lib/boss-logic'
+import { BOSS_STREAK_THRESHOLD, expandBossParticipants, evaluateBossStatus, resolveBossOutcome } from '@/lib/boss-logic'
 import { applyChestPreRace, getActiveChestsForUsers, issueBossRewardChests, resolveChestPostRace, validateChestConfig } from '@/lib/mystery-chest'
 import { SHIELD_INITIAL_CHARGES, consumeShield, craftShieldIfEligible, normalizeLegacyShieldState, syncShieldCounters, tickShieldDecay } from '@/lib/shield-decay'
 import type { BossRewardInput, ItemRaceModifiers } from '@/lib/mystery-chest'
@@ -51,6 +51,36 @@ interface RaceEventUser {
   id: number
   name: string
   avatarUrl?: string | null
+}
+
+interface RaceVictimEntry {
+  name: string
+  userId: number
+  initialRank: number
+  isClone?: boolean
+  cloneOfUserId?: number | null
+  cloneIndex?: number | null
+}
+
+function participantResultKey(entry: { userId: number; cloneIndex?: number | null }) {
+  return `${entry.userId}:${entry.cloneIndex ?? 'main'}`
+}
+
+function mergeVictimEntries(victims: RaceVictimEntry[], additions: RaceVictimEntry[]) {
+  const merged = [...victims]
+  const seen = new Set(merged.map(participantResultKey))
+
+  for (const addition of additions) {
+    const key = participantResultKey(addition)
+    if (seen.has(key)) {
+      continue
+    }
+
+    merged.push(addition)
+    seen.add(key)
+  }
+
+  return merged
 }
 
 function getVietnamDayWindow() {
@@ -182,10 +212,10 @@ export async function POST(request: Request) {
 
     // INVARIANT: 1 user không thể đồng thời là Boss và sở hữu chest active.
     // Khi user thành Boss, mọi chest đang giữ phải void; khi user nhận chest mới,
-    // họ chắc chắn không phải Boss (vì Boss = cleanStreak ≥ 3 không có scar).
+    // họ chắc chắn không phải Boss (vì Boss = cleanStreak ≥ 4 không có scar).
     const bossChestOwners = (activeChests as Array<{ id: number; ownerId: number }>).filter((chest) => {
       const owner = (users as UserWithActiveShields[]).find((candidate) => candidate.id === chest.ownerId)
-      return owner?.isBoss === true
+      return owner?.isBoss === true && owner.cleanStreak >= BOSS_STREAK_THRESHOLD
     })
     if (bossChestOwners.length > 0) {
       const violators = bossChestOwners.map((chest) => `chest #${chest.id} (owner ${chest.ownerId})`).join(', ')
@@ -405,8 +435,26 @@ async function executeRace(
     const race = await prisma.race.findUnique({ where: { id: raceId } })
     const isTest = race?.isTest ?? false
     const bossUsers = await prisma.user.findMany({
-      where: { isBoss: true, id: { in: Array.from(new Set(playerInputs.map((player) => player.userId))) } },
+      where: {
+        isBoss: true,
+        cleanStreak: { gte: BOSS_STREAK_THRESHOLD },
+        id: { in: Array.from(new Set(playerInputs.map((player) => player.userId))) },
+      },
     })
+    const bossUserIds = new Set((bossUsers as Array<{ id: number }>).map((boss) => boss.id))
+    const bossBottomTwoVictims: RaceVictimEntry[] = [...raceResults]
+      .filter((entry) => !entry.isImmortal)
+      .sort((left, right) => right.initialRank - left.initialRank)
+      .slice(0, 2)
+      .filter((entry) => bossUserIds.has(entry.cloneOfUserId ?? entry.userId))
+      .map((entry) => ({
+        name: entry.name,
+        userId: entry.userId,
+        initialRank: entry.initialRank,
+        isClone: entry.isClone,
+        cloneOfUserId: entry.cloneOfUserId,
+        cloneIndex: entry.cloneIndex,
+      }))
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const transactionSummary = await prisma.$transaction(async (tx: any) => {
@@ -419,6 +467,7 @@ async function executeRace(
           initialRank: victim.initialRank,
           isClone: victim.isClone ?? false,
           cloneOfUserId: victim.cloneOfUserId ?? undefined,
+          cloneIndex: victim.cloneIndex ?? undefined,
         })),
         shieldsToGrant: [],
         outcomes: [],
@@ -477,10 +526,23 @@ async function executeRace(
             activeChests
           )
 
-      const participantResultKey = (entry: { userId: number; cloneIndex?: number | null }) => `${entry.userId}:${entry.cloneIndex ?? 'main'}`
-      const finalVictimParticipantKeys = new Set(postRace.modifiedVictims.map(participantResultKey))
-      const finalVictimUserIds = dedupeVictimUserIds(postRace.modifiedVictims)
-      const finalVerdict = buildPenaltyVerdict(postRace.modifiedVictims.map((victim) => ({
+      const modifiedVictims = mergeVictimEntries(
+        postRace.modifiedVictims.map((victim) => {
+          const cloneIndex = (victim as { cloneIndex?: number | null }).cloneIndex
+          return {
+            name: victim.name ?? raceResults.find((entry) => participantResultKey(entry) === participantResultKey({ userId: victim.userId, cloneIndex }))?.name ?? `User ${victim.cloneOfUserId ?? victim.userId}`,
+            userId: victim.userId,
+            initialRank: victim.initialRank,
+            isClone: victim.isClone,
+            cloneOfUserId: victim.cloneOfUserId,
+            cloneIndex,
+          }
+        }),
+        bossBottomTwoVictims
+      )
+      const finalVictimParticipantKeys = new Set(modifiedVictims.map(participantResultKey))
+      const finalVictimUserIds = dedupeVictimUserIds(modifiedVictims)
+      const finalVerdict = buildPenaltyVerdict(modifiedVictims.map((victim) => ({
         name: victim.name ?? raceResults.find((entry) => (entry.cloneOfUserId ?? entry.userId) === (victim.cloneOfUserId ?? victim.userId))?.name ?? `User ${victim.cloneOfUserId ?? victim.userId}`,
       })))
 
@@ -506,7 +568,7 @@ async function executeRace(
         if (bossUser) {
           const bossOutcome = resolveBossOutcome({
             bossUserId: participantUserId,
-            raceVictims: postRace.modifiedVictims.map((victim) => ({
+            raceVictims: bossBottomTwoVictims.map((victim) => ({
               userId: victim.userId,
               isClone: victim.isClone ?? false,
               cloneOfUserId: victim.cloneOfUserId ?? null,
@@ -516,7 +578,7 @@ async function executeRace(
           if (bossOutcome.bossLost) {
             bossRewardInputs.push({
               ownerId: participantUserId,
-              bossStreak: Math.max(bossUser.cleanStreak, 3),
+              bossStreak: bossUser.cleanStreak,
             })
           }
         }
@@ -549,7 +611,7 @@ async function executeRace(
           const bossOutcome = bossUsers.some((boss: { id: number }) => boss.id === participantUserId)
             ? resolveBossOutcome({
                 bossUserId: participantUserId,
-                raceVictims: postRace.modifiedVictims.map((victim) => ({
+                raceVictims: bossBottomTwoVictims.map((victim) => ({
                   userId: victim.userId,
                   isClone: victim.isClone ?? false,
                   cloneOfUserId: victim.cloneOfUserId ?? null,

@@ -456,7 +456,7 @@ export function AdminDashboardContent({ secret }: Props) {
                       <div key={boss.id} className="rounded-xl border-3 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-4">
                         <div className="flex items-center justify-between gap-3">
                           <span className="font-body text-white font-black">{boss.name}</span>
-                          <span className="ggd-tag bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]">👑 {boss.cleanStreak}/3</span>
+                          <span className="ggd-tag bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]">👑 Lv{boss.cleanStreak}</span>
                         </div>
                         <div className="font-data text-xs text-[var(--color-ggd-muted)] mt-2">
                           Boss since: {boss.bossSince ? new Date(boss.bossSince).toLocaleString() : '—'}

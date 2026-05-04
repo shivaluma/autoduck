@@ -5,6 +5,7 @@ import Link from 'next/link'
 import type { PlayerData } from '@/lib/types'
 import Image from 'next/image'
 import { BossBadge } from '@/components/boss-badge'
+import { BOSS_STREAK_THRESHOLD } from '@/lib/boss-logic'
 import { ShieldAgingStack } from '@/components/shield-aging-stack'
 import { MYSTERY_CHESTS_ENABLED } from '@/lib/feature-flags'
 
@@ -401,8 +402,8 @@ export default function Dashboard() {
                             <div className="font-body text-lg font-black text-white tracking-wide truncate">{player.name}</div>
                             {player.isBoss && <BossBadge compact streak={player.cleanStreak} />}
                             {player.cleanStreak > 0 && (
-                              <span className={`ggd-tag ${player.cleanStreak >= 3 ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' : 'bg-[var(--color-ggd-panel)] text-[var(--color-ggd-neon-green)]'}`}>
-                                🔥 {player.cleanStreak}/3 tuần sạch
+                              <span className={`ggd-tag ${player.cleanStreak >= BOSS_STREAK_THRESHOLD ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' : 'bg-[var(--color-ggd-panel)] text-[var(--color-ggd-neon-green)]'}`}>
+                                🔥 {player.cleanStreak}/{BOSS_STREAK_THRESHOLD} tuần sạch
                               </span>
                             )}
                           </div>
@@ -505,14 +506,14 @@ export default function Dashboard() {
                 <Image src="/assets/v2/boss-crown.svg" alt="boss" width={32} height={32} className="animate-bob" unoptimized />
                 <div>
                   <div className="font-display text-xl text-[var(--color-ggd-gold)] text-outlined leading-none">⛑ Boss Watch</div>
-                  <div className="font-data text-[10px] uppercase tracking-widest text-white/50">3 tuần sạch mở Boss Mode.</div>
+                  <div className="font-data text-[10px] uppercase tracking-widest text-white/50">{BOSS_STREAK_THRESHOLD} tuần sạch mở Boss Mode.</div>
                 </div>
               </div>
-              <p className="font-readable text-sm text-white/70 mb-4">Càng sống lâu càng bị spawn thêm clone để săn.</p>
+              <p className="font-readable text-sm text-white/70 mb-4">Boss Level = streak. Extra clone bị cap tối đa 3.</p>
               <div className="space-y-2.5">
                 {bossWatch.length > 0 ? bossWatch.map((entry) => {
                   const streak = entry.cleanStreak
-                  const pct = Math.min((Math.min(streak, 3) / 3) * 100, 100)
+                  const pct = Math.min((Math.min(streak, BOSS_STREAK_THRESHOLD) / BOSS_STREAK_THRESHOLD) * 100, 100)
                   return (
                     <div key={entry.id} className="stat-row">
                       <div className="stat-row-icon" style={{ background: entry.isBoss ? 'linear-gradient(180deg, #ffd84d 0%, #f59e0b 100%)' : 'rgba(0,0,0,0.4)' }}>
@@ -525,7 +526,7 @@ export default function Dashboard() {
                           <span className="font-body text-white font-black truncate">{entry.name}</span>
                           {entry.isBoss
                             ? <BossBadge compact streak={entry.cleanStreak} />
-                            : <span className="font-data text-[11px] font-black text-[var(--color-ggd-gold)]">{streak}/3</span>}
+                            : <span className="font-data text-[11px] font-black text-[var(--color-ggd-gold)]">{streak}/{BOSS_STREAK_THRESHOLD}</span>}
                         </div>
                         <div className="progress-track">
                           <div className="progress-fill" style={{ width: `${pct}%`, '--bar-bg': entry.isBoss ? 'linear-gradient(90deg,#ffd84d,#f59e0b)' : 'linear-gradient(90deg,#3dff8f,#ffcc00)' } as React.CSSProperties} />
@@ -588,7 +589,7 @@ export default function Dashboard() {
                   { icon: '💀', title: 'Thua Cuộc', lines: ['2 vịt cuối bảng = Làm Dzịt', 'Bao nước, nhận +1 Sẹo'] },
                   { icon: '🛡', title: 'Khiên', lines: ['2 Sẹo = auto ghép 1 Khiên', 'Declare trước race để kích hoạt', 'Cứu 1 lần rồi biến mất'] },
                   { icon: '⏳', title: 'Tuổi Thọ Khiên', lines: ['Không dùng sau race sẽ già đi', 'Quá hạn là vỡ'] },
-                  { icon: '⛑', title: 'Boss Duck', lines: ['3 tuần liên tiếp không Dzịt = Boss', 'Boss spawn nhiều clone hơn mỗi tuần', 'Clone chết = Boss chết'] },
+                  { icon: '⛑', title: 'Boss Duck', lines: [`${BOSS_STREAK_THRESHOLD} tuần sạch = Boss`, 'Extra clone cap tối đa 3', 'Entry lọt top 2 cuối = Boss chết'] },
                   { icon: '🎁', title: 'Reward Chest', lines: ['Hạ Boss sẽ nhận chest', 'Streak càng cao, loot càng ngon'] },
                 ].map((rule) => (
                   <div key={rule.title} className="rounded-xl border-2 border-[var(--color-ggd-outline)]/35 bg-black/20 p-3">

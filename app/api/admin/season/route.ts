@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { BOSS_STREAK_THRESHOLD } from '@/lib/boss-logic'
 import { normalizeLegacyShieldState } from '@/lib/shield-decay'
 
 function checkSecret(req: Request) {
@@ -18,7 +19,7 @@ export async function GET(request: Request) {
 
     const [bosses, activeShields, activeChests, chestHistory, weeklyTicks] = await Promise.all([
       prisma.user.findMany({
-        where: { isBoss: true, name: { not: 'Thomas' } },
+        where: { isBoss: true, cleanStreak: { gte: BOSS_STREAK_THRESHOLD }, name: { not: 'Thomas' } },
         orderBy: [{ cleanStreak: 'desc' }, { name: 'asc' }],
       }),
       prisma.shield.findMany({

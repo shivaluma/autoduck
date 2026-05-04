@@ -9,6 +9,8 @@ type Migration = {
   run: (prisma: PrismaClient) => Promise<void>
 }
 
+const BOSS_STREAK_THRESHOLD = 4
+
 function createClient() {
   const dbUrl = process.env.DATABASE_URL || `file:${path.join(process.cwd(), 'prisma', 'dev.db')}`
   const adapter = new PrismaBetterSqlite3({ url: dbUrl })
@@ -131,7 +133,7 @@ async function rebuildBossWatchFromOfficialRaces(prisma: PrismaClient, raceCount
       }
 
       streak += 1
-      if (streak >= 3) {
+      if (streak >= BOSS_STREAK_THRESHOLD) {
         bossSince = race.finishedAt ?? race.createdAt
       }
     }
@@ -140,8 +142,8 @@ async function rebuildBossWatchFromOfficialRaces(prisma: PrismaClient, raceCount
       where: { id: user.id },
       data: {
         cleanStreak: streak,
-        isBoss: streak >= 3,
-        bossSince: streak >= 3 ? (bossSince ?? user.bossSince ?? new Date()) : null,
+        isBoss: streak >= BOSS_STREAK_THRESHOLD,
+        bossSince: streak >= BOSS_STREAK_THRESHOLD ? (bossSince ?? user.bossSince ?? new Date()) : null,
       },
     })
   }
@@ -215,7 +217,7 @@ async function rebuildBossWatchFromOfficialWeeks(prisma: PrismaClient, weekCount
       }
 
       streak += 1
-      if (streak >= 3) {
+      if (streak >= BOSS_STREAK_THRESHOLD) {
         bossSince = race.finishedAt ?? race.createdAt
       }
     }
@@ -224,8 +226,8 @@ async function rebuildBossWatchFromOfficialWeeks(prisma: PrismaClient, weekCount
       where: { id: user.id },
       data: {
         cleanStreak: streak,
-        isBoss: streak >= 3,
-        bossSince: streak >= 3 ? (bossSince ?? user.bossSince ?? new Date()) : null,
+        isBoss: streak >= BOSS_STREAK_THRESHOLD,
+        bossSince: streak >= BOSS_STREAK_THRESHOLD ? (bossSince ?? user.bossSince ?? new Date()) : null,
       },
     })
   }

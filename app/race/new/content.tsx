@@ -8,6 +8,7 @@ import { ChestConfigCard } from '@/components/chest-config-card'
 import { ChestIcon } from '@/components/chest-icon'
 import { ShieldChip } from '@/components/shield-chip'
 import { MYSTERY_CHESTS_ENABLED } from '@/lib/feature-flags'
+import { BOSS_STREAK_THRESHOLD, getBossExtraEntries, getBossTotalEntries } from '@/lib/boss-logic'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -158,12 +159,12 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
 
   const extraBossEntries = selectedPlayers
     .filter((player) => player.isBoss)
-    .reduce((sum, player) => sum + Math.max(player.cleanStreak, 3), 0)
+    .reduce((sum, player) => sum + getBossExtraEntries(player.cleanStreak), 0)
   const hasCloneChaos = activeSelectedChests.some(({ chest }) => chest.effect === 'CLONE_CHAOS')
   const extraItemEntries = hasCloneChaos ? selectedCount : 0
   const totalEntries = selectedCount + extraBossEntries + extraItemEntries
   const canStartRace = selectedCount >= 2 && chestConfigErrors.length === 0 && !starting
-  const bossCount = selectedPlayers.filter((player) => player.isBoss).length
+  const bossCount = selectedPlayers.filter((player) => player.isBoss && getBossExtraEntries(player.cleanStreak) > 0).length
   const armedShieldCount = selectedPlayers.filter((player) => player.useShield && !player.isImmortal).length
   const highScarPlayers = selectedPlayers.filter((player) => player.scars >= 6)
   const cleanDuckName = (name: string) => name.replace(/^Zịt\s+/i, '')
@@ -181,8 +182,8 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
   )
   const dramaWatch = [
     ...selectedPlayers
-      .filter((player) => player.isBoss)
-      .map((player) => `Boss ${cleanDuckName(player.name)} phải né top 2 cuối với ${Math.max(player.cleanStreak, 3) + 1} entries`),
+      .filter((player) => player.isBoss && getBossExtraEntries(player.cleanStreak) > 0)
+      .map((player) => `Boss ${cleanDuckName(player.name)} phải né top 2 cuối với ${getBossTotalEntries(player.cleanStreak)} entries`),
     ...highScarPlayers.map((player) => `${cleanDuckName(player.name)} đang giữ ${player.scars} sẹo, chỉ chờ thêm drama`),
     ...activeSelectedChests.map(({ ownerName, chest }) => `${cleanDuckName(ownerName)} mang modifier ${chest.effect.replaceAll('_', ' ')}`),
   ].slice(0, 5)
@@ -472,10 +473,10 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
                               <div className="font-body text-base font-extrabold text-white tracking-wide">{player.name}</div>
-                              {player.isBoss && <span className="ggd-tag bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)] text-[10px] px-2 py-0">👑 Boss {player.cleanStreak}</span>}
+                              {player.isBoss && getBossExtraEntries(player.cleanStreak) > 0 && <span className="ggd-tag bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)] text-[10px] px-2 py-0">👑 Boss {player.cleanStreak}</span>}
                               {player.isImmortal && <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)] text-[10px] px-2 py-0">∞ Auto Shield ON</span>}
                               {player.cleanStreak > 0 && (
-                                <span className={`ggd-tag text-[10px] px-2 py-0 ${player.cleanStreak >= 3 ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' : 'bg-[var(--color-ggd-panel)] text-[var(--color-ggd-neon-green)]'}`}>
+                                <span className={`ggd-tag text-[10px] px-2 py-0 ${player.cleanStreak >= BOSS_STREAK_THRESHOLD ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' : 'bg-[var(--color-ggd-panel)] text-[var(--color-ggd-neon-green)]'}`}>
                                   🔥 {player.cleanStreak} streak
                                 </span>
                               )}

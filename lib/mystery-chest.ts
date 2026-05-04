@@ -85,6 +85,7 @@ type PenaltyVictim = {
   initialRank: number
   isClone?: boolean
   cloneOfUserId?: number | null
+  cloneIndex?: number | null
 }
 
 type ActiveChestRecord = {
@@ -444,6 +445,7 @@ export async function resolveChestPostRace(
         initialRank: dragged.rank,
         isClone: dragged.isClone,
         cloneOfUserId: dragged.cloneOfUserId ?? undefined,
+        cloneIndex: dragged.cloneIndex ?? undefined,
       })
       victimOwnerIds.add(dragged.cloneOfUserId ?? dragged.userId)
     }

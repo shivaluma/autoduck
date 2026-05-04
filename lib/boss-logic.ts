@@ -1,6 +1,9 @@
 import type { RaceSetupPlayer } from '@/lib/types'
 import { isImmortalDuck } from '@/lib/immortal-duck'
 
+export const BOSS_STREAK_THRESHOLD = 4
+export const BOSS_MAX_EXTRA_ENTRIES = 3
+
 export interface BossSpawnPlan {
   ownerUserId: number
   cloneCount: number
@@ -22,6 +25,19 @@ interface RaceSetupPlayerWithBoss extends RaceSetupPlayer {
   displayName?: string
 }
 
+export function getBossExtraEntries(streak?: number | null) {
+  const bossLevel = streak ?? 0
+  if (bossLevel < BOSS_STREAK_THRESHOLD) {
+    return 0
+  }
+
+  return Math.min(bossLevel - 1, BOSS_MAX_EXTRA_ENTRIES)
+}
+
+export function getBossTotalEntries(streak?: number | null) {
+  return 1 + getBossExtraEntries(streak)
+}
+
 export function evaluateBossStatus(args: BossStatusArgs): { newCleanStreak: number; newIsBoss: boolean } {
   if (isImmortalDuck({ name: args.name ?? '', shields: args.shields })) {
     return {
@@ -40,7 +56,7 @@ export function evaluateBossStatus(args: BossStatusArgs): { newCleanStreak: numb
   const newCleanStreak = args.currentCleanStreak + 1
   return {
     newCleanStreak,
-    newIsBoss: newCleanStreak >= 3 || args.currentIsBoss,
+    newIsBoss: newCleanStreak >= BOSS_STREAK_THRESHOLD,
   }
 }
 
@@ -58,7 +74,7 @@ export function expandBossParticipants(
       continue
     }
 
-    const cloneCount = Math.max(user.cleanStreak ?? 3, 3)
+    const cloneCount = getBossExtraEntries(user.cleanStreak)
     for (let cloneIndex = 1; cloneIndex <= cloneCount; cloneIndex += 1) {
       expanded.push({
         ...participant,

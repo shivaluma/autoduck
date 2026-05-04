@@ -139,17 +139,19 @@ export default function RaceDetailPage({
   const resultGridClass = MYSTERY_CHESTS_ENABLED
     ? 'grid-cols-[56px_minmax(0,1.35fr)_132px_110px_minmax(0,1.15fr)]'
     : 'grid-cols-[56px_minmax(0,1.35fr)_132px_110px]'
-  const bossFalls = Array.from(
-    new Set(
-      sortedParticipants
-        .filter((participant) => participant.isClone && participant.gotScar && typeof participant.cloneOfUserId === 'number')
-        .map((participant) => sortedParticipants.find((candidate) => candidate.userId === participant.cloneOfUserId && !candidate.isClone)?.name)
-        .filter((name): name is string => Boolean(name))
-    )
-  )
   const victims = sortedParticipants.filter((participant) => participant.gotScar)
   const winner = sortedParticipants.find((participant) => participant.initialRank === 1)
   const bossOwnerIds = Array.from(new Set(sortedParticipants.filter((participant) => participant.isClone && typeof participant.cloneOfUserId === 'number').map((participant) => participant.cloneOfUserId as number)))
+  const bossFalls = Array.from(
+    new Set(
+      bossOwnerIds
+        .filter((bossOwnerId) => sortedParticipants.some(
+          (participant) => participant.gotScar && (participant.userId === bossOwnerId || participant.cloneOfUserId === bossOwnerId)
+        ))
+        .map((bossOwnerId) => sortedParticipants.find((candidate) => candidate.userId === bossOwnerId && !candidate.isClone)?.name)
+        .filter((name): name is string => Boolean(name))
+    )
+  )
   const bossNames = bossOwnerIds
     .map((bossOwnerId) => sortedParticipants.find((participant) => participant.userId === bossOwnerId && !participant.isClone)?.name)
     .filter((name): name is string => Boolean(name))
@@ -310,7 +312,8 @@ export default function RaceDetailPage({
     return race.finalVerdict ?? 'Kết quả chính thức đã được ghi nhận.'
   })()
   const getParticipantStatus = (participant: typeof sortedParticipants[number], index: number) => {
-    if (participant.gotScar && participant.isClone && typeof participant.cloneOfUserId === 'number') return 'Boss Down'
+    const ownerId = participant.cloneOfUserId ?? participant.userId
+    if (participant.gotScar && bossOwnerIds.includes(ownerId)) return 'Boss Down'
     if (participant.gotScar) return 'Dzịt'
     if (index === 0) return 'Winner'
     return 'Safe'

@@ -1,4 +1,5 @@
 import { MYSTERY_CHESTS_ENABLED } from './feature-flags'
+import { BOSS_STREAK_THRESHOLD } from './boss-logic'
 import { isImmortalDuck } from './immortal-duck'
 import { COMMON_CHEST_TABLE, RARE_CHEST_TABLE } from './mystery-chest'
 import type { ChestEffect, PlayerData } from './types'
@@ -137,7 +138,7 @@ export async function getDashboardUsers(prisma: PrismaClient): Promise<PlayerDat
       shieldsUsed: user.shieldsUsed,
       totalKhaos: user.totalKhaos,
       cleanStreak: immortal ? 0 : user.cleanStreak,
-      isBoss: immortal ? false : user.isBoss,
+      isBoss: immortal ? false : user.isBoss && user.cleanStreak >= BOSS_STREAK_THRESHOLD,
       bossSince: user.bossSince ? user.bossSince.toISOString() : null,
       activeShields: user.ownedShields.map((shield) => ({
         id: shield.id,
