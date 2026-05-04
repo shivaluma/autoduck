@@ -5,11 +5,12 @@ import { SHIELD_INITIAL_CHARGES, createShield, craftShieldIfEligible } from '@/l
 export type ChestRarity = 'common' | 'rare'
 
 export const COMMON_CHEST_TABLE: Array<{ effect: ChestEffect; weight: number }> = [
-  { effect: 'CLONE_CHAOS', weight: 24 },
-  { effect: 'SAFE_WEEK', weight: 20 },
-  { effect: 'REVERSE_RESULTS', weight: 20 },
-  { effect: 'CANT_PASS_THOMAS', weight: 18 },
-  { effect: 'MORE_PEOPLE_MORE_FUN', weight: 18 },
+  { effect: 'NOTHING', weight: 30 },
+  { effect: 'CLONE_CHAOS', weight: 20 },
+  { effect: 'SAFE_WEEK', weight: 15 },
+  { effect: 'REVERSE_RESULTS', weight: 15 },
+  { effect: 'CANT_PASS_THOMAS', weight: 10 },
+  { effect: 'MORE_PEOPLE_MORE_FUN', weight: 10 },
 ]
 
 export const RARE_CHEST_TABLE: Array<{ effect: ChestEffect; weight: number }> = [
@@ -24,11 +25,11 @@ const INVENTORY_EFFECTS = new Set<ChestEffect>([
   'BONUS_SCAR',
   'FRAGILE_SHIELD',
   'GOLDEN_SHIELD',
+  'NOTHING',
 ])
 
 const LEGACY_EFFECTS = new Set<ChestEffect>([
   'LUCKY_CLONE',
-  'NOTHING',
   'CURSE_SWAP',
   'INSURANCE_FRAUD',
   'IDENTITY_THEFT',
@@ -37,6 +38,15 @@ const LEGACY_EFFECTS = new Set<ChestEffect>([
 ])
 
 const MUTUALLY_EXCLUSIVE_RARE_EFFECTS: Array<Set<ChestEffect>> = []
+const COMMON_META_EFFECTS = new Set<ChestEffect>([
+  'CLONE_CHAOS',
+  'REVERSE_RESULTS',
+  'CANT_PASS_THOMAS',
+  'MORE_PEOPLE_MORE_FUN',
+])
+const MUTUALLY_EXCLUSIVE_COMMON_EFFECTS: Array<Set<ChestEffect>> = [
+  COMMON_META_EFFECTS,
+]
 
 export const EFFECTS_REQUIRING_TARGET = new Set<ChestEffect>()
 export const CHEST_TABLE = COMMON_CHEST_TABLE
@@ -166,9 +176,21 @@ function expandExcludedRareEffects(excludedRareEffects: Set<ChestEffect>) {
   return expanded
 }
 
+function expandExcludedCommonEffects(excludedCommonEffects: Set<ChestEffect>) {
+  const expanded = new Set(excludedCommonEffects)
+  for (const group of MUTUALLY_EXCLUSIVE_COMMON_EFFECTS) {
+    if ([...group].some((effect) => excludedCommonEffects.has(effect))) {
+      for (const effect of group) {
+        expanded.add(effect)
+      }
+    }
+  }
+  return expanded
+}
+
 export function rollChest(
   seed: string = randomUUID(),
-  options: { bossStreak?: number; excludedRareEffects?: Set<ChestEffect> } = {}
+  options: { bossStreak?: number; excludedRareEffects?: Set<ChestEffect>; excludedCommonEffects?: Set<ChestEffect> } = {}
 ): { effect: ChestEffect; seed: string; rarity: ChestRarity } {
   const bossStreak = options.bossStreak ?? 3
   const rarity = rollRarity(bossStreak, `${seed}:rarity`)
@@ -185,8 +207,11 @@ export function rollChest(
     }
   }
 
+  const excludedCommonEffects = expandExcludedCommonEffects(options.excludedCommonEffects ?? new Set<ChestEffect>())
+  const availableCommonTable = COMMON_CHEST_TABLE.filter((entry) => !excludedCommonEffects.has(entry.effect))
+
   return {
-    effect: rollWeighted(COMMON_CHEST_TABLE, `${seed}:common`),
+    effect: rollWeighted(availableCommonTable.length > 0 ? availableCommonTable : [{ effect: 'NOTHING', weight: 1 }], `${seed}:common`),
     seed,
     rarity: 'common',
   }
@@ -230,15 +255,23 @@ export async function issueBossRewardChests(prisma: any, raceId: number, rewards
   )
   const created = []
   const rareRolledThisRace = new Set<ChestEffect>()
+  const commonMetaRolledThisRace = new Set<ChestEffect>()
   const now = new Date()
 
   for (const reward of dedupedRewards) {
-    const rolled = rollChest(randomUUID(), {
+    let rolled = rollChest(randomUUID(), {
       bossStreak: reward.bossStreak,
       excludedRareEffects: rareRolledThisRace,
+      excludedCommonEffects: commonMetaRolledThisRace,
     })
+    if (rolled.rarity === 'common' && commonMetaRolledThisRace.has('CANT_PASS_THOMAS')) {
+      rolled = { ...rolled, effect: 'NOTHING', seed: `${rolled.seed}:cant-pass-empty` }
+    }
     if (rolled.rarity === 'rare') {
       rareRolledThisRace.add(rolled.effect)
+    }
+    if (rolled.rarity === 'common' && COMMON_META_EFFECTS.has(rolled.effect)) {
+      commonMetaRolledThisRace.add(rolled.effect)
     }
 
     const forceVoid = options.forceVoid === true

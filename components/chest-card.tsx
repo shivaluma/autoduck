@@ -16,7 +16,7 @@ const effectMeta: Record<ChestEffect, { label: string; svg: string; rarity: 'tra
   GOLDEN_SHIELD: { label: 'Golden Shield', svg: '/assets/v2/shield-fresh.svg', rarity: 'rare', tagline: 'Nhận 1 shield mới tinh, tuổi thọ 5 race' },
   MORE_PEOPLE_MORE_FUN: { label: 'More People More Fun', svg: '/assets/v2/chest-open.svg', rarity: 'common', tagline: 'Race sau số người thua tăng thành 3 hoặc 4' },
   LUCKY_CLONE: { label: 'Legacy Lucky Clone', svg: '/assets/v2/chest-open.svg', rarity: 'trash', tagline: 'Effect cũ đã ngưng dùng' },
-  NOTHING: { label: 'Legacy Empty', svg: '/assets/v2/effect-nothing.svg', rarity: 'trash', tagline: 'Effect cũ đã ngưng dùng' },
+  NOTHING: { label: 'Rương Trống', svg: '/assets/v2/effect-nothing.svg', rarity: 'common', tagline: 'Chúc bạn may mắn lần sau' },
   CURSE_SWAP: { label: 'Legacy Curse Swap', svg: '/assets/v2/effect-curse-swap.svg', rarity: 'trash', tagline: 'Effect cũ đã ngưng dùng' },
   INSURANCE_FRAUD: { label: 'Legacy Insurance', svg: '/assets/v2/effect-insurance-fraud.svg', rarity: 'trash', tagline: 'Effect cũ đã ngưng dùng' },
   IDENTITY_THEFT: { label: 'Legacy Identity', svg: '/assets/v2/effect-identity-theft.svg', rarity: 'trash', tagline: 'Effect cũ đã ngưng dùng' },

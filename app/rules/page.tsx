@@ -15,11 +15,12 @@ const tierRates = [
 ]
 
 const commonItems = [
-  { icon: '🐣', name: 'Clone Chaos', rate: '24%', effect: 'Race kế tiếp toàn lobby có thêm 1 Clone.', tone: 'from-lime-400/30 to-emerald-950/25' },
-  { icon: '🌿', name: 'Safe Week', rate: '20%', effect: 'Race kế tiếp Khiên không già đi.', tone: 'from-green-400/30 to-teal-950/25' },
-  { icon: '🌀', name: 'Reverse Results', rate: '20%', effect: 'Race kế tiếp đảo ngược bảng xếp hạng cuối cùng.', tone: 'from-indigo-400/30 to-violet-950/25' },
-  { icon: '👑', name: "Can't Pass Thomas", rate: '18%', effect: 'Race kế tiếp ai về trước Thomas sẽ bị tính thua.', tone: 'from-amber-300/35 to-stone-950/25' },
-  { icon: '🎪', name: 'More People More Fun', rate: '18%', effect: 'Race kế tiếp sẽ có 3 hoặc 4 người cùng thua thay vì 2.', tone: 'from-pink-400/35 to-fuchsia-950/25' },
+  { icon: '🥚', name: 'Rương Trống', rate: '30%', effect: 'Không có effect. Chúc bạn may mắn lần sau.', tone: 'from-slate-400/25 to-slate-950/20' },
+  { icon: '🐣', name: 'Clone Chaos', rate: '20%', effect: 'Race kế tiếp toàn lobby có thêm 1 Clone.', tone: 'from-lime-400/30 to-emerald-950/25' },
+  { icon: '🌿', name: 'Safe Week', rate: '15%', effect: 'Race kế tiếp Khiên không già đi.', tone: 'from-green-400/30 to-teal-950/25' },
+  { icon: '🌀', name: 'Reverse Results', rate: '15%', effect: 'Race kế tiếp đảo ngược bảng xếp hạng cuối cùng.', tone: 'from-indigo-400/30 to-violet-950/25' },
+  { icon: '👑', name: "Can't Pass Thomas", rate: '10%', effect: 'Race kế tiếp ai về trước Thomas sẽ bị tính thua.', tone: 'from-amber-300/35 to-stone-950/25' },
+  { icon: '🎪', name: 'More People More Fun', rate: '10%', effect: 'Race kế tiếp sẽ có 3 hoặc 4 người cùng thua thay vì 2.', tone: 'from-pink-400/35 to-fuchsia-950/25' },
 ]
 
 const rareItems = [
@@ -262,7 +263,7 @@ export default function RulesPage() {
           <div className="ggd-card p-5">
             <div className="font-display text-2xl text-white text-outlined">🧯 Safety</div>
             <p className="mt-3 font-readable text-sm leading-relaxed text-white/75">
-              Item V2 không cần target cá nhân, giảm toxic. Thomas vẫn bất tử, nhưng Rare có thể biến Thomas thành mốc áp lực cho toàn lobby.
+              Item V2 không cần target cá nhân, giảm toxic. Common modifier mạnh không chồng lên nhau trong cùng lượt phát chest; nếu Can't Pass Thomas đã nổ, common reward sau đó sẽ ưu tiên rương trống.
             </p>
           </div>
         </section>

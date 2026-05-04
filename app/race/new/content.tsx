@@ -55,7 +55,7 @@ const EFFECT_DESCRIPTIONS: Record<ChestEffect, string> = {
   GOLDEN_SHIELD: 'Nhận ngay 1 shield mới tinh, tuổi thọ 5 race.',
   MORE_PEOPLE_MORE_FUN: 'Race sau số người thua tăng thành 3 hoặc 4.',
   LUCKY_CLONE: 'Legacy effect đã ngưng dùng.',
-  NOTHING: 'Legacy effect đã ngưng dùng.',
+  NOTHING: 'Rương trống. Không có effect, chúc bạn may mắn lần sau.',
   CURSE_SWAP: 'Legacy effect đã ngưng dùng.',
   INSURANCE_FRAUD: 'Legacy effect đã ngưng dùng.',
   IDENTITY_THEFT: 'Legacy effect đã ngưng dùng.',
@@ -123,7 +123,9 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
   const activeSelectedChests = MYSTERY_CHESTS_ENABLED
     ? selectedPlayers
         .map((player) => player.activeChest ? { ownerName: player.name, chest: player.activeChest } : null)
-        .filter((value): value is { ownerName: string; chest: NonNullable<PlayerData['activeChest']> } => Boolean(value))
+        .filter((value): value is { ownerName: string; chest: NonNullable<PlayerData['activeChest']> } => {
+          return value !== null && value.chest.effect !== 'NOTHING'
+        })
     : []
 
   const chestConfigErrors = activeSelectedChests.flatMap(({ ownerName, chest }) => {
