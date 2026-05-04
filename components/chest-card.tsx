@@ -13,7 +13,7 @@ const effectMeta: Record<ChestEffect, { label: string; svg: string; rarity: 'tra
   LAST_LAUGH: { label: 'Last Laugh', svg: '/assets/v2/chest-open.svg', rarity: 'rare', tagline: 'Nếu chủ rương thành dzịt, kéo người sát nút xuống theo' },
   ANTI_SHIELD: { label: 'Anti Shield', svg: '/assets/v2/shield-broken.svg', rarity: 'rare', tagline: 'Race sau toàn lobby cấm dùng shield' },
   CANT_PASS_THOMAS: { label: "Can't Pass Thomas", svg: '/assets/v2/chest-open.svg', rarity: 'rare', tagline: 'Race sau ai vượt Thomas tính thua' },
-  GOLDEN_SHIELD: { label: 'Golden Shield', svg: '/assets/v2/shield-fresh.svg', rarity: 'rare', tagline: 'Nhận 1 shield mới tinh' },
+  GOLDEN_SHIELD: { label: 'Golden Shield', svg: '/assets/v2/shield-fresh.svg', rarity: 'rare', tagline: 'Nhận 1 shield mới tinh, tuổi thọ 5 race' },
   MORE_PEOPLE_MORE_FUN: { label: 'More People More Fun', svg: '/assets/v2/chest-open.svg', rarity: 'rare', tagline: 'Race sau số người thua tăng thành 3 hoặc 4' },
   LUCKY_CLONE: { label: 'Legacy Lucky Clone', svg: '/assets/v2/chest-open.svg', rarity: 'trash', tagline: 'Effect cũ đã ngưng dùng' },
   NOTHING: { label: 'Legacy Empty', svg: '/assets/v2/effect-nothing.svg', rarity: 'trash', tagline: 'Effect cũ đã ngưng dùng' },

@@ -5,7 +5,7 @@ import { buildPenaltyVerdict, calculatePenalties, dedupeVictimUserIds } from '@/
 import { raceEventBus, RACE_EVENTS } from '@/lib/event-bus'
 import { expandBossParticipants, evaluateBossStatus, resolveBossOutcome } from '@/lib/boss-logic'
 import { applyChestPreRace, getActiveChestsForUsers, issueBossRewardChests, resolveChestPostRace, validateChestConfig } from '@/lib/mystery-chest'
-import { consumeShield, craftShieldIfEligible, normalizeLegacyShieldState, syncShieldCounters, tickShieldDecay } from '@/lib/shield-decay'
+import { SHIELD_INITIAL_CHARGES, consumeShield, craftShieldIfEligible, normalizeLegacyShieldState, syncShieldCounters, tickShieldDecay } from '@/lib/shield-decay'
 import type { BossRewardInput, ItemRaceModifiers } from '@/lib/mystery-chest'
 import type { ChestEffect, RaceMetaContext } from '@/lib/types'
 import { isImmortalDuck } from '@/lib/immortal-duck'
@@ -449,6 +449,7 @@ async function executeRace(
               initialRank: victim.initialRank,
               isClone: victim.isClone ?? false,
               cloneOfUserId: victim.cloneOfUserId ?? undefined,
+              cloneIndex: victim.cloneIndex ?? undefined,
             })),
             activeChests,
             { forceVoid: true }
@@ -471,18 +472,20 @@ async function executeRace(
               initialRank: victim.initialRank,
               isClone: victim.isClone ?? false,
               cloneOfUserId: victim.cloneOfUserId ?? undefined,
+              cloneIndex: victim.cloneIndex ?? undefined,
             })),
             activeChests
           )
 
+      const participantResultKey = (entry: { userId: number; cloneIndex?: number | null }) => `${entry.userId}:${entry.cloneIndex ?? 'main'}`
+      const finalVictimParticipantKeys = new Set(postRace.modifiedVictims.map(participantResultKey))
       const finalVictimUserIds = dedupeVictimUserIds(postRace.modifiedVictims)
       const finalVerdict = buildPenaltyVerdict(postRace.modifiedVictims.map((victim) => ({
         name: victim.name ?? raceResults.find((entry) => (entry.cloneOfUserId ?? entry.userId) === (victim.cloneOfUserId ?? victim.userId))?.name ?? `User ${victim.cloneOfUserId ?? victim.userId}`,
       })))
 
       for (const resultEntry of raceResults) {
-        const effectiveUserId = resultEntry.cloneOfUserId ?? resultEntry.userId
-        const isVictim = finalVictimUserIds.includes(effectiveUserId)
+        const isVictim = finalVictimParticipantKeys.has(participantResultKey(resultEntry))
 
         await tx.raceParticipant.updateMany({
           where: {
@@ -598,7 +601,7 @@ async function executeRace(
             where: { id: shieldId },
             data: {
               charges: 0,
-              weeksUnused: 3,
+              weeksUnused: SHIELD_INITIAL_CHARGES,
               status: 'used',
               consumedAt: new Date(),
             },

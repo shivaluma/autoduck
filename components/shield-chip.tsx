@@ -13,21 +13,23 @@ interface ShieldChipProps {
 function tierClass(charges: number, selected: boolean) {
   if (selected) return 'shield-tier-fresh shield-chip-selected'
   if (charges <= 1) return 'shield-tier-danger'
-  if (charges <= 2) return 'shield-tier-aging'
+  if (charges <= 3) return 'shield-tier-aging'
   return 'shield-tier-fresh'
 }
 
 function shieldBreakText(charges: number) {
   if (charges <= 1) return 'vỡ ở race kế tiếp nếu không dùng'
   if (charges <= 2) return 'vỡ sau 2 race không dùng'
-  return 'vỡ sau 3 race không dùng'
+  if (charges <= 3) return 'vỡ sau 3 race không dùng'
+  if (charges <= 4) return 'vỡ sau 4 race không dùng'
+  return 'vỡ sau 5 race không dùng'
 }
 
 export function ShieldChip({ id, charges, selected = false, disabled = false, onClick }: ShieldChipProps) {
-  const aged = charges <= 2
+  const aged = charges <= 3
   const iconSrc = charges <= 1
     ? '/assets/v2/shield-broken.svg'
-    : charges <= 2
+    : charges <= 3
       ? '/assets/v2/shield-cracked.svg'
       : '/assets/v2/shield-fresh.svg'
   return (

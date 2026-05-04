@@ -26,7 +26,7 @@ const rareItems = [
   { icon: '🎭', name: 'Last Laugh', rate: '28%', effect: 'Nếu chủ item thành dzịt, kéo người an toàn gần nhất xuống làm dzịt theo.', tone: 'from-yellow-300/35 to-orange-950/25' },
   { icon: '🚫', name: 'Anti Shield', rate: '22%', effect: 'Race kế tiếp toàn lobby không ai được dùng Khiên.', tone: 'from-red-500/35 to-rose-950/25' },
   { icon: '👑', name: "Can't Pass Thomas", rate: '18%', effect: 'Race kế tiếp ai về trước Thomas sẽ bị tính thua.', tone: 'from-amber-300/35 to-stone-950/25' },
-  { icon: '✨', name: 'Golden Shield', rate: '17%', effect: 'Nhận ngay 1 Khiên mới tinh, bền nhất.', tone: 'from-yellow-300/45 to-yellow-900/20' },
+  { icon: '✨', name: 'Golden Shield', rate: '17%', effect: 'Nhận ngay 1 Khiên mới tinh, tuổi thọ 5 race.', tone: 'from-yellow-300/45 to-yellow-900/20' },
   { icon: '🎪', name: 'More People More Fun', rate: '15%', effect: 'Race kế tiếp sẽ có 3 hoặc 4 người cùng thua thay vì 2.', tone: 'from-pink-400/35 to-fuchsia-950/25' },
 ]
 
@@ -39,9 +39,9 @@ const flowSteps = [
 ]
 
 const shieldDecaySteps = [
-  { charge: 'Mới', label: 'Khiên mới', text: 'Vừa craft hoặc nhận Golden Shield. Chưa cần lo vỡ ngay.', color: 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]' },
-  { charge: 'Nứt', label: 'Đã già đi', text: 'Không dùng sau race thì bắt đầu nứt.', color: 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' },
-  { charge: 'Căng', label: 'Sắp vỡ', text: 'Race kế tiếp không dùng là rất căng.', color: 'bg-[var(--color-ggd-orange)] text-white' },
+  { charge: '5', label: 'Khiên mới', text: 'Vừa craft hoặc nhận Golden Shield. Có 5 race tuổi thọ nếu cứ cất kho.', color: 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]' },
+  { charge: '4-3', label: 'Đã già đi', text: 'Không dùng sau race thì già đi từng nấc, nhưng vẫn còn dư địa.', color: 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' },
+  { charge: '2-1', label: 'Sắp vỡ', text: 'Đến vùng này mới thật sự nên cân nhắc bật khiên.', color: 'bg-[var(--color-ggd-orange)] text-white' },
   { charge: 'Vỡ', label: 'Vỡ', text: 'Quá hạn thì Khiên mất luôn, không hoàn Sẹo.', color: 'bg-[#4d0000] text-white' },
 ]
 
@@ -140,7 +140,7 @@ export default function RulesPage() {
             <div>
               <div className="font-display text-3xl text-[var(--color-ggd-sky)] text-outlined">🛡 Tuổi Thọ Khiên</div>
               <p className="mt-2 max-w-2xl font-readable text-sm leading-relaxed text-white/72">
-                Khiên không giữ vô hạn. Nếu không được dùng trong race, sau khi resolve xong Khiên sẽ già đi một nấc.
+                Khiên không giữ vô hạn, nhưng giờ có tối đa 5 nấc tuổi thọ. Nếu không được dùng trong race, sau khi resolve xong Khiên sẽ già đi một nấc.
               </p>
             </div>
             <div className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)]">2 Sẹo = 1 Khiên</div>

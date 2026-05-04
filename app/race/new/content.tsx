@@ -52,7 +52,7 @@ const EFFECT_DESCRIPTIONS: Record<ChestEffect, string> = {
   LAST_LAUGH: 'Nếu chủ rương thành dzịt, kéo người an toàn gần nhất xuống làm dzịt theo.',
   ANTI_SHIELD: 'Race sau toàn lobby không được dùng shield thường.',
   CANT_PASS_THOMAS: 'Race sau ai vượt Thomas sẽ bị tính thua.',
-  GOLDEN_SHIELD: 'Nhận ngay 1 shield mới tinh, bền nhất.',
+  GOLDEN_SHIELD: 'Nhận ngay 1 shield mới tinh, tuổi thọ 5 race.',
   MORE_PEOPLE_MORE_FUN: 'Race sau số người thua tăng thành 3 hoặc 4.',
   LUCKY_CLONE: 'Legacy effect đã ngưng dùng.',
   NOTHING: 'Legacy effect đã ngưng dùng.',

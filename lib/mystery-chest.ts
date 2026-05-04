@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto'
 import type { ChestEffect } from '@/lib/types'
-import { createShield, craftShieldIfEligible } from '@/lib/shield-decay'
+import { SHIELD_INITIAL_CHARGES, createShield, craftShieldIfEligible } from '@/lib/shield-decay'
 
 export type ChestRarity = 'common' | 'rare'
 
@@ -275,7 +275,7 @@ export async function issueBossRewardChests(prisma: any, raceId: number, rewards
     }
 
     if (rolled.effect === 'GOLDEN_SHIELD') {
-      await createShield(prisma, reward.ownerId, raceId, 3)
+      await createShield(prisma, reward.ownerId, raceId, SHIELD_INITIAL_CHARGES)
     }
   }
 

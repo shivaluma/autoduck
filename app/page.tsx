@@ -550,7 +550,7 @@ export default function Dashboard() {
               <div className="space-y-2.5">
                 {fragileShields.length > 0 ? fragileShields.slice(0, 6).map(({ player, shield }) => {
                   const danger = shield.charges <= 1
-                  const pct = ((3 - shield.charges) / 3) * 100
+                  const pct = ((5 - shield.charges) / 5) * 100
                   return (
                     <div key={shield.id} className="stat-row">
                       <div className="stat-row-icon">

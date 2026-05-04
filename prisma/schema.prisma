@@ -71,7 +71,7 @@ model Shield {
   ownerId      Int
   earnedAt     DateTime  @default(now())
   earnedRaceId Int?
-  charges      Int       @default(3)
+  charges      Int       @default(5)
   weeksUnused  Int       @default(0)
   status       String    @default("active")
   consumedAt   DateTime?

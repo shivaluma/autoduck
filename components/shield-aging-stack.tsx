@@ -27,10 +27,26 @@ function shieldVisual(charges: number) {
     }
   }
 
+  if (charges <= 3) {
+    return {
+      src: '/assets/v2/shield-cracked.svg',
+      className: 'bg-[var(--color-ggd-gold)]/12 border-[var(--color-ggd-gold)]/75 shadow-[0_0_8px_rgba(255,204,0,0.18)]',
+      label: 'vỡ sau 3 race không dùng',
+    }
+  }
+
+  if (charges <= 4) {
+    return {
+      src: '/assets/v2/shield-fresh.svg',
+      className: 'bg-[var(--color-ggd-neon-green)]/10 border-[var(--color-ggd-neon-green)]/55 shadow-[0_0_7px_rgba(61,255,143,0.14)]',
+      label: 'vỡ sau 4 race không dùng',
+    }
+  }
+
   return {
     src: '/assets/v2/shield-fresh.svg',
     className: 'bg-[var(--color-ggd-neon-green)]/14 border-[var(--color-ggd-neon-green)]/70 shadow-[0_0_8px_rgba(61,255,143,0.18)]',
-    label: 'vỡ sau 3 race không dùng',
+    label: 'vỡ sau 5 race không dùng',
   }
 }
 

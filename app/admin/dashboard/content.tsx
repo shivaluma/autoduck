@@ -96,6 +96,7 @@ function formatAuditJson(value?: string | null) {
 function shieldAgeLabel(charges: number) {
   if (charges <= 1) return 'Sắp vỡ'
   if (charges <= 2) return 'Đã nứt'
+  if (charges <= 4) return 'Còn bền'
   return 'Mới tinh'
 }
 
@@ -107,7 +108,7 @@ export function AdminDashboardContent({ secret }: Props) {
   const [activeTab, setActiveTab] = useState<'users' | 'races' | 'tools' | 'season'>('users')
   const [seasonTab, setSeasonTab] = useState<'boss' | 'shield' | 'active_chests' | 'chest_history' | 'weekly_tick'>('boss')
   const [shieldOwnerId, setShieldOwnerId] = useState('')
-  const [shieldCharges, setShieldCharges] = useState('3')
+  const [shieldCharges, setShieldCharges] = useState('5')
   const [msg, setMsg] = useState('')
 
   const fetchAdminData = useCallback(async () => {
@@ -481,7 +482,7 @@ export function AdminDashboardContent({ secret }: Props) {
                   <div>
                     <div className="font-display text-2xl text-white text-outlined">⏳ Tuổi Thọ Khiên</div>
                     <div className="font-data text-xs text-[var(--color-ggd-muted)] mt-1">
-                      Tối đa 12 shield mỗi vịt. Mỗi shield có tuổi thọ riêng; sau race không dùng thì già đi, quá hạn sẽ vỡ và mất luôn.
+                      Tối đa 12 shield mỗi vịt. Mỗi shield có 5 nấc tuổi thọ; sau race không dùng thì già đi, quá hạn sẽ vỡ và mất luôn.
                     </div>
                   </div>
 
@@ -510,7 +511,9 @@ export function AdminDashboardContent({ secret }: Props) {
                           onChange={(event) => setShieldCharges(event.target.value)}
                           className="bg-[var(--color-ggd-surface)] border-3 border-[var(--color-ggd-outline)] rounded-xl px-3 py-2 font-bold text-white outline-none"
                         >
-                          <option value="3">Mới tinh</option>
+                          <option value="5">Mới tinh</option>
+                          <option value="4">Còn bền</option>
+                          <option value="3">Đã già đi</option>
                           <option value="2">Đã nứt nhẹ</option>
                           <option value="1">Sắp vỡ</option>
                         </select>
@@ -529,7 +532,7 @@ export function AdminDashboardContent({ secret }: Props) {
                       <div key={shield.id} className="rounded-xl border-3 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-4">
                         <div className="flex items-center justify-between gap-3">
                           <span className="font-body text-white font-black">🛡️ #{shield.id} - {shield.ownerName}</span>
-                          <span className={`ggd-tag ${shield.charges <= 1 ? 'bg-[var(--color-ggd-orange)] text-white' : shield.charges <= 2 ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' : 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]'}`}>
+                          <span className={`ggd-tag ${shield.charges <= 1 ? 'bg-[var(--color-ggd-orange)] text-white' : shield.charges <= 3 ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' : 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]'}`}>
                             {shieldAgeLabel(shield.charges)}
                           </span>
                         </div>

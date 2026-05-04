@@ -9,7 +9,8 @@ function getIsoWeekKey(date = new Date()) {
 
 export { getIsoWeekKey }
 
-export const SHIELD_INITIAL_CHARGES = 3
+export const SHIELD_INITIAL_CHARGES = 5
+const LEGACY_SHIELD_INITIAL_CHARGES = 3
 export const SHIELD_CRAFT_COST = 2
 export const SHIELD_MAX_ACTIVE = 12
 
@@ -30,6 +31,14 @@ function chargesToLegacyWeeks(charges: number) {
 
 function legacyWeeksToCharges(weeksUnused: number) {
   return Math.max(1, SHIELD_INITIAL_CHARGES - Math.max(0, weeksUnused))
+}
+
+function shouldUpgradeLegacyLifetime(shield: Pick<ActiveShieldRecord, 'charges' | 'weeksUnused'>) {
+  if (shield.weeksUnused < 0 || shield.weeksUnused >= LEGACY_SHIELD_INITIAL_CHARGES) {
+    return false
+  }
+
+  return shield.charges === LEGACY_SHIELD_INITIAL_CHARGES - shield.weeksUnused
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -92,7 +101,7 @@ export async function normalizeLegacyShieldState(prisma: any, ownerIds?: number[
   await withTransaction(prisma, async (tx) => {
     for (const [ownerId, ownerShields] of grouped) {
       for (const shield of ownerShields) {
-        const shouldBackfillCharges = shield.charges === SHIELD_INITIAL_CHARGES && shield.weeksUnused > 0
+        const shouldBackfillCharges = shouldUpgradeLegacyLifetime(shield) || (shield.charges === SHIELD_INITIAL_CHARGES && shield.weeksUnused > 0)
         const nextCharges = shouldBackfillCharges
           ? legacyWeeksToCharges(shield.weeksUnused)
           : Math.min(Math.max(shield.charges, 1), SHIELD_INITIAL_CHARGES)
@@ -352,7 +361,7 @@ export async function craftShieldIfEligible(prisma: any, ownerId: number, earned
     },
   })
 
-  if (activeShieldCount >= SHIELD_MAX_ACTIVE) {
+  if (activeShieldCount > 0) {
     await syncOwnerShieldCount(prisma, ownerId)
     return null
   }
