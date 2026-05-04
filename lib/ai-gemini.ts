@@ -245,7 +245,7 @@ function buildPrompt(
           ? `🎁 UNDERDOG: ${context.underdogs.map((item) => `${item.name} cầm ${item.chest}${item.target ? ` -> ${item.target}` : ''}`).join(' | ')}`
           : '',
         context.shieldsAtRisk && context.shieldsAtRisk.length > 0
-          ? `⏳ KHIÊN SẮP VỠ: ${context.shieldsAtRisk.map((item) => `${item.owner} (${item.charges}c)`).join(' | ')}`
+          ? `⏳ KHIÊN SẮP VỠ: ${context.shieldsAtRisk.map((item) => `${item.owner} (${item.charges <= 1 ? 'vỡ ở race kế tiếp nếu không dùng' : 'đã nứt'})`).join(' | ')}`
           : '',
         context.curseSwaps && context.curseSwaps.length > 0
           ? `🎭 CURSE SWAP: ${context.curseSwaps.map((item) => `${item.owner} đang chạy dưới tên ${item.displayName}`).join(' | ')}`

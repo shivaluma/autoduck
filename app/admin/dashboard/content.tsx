@@ -93,6 +93,12 @@ function formatAuditJson(value?: string | null) {
   }
 }
 
+function shieldAgeLabel(charges: number) {
+  if (charges <= 1) return 'Sắp vỡ'
+  if (charges <= 2) return 'Đã nứt'
+  return 'Mới tinh'
+}
+
 export function AdminDashboardContent({ secret }: Props) {
   const [users, setUsers] = useState<UserRow[]>([])
   const [races, setRaces] = useState<RaceRow[]>([])
@@ -236,7 +242,7 @@ export function AdminDashboardContent({ secret }: Props) {
     ownerName: string,
     action: 'break' | 'lose' | 'reset_age'
   ) => {
-    const label = action === 'break' ? 'Force Break' : action === 'lose' ? 'Force Lose' : 'Recharge 3c'
+    const label = action === 'break' ? 'Force Break' : action === 'lose' ? 'Force Lose' : 'Làm mới khiên'
     setMsg(`🛡️ ${label} #${shieldId}...`)
     const response = await fetch(`/api/admin/shields/${shieldId}?secret=${secret}`, {
       method: 'POST',
@@ -266,7 +272,7 @@ export function AdminDashboardContent({ secret }: Props) {
       }),
     })
     const data = await response.json()
-    setMsg(response.ok ? `✅ Added shield #${data.shield?.id ?? '?'} (${data.shield?.charges ?? shieldCharges}c)` : data.error || 'Grant shield failed')
+    setMsg(response.ok ? `✅ Added shield #${data.shield?.id ?? '?'} (${shieldAgeLabel(data.shield?.charges ?? Number(shieldCharges))})` : data.error || 'Grant shield failed')
     if (response.ok) {
       await fetchAdminData()
     }
@@ -349,7 +355,7 @@ export function AdminDashboardContent({ secret }: Props) {
                         <td className="px-4 py-3.5 min-w-[150px]">
                           <div className="flex items-center gap-2">
                             <span className="ggd-tag bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]">
-                              {isImmortal ? '∞ immortal' : activeShieldCount > 0 ? `${activeShieldCount} shield${activeShieldCount > 1 ? 's' : ` · ${user.activeShieldCharges ?? '?'}c`}` : '0 shield'}
+                              {isImmortal ? '∞ immortal' : activeShieldCount > 0 ? `${activeShieldCount} shield${activeShieldCount > 1 ? 's' : ''}` : '0 shield'}
                             </span>
                             <button
                               onClick={() => {
@@ -473,9 +479,9 @@ export function AdminDashboardContent({ secret }: Props) {
               {seasonTab === 'shield' && (
                 <div className="ggd-card p-6 space-y-5">
                   <div>
-                    <div className="font-display text-2xl text-white text-outlined">⏳ Shield Aging</div>
+                    <div className="font-display text-2xl text-white text-outlined">⏳ Tuổi Thọ Khiên</div>
                     <div className="font-data text-xs text-[var(--color-ggd-muted)] mt-1">
-                      Tối đa 12 shield mỗi vịt. Mỗi shield có 3 charge, sau race không dùng thì -1, về 0 sẽ vỡ và mất luôn.
+                      Tối đa 12 shield mỗi vịt. Mỗi shield có tuổi thọ riêng; sau race không dùng thì già đi, quá hạn sẽ vỡ và mất luôn.
                     </div>
                   </div>
 
@@ -498,15 +504,15 @@ export function AdminDashboardContent({ secret }: Props) {
                         </select>
                       </label>
                       <label className="flex flex-col gap-1">
-                        <span className="ggd-col-header">Charges</span>
+                        <span className="ggd-col-header">Tuổi thọ</span>
                         <select
                           value={shieldCharges}
                           onChange={(event) => setShieldCharges(event.target.value)}
                           className="bg-[var(--color-ggd-surface)] border-3 border-[var(--color-ggd-outline)] rounded-xl px-3 py-2 font-bold text-white outline-none"
                         >
-                          <option value="3">3c fresh</option>
-                          <option value="2">2c cracked</option>
-                          <option value="1">1c danger</option>
+                          <option value="3">Mới tinh</option>
+                          <option value="2">Đã nứt nhẹ</option>
+                          <option value="1">Sắp vỡ</option>
                         </select>
                       </label>
                       <button
@@ -524,7 +530,7 @@ export function AdminDashboardContent({ secret }: Props) {
                         <div className="flex items-center justify-between gap-3">
                           <span className="font-body text-white font-black">🛡️ #{shield.id} - {shield.ownerName}</span>
                           <span className={`ggd-tag ${shield.charges <= 1 ? 'bg-[var(--color-ggd-orange)] text-white' : shield.charges <= 2 ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' : 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]'}`}>
-                            {shield.charges}c
+                            {shieldAgeLabel(shield.charges)}
                           </span>
                         </div>
                         <div className="font-data text-xs text-[var(--color-ggd-muted)] mt-2">
@@ -547,7 +553,7 @@ export function AdminDashboardContent({ secret }: Props) {
                             onClick={() => handleShieldAction(shield.id, shield.ownerName, 'reset_age')}
                             className="ggd-btn bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)] text-xs px-3 py-2"
                           >
-                            Recharge 3c
+                            Làm mới khiên
                           </button>
                         </div>
                       </div>

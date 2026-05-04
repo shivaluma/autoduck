@@ -16,9 +16,9 @@ const tierRates = [
 
 const commonItems = [
   { icon: '🤕', name: 'Bonus Scar', rate: '28%', effect: 'Nhận ngay +1 Sẹo.', tone: 'from-orange-500/35 to-red-900/25' },
-  { icon: '🛡️', name: 'Fragile Shield', rate: '24%', effect: 'Nhận ngay 1 Khiên tạm (1 charge). Không dùng ở Race kế tiếp sẽ vỡ.', tone: 'from-sky-400/35 to-cyan-950/25' },
+  { icon: '🛡️', name: 'Fragile Shield', rate: '24%', effect: 'Nhận ngay 1 Khiên mỏng. Không dùng ở Race kế tiếp sẽ vỡ.', tone: 'from-sky-400/35 to-cyan-950/25' },
   { icon: '🐣', name: 'Clone Chaos', rate: '18%', effect: 'Race kế tiếp toàn lobby có thêm 1 Clone.', tone: 'from-lime-400/30 to-emerald-950/25' },
-  { icon: '🌿', name: 'Safe Week', rate: '15%', effect: 'Race kế tiếp Khiên không bị decay.', tone: 'from-green-400/30 to-teal-950/25' },
+  { icon: '🌿', name: 'Safe Week', rate: '15%', effect: 'Race kế tiếp Khiên không già đi.', tone: 'from-green-400/30 to-teal-950/25' },
   { icon: '🌀', name: 'Reverse Results', rate: '15%', effect: 'Race kế tiếp đảo ngược bảng xếp hạng cuối cùng.', tone: 'from-indigo-400/30 to-violet-950/25' },
 ]
 
@@ -26,7 +26,7 @@ const rareItems = [
   { icon: '🎭', name: 'Last Laugh', rate: '28%', effect: 'Nếu chủ item thành dzịt, kéo người an toàn gần nhất xuống làm dzịt theo.', tone: 'from-yellow-300/35 to-orange-950/25' },
   { icon: '🚫', name: 'Anti Shield', rate: '22%', effect: 'Race kế tiếp toàn lobby không ai được dùng Khiên.', tone: 'from-red-500/35 to-rose-950/25' },
   { icon: '👑', name: "Can't Pass Thomas", rate: '18%', effect: 'Race kế tiếp ai về trước Thomas sẽ bị tính thua.', tone: 'from-amber-300/35 to-stone-950/25' },
-  { icon: '✨', name: 'Golden Shield', rate: '17%', effect: 'Nhận ngay 1 Khiên full 3 charge.', tone: 'from-yellow-300/45 to-yellow-900/20' },
+  { icon: '✨', name: 'Golden Shield', rate: '17%', effect: 'Nhận ngay 1 Khiên mới tinh, bền nhất.', tone: 'from-yellow-300/45 to-yellow-900/20' },
   { icon: '🎪', name: 'More People More Fun', rate: '15%', effect: 'Race kế tiếp sẽ có 3 hoặc 4 người cùng thua thay vì 2.', tone: 'from-pink-400/35 to-fuchsia-950/25' },
 ]
 
@@ -39,10 +39,10 @@ const flowSteps = [
 ]
 
 const shieldDecaySteps = [
-  { charge: '3', label: 'Khiên mới', text: 'Vừa craft hoặc nhận Golden Shield.', color: 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]' },
-  { charge: '2', label: 'Đã decay 1 lần', text: 'Không dùng sau race thì giảm còn 2 charge.', color: 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' },
-  { charge: '1', label: 'Sắp vỡ', text: 'Còn 1 charge, Race kế tiếp không dùng là rất căng.', color: 'bg-[var(--color-ggd-orange)] text-white' },
-  { charge: '0', label: 'Vỡ', text: 'Về 0 charge thì Khiên mất luôn, không hoàn Sẹo.', color: 'bg-[#4d0000] text-white' },
+  { charge: 'Mới', label: 'Khiên mới', text: 'Vừa craft hoặc nhận Golden Shield. Chưa cần lo vỡ ngay.', color: 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]' },
+  { charge: 'Nứt', label: 'Đã già đi', text: 'Không dùng sau race thì bắt đầu nứt.', color: 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' },
+  { charge: 'Căng', label: 'Sắp vỡ', text: 'Race kế tiếp không dùng là rất căng.', color: 'bg-[var(--color-ggd-orange)] text-white' },
+  { charge: 'Vỡ', label: 'Vỡ', text: 'Quá hạn thì Khiên mất luôn, không hoàn Sẹo.', color: 'bg-[#4d0000] text-white' },
 ]
 
 function RateBar({ common, rare }: { common: number; rare: number }) {
@@ -138,9 +138,9 @@ export default function RulesPage() {
         <section className="ggd-card p-5 sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <div className="font-display text-3xl text-[var(--color-ggd-sky)] text-outlined">🛡 Shield Decay</div>
+              <div className="font-display text-3xl text-[var(--color-ggd-sky)] text-outlined">🛡 Tuổi Thọ Khiên</div>
               <p className="mt-2 max-w-2xl font-readable text-sm leading-relaxed text-white/72">
-                Khiên không giữ vô hạn. Nếu không được dùng trong race, sau khi resolve xong Khiên sẽ mất 1 charge.
+                Khiên không giữ vô hạn. Nếu không được dùng trong race, sau khi resolve xong Khiên sẽ già đi một nấc.
               </p>
             </div>
             <div className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)]">2 Sẹo = 1 Khiên</div>
@@ -165,7 +165,7 @@ export default function RulesPage() {
             {[
               ['🧩', 'Auto craft', 'Nếu có đủ 2 Sẹo và đang không có Khiên, hệ thống tự ghép thành 1 Khiên mới.'],
               ['🙋', 'Declare trước race', 'Muốn Khiên cứu mình thì phải bật dùng Khiên trước khi race bắt đầu.'],
-              ['🌿', 'Safe Week', 'Nếu Safe Week kích hoạt, Race kế tiếp Khiên không bị decay.'],
+              ['🌿', 'Safe Week', 'Nếu Safe Week kích hoạt, Race kế tiếp Khiên không già đi.'],
             ].map(([icon, title, text]) => (
               <div key={title} className="rounded-2xl border-3 border-[var(--color-ggd-outline)] bg-black/20 p-4">
                 <div className="font-display text-lg text-white text-outlined">{icon} {title}</div>

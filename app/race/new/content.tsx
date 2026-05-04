@@ -45,14 +45,14 @@ const TARGETED_EFFECTS = new Set<ChestEffect>()
 
 const EFFECT_DESCRIPTIONS: Record<ChestEffect, string> = {
   BONUS_SCAR: '+1 sẹo ngay lập tức, có thể auto craft shield nếu đủ 2 sẹo.',
-  FRAGILE_SHIELD: '+1 khiên tạm 1 charge. Race sau không dùng là vỡ.',
+  FRAGILE_SHIELD: '+1 khiên mỏng. Race sau không dùng là vỡ.',
   CLONE_CHAOS: 'Race sau toàn lobby +1 clone, tạo một round hỗn loạn nhẹ.',
-  SAFE_WEEK: 'Race sau shield không decay sau khi resolve.',
+  SAFE_WEEK: 'Race sau shield không già đi sau khi resolve.',
   REVERSE_RESULTS: 'Race sau đảo ngược bảng kết quả trước khi tính phạt.',
   LAST_LAUGH: 'Nếu chủ rương thành dzịt, kéo người an toàn gần nhất xuống làm dzịt theo.',
   ANTI_SHIELD: 'Race sau toàn lobby không được dùng shield thường.',
   CANT_PASS_THOMAS: 'Race sau ai vượt Thomas sẽ bị tính thua.',
-  GOLDEN_SHIELD: 'Nhận ngay 1 shield full 3 charge.',
+  GOLDEN_SHIELD: 'Nhận ngay 1 shield mới tinh, bền nhất.',
   MORE_PEOPLE_MORE_FUN: 'Race sau số người thua tăng thành 3 hoặc 4.',
   LUCKY_CLONE: 'Legacy effect đã ngưng dùng.',
   NOTHING: 'Legacy effect đã ngưng dùng.',

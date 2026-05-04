@@ -127,7 +127,9 @@ function fallbackBrief(facts: ReturnType<typeof buildFacts>): DashboardBrief {
   if (facts.shieldRisk) {
     return {
       headline: `RACE #${facts.nextRaceNumber}: KHIÊN ${facts.shieldRisk.name} NỨT RỒI`,
-      subline: `Còn ${facts.shieldRisk.charges} charge. Một cú hụt chân là nghe tiếng vỡ.`,
+      subline: facts.shieldRisk.charges <= 1
+        ? 'Race tới không dùng là nghe tiếng vỡ.'
+        : 'Đã nứt rồi, thêm vài tuần lơ là là mất.',
       source: 'fallback',
     }
   }

@@ -15,7 +15,7 @@ function shieldVisual(charges: number) {
     return {
       src: '/assets/v2/shield-broken.svg',
       className: 'bg-[var(--color-ggd-orange)]/20 border-[var(--color-ggd-orange)] shadow-[0_0_12px_rgba(255,87,51,0.35)] animate-pulse',
-      label: 'sắp vỡ ở decay tick kế tiếp và mất luôn',
+      label: 'vỡ ở race kế tiếp nếu không dùng',
     }
   }
 
@@ -23,14 +23,14 @@ function shieldVisual(charges: number) {
     return {
       src: '/assets/v2/shield-cracked.svg',
       className: 'bg-[var(--color-ggd-gold)]/18 border-[var(--color-ggd-gold)] shadow-[0_0_10px_rgba(255,204,0,0.25)]',
-      label: 'đã qua 1 tuần, còn 2 charge',
+      label: 'vỡ sau 2 race không dùng',
     }
   }
 
   return {
     src: '/assets/v2/shield-fresh.svg',
     className: 'bg-[var(--color-ggd-neon-green)]/14 border-[var(--color-ggd-neon-green)]/70 shadow-[0_0_8px_rgba(61,255,143,0.18)]',
-    label: 'mới tạo, còn 3 charge',
+    label: 'vỡ sau 3 race không dùng',
   }
 }
 
@@ -57,7 +57,7 @@ export function ShieldAgingStack({ shields, maxVisible = 12, legacyCount = 0, hi
             <div
               key={`legacy-${index}`}
               className="group relative flex h-8 w-8 items-center justify-center rounded-lg border-2 border-[var(--color-ggd-neon-green)]/70 bg-[var(--color-ggd-neon-green)]/14 shadow-[0_0_8px_rgba(61,255,143,0.18)] transition-transform duration-150 hover:-translate-y-1 hover:scale-110"
-              title={`Khiên legacy #${index + 1}: chưa có record Shield riêng trên DB prod, tạm xem là 3 charge. Nên chạy migration Shield Charges để decay chính xác.`}
+              title={`Khiên legacy #${index + 1}: chưa có record Shield riêng trên DB prod, tạm xem là còn bền. Nên chạy migration tuổi thọ khiên để theo dõi chính xác.`}
             >
               <Image
                 src="/assets/v2/shield-fresh.svg"
@@ -67,9 +67,6 @@ export function ShieldAgingStack({ shields, maxVisible = 12, legacyCount = 0, hi
                 unoptimized
                 className="drop-shadow-[1px_1px_0_rgba(0,0,0,0.7)]"
               />
-              <span className="absolute -bottom-1 -right-1 rounded bg-[var(--color-ggd-outline)] px-1 font-data text-[8px] font-black text-white">
-                3c
-              </span>
             </div>
           ))}
           {hiddenLegacy > 0 && (
@@ -98,7 +95,7 @@ export function ShieldAgingStack({ shields, maxVisible = 12, legacyCount = 0, hi
           <div
             key={shield.id}
             className={`group relative flex h-8 w-8 items-center justify-center rounded-lg border-2 transition-transform duration-150 hover:-translate-y-1 hover:scale-110 ${visual.className} ${isFreshReward ? 'ring-2 ring-[var(--color-ggd-gold)] ring-offset-2 ring-offset-[var(--color-ggd-panel)]' : ''}`}
-            title={`Khiên #${shield.id}: còn ${shield.charges} charge, ${visual.label}.${shield.earnedRaceId ? ` Nhận từ race #${shield.earnedRaceId}.` : ''}`}
+            title={`Khiên #${shield.id}: ${visual.label}.${shield.earnedRaceId ? ` Nhận từ race #${shield.earnedRaceId}.` : ''}`}
           >
             <Image
               src={visual.src}
@@ -108,9 +105,6 @@ export function ShieldAgingStack({ shields, maxVisible = 12, legacyCount = 0, hi
               unoptimized
               className="drop-shadow-[1px_1px_0_rgba(0,0,0,0.7)]"
             />
-            <span className="absolute -bottom-1 -right-1 rounded bg-[var(--color-ggd-outline)] px-1 font-data text-[8px] font-black text-white">
-              {shield.charges}c
-            </span>
             {isFreshReward && (
               <span className="absolute -top-2 -left-2 rounded bg-[var(--color-ggd-gold)] px-1 font-data text-[8px] font-black text-[var(--color-ggd-outline)] shadow-[0_1px_0_var(--color-ggd-outline)]">
                 NEW

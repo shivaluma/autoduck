@@ -154,6 +154,12 @@ export default function Dashboard() {
 
   const currentBoss = bossWatch.find((player) => player.isBoss) ?? null
   const topShieldThreat = fragileShields[0] ?? null
+  const shieldRiskLabel = topShieldThreat?.shield.charges === 1 ? 'Sắp vỡ' : topShieldThreat ? 'Đang nứt' : 'Safe'
+  const shieldRiskDetail = topShieldThreat
+    ? topShieldThreat.shield.charges === 1
+      ? `${topShieldThreat.player.name.replace('Zịt ', '')} sẽ vỡ nếu race tới không dùng`
+      : `${topShieldThreat.player.name.replace('Zịt ', '')} còn 2 race không dùng trước khi vỡ`
+    : 'Chưa có khiên nguy hiểm'
   const fallbackWeeklyHeadline = currentBoss
     ? `WEEK ${Math.max(totalRaces, 1)}: SĂN BOSS ${currentBoss.name.replace('Zịt ', '')}`
     : topShieldThreat
@@ -182,8 +188,8 @@ export default function Dashboard() {
     {
       icon: '🛡',
       label: 'Shield Risk',
-      value: topShieldThreat ? `${topShieldThreat.shield.charges}c` : 'Safe',
-      detail: topShieldThreat ? `${topShieldThreat.player.name.replace('Zịt ', '')} sắp vỡ khiên` : 'Chưa có khiên nguy hiểm',
+      value: shieldRiskLabel,
+      detail: shieldRiskDetail,
       tone: topShieldThreat?.shield.charges === 1 ? 'primary-kpi-danger' : 'primary-kpi-blue',
     },
     {
@@ -538,7 +544,7 @@ export default function Dashboard() {
                 <Image src="/assets/v2/shield-cracked.svg" alt="shield" width={32} height={32} className="animate-bob" unoptimized />
                 <div>
                   <div className="font-display text-xl text-white text-outlined leading-none">🛡 Khiên Sắp Hỏng</div>
-                  <div className="font-data text-[10px] uppercase tracking-widest text-white/50">Khiên sống theo charge: 3 → 2 → 1 → vỡ</div>
+                  <div className="font-data text-[10px] uppercase tracking-widest text-white/50">Icon càng nứt càng gần ngày vỡ</div>
                 </div>
               </div>
               <div className="space-y-2.5">
@@ -560,7 +566,7 @@ export default function Dashboard() {
                             {player.name} <span className="text-white/50 font-data text-[11px]">#{shield.id}</span>
                           </span>
                           <span className={`font-data text-[11px] font-black ${danger ? 'text-[var(--color-ggd-orange)]' : 'text-[var(--color-ggd-gold)]'}`}>
-                            {shield.charges}c {danger ? '⚠️' : ''}
+                            {danger ? 'Sắp vỡ ⚠️' : 'Đang nứt'}
                           </span>
                         </div>
                         <div className="progress-track">
@@ -581,7 +587,7 @@ export default function Dashboard() {
                 {[
                   { icon: '💀', title: 'Thua Cuộc', lines: ['2 vịt cuối bảng = Làm Dzịt', 'Bao nước, nhận +1 Sẹo'] },
                   { icon: '🛡', title: 'Khiên', lines: ['2 Sẹo = auto ghép 1 Khiên', 'Declare trước race để kích hoạt', 'Cứu 1 lần rồi biến mất'] },
-                  { icon: '⏳', title: 'Shield Decay', lines: ['Không dùng sau race sẽ -1 charge', '0 charge = vỡ'] },
+                  { icon: '⏳', title: 'Tuổi Thọ Khiên', lines: ['Không dùng sau race sẽ già đi', 'Quá hạn là vỡ'] },
                   { icon: '⛑', title: 'Boss Duck', lines: ['3 tuần liên tiếp không Dzịt = Boss', 'Boss spawn nhiều clone hơn mỗi tuần', 'Clone chết = Boss chết'] },
                   { icon: '🎁', title: 'Reward Chest', lines: ['Hạ Boss sẽ nhận chest', 'Streak càng cao, loot càng ngon'] },
                 ].map((rule) => (

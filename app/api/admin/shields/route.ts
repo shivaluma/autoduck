@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     }
 
     if (!Number.isInteger(charges) || charges < 1 || charges > SHIELD_INITIAL_CHARGES) {
-      return NextResponse.json({ error: 'Charges must be from 1 to 3' }, { status: 400 })
+      return NextResponse.json({ error: 'Tuổi thọ khiên phải nằm trong 1-3 nấc' }, { status: 400 })
     }
 
     const owner = await prisma.user.findUnique({
