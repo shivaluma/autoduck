@@ -9,7 +9,7 @@ type Migration = {
   run: (prisma: PrismaClient) => Promise<void>
 }
 
-const BOSS_STREAK_THRESHOLD = 4
+const BOSS_STREAK_THRESHOLD = 6
 
 function createClient() {
   const dbUrl = process.env.DATABASE_URL || `file:${path.join(process.cwd(), 'prisma', 'dev.db')}`

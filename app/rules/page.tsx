@@ -7,33 +7,31 @@ export const metadata: Metadata = {
 }
 
 const tierRates = [
-  { streak: '3', common: 70, rare: 30 },
-  { streak: '4', common: 60, rare: 40 },
-  { streak: '5', common: 50, rare: 50 },
-  { streak: '6', common: 40, rare: 60 },
-  { streak: '7+', common: 30, rare: 70 },
+  { streak: '6', common: 65, rare: 35 },
+  { streak: '7', common: 55, rare: 45 },
+  { streak: '8', common: 45, rare: 55 },
+  { streak: '9+', common: 40, rare: 60 },
 ]
 
 const commonItems = [
-  { icon: '🥚', name: 'Rương Trống', rate: '30%', effect: 'Không có effect. Chúc bạn may mắn lần sau.', tone: 'from-slate-400/25 to-slate-950/20' },
-  { icon: '🐣', name: 'Clone Chaos', rate: '20%', effect: 'Race kế tiếp toàn lobby có thêm 1 Clone.', tone: 'from-lime-400/30 to-emerald-950/25' },
-  { icon: '🌿', name: 'Safe Week', rate: '15%', effect: 'Race kế tiếp Khiên không già đi.', tone: 'from-green-400/30 to-teal-950/25' },
-  { icon: '🌀', name: 'Reverse Results', rate: '15%', effect: 'Race kế tiếp đảo ngược bảng xếp hạng cuối cùng.', tone: 'from-indigo-400/30 to-violet-950/25' },
-  { icon: '👑', name: "Can't Pass Thomas", rate: '10%', effect: 'Race kế tiếp ai về trước Thomas sẽ bị tính thua.', tone: 'from-amber-300/35 to-stone-950/25' },
-  { icon: '🎪', name: 'More People More Fun', rate: '10%', effect: 'Race kế tiếp sẽ có 3 hoặc 4 người cùng thua thay vì 2.', tone: 'from-pink-400/35 to-fuchsia-950/25' },
+  { icon: '🥚', name: 'Rương Trống', rate: '45%', effect: 'Không có effect. Chúc bạn may mắn lần sau.', tone: 'from-slate-400/25 to-slate-950/20' },
+  { icon: '🌿', name: 'Safe Week', rate: '25%', effect: 'Race kế tiếp Khiên không già đi.', tone: 'from-green-400/30 to-teal-950/25' },
+  { icon: '🐣', name: 'Clone Chaos', rate: '15%', effect: 'Race kế tiếp toàn lobby có thêm 1 Clone.', tone: 'from-lime-400/30 to-emerald-950/25' },
+  { icon: '🌀', name: 'Reverse Results', rate: '10%', effect: 'Race kế tiếp đảo ngược bảng xếp hạng cuối cùng.', tone: 'from-indigo-400/30 to-violet-950/25' },
+  { icon: '🎪', name: 'More People More Fun', rate: '5%', effect: 'Race kế tiếp có đúng 3 người cùng thua thay vì 2.', tone: 'from-pink-400/35 to-fuchsia-950/25' },
 ]
 
 const rareItems = [
-  { icon: '🤕', name: 'Bonus Scar', rate: '30%', effect: 'Nhận ngay +1 Sẹo.', tone: 'from-orange-500/35 to-red-900/25' },
-  { icon: '🎭', name: 'Last Laugh', rate: '24%', effect: 'Nếu chủ item thành dzịt, kéo người an toàn gần nhất xuống làm dzịt theo.', tone: 'from-yellow-300/35 to-orange-950/25' },
-  { icon: '🛡️', name: 'Fragile Shield', rate: '20%', effect: 'Nhận ngay 1 Khiên mỏng. Không dùng ở Race kế tiếp sẽ vỡ.', tone: 'from-sky-400/35 to-cyan-950/25' },
+  { icon: '🛡️', name: 'Fragile Shield', rate: '30%', effect: 'Nhận ngay 1 Khiên mỏng. Không dùng ở Race kế tiếp sẽ vỡ.', tone: 'from-sky-400/35 to-cyan-950/25' },
+  { icon: '🎭', name: 'Last Laugh', rate: '20%', effect: 'Nếu chủ item thành dzịt, kéo người an toàn gần nhất xuống làm dzịt theo.', tone: 'from-yellow-300/35 to-orange-950/25' },
   { icon: '🚫', name: 'Anti Shield', rate: '20%', effect: 'Race kế tiếp toàn lobby không ai được dùng Khiên.', tone: 'from-red-500/35 to-rose-950/25' },
-  { icon: '✨', name: 'Golden Shield', rate: '6%', effect: 'Nhận ngay 1 Khiên mới tinh, tuổi thọ 5 race.', tone: 'from-yellow-300/45 to-yellow-900/20' },
+  { icon: '🤕', name: 'Bonus Scar', rate: '15%', effect: 'Nhận ngay +1 Sẹo.', tone: 'from-orange-500/35 to-red-900/25' },
+  { icon: '✨', name: 'Golden Shield', rate: '15%', effect: 'Nhận ngay 1 Khiên mới tinh, tuổi thọ 5 race.', tone: 'from-yellow-300/45 to-yellow-900/20' },
 ]
 
 const flowSteps = [
   { step: '01', title: 'Boss bị hạ', text: 'Bất kỳ entry nào của Boss lọt top 2 cuối thì Boss mất ngôi.' },
-  { step: '02', title: 'Roll chest theo streak', text: 'Streak càng cao thì Rare rate càng lớn.' },
+  { step: '02', title: 'Trao bounty chest', text: 'Top safe non-Boss nhận tối đa 1 chest theo Boss level cao nhất bị hạ.' },
   { step: '03', title: 'Nhận item / lưu modifier', text: 'Item inventory nhận ngay. Modifier được lưu cho Race kế tiếp.' },
   { step: '04', title: 'Race kế tiếp kích hoạt effect', text: 'Modifier tự kích hoạt khi Race kế tiếp bắt đầu.' },
   { step: '05', title: 'Effect tự clear sau race', text: 'Resolve xong Race kế tiếp thì modifier tự clear.' },
@@ -122,8 +120,8 @@ export default function RulesPage() {
               <div className="mt-6 grid gap-3 sm:grid-cols-3">
                 {[
                   ['🔥', 'Boss Streak là gì?', 'Số Race liên tiếp một vịt không bị tính thua.'],
-                  ['👑', 'Mở Boss Mode', 'Đạt Streak 4 thì thành Boss Duck.'],
-                  ['🐣', 'Sống càng lâu càng căng', 'Boss Level = streak, extra clone cap tối đa 3.'],
+                  ['👑', 'Mở Boss Mode', 'Đạt Streak 6 thì thành Boss Duck.'],
+                  ['🐣', 'Sống càng lâu càng căng', 'Boss Level = streak, extra clone cap tối đa 2.'],
                 ].map(([icon, title, text]) => (
                   <div key={title} className="rounded-2xl border-3 border-[var(--color-ggd-outline)] bg-black/25 p-4 shadow-[inset_0_2px_0_rgba(255,255,255,0.1)]">
                     <div className="text-2xl">{icon}</div>
@@ -179,7 +177,7 @@ export default function RulesPage() {
         <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
           <div className="ggd-card-gold ggd-stripe p-5 sm:p-6">
             <div className="font-display text-3xl text-[var(--color-ggd-gold)] text-outlined">👑 Boss Streak Rate</div>
-            <p className="mt-2 font-readable text-sm text-white/70">Boss càng sống lâu, reward càng dễ nổ Rare.</p>
+            <p className="mt-2 font-readable text-sm text-white/70">Boss càng sống lâu, bounty chest càng dễ nổ Rare.</p>
             <div className="mt-5 space-y-4">
               {tierRates.map((tier) => (
                 <div key={tier.streak} className="rounded-2xl border-3 border-[var(--color-ggd-outline)] bg-black/20 p-4">
@@ -213,7 +211,7 @@ export default function RulesPage() {
               <div className="mt-2 font-readable text-sm leading-relaxed text-white/75 space-y-1">
                 <div>Nếu nhiều Rare Chest mở cùng tuần, mỗi Rare item chỉ xuất hiện 1 lần.</div>
                 <div>Item đã rơi sẽ bị loại khỏi pool tới hết tuần.</div>
-                <div>Can&apos;t Pass Thomas và More People More Fun không thể cùng xuất hiện trong một tuần.</div>
+                <div>Common meta mạnh không chồng lên nhau trong cùng lượt phát chest.</div>
               </div>
             </div>
           </div>
@@ -263,7 +261,7 @@ export default function RulesPage() {
           <div className="ggd-card p-5">
             <div className="font-display text-2xl text-white text-outlined">🧯 Safety</div>
             <p className="mt-3 font-readable text-sm leading-relaxed text-white/75">
-              Item V2 không cần target cá nhân, giảm toxic. Common modifier mạnh không chồng lên nhau trong cùng lượt phát chest; nếu Can't Pass Thomas đã nổ, common reward sau đó sẽ ưu tiên rương trống.
+              Item V2 không cần target cá nhân, giảm toxic. Common modifier mạnh không chồng lên nhau trong cùng lượt phát chest; Can&apos;t Pass Thomas đã ngưng roll mới.
             </p>
           </div>
         </section>

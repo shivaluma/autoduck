@@ -212,7 +212,7 @@ export async function POST(request: Request) {
 
     // INVARIANT: 1 user không thể đồng thời là Boss và sở hữu chest active.
     // Khi user thành Boss, mọi chest đang giữ phải void; khi user nhận chest mới,
-    // họ chắc chắn không phải Boss (vì Boss = cleanStreak ≥ 4 không có scar).
+    // họ chắc chắn không phải Boss (vì Boss = cleanStreak ≥ 6 không có scar).
     const bossChestOwners = (activeChests as Array<{ id: number; ownerId: number }>).filter((chest) => {
       const owner = (users as UserWithActiveShields[]).find((candidate) => candidate.id === chest.ownerId)
       return owner?.isBoss === true && owner.cleanStreak >= BOSS_STREAK_THRESHOLD
@@ -459,6 +459,7 @@ async function executeRace(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const transactionSummary = await prisma.$transaction(async (tx: any) => {
       const bossRewardInputs: BossRewardInput[] = []
+      const bossDownStreaks: number[] = []
       let newChestsForThisRace: Array<{ ownerId: number; effect: ChestEffect }> = []
       const chestDisabledPostRace = {
         modifiedVictims: penalties.victims.map((victim) => ({
@@ -576,11 +577,24 @@ async function executeRace(
           })
 
           if (bossOutcome.bossLost) {
-            bossRewardInputs.push({
-              ownerId: participantUserId,
-              bossStreak: bossUser.cleanStreak,
-            })
+            bossDownStreaks.push(bossUser.cleanStreak)
           }
+        }
+      }
+
+      if (bossDownStreaks.length > 0) {
+        const bountyRecipient = [...raceResults]
+          .sort((left, right) => left.initialRank - right.initialRank)
+          .find((entry) => {
+            const ownerId = entry.cloneOfUserId ?? entry.userId
+            return !entry.isImmortal && !bossUserIds.has(ownerId) && !finalVictimUserIds.includes(ownerId)
+          })
+
+        if (bountyRecipient) {
+          bossRewardInputs.push({
+            ownerId: bountyRecipient.cloneOfUserId ?? bountyRecipient.userId,
+            bossStreak: Math.max(...bossDownStreaks),
+          })
         }
       }
 

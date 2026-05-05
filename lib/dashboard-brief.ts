@@ -74,7 +74,7 @@ function buildFacts(players: PlayerData[], races: DashboardRaceLists, _summary: 
     pendingEffects: activeEffects.map(effectLabel),
     pendingOwners,
     activeShieldOwners,
-    expectedLosers: activeEffects.includes('MORE_PEOPLE_MORE_FUN') ? '3 hoặc 4' : '2',
+    expectedLosers: activeEffects.includes('MORE_PEOPLE_MORE_FUN') ? '3' : '2',
     antiShield: activeEffects.includes('ANTI_SHIELD'),
     lastLaugh: activeEffects.includes('LAST_LAUGH'),
     shieldRisk: shieldRisk
