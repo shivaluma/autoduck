@@ -1,24 +1,24 @@
 import { randomUUID } from 'crypto'
 import type { ChestEffect } from '@/lib/types'
 import { SHIELD_INITIAL_CHARGES, createShield, craftShieldIfEligible } from '@/lib/shield-decay'
-import { BOSS_STREAK_THRESHOLD } from '@/lib/boss-logic'
 
 export type ChestRarity = 'common' | 'rare'
 
 export const COMMON_CHEST_TABLE: Array<{ effect: ChestEffect; weight: number }> = [
-  { effect: 'NOTHING', weight: 45 },
-  { effect: 'SAFE_WEEK', weight: 25 },
-  { effect: 'CLONE_CHAOS', weight: 15 },
-  { effect: 'REVERSE_RESULTS', weight: 10 },
-  { effect: 'MORE_PEOPLE_MORE_FUN', weight: 5 },
+  { effect: 'NOTHING', weight: 30 },
+  { effect: 'CLONE_CHAOS', weight: 20 },
+  { effect: 'SAFE_WEEK', weight: 15 },
+  { effect: 'REVERSE_RESULTS', weight: 15 },
+  { effect: 'CANT_PASS_THOMAS', weight: 10 },
+  { effect: 'MORE_PEOPLE_MORE_FUN', weight: 10 },
 ]
 
 export const RARE_CHEST_TABLE: Array<{ effect: ChestEffect; weight: number }> = [
-  { effect: 'FRAGILE_SHIELD', weight: 30 },
-  { effect: 'LAST_LAUGH', weight: 20 },
+  { effect: 'BONUS_SCAR', weight: 30 },
+  { effect: 'LAST_LAUGH', weight: 24 },
+  { effect: 'FRAGILE_SHIELD', weight: 20 },
   { effect: 'ANTI_SHIELD', weight: 20 },
-  { effect: 'BONUS_SCAR', weight: 15 },
-  { effect: 'GOLDEN_SHIELD', weight: 15 },
+  { effect: 'GOLDEN_SHIELD', weight: 6 },
 ]
 
 const INVENTORY_EFFECTS = new Set<ChestEffect>([
@@ -41,6 +41,7 @@ const MUTUALLY_EXCLUSIVE_RARE_EFFECTS: Array<Set<ChestEffect>> = []
 const COMMON_META_EFFECTS = new Set<ChestEffect>([
   'CLONE_CHAOS',
   'REVERSE_RESULTS',
+  'CANT_PASS_THOMAS',
   'MORE_PEOPLE_MORE_FUN',
 ])
 const MUTUALLY_EXCLUSIVE_COMMON_EFFECTS: Array<Set<ChestEffect>> = [
@@ -135,7 +136,11 @@ function rollWeighted<T extends string>(table: Array<{ effect: T; weight: number
 }
 
 function rareRateForBossStreak(streak: number) {
-  return Math.min(35 + Math.max(0, streak - BOSS_STREAK_THRESHOLD) * 10, 60)
+  if (streak >= 7) return 70
+  if (streak >= 6) return 60
+  if (streak >= 5) return 50
+  if (streak >= 4) return 40
+  return 30
 }
 
 function rollRarity(streak: number, seed: string): ChestRarity {
@@ -188,7 +193,7 @@ export function rollChest(
   seed: string = randomUUID(),
   options: { bossStreak?: number; excludedRareEffects?: Set<ChestEffect>; excludedCommonEffects?: Set<ChestEffect> } = {}
 ): { effect: ChestEffect; seed: string; rarity: ChestRarity } {
-  const bossStreak = options.bossStreak ?? BOSS_STREAK_THRESHOLD
+  const bossStreak = options.bossStreak ?? 3
   const rarity = rollRarity(bossStreak, `${seed}:rarity`)
 
   if (rarity === 'rare') {
@@ -225,7 +230,7 @@ export async function issueChestsForVictims(
   const created = []
 
   for (const ownerId of dedupedVictims) {
-    const rolled = rollChest(randomUUID(), { bossStreak: BOSS_STREAK_THRESHOLD })
+    const rolled = rollChest(randomUUID(), { bossStreak: 3 })
     created.push(
       await prisma.mysteryChest.create({
         data: {
@@ -255,11 +260,14 @@ export async function issueBossRewardChests(prisma: any, raceId: number, rewards
   const now = new Date()
 
   for (const reward of dedupedRewards) {
-    const rolled = rollChest(randomUUID(), {
+    let rolled = rollChest(randomUUID(), {
       bossStreak: reward.bossStreak,
       excludedRareEffects: rareRolledThisRace,
       excludedCommonEffects: commonMetaRolledThisRace,
     })
+    if (rolled.rarity === 'common' && commonMetaRolledThisRace.has('CANT_PASS_THOMAS')) {
+      rolled = { ...rolled, effect: 'NOTHING', seed: `${rolled.seed}:cant-pass-empty` }
+    }
     if (rolled.rarity === 'rare') {
       rareRolledThisRace.add(rolled.effect)
     }
@@ -341,6 +349,10 @@ export function validateChestConfig(
 
 function summarizeItemModifiers(activeChests: ActiveChestRecord[]): ItemRaceModifiers {
   const effects = new Set(activeChests.map((chest) => chest.effect))
+  const morePeopleChest = activeChests.find((chest) => chest.effect === 'MORE_PEOPLE_MORE_FUN')
+  const morePeopleRoll = morePeopleChest
+    ? hashSeed(`${morePeopleChest.rngSeed ?? morePeopleChest.id}:more-people`) < 0.5 ? 3 : 4
+    : null
 
   return {
     cloneChaos: effects.has('CLONE_CHAOS'),
@@ -348,7 +360,7 @@ function summarizeItemModifiers(activeChests: ActiveChestRecord[]): ItemRaceModi
     reverseResults: effects.has('REVERSE_RESULTS'),
     antiShield: effects.has('ANTI_SHIELD'),
     cantPassThomas: effects.has('CANT_PASS_THOMAS'),
-    morePeopleMoreFun: effects.has('MORE_PEOPLE_MORE_FUN') ? 3 : null,
+    morePeopleMoreFun: morePeopleRoll,
     lastLaughOwnerIds: activeChests
       .filter((chest) => chest.effect === 'LAST_LAUGH')
       .map((chest) => chest.ownerId),

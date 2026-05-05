@@ -33,7 +33,7 @@ interface PenaltyOptions {
 /**
  * IDENTITY_THEFT: owner spawn thêm 1 clone (cloneIndex=99). Theo spec lấy
  * min(rank gốc, rank clone) làm kết quả → drop entry tệ hơn trước khi xét phạt.
- * Boss clones (cloneIndex 1..2) KHÔNG dedupe — mỗi clone vẫn là risk độc lập.
+ * Boss clones (cloneIndex 1..3) KHÔNG dedupe — mỗi clone vẫn là risk độc lập.
  */
 function applyIdentityTheftDedupe(results: RaceResultInput[]): RaceResultInput[] {
   const identityOwners = new Set(

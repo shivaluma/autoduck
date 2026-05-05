@@ -223,15 +223,15 @@ export default function Dashboard() {
   const metaItems = [
     {
       label: 'Losers',
-      value: activeChestEffects.includes('MORE_PEOPLE_MORE_FUN') ? '3' : '2',
+      value: activeChestEffects.includes('MORE_PEOPLE_MORE_FUN') ? '3+' : '2',
     },
     {
       label: 'Anti Shield',
       value: activeChestEffects.includes('ANTI_SHIELD') ? 'ON' : 'OFF',
     },
     {
-      label: 'Item Meta',
-      value: activeChestEffects.length > 0 ? 'ON' : 'OFF',
+      label: 'Thomas Mode',
+      value: activeChestEffects.includes('CANT_PASS_THOMAS') ? 'ON' : 'OFF',
     },
     {
       label: 'Boss',
@@ -509,7 +509,7 @@ export default function Dashboard() {
                   <div className="font-data text-[10px] uppercase tracking-widest text-white/50">{BOSS_STREAK_THRESHOLD} tuần sạch mở Boss Mode.</div>
                 </div>
               </div>
-              <p className="font-readable text-sm text-white/70 mb-4">Boss Level = streak. Extra clone bị cap tối đa 2.</p>
+              <p className="font-readable text-sm text-white/70 mb-4">Boss Level = streak. Extra clone bị cap tối đa 3.</p>
               <div className="space-y-2.5">
                 {bossWatch.length > 0 ? bossWatch.map((entry) => {
                   const streak = entry.cleanStreak
@@ -589,8 +589,8 @@ export default function Dashboard() {
                   { icon: '💀', title: 'Thua Cuộc', lines: ['2 vịt cuối bảng = Làm Dzịt', 'Bao nước, nhận +1 Sẹo'] },
                   { icon: '🛡', title: 'Khiên', lines: ['2 Sẹo = auto ghép 1 Khiên', 'Declare trước race để kích hoạt', 'Cứu 1 lần rồi biến mất'] },
                   { icon: '⏳', title: 'Tuổi Thọ Khiên', lines: ['Không dùng sau race sẽ già đi', 'Quá hạn là vỡ'] },
-                  { icon: '⛑', title: 'Boss Duck', lines: [`${BOSS_STREAK_THRESHOLD} tuần sạch = Boss`, 'Extra clone cap tối đa 2', 'Entry lọt top 2 cuối = Boss chết'] },
-                  { icon: '🎁', title: 'Reward Chest', lines: ['Top safe non-Boss nhận bounty', 'Tối đa 1 chest mỗi race'] },
+                  { icon: '⛑', title: 'Boss Duck', lines: [`${BOSS_STREAK_THRESHOLD} tuần sạch = Boss`, 'Extra clone cap tối đa 3', 'Entry lọt top 2 cuối = Boss chết'] },
+                  { icon: '🎁', title: 'Reward Chest', lines: ['Hạ Boss sẽ nhận chest', 'Streak càng cao, loot càng ngon'] },
                 ].map((rule) => (
                   <div key={rule.title} className="rounded-xl border-2 border-[var(--color-ggd-outline)]/35 bg-black/20 p-3">
                     <div className="font-display text-lg text-white text-outlined">{rule.icon} {rule.title}</div>
