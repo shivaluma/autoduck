@@ -18,7 +18,7 @@ function tierClass(charges: number, selected: boolean) {
 }
 
 function shieldBreakText(charges: number) {
-  if (charges <= 1) return 'vỡ ở race kế tiếp nếu không dùng'
+  if (charges <= 1) return 'Khiên Bất Ổn: 50% cứu, 50% phát nổ tụt 1 hạng'
   if (charges <= 2) return 'vỡ sau 2 race không dùng'
   if (charges <= 3) return 'vỡ sau 3 race không dùng'
   if (charges <= 4) return 'vỡ sau 4 race không dùng'

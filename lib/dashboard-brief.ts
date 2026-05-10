@@ -42,6 +42,8 @@ function sanitizeBriefText(text: string) {
 }
 
 function buildFacts(players: PlayerData[], races: DashboardRaceLists, _summary: DashboardSummary) {
+  void _summary
+
   const activeEffects = players
     .map((player) => player.activeChest?.effect)
     .filter((effect): effect is NonNullable<PlayerData['activeChest']>['effect'] => Boolean(effect))
@@ -165,13 +167,13 @@ async function generateAiBrief(facts: ReturnType<typeof buildFacts>): Promise<Da
               'Nhiệm vụ: Viết preview cho race kế tiếp, KHÔNG recap race cũ.',
               'Mục tiêu: Headline phải khiến người ta muốn bấm xem race ngay. Subline phải gợi drama sắp xảy ra.',
               'Chỉ được dùng facts được đưa, không bịa luật, không bịa tên.',
-              'Chỉ nói: áp lực, nguy cơ, boss đang bị săn, item sắp nổ, khiên sắp vỡ, số người dự kiến lãnh án, lobby sắp loạn.',
+              'Chỉ nói: áp lực, nguy cơ, boss đang bị săn, item sắp nổ, Khiên Bất Ổn, số người dự kiến lãnh án, lobby sắp loạn.',
               'Không khẳng định chắc ai sẽ thua; chỉ nói nguy cơ, áp lực, hoặc drama đang chờ.',
               'Tone: Thể thao + báo lá cải + meme văn phòng Việt. Sắc, ngắn, tự tin, cà khịa vừa đủ.',
               'Headline style: như báo thể thao, có tension, có chữ đắt, tránh generic.',
               'Subline style: một câu phụ sắc bén, tăng tò mò, có punchline cuối càng tốt.',
               'Cấm: chúc mừng, kể chuyện trận trước, đạo đức giả, dùng từ khao/khaos/totalKhaos, lặp lại headline bằng wording khác, câu vô thưởng vô phạt.',
-              'Ưu tiên event: 1 Anti Shield, 2 Boss cấp cao, 3 Pending rare item, 4 Shield sắp vỡ, 5 Số dzịt tăng, 6 Bình yên giả tạo.',
+              'Ưu tiên event: 1 Anti Shield, 2 Boss cấp cao, 3 Pending rare item, 4 Khiên Bất Ổn, 5 Số dzịt tăng, 6 Bình yên giả tạo.',
               'Cấm dùng cụm generic: gay cấn, hấp dẫn, kịch tính, rất nóng, đầy bất ngờ.',
               'Humor đến từ irony, humiliation, overconfidence, survival vô lý. Không đến từ spam meme vô nghĩa.',
               'Trả về JSON hợp lệ: {"headline":"...","subline":"..."}',

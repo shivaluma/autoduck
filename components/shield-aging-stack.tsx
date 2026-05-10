@@ -15,7 +15,7 @@ function shieldVisual(charges: number) {
     return {
       src: '/assets/v2/shield-broken.svg',
       className: 'bg-[var(--color-ggd-orange)]/20 border-[var(--color-ggd-orange)] shadow-[0_0_12px_rgba(255,87,51,0.35)] animate-pulse',
-      label: 'vỡ ở race kế tiếp nếu không dùng',
+      label: 'Khiên Bất Ổn: 50% cứu, 50% phát nổ tụt 1 hạng khi dùng',
     }
   }
 

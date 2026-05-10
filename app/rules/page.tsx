@@ -42,7 +42,7 @@ const flowSteps = [
 const shieldDecaySteps = [
   { charge: '5', label: 'Khiên mới', text: 'Vừa craft hoặc nhận Golden Shield. Có 5 race tuổi thọ nếu cứ cất kho.', color: 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]' },
   { charge: '4-3', label: 'Đã già đi', text: 'Không dùng sau race thì già đi từng nấc, nhưng vẫn còn dư địa.', color: 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' },
-  { charge: '2-1', label: 'Sắp vỡ', text: 'Đến vùng này mới thật sự nên cân nhắc bật khiên.', color: 'bg-[var(--color-ggd-orange)] text-white' },
+  { charge: '2-1', label: 'Khiên Bất Ổn', text: 'Ở 1 tuổi thọ, Khiên Bất Ổn có 50% cứu như thường và 50% phát nổ làm tụt 1 hạng.', color: 'bg-[var(--color-ggd-orange)] text-white' },
   { charge: 'Vỡ', label: 'Vỡ', text: 'Quá hạn thì Khiên mất luôn, không hoàn Sẹo.', color: 'bg-[#4d0000] text-white' },
 ]
 
@@ -263,7 +263,7 @@ export default function RulesPage() {
           <div className="ggd-card p-5">
             <div className="font-display text-2xl text-white text-outlined">🧯 Safety</div>
             <p className="mt-3 font-readable text-sm leading-relaxed text-white/75">
-              Item V2 không cần target cá nhân, giảm toxic. Common modifier mạnh không chồng lên nhau trong cùng lượt phát chest; nếu Can't Pass Thomas đã nổ, common reward sau đó sẽ ưu tiên rương trống.
+              Item V2 không cần target cá nhân, giảm toxic. Common modifier mạnh không chồng lên nhau trong cùng lượt phát chest; nếu Can&apos;t Pass Thomas đã nổ, common reward sau đó sẽ ưu tiên rương trống.
             </p>
           </div>
         </section>

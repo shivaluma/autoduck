@@ -155,10 +155,10 @@ export default function Dashboard() {
 
   const currentBoss = bossWatch.find((player) => player.isBoss) ?? null
   const topShieldThreat = fragileShields[0] ?? null
-  const shieldRiskLabel = topShieldThreat?.shield.charges === 1 ? 'Sắp vỡ' : topShieldThreat ? 'Đang nứt' : 'Safe'
+  const shieldRiskLabel = topShieldThreat?.shield.charges === 1 ? 'Bất ổn' : topShieldThreat ? 'Đang nứt' : 'Safe'
   const shieldRiskDetail = topShieldThreat
     ? topShieldThreat.shield.charges === 1
-      ? `${topShieldThreat.player.name.replace('Zịt ', '')} sẽ vỡ nếu race tới không dùng`
+      ? `${topShieldThreat.player.name.replace('Zịt ', '')} đang cầm Khiên Bất Ổn: 50% cứu, 50% phát nổ`
       : `${topShieldThreat.player.name.replace('Zịt ', '')} còn 2 race không dùng trước khi vỡ`
     : 'Chưa có khiên nguy hiểm'
   const fallbackWeeklyHeadline = currentBoss
@@ -567,7 +567,7 @@ export default function Dashboard() {
                             {player.name} <span className="text-white/50 font-data text-[11px]">#{shield.id}</span>
                           </span>
                           <span className={`font-data text-[11px] font-black ${danger ? 'text-[var(--color-ggd-orange)]' : 'text-[var(--color-ggd-gold)]'}`}>
-                            {danger ? 'Sắp vỡ ⚠️' : 'Đang nứt'}
+                            {danger ? 'Khiên Bất Ổn' : 'Đang nứt'}
                           </span>
                         </div>
                         <div className="progress-track">
@@ -587,7 +587,7 @@ export default function Dashboard() {
               <div className="space-y-3">
                 {[
                   { icon: '💀', title: 'Thua Cuộc', lines: ['2 vịt cuối bảng = Làm Dzịt', 'Bao nước, nhận +1 Sẹo'] },
-                  { icon: '🛡', title: 'Khiên', lines: ['2 Sẹo = auto ghép 1 Khiên', 'Declare trước race để kích hoạt', 'Cứu 1 lần rồi biến mất'] },
+                  { icon: '🛡', title: 'Khiên', lines: ['2 Sẹo = auto ghép 1 Khiên', 'Declare trước race để kích hoạt', 'Khiên Bất Ổn: 50% nổ tụt hạng'] },
                   { icon: '⏳', title: 'Tuổi Thọ Khiên', lines: ['Không dùng sau race sẽ già đi', 'Quá hạn là vỡ'] },
                   { icon: '⛑', title: 'Boss Duck', lines: [`${BOSS_STREAK_THRESHOLD} tuần sạch = Boss`, 'Extra clone cap tối đa 3', 'Entry lọt top 2 cuối = Boss chết'] },
                   { icon: '🎁', title: 'Reward Chest', lines: ['Hạ Boss sẽ nhận chest', 'Streak càng cao, loot càng ngon'] },

@@ -94,7 +94,7 @@ function formatAuditJson(value?: string | null) {
 }
 
 function shieldAgeLabel(charges: number) {
-  if (charges <= 1) return 'Sắp vỡ'
+  if (charges <= 1) return 'Khiên Bất Ổn'
   if (charges <= 2) return 'Đã nứt'
   if (charges <= 4) return 'Còn bền'
   return 'Mới tinh'
@@ -515,7 +515,7 @@ export function AdminDashboardContent({ secret }: Props) {
                           <option value="4">Còn bền</option>
                           <option value="3">Đã già đi</option>
                           <option value="2">Đã nứt nhẹ</option>
-                          <option value="1">Sắp vỡ</option>
+                          <option value="1">Khiên Bất Ổn</option>
                         </select>
                       </label>
                       <button
