@@ -50,6 +50,13 @@ const headlineTemplates = {
     '{name} suýt chết, rồi nhớ ra mình có khiên.',
     'Cả chuồng nhìn {name} sống tiếp trong cay đắng.',
   ],
+  unstableShield: [
+    'Khiên Bất Ổn của {name} vừa làm lobby giật mình.',
+    '{name} bấm khiên và nhận về một bài test nhân phẩm.',
+    'Khiên Bất Ổn bước vào race, lobby bắt đầu nín thở.',
+    '{name} mang công nghệ phòng thủ hơi khó tin vào race.',
+    'Một coin flip bằng khiên vừa đổi nhịp trận đấu.',
+  ],
   bossSurvived: [
     'Boss {name} vượt ải và cộng thêm một tuần thống trị.',
     '{name} sống tiếp, lobby thêm một tuần nhịn nhục.',
@@ -202,8 +209,12 @@ export default function RaceDetailPage({
 
   const shieldSavedParticipants = sortedParticipants.filter((participant) => effectiveShieldKeys.has(participantKey(participant)) && !participant.gotScar)
   const decorativeShieldParticipants = sortedParticipants.filter((participant) => participant.usedShield && !effectiveShieldKeys.has(participantKey(participant)) && !participant.gotScar)
+  const unstableShieldParticipants = sortedParticipants.filter((participant) => participant.shieldChargesAtStart === 1 && !participant.isClone)
+  const unstableShieldBackfires = unstableShieldParticipants.filter((participant) => participant.shieldBackfired)
+  const unstableShieldSuccesses = unstableShieldParticipants.filter((participant) => participant.usedShield && !participant.shieldBackfired)
   const shieldSavedName = shieldSavedParticipants[0] ? cleanDuckName(shieldSavedParticipants[0].displayName ?? shieldSavedParticipants[0].name) : ''
   const decorativeShieldNames = decorativeShieldParticipants.map((participant) => cleanDuckName(participant.displayName ?? participant.name))
+  const unstableShieldNames = unstableShieldParticipants.map((participant) => cleanDuckName(participant.displayName ?? participant.name))
   const thomasEntry = sortedParticipants.find((participant) => participant.name.toLowerCase() === 'thomas' && !participant.isClone)
   const thomasTopThree = typeof thomasEntry?.initialRank === 'number' && thomasEntry.initialRank <= 3
   const cloneCountByBoss = new Map<number, number>()
@@ -225,6 +236,7 @@ export default function RaceDetailPage({
     if (bossFalls.length > 0) return 'bossDown'
     if (awardedRareChests.length > 0) return 'rareChest'
     if (victims.length >= 4) return 'disaster'
+    if (unstableShieldParticipants.length > 0) return 'unstableShield'
     if (shieldSavedParticipants.length > 0) return 'shieldSave'
     if (bossSurvived) return 'bossSurvived'
     return 'normal'
@@ -245,6 +257,7 @@ export default function RaceDetailPage({
     rareChest: '✨',
     disaster: '☠️',
     shieldSave: '🛡',
+    unstableShield: '🛡',
     bossSurvived: '🔥',
     normal: '📰',
   }[narrativeKind]
@@ -254,7 +267,9 @@ export default function RaceDetailPage({
       title: 'Trước Race',
       lines: [
         primaryBossName ? `Boss ${primaryBossName} bước vào race với ${primaryBossCloneCount} clone.` : 'Không có Boss active trong race này.',
-        shieldSavedParticipants.length > 0
+        unstableShieldParticipants.length > 0
+          ? `${formatNameList(unstableShieldNames)} bật Khiên Bất Ổn: 50% cứu, 50% phát nổ tụt 1 hạng.`
+          : shieldSavedParticipants.length > 0
           ? `${shieldSavedParticipants.length} khiên thật sự cứu mạng: ${formatNameList(shieldSavedParticipants.map((participant) => cleanDuckName(participant.displayName ?? participant.name)))}.`
           : decorativeShieldParticipants.length > 0
             ? `${formatNameList(decorativeShieldNames)} có bật khiên, nhưng lần này khiên chủ yếu đi du lịch.`
@@ -267,7 +282,11 @@ export default function RaceDetailPage({
       title: 'Diễn Biến',
       lines: [
         `${winnerName} cán đích đầu tiên và giữ vị trí thắng cuộc.`,
-        thomasTopThree ? 'Thomas tiếp tục len vào top an toàn như thể luật vật lý chỉ là gợi ý.' : 'Nhóm giữa race giằng co cho tới đoạn cuối.',
+        unstableShieldBackfires.length > 0
+          ? `Khiên Bất Ổn phát nổ: ${formatNameList(unstableShieldBackfires.map((participant) => cleanDuckName(participant.displayName ?? participant.name)))} bị tụt 1 hạng.`
+          : unstableShieldSuccesses.length > 0
+            ? `Khiên Bất Ổn ổn áp: ${formatNameList(unstableShieldSuccesses.map((participant) => cleanDuckName(participant.displayName ?? participant.name)))} qua được coin flip.`
+            : thomasTopThree ? 'Thomas tiếp tục len vào top an toàn như thể luật vật lý chỉ là gợi ý.' : 'Nhóm giữa race giằng co cho tới đoạn cuối.',
         race.commentaries[0] ? shortCommentary(race.commentaries[0].content) : `${renderedVictims} tụt khỏi vùng an toàn ở đoạn quyết định.`,
       ],
     },
@@ -294,6 +313,8 @@ export default function RaceDetailPage({
     bossSurvived ? 'Boss Survived' : null,
     awardedRareChests.length > 0 ? 'Rare Chest' : null,
     victims.length >= 4 ? 'Disaster Round' : null,
+    unstableShieldBackfires.length > 0 ? 'Khiên Bất Ổn Nổ' : null,
+    unstableShieldSuccesses.length > 0 ? 'Khiên Bất Ổn Qua Ải' : null,
     shieldSavedParticipants.length > 0 ? 'Shield Saved' : null,
   ].filter((tag): tag is string => Boolean(tag))
   const heroHeadline = (() => {
@@ -467,13 +488,14 @@ export default function RaceDetailPage({
                     const rowBadges = [
                       p.isClone ? 'Clone' : null,
                       p.isImmortal ? 'Immortal' : null,
+                      p.shieldChargesAtStart === 1 ? 'Khiên Bất Ổn' : null,
                       p.chestEffect ? p.chestEffect.replaceAll('_', ' ') : null,
                     ].filter((badge): badge is string => Boolean(badge)).slice(0, 2)
                     return (
                     <div
                       key={`${p.userId}-${p.cloneIndex ?? 0}-${p.initialRank ?? idx}`}
                       className={`grid ${resultGridClass} min-w-[920px] gap-2 items-center px-5 py-3.5 duck-row
-                        ${p.gotScar ? 'loser' : p.usedShield ? 'shielded' : idx < 3 ? 'winner' : ''}
+                        ${p.gotScar ? 'loser' : (p.usedShield || p.shieldBackfired) ? 'shielded' : idx < 3 ? 'winner' : ''}
                         animate-slide-right opacity-0`}
                       style={{ animationDelay: `${0.3 + idx * 0.08}s` }}
                     >
@@ -485,7 +507,7 @@ export default function RaceDetailPage({
                         </span>
                       </div>
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className={`w-2 h-12 rounded-full flex-shrink-0 ${p.gotScar ? 'bg-[var(--color-ggd-orange)] shadow-[0_0_8px_rgba(255,87,51,0.6)]' : p.usedShield ? 'bg-[var(--color-ggd-sky)] shadow-[0_0_8px_rgba(61,200,255,0.5)]' :
+                        <div className={`w-2 h-12 rounded-full flex-shrink-0 ${p.gotScar ? 'bg-[var(--color-ggd-orange)] shadow-[0_0_8px_rgba(255,87,51,0.6)]' : (p.usedShield || p.shieldBackfired) ? 'bg-[var(--color-ggd-sky)] shadow-[0_0_8px_rgba(61,200,255,0.5)]' :
                           idx === 0 ? 'bg-[var(--color-ggd-gold)] shadow-[0_0_8px_rgba(255,204,0,0.5)]' : 'bg-[var(--color-ggd-muted)]/20'}`} />
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
@@ -506,6 +528,8 @@ export default function RaceDetailPage({
                           <span className="font-display text-base text-[var(--color-ggd-gold)] glow-gold">👑 Boss Down</span>
                         ) : status === 'Winner' ? (
                           <span className="font-display text-xl text-[var(--color-ggd-gold)] glow-gold">Winner</span>
+                        ) : p.shieldBackfired ? (
+                          <span className="font-display text-base text-[var(--color-ggd-orange)] glow-orange">🛡 Nổ</span>
                         ) : effectiveShieldKeys.has(participantKey(p)) ? (
                           <span className="font-display text-base text-[var(--color-ggd-sky)] glow-sky">🛡 Thoát</span>
                         ) : (
@@ -515,10 +539,22 @@ export default function RaceDetailPage({
                         )}
                       </div>
                       <div className="flex flex-col items-center justify-center gap-1.5">
-                        {p.usedShield ? (
-                          <span className="shield-chip shield-tier-fresh">
-                            <Image src="/assets/v2/shield-cracked.svg" alt="shield" width={18} height={18} className="shield-chip-icon" unoptimized />
-                            <span>Tao có khiên</span>
+                        {p.shieldBackfired ? (
+                          <span className="shield-chip shield-tier-danger">
+                            <Image src="/assets/v2/shield-broken.svg" alt="shield backfired" width={18} height={18} className="shield-chip-icon" unoptimized />
+                            <span>Khiên nổ</span>
+                          </span>
+                        ) : p.usedShield ? (
+                          <span className={`shield-chip ${p.shieldChargesAtStart === 1 ? 'shield-tier-danger' : 'shield-tier-fresh'}`}>
+                            <Image
+                              src={p.shieldChargesAtStart === 1 ? '/assets/v2/shield-broken.svg' : '/assets/v2/shield-cracked.svg'}
+                              alt="shield"
+                              width={18}
+                              height={18}
+                              className="shield-chip-icon"
+                              unoptimized
+                            />
+                            <span>{p.shieldChargesAtStart === 1 ? 'Bất Ổn qua ải' : 'Tao có khiên'}</span>
                           </span>
                         ) : awardedShield ? (
                           <span className={`shield-chip ${awardedShield.effect === 'GOLDEN_SHIELD' ? 'shield-tier-fresh' : 'shield-tier-cracked'}`}>

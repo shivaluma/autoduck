@@ -8,18 +8,18 @@ datasource db {
 }
 
 model User {
-  id           Int       @id @default(autoincrement())
-  name         String    @unique
-  avatarUrl    String?
-  scars        Int       @default(0)
-  shields      Int       @default(0)
-  shieldsUsed  Int       @default(0) // Tổng số khiên đã dùng
-  totalKhaos   Int       @default(0) // Tổng số lần làm dzịt
-  cleanStreak  Int       @default(0)
-  isBoss       Boolean   @default(false)
-  bossSince    DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  avatarUrl   String?
+  scars       Int       @default(0)
+  shields     Int       @default(0)
+  shieldsUsed Int       @default(0) // Tổng số khiên đã dùng
+  totalKhaos  Int       @default(0) // Tổng số lần làm dzịt
+  cleanStreak Int       @default(0)
+  isBoss      Boolean   @default(false)
+  bossSince   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   raceParticipations RaceParticipant[]
   ownedShields       Shield[]          @relation("ShieldOwner")
@@ -28,13 +28,13 @@ model User {
 }
 
 model Race {
-  id           Int      @id @default(autoincrement())
-  status       String   @default("pending") // pending, running, finished, failed
+  id           Int       @id @default(autoincrement())
+  status       String    @default("pending") // pending, running, finished, failed
   videoUrl     String?
-  finalVerdict String?  // Câu chốt "Ai là con dzịt"
-  createdAt    DateTime @default(now())
+  finalVerdict String? // Câu chốt "Ai là con dzịt"
+  createdAt    DateTime  @default(now())
   finishedAt   DateTime?
-  isTest       Boolean  @default(false)
+  isTest       Boolean   @default(false)
 
   participants   RaceParticipant[]
   commentaries   CommentaryLog[]
@@ -46,18 +46,21 @@ model Race {
 }
 
 model RaceParticipant {
-  id               Int     @id @default(autoincrement())
-  raceId           Int
-  userId           Int
-  usedShield       Boolean @default(false)
-  initialRank      Int?    // Thứ hạng gốc AI đọc được
-  gotScar          Boolean @default(false) // Kết quả cuối: có bị sẹo không?
-  isClone          Boolean @default(false)
-  cloneOfUserId    Int?
-  cloneIndex       Int?
-  displayName      String?
-  chestEffect      String?
-  chestTargetUserId Int?
+  id                   Int     @id @default(autoincrement())
+  raceId               Int
+  userId               Int
+  usedShield           Boolean @default(false)
+  shieldId             Int?
+  shieldChargesAtStart Int?
+  shieldBackfired      Boolean @default(false)
+  initialRank          Int? // Thứ hạng gốc AI đọc được
+  gotScar              Boolean @default(false) // Kết quả cuối: có bị sẹo không?
+  isClone              Boolean @default(false)
+  cloneOfUserId        Int?
+  cloneIndex           Int?
+  displayName          String?
+  chestEffect          String?
+  chestTargetUserId    Int?
 
   race Race @relation(fields: [raceId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -122,7 +125,7 @@ model AppMigration {
 model CommentaryLog {
   id        Int    @id @default(autoincrement())
   raceId    Int
-  timestamp Int    // Giây thứ bao nhiêu trong video
+  timestamp Int // Giây thứ bao nhiêu trong video
   content   String // Nội dung AI bình luận
 
   race Race @relation(fields: [raceId], references: [id], onDelete: Cascade)
@@ -132,18 +135,18 @@ model CommentaryLog {
 
 // Job queue for async commentary generation
 model CommentaryJob {
-  id            Int       @id @default(autoincrement())
-  raceId        Int
-  timestamp     Int       // Giây thứ bao nhiêu trong cuộc đua
-  screenshotB64 String    // Base64 encoded screenshot (JPEG)
-  isRaceEnd     Boolean   @default(false)
+  id               Int       @id @default(autoincrement())
+  raceId           Int
+  timestamp        Int // Giây thứ bao nhiêu trong cuộc đua
+  screenshotB64    String // Base64 encoded screenshot (JPEG)
+  isRaceEnd        Boolean   @default(false)
   participantNames String? // Comma-separated duck names for AI prompt
-  raceResults     String?  // JSON race results for end-of-race commentary
-  status        String    @default("pending") // pending, processing, completed, failed
-  result        String?   // Generated commentary
-  error         String?
-  createdAt     DateTime  @default(now())
-  processedAt   DateTime?
+  raceResults      String? // JSON race results for end-of-race commentary
+  status           String    @default("pending") // pending, processing, completed, failed
+  result           String? // Generated commentary
+  error            String?
+  createdAt        DateTime  @default(now())
+  processedAt      DateTime?
 
   race Race @relation(fields: [raceId], references: [id], onDelete: Cascade)
 

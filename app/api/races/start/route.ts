@@ -76,16 +76,29 @@ interface RaceResultEntry extends RaceVictimEntry {
   borrowedShieldFromUserId?: number | null
 }
 
-interface ShieldBackfireEvent {
+interface UnstableShieldEvent {
   name: string
   userId: number
   shieldId?: number | null
   fromRank: number
   toRank: number
+  backfired: boolean
 }
 
 function participantResultKey(entry: { userId: number; cloneIndex?: number | null }) {
   return `${entry.userId}:${entry.cloneIndex ?? 'main'}`
+}
+
+function findDeclaredShield(user: UserWithActiveShields | undefined, shieldId?: number) {
+  if (!user) {
+    return null
+  }
+
+  if (typeof shieldId === 'number') {
+    return user.ownedShields.find((shield) => shield.id === shieldId) ?? null
+  }
+
+  return user.ownedShields[0] ?? null
 }
 
 function hashToUnit(seed: string) {
@@ -99,10 +112,9 @@ function hashToUnit(seed: string) {
 
 function resolveUnstableShieldBackfires(raceId: number, results: RaceResultEntry[]) {
   const adjusted = [...results].sort((left, right) => left.initialRank - right.initialRank)
-  const backfireEvents: ShieldBackfireEvent[] = []
+  const unstableShieldEvents: UnstableShieldEvent[] = []
   const unstableShieldEntries = adjusted
     .filter((entry) => entry.usedShield && entry.shieldCharges === 1 && !entry.isImmortal && !entry.isClone)
-    .filter((entry) => hashToUnit(`${raceId}:${entry.userId}:${entry.shieldId ?? 'auto'}:unstable-shield`) < 0.5)
     .sort((left, right) => right.initialRank - left.initialRank)
 
   for (const unstableEntry of unstableShieldEntries) {
@@ -111,23 +123,30 @@ function resolveUnstableShieldBackfires(raceId: number, results: RaceResultEntry
       continue
     }
 
-    unstableEntry.usedShield = false
     const fromRank = currentIndex + 1
-    const nextIndex = Math.min(currentIndex + 1, adjusted.length - 1)
+    const backfired = hashToUnit(`${raceId}:${unstableEntry.userId}:${unstableEntry.shieldId ?? 'auto'}:unstable-shield`) < 0.5
+    let toRank = fromRank
 
-    if (nextIndex !== currentIndex) {
-      const nextEntry = adjusted[nextIndex]
-      adjusted[currentIndex] = nextEntry
-      adjusted[nextIndex] = unstableEntry
+    if (backfired) {
+      unstableEntry.usedShield = false
+      const nextIndex = Math.min(currentIndex + 1, adjusted.length - 1)
+
+      if (nextIndex !== currentIndex) {
+        const nextEntry = adjusted[nextIndex]
+        adjusted[currentIndex] = nextEntry
+        adjusted[nextIndex] = unstableEntry
+      }
+
+      toRank = nextIndex + 1
     }
 
-    const toRank = nextIndex + 1
-    backfireEvents.push({
+    unstableShieldEvents.push({
       name: unstableEntry.name,
       userId: unstableEntry.userId,
       shieldId: unstableEntry.shieldId,
       fromRank,
       toRank,
+      backfired,
     })
   }
 
@@ -136,7 +155,7 @@ function resolveUnstableShieldBackfires(raceId: number, results: RaceResultEntry
       ...entry,
       initialRank: index + 1,
     })),
-    backfireEvents,
+    unstableShieldEvents,
   }
 }
 
@@ -274,6 +293,12 @@ export async function POST(request: Request) {
           { status: 400 }
         )
       }
+      if (typeof participant.shieldId === 'number' && !findDeclaredShield(user, participant.shieldId)) {
+        return NextResponse.json(
+          { error: `${user.name} không sở hữu khiên #${participant.shieldId}` },
+          { status: 400 }
+        )
+      }
     }
 
     const chestValidation = validateChestConfig(activeChests, participants, chestConfigs)
@@ -345,6 +370,16 @@ export async function POST(request: Request) {
           create: preRace.participants.map((participant) => ({
             userId: participant.userId,
             usedShield: participant.useShield,
+            shieldId: participant.shieldId ?? null,
+            shieldChargesAtStart: (() => {
+              if (!participant.useShield || participant.isClone || participant.isImmortal) {
+                return null
+              }
+
+              const shieldOwner = (users as UserWithActiveShields[]).find((candidate) => candidate.id === participant.userId)
+              const declaredShield = findDeclaredShield(shieldOwner, participant.shieldId)
+              return declaredShield?.charges ?? null
+            })(),
             isClone: participant.isClone ?? false,
             cloneOfUserId: participant.cloneOfUserId ?? null,
             cloneIndex: participant.cloneIndex ?? null,
@@ -370,9 +405,7 @@ export async function POST(request: Request) {
         }
 
         const shieldOwner = (users as UserWithActiveShields[]).find((candidate) => candidate.id === participant.userId)
-        const declaredShield = participant.shieldId
-          ? shieldOwner?.ownedShields.find((shield) => shield.id === participant.shieldId)
-          : shieldOwner?.ownedShields[0]
+        const declaredShield = findDeclaredShield(shieldOwner, participant.shieldId)
         return declaredShield?.charges ?? null
       })(),
       userId: participant.userId,
@@ -510,7 +543,12 @@ async function executeRace(
 
     const unstableShieldResolution = resolveUnstableShieldBackfires(raceId, raceResults)
     raceResults = unstableShieldResolution.results
-    const shieldBackfireEvents = unstableShieldResolution.backfireEvents
+    const unstableShieldEvents = unstableShieldResolution.unstableShieldEvents
+    const backfiredShieldKeys = new Set(
+      unstableShieldEvents
+        .filter((event) => event.backfired)
+        .map((event) => `${event.userId}:${event.shieldId ?? 'auto'}`)
+    )
 
     const thomasEntry = itemModifiers.cantPassThomas
       ? raceResults.find((entry) => entry.isImmortal && !entry.isClone)
@@ -637,16 +675,18 @@ async function executeRace(
         name: victim.name ?? raceResults.find((entry) => (entry.cloneOfUserId ?? entry.userId) === (victim.cloneOfUserId ?? victim.userId))?.name ?? `User ${victim.cloneOfUserId ?? victim.userId}`,
       })))
 
-      for (const [index, event] of shieldBackfireEvents.entries()) {
-        const backfireText = event.fromRank === event.toRank
-          ? `🛡️ Khiên Bất Ổn của ${event.name} phát nổ ngay ở đáy bảng. Không còn chỗ tụt, chỉ còn tiếng nổ.`
-          : `🛡️ Khiên Bất Ổn của ${event.name} phát nổ, tụt từ #${event.fromRank} xuống #${event.toRank}. Công nghệ phòng thủ hôm nay hơi tự ái.`
+      for (const [index, event] of unstableShieldEvents.entries()) {
+        const shieldText = event.backfired
+          ? event.fromRank === event.toRank
+            ? `🛡️ Khiên Bất Ổn của ${event.name} phát nổ ngay ở đáy bảng. Không còn chỗ tụt, chỉ còn tiếng nổ.`
+            : `🛡️ Khiên Bất Ổn của ${event.name} phát nổ, tụt từ #${event.fromRank} xuống #${event.toRank}. Công nghệ phòng thủ hôm nay hơi tự ái.`
+          : `🛡️ Khiên Bất Ổn của ${event.name} ổn áp đúng lúc. 50% sinh tồn hôm nay đứng về phía ${event.name}.`
 
         await tx.commentaryLog.create({
           data: {
             raceId,
             timestamp: 37 + index,
-            content: backfireText,
+            content: shieldText,
           },
         })
       }
@@ -664,6 +704,7 @@ async function executeRace(
             initialRank: resultEntry.initialRank,
             gotScar: isVictim,
             usedShield: resultEntry.usedShield,
+            shieldBackfired: backfiredShieldKeys.has(`${resultEntry.userId}:${resultEntry.shieldId ?? 'auto'}`),
           },
         })
       }

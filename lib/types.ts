@@ -112,6 +112,9 @@ export interface RaceStatus {
     displayName?: string | null
     avatarUrl?: string | null
     usedShield: boolean
+    shieldId?: number | null
+    shieldChargesAtStart?: number | null
+    shieldBackfired?: boolean | null
     initialRank: number | null
     gotScar: boolean
     isImmortal?: boolean

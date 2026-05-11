@@ -137,6 +137,9 @@ export async function GET(
         userId: number
         user: { name: string; avatarUrl?: string | null }
         usedShield: boolean
+        shieldId?: number | null
+        shieldChargesAtStart?: number | null
+        shieldBackfired?: boolean | null
         initialRank: number | null
         gotScar: boolean
         isClone: boolean
@@ -151,14 +154,17 @@ export async function GET(
         displayName: p.displayName,
         avatarUrl: p.user.avatarUrl,
         usedShield: p.usedShield,
+        shieldId: p.shieldId ?? null,
+        shieldChargesAtStart: p.shieldChargesAtStart ?? null,
+        shieldBackfired: Boolean(p.shieldBackfired),
         initialRank: p.initialRank,
         gotScar: p.gotScar,
         isImmortal: isImmortalDuck({ name: p.user.name }),
         isClone: p.isClone,
         cloneOfUserId: p.cloneOfUserId,
         cloneIndex: p.cloneIndex,
-          chestEffect: MYSTERY_CHESTS_ENABLED ? p.chestEffect : null,
-          chestTargetUserId: MYSTERY_CHESTS_ENABLED ? p.chestTargetUserId : null,
+        chestEffect: MYSTERY_CHESTS_ENABLED ? p.chestEffect : null,
+        chestTargetUserId: MYSTERY_CHESTS_ENABLED ? p.chestTargetUserId : null,
       })),
       commentaries: race.commentaries.map((c: { timestamp: number; content: string }) => ({
         timestamp: c.timestamp,
