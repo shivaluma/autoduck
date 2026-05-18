@@ -123,7 +123,7 @@ export default function RulesPage() {
                 {[
                   ['🔥', 'Boss Streak là gì?', 'Số Race liên tiếp một vịt không bị tính thua.'],
                   ['👑', 'Mở Boss Mode', 'Đạt Streak 4 thì thành Boss Duck.'],
-                  ['🐣', 'Sống càng lâu càng căng', 'Boss Level = streak, extra clone cap tối đa 3.'],
+                  ['🐣', 'Sống càng lâu càng căng', 'Boss Level = streak, tối đa 3 entry tổng.'],
                 ].map(([icon, title, text]) => (
                   <div key={title} className="rounded-2xl border-3 border-[var(--color-ggd-outline)] bg-black/25 p-4 shadow-[inset_0_2px_0_rgba(255,255,255,0.1)]">
                     <div className="text-2xl">{icon}</div>

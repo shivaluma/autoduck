@@ -2,7 +2,7 @@ import type { RaceSetupPlayer } from '@/lib/types'
 import { isImmortalDuck } from '@/lib/immortal-duck'
 
 export const BOSS_STREAK_THRESHOLD = 4
-export const BOSS_MAX_EXTRA_ENTRIES = 3
+export const BOSS_MAX_EXTRA_ENTRIES = 2
 
 export interface BossSpawnPlan {
   ownerUserId: number

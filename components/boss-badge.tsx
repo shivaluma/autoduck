@@ -13,9 +13,9 @@ export function BossBadge({ compact = false, streak }: BossBadgeProps) {
   const crownSize = compact ? 18 : 24
   const cloneCount = getBossExtraEntries(streak)
   const totalEntries = getBossTotalEntries(streak)
-  const tierClass = cloneCount >= 3
+  const tierClass = cloneCount >= 2
     ? 'boss-tier-3'
-    : cloneCount >= 2
+    : cloneCount >= 1
       ? 'boss-tier-2'
       : 'boss-tier-1'
   return (
