@@ -89,6 +89,9 @@ function buildPrompt(
         context.curseSwaps && context.curseSwaps.length > 0
           ? `\n🎭 TÊN GIẢ: ${context.curseSwaps.map((item) => `${item.owner}->${item.displayName}`).join(' | ')}`
           : '',
+        context.dragonEvents && context.dragonEvents.length > 0
+          ? `\n🐉 DRAGON: ${context.dragonEvents.join(' | ')}. Gợi ý tone: Long Lân Hộ Mệnh đã phủ lên cả đàn vịt; clone cũng là con.`
+          : '',
       ].filter(Boolean).join('')
     : ''
 

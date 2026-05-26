@@ -14,15 +14,18 @@ export interface PlayerData {
   bossSince?: string | null
   activeShields: ShieldData[]
   activeChest?: MysteryChestData | null
+  dragonItems?: DragonItemData[]
 }
 
 export interface RaceSetupPlayer {
   userId: number
   name: string
   useShield: boolean
-  availableShields: number
+  availableShields?: number
   shieldId?: number
   isImmortal?: boolean
+  dragonScaleItemId?: number
+  dragonEligible?: boolean
 }
 
 export interface ShieldData {
@@ -65,6 +68,17 @@ export interface MysteryChestData {
   createdAt: string
 }
 
+export interface DragonItemData {
+  id: number
+  userId: number
+  type: string
+  status: string
+  label: string
+  subtitle: string
+  equippedForRaceId?: number | null
+  grantedAt?: string | null
+}
+
 export interface RaceMetaContext {
   boss?: {
     name: string
@@ -83,6 +97,7 @@ export interface RaceMetaContext {
     owner: string
     displayName: string
   }>
+  dragonEvents?: string[]
 }
 
 export interface RaceStatus {
@@ -106,6 +121,27 @@ export interface RaceStatus {
     effect: ChestEffect
     status: string
   }[]
+  dragonAward?: {
+    awarded: boolean
+    reason?: string
+    winnerUserId?: number
+    awardedStar?: number
+    awardedOrbName?: string
+    dragonWeekId?: number
+    duplicateCountForStar?: number
+    setProgressAfter?: number
+    summonReady?: boolean
+    orbId?: number
+    winnerName?: string | null
+  } | null
+  dragonScaleEvents?: Array<{
+    type: string
+    userId: number
+    userName?: string | null
+    itemId: number
+    participantIds: string[]
+    message?: string | null
+  }>
   participants: {
     userId: number
     name: string
@@ -123,6 +159,7 @@ export interface RaceStatus {
     cloneIndex?: number | null
     chestEffect?: string | null
     chestTargetUserId?: number | null
+    dragonEligible?: boolean | null
   }[]
   commentaries: {
     timestamp: number

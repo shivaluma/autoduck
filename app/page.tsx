@@ -8,6 +8,7 @@ import { BossBadge } from '@/components/boss-badge'
 import { BOSS_STREAK_THRESHOLD } from '@/lib/boss-logic'
 import { ShieldAgingStack } from '@/components/shield-aging-stack'
 import { MYSTERY_CHESTS_ENABLED } from '@/lib/feature-flags'
+import { DragonCompassCard, type DragonStateData } from '@/components/dragon/dragon-widgets'
 
 interface DashboardRaceItem {
   id: number
@@ -106,6 +107,7 @@ export default function Dashboard() {
     mostUnluckyDuck: { name: string; totalKhaos: number } | null
   } | null>(null)
   const [brief, setBrief] = useState<DashboardBrief | null>(null)
+  const [dragon, setDragon] = useState<DragonStateData | null>(null)
   const [showTestRaces, setShowTestRaces] = useState(false)
 
   useEffect(() => {
@@ -116,6 +118,7 @@ export default function Dashboard() {
         setRaces(dashboardData.races)
         setSummary(dashboardData.summary)
         setBrief(dashboardData.brief ?? null)
+        setDragon(dashboardData.dragon ?? null)
         setLoading(false)
       })
       .catch(() => setLoading(false))
@@ -347,6 +350,8 @@ export default function Dashboard() {
             </div>
           ))}
         </div>
+
+        <DragonCompassCard dragon={dragon} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 animate-slide-up opacity-0" style={{ animationDelay: '0.2s' }}>

@@ -250,6 +250,9 @@ function buildPrompt(
         context.curseSwaps && context.curseSwaps.length > 0
           ? `🎭 CURSE SWAP: ${context.curseSwaps.map((item) => `${item.owner} đang chạy dưới tên ${item.displayName}`).join(' | ')}`
           : '',
+        context.dragonEvents && context.dragonEvents.length > 0
+          ? `🐉 DRAGON: ${context.dragonEvents.join(' | ')}. Gợi ý tone: Long Lân Hộ Mệnh phủ lên cả đàn vịt; clone cũng là con.`
+          : '',
       ].filter(Boolean).join('\n')
     : ''
 

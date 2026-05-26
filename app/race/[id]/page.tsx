@@ -113,6 +113,26 @@ export default function RaceDetailPage({
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
+  const handleDragonSummon = async () => {
+    if (!race?.dragonAward?.winnerUserId) return
+    if (!window.confirm('Khai Môn Triệu Long và nhận Long Lân Hộ Mệnh?')) return
+    const response = await fetch('/api/dragon', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'summon',
+        userId: race.dragonAward.winnerUserId,
+        actorUserId: race.dragonAward.winnerUserId,
+      }),
+    })
+    const data = await response.json()
+    if (!response.ok && !data.blocked) {
+      window.alert(data.reason || data.error || 'Triệu hồi thất bại')
+      return
+    }
+    window.alert(data.blocked ? data.reason : 'Thần Long AutoDuck đã ban Long Lân Hộ Mệnh.')
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-transparent flex items-center justify-center">
@@ -148,6 +168,9 @@ export default function RaceDetailPage({
     : 'grid-cols-[56px_minmax(0,1.35fr)_132px_110px]'
   const victims = sortedParticipants.filter((participant) => participant.gotScar)
   const winner = sortedParticipants.find((participant) => participant.initialRank === 1)
+  const dragonAward = race.dragonAward
+  const dragonProtectedEvents = race.dragonScaleEvents?.filter((event) => event.type === 'PROTECTED') ?? []
+  const dragonNotNeededEvents = race.dragonScaleEvents?.filter((event) => event.type === 'NOT_NEEDED') ?? []
   const bossOwnerIds = Array.from(new Set(sortedParticipants.filter((participant) => participant.isClone && typeof participant.cloneOfUserId === 'number').map((participant) => participant.cloneOfUserId as number)))
   const bossFalls = Array.from(
     new Set(
@@ -420,6 +443,68 @@ export default function RaceDetailPage({
 
             {hasResults && (
               <>
+                <section className="ggd-card-gold ggd-stripe animate-slide-up opacity-0 overflow-hidden" style={{ animationDelay: '0.16s' }}>
+                  <div className="px-5 py-5 sm:px-6">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div>
+                        <div className="font-data text-xs font-black uppercase tracking-widest text-[var(--color-ggd-gold)]">Chiến Lợi Phẩm Long Châu</div>
+                        <h3 className="mt-1 font-display text-3xl text-white text-outlined">Thất Tinh Dzịt Châu</h3>
+                        {dragonAward?.awarded ? (
+                          <div className="mt-3 space-y-1 font-readable text-base text-white/82">
+                            <p>Tuần này rơi: {dragonAward.awardedOrbName}.</p>
+                            <p>{dragonAward.winnerName ?? 'Winner'} đoạt được {dragonAward.awardedOrbName}.</p>
+                            {typeof dragonAward.setProgressAfter === 'number' && <p>Bộ hiện tại: {dragonAward.setProgressAfter}/7.</p>}
+                            {(dragonAward.duplicateCountForStar ?? 0) > 1 && (
+                              <p>Đây là viên {dragonAward.awardedOrbName} thứ {dragonAward.duplicateCountForStar}. Có thể đem lên Sàn Đổi Châu.</p>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="mt-3 font-readable text-base text-white/70">
+                            Race này không trao Long Châu. Test race, Thomas hoặc thiếu điều kiện sẽ không sinh loot.
+                          </p>
+                        )}
+                      </div>
+                      {dragonAward?.summonReady && (
+                        <div className="rounded-xl border-3 border-[var(--color-ggd-outline)] bg-black/25 p-4 lg:max-w-sm">
+                          <div className="font-display text-2xl text-[var(--color-ggd-gold)] text-outlined">Thất Tinh hội tụ</div>
+                          <div className="font-data text-xs uppercase tracking-widest text-white/55">Thần Long AutoDuck đã mở cổng</div>
+                          <p className="mt-3 font-readable text-sm text-white/78">Ngươi đã gom đủ 7 Long Châu. Nhận Long Lân Hộ Mệnh.</p>
+                          {dragonAward.reason ? (
+                            <p className="mt-3 rounded-lg bg-[var(--color-ggd-orange)]/20 p-3 font-readable text-sm text-white/82">{dragonAward.reason}</p>
+                          ) : (
+                            <button onClick={handleDragonSummon} className="mt-4 ggd-btn bg-[var(--color-ggd-gold)] px-4 py-2 text-sm text-[var(--color-ggd-outline)]">
+                              Khai Môn Triệu Long
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </section>
+
+                {dragonProtectedEvents.map((event) => (
+                  <section key={`${event.itemId}-${event.type}`} className="ggd-card-green animate-slide-up opacity-0 p-5" style={{ animationDelay: '0.2s' }}>
+                    <div className="font-display text-3xl text-white text-outlined">Long Lân Hộ Mệnh kích hoạt</div>
+                    <p className="mt-2 font-readable text-base text-white/82">Toàn bộ đàn vịt của {event.userName ?? 'chủ nhân'} được che chắn.</p>
+                    <p className="mt-1 font-readable text-sm text-white/68">Long Lân đã tan thành ánh sáng sau khi cứu chủ nhân.</p>
+                    {event.participantIds.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {event.participantIds.map((participantId) => (
+                          <span key={participantId} className="ggd-tag bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]">
+                            protected {participantId}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </section>
+                ))}
+
+                {dragonNotNeededEvents.map((event) => (
+                  <section key={`${event.itemId}-${event.type}`} className="ggd-card animate-slide-up opacity-0 p-4" style={{ animationDelay: '0.22s' }}>
+                    <div className="font-display text-xl text-white text-outlined">Long Lân chưa cần hộ mệnh, item vẫn còn nguyên.</div>
+                  </section>
+                ))}
+
                 <section className="ggd-card animate-slide-up opacity-0 overflow-hidden" style={{ animationDelay: '0.18s' }}>
                   <div className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                     <div className="flex min-w-0 items-start gap-4">

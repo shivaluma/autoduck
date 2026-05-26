@@ -10,11 +10,16 @@ import type { BossRewardInput, ItemRaceModifiers } from '@/lib/mystery-chest'
 import type { ChestEffect, RaceMetaContext } from '@/lib/types'
 import { isImmortalDuck } from '@/lib/immortal-duck'
 import { MYSTERY_CHESTS_ENABLED } from '@/lib/feature-flags'
+import { awardDragonOrbForRace } from '@/lib/dragon/awardDragonOrb'
+import { applyDragonScaleProtection } from '@/lib/dragon/applyDragonScaleProtection'
+import { DRAGON_ITEM_TYPE_SCALE } from '@/lib/dragon/utils'
+import { DRAGON_ITEM_LABEL, DRAGON_ITEM_SUBTITLE } from '@/lib/dragon/naming'
 
 interface ParticipantInput {
   userId: number
   useShield: boolean
   shieldId?: number
+  dragonScaleItemId?: number
 }
 
 interface ChestConfigInput {
@@ -36,6 +41,7 @@ interface WorkerPlayerInput {
   chestEffect?: ChestEffect | null
   chestTargetUserId?: number | null
   borrowedShieldFromUserId?: number | null
+  dragonScaleItemId?: number | null
 }
 
 interface UserWithActiveShields {
@@ -43,6 +49,7 @@ interface UserWithActiveShields {
   name: string
   shields: number
   ownedShields: Array<{ id: number; charges: number }>
+  dragonItems?: Array<{ id: number; type: string; status: string; equippedForRaceId?: number | null }>
   cleanStreak: number
   isBoss: boolean
   bossSince?: Date | null
@@ -249,6 +256,13 @@ export async function POST(request: Request) {
           where: { status: 'active' },
           orderBy: [{ charges: 'asc' }, { earnedAt: 'asc' }],
         },
+        dragonItems: {
+          where: {
+            type: DRAGON_ITEM_TYPE_SCALE,
+            status: 'ACTIVE',
+          },
+          orderBy: [{ grantedAt: 'asc' }],
+        },
       },
     })
 
@@ -276,7 +290,33 @@ export async function POST(request: Request) {
     const antiShieldActive = activeChests.some((chest: { effect: ChestEffect }) => chest.effect === 'ANTI_SHIELD')
 
     for (const participant of participants) {
+      if (participant.useShield && typeof participant.dragonScaleItemId === 'number') {
+        return NextResponse.json(
+          { error: 'MVP chỉ cho chọn Khiên thường hoặc Long Lân Hộ Mệnh, không dùng cả hai cùng lúc.' },
+          { status: 400 }
+        )
+      }
+
       if (!participant.useShield) {
+        if (typeof participant.dragonScaleItemId === 'number') {
+          const user = (users as UserWithActiveShields[]).find((candidate) => candidate.id === participant.userId)
+          if (!user) {
+            return NextResponse.json({ error: 'Một số người chơi không tồn tại' }, { status: 400 })
+          }
+          if (isImmortalDuck({ name: user.name, shields: user.shields })) {
+            return NextResponse.json(
+              { error: 'Thomas không được nhận hoặc dùng Long Lân Hộ Mệnh.' },
+              { status: 400 }
+            )
+          }
+          const dragonScale = user.dragonItems?.find((item) => item.id === participant.dragonScaleItemId)
+          if (!dragonScale) {
+            return NextResponse.json(
+              { error: `${user.name} không sở hữu Long Lân Hộ Mệnh active #${participant.dragonScaleItemId}` },
+              { status: 400 }
+            )
+          }
+        }
         continue
       }
 
@@ -340,6 +380,7 @@ export async function POST(request: Request) {
         ...participant,
         name: user?.name ?? `User ${participant.userId}`,
         useShield: immortal ? true : participant.useShield,
+        dragonScaleItemId: immortal ? undefined : participant.dragonScaleItemId,
         availableShields: user?.ownedShields.length ?? 0,
         isImmortal: immortal,
       }
@@ -386,6 +427,7 @@ export async function POST(request: Request) {
             displayName: participant.displayName ?? participant.name,
             chestEffect: participant.chestEffect ?? null,
             chestTargetUserId: participant.chestTargetUserId ?? null,
+            dragonEligible: participant.dragonEligible ?? true,
           })),
         },
       },
@@ -416,9 +458,43 @@ export async function POST(request: Request) {
       chestEffect: participant.chestEffect ?? null,
       chestTargetUserId: participant.chestTargetUserId ?? null,
       borrowedShieldFromUserId: participant.borrowedShieldFromUserId ?? null,
+      dragonScaleItemId: participant.dragonScaleItemId ?? null,
     }))
 
     playerInputs = playerInputs.sort(() => Math.random() - 0.5)
+
+    const dragonScaleSelections = preRace.participants
+      .filter((participant) => !participant.isClone && typeof participant.dragonScaleItemId === 'number')
+      .map((participant) => ({
+        userId: participant.userId,
+        itemId: participant.dragonScaleItemId as number,
+        name: participant.name,
+      }))
+
+    for (const selection of dragonScaleSelections) {
+      const equipped = await prisma.dragonItem.update({
+        where: { id: selection.itemId },
+        data: {
+          status: 'EQUIPPED',
+          equippedForRaceId: race.id,
+          equippedAt: new Date(),
+        },
+      })
+
+      if (equipped.userId !== selection.userId) {
+        throw new Error(`Dragon scale ownership changed for ${selection.name}`)
+      }
+
+      await prisma.dragonItemEvent.create({
+        data: {
+          itemId: selection.itemId,
+          userId: selection.userId,
+          raceId: race.id,
+          type: 'EQUIPPED',
+          message: `${DRAGON_ITEM_LABEL} (${DRAGON_ITEM_SUBTITLE}) đã nhập trận.`,
+        },
+      })
+    }
 
     executeRace(race.id, playerInputs, configuredActiveChests, preRace.borrowedShieldIds, preRace.modifiers).catch((error: unknown) => {
       console.error('Race execution failed:', error)
@@ -493,6 +569,9 @@ async function executeRace(
           owner: player.name,
           displayName: player.displayName,
         })),
+      dragonEvents: playerInputs
+        .filter((player) => !player.isClone && typeof player.dragonScaleItemId === 'number')
+        .map((player) => `dragonScaleEquipped: ${player.name} mang Long Lân Hộ Mệnh, bảo vệ main duck và toàn bộ clone.`),
     }
 
     const result = await runRaceWorker(
@@ -655,7 +734,7 @@ async function executeRace(
             activeChests
           )
 
-      const modifiedVictims = mergeVictimEntries(
+      const modifiedVictimsBeforeDragonScale = mergeVictimEntries(
         postRace.modifiedVictims.map((victim) => {
           const cloneIndex = (victim as { cloneIndex?: number | null }).cloneIndex
           return {
@@ -669,9 +748,16 @@ async function executeRace(
         }),
         bossBottomTwoVictims
       )
+      const dragonScaleProtection = await applyDragonScaleProtection(
+        tx,
+        raceId,
+        raceResults,
+        modifiedVictimsBeforeDragonScale
+      )
+      const modifiedVictims: RaceVictimEntry[] = dragonScaleProtection.finalVictims
       const finalVictimParticipantKeys = new Set(modifiedVictims.map(participantResultKey))
       const finalVictimUserIds = dedupeVictimUserIds(modifiedVictims)
-      const finalVerdict = buildPenaltyVerdict(modifiedVictims.map((victim) => ({
+      const finalVerdict = dragonScaleProtection.finalVerdict ?? buildPenaltyVerdict(modifiedVictims.map((victim) => ({
         name: victim.name ?? raceResults.find((entry) => (entry.cloneOfUserId ?? entry.userId) === (victim.cloneOfUserId ?? victim.userId))?.name ?? `User ${victim.cloneOfUserId ?? victim.userId}`,
       })))
 
@@ -892,10 +978,23 @@ async function executeRace(
         },
       })
 
+      const dragonAward = await awardDragonOrbForRace(tx, raceId)
+      if (dragonAward.awarded) {
+        await tx.commentaryLog.create({
+          data: {
+            raceId,
+            timestamp: 42,
+            content: `${dragonAward.awardedOrbName} đã rơi vào Tàng Châu Các. Duplicate thì đem lên Sàn Đổi Châu, đừng ôm rồi than thiếu bộ.`,
+          },
+        })
+      }
+
       return {
         finalVictimUserIds,
         finalVerdict,
         newChestsForThisRace,
+        dragonAward,
+        dragonScaleProtection,
       }
     })
 

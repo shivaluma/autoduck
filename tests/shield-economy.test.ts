@@ -53,7 +53,7 @@ function pickSelect<T extends Record<string, unknown>>(row: T, select?: Record<s
   )
 }
 
-function matchesShieldWhere(shield: MockShield, where: Record<string, unknown> = {}) {
+function matchesShieldWhere(shield: MockShield, where: Record<string, unknown> = {}): boolean {
   if (typeof where.ownerId === 'number' && shield.ownerId !== where.ownerId) return false
   if (typeof where.status === 'string' && shield.status !== where.status) return false
   if (typeof where.id === 'number' && shield.id !== where.id) return false

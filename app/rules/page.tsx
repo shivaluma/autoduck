@@ -176,6 +176,59 @@ export default function RulesPage() {
           </div>
         </section>
 
+        <section className="ggd-card-gold ggd-stripe p-5 sm:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <div className="font-display text-3xl text-[var(--color-ggd-gold)] text-outlined">Thất Tinh Dzịt Châu</div>
+              <p className="mt-2 max-w-3xl font-readable text-sm leading-relaxed text-white/75">
+                Mỗi official race weekly có đúng 1 Long Châu rơi. Test race không trao Long Châu, Thomas không nhận Long Châu, và winner nhận viên theo lịch xoay vòng của tuần đó.
+              </p>
+            </div>
+            <Link href="/dragon" className="ggd-btn bg-[var(--color-ggd-gold)] px-4 py-2 text-sm text-[var(--color-ggd-outline)]">
+              Mở Sàn Đổi Châu
+            </Link>
+          </div>
+
+          <div className="mt-5 grid gap-3 md:grid-cols-7">
+            {[
+              'Nhất Tinh Châu',
+              'Nhị Tinh Châu',
+              'Tam Tinh Châu',
+              'Tứ Tinh Châu',
+              'Ngũ Tinh Châu',
+              'Lục Tinh Châu',
+              'Thất Tinh Châu',
+            ].map((name, index) => (
+              <div key={name} className="rounded-2xl border-3 border-[var(--color-ggd-outline)] bg-black/24 p-3 text-center shadow-[0_4px_0_var(--color-ggd-outline)]">
+                <div className="mx-auto grid h-11 w-11 place-items-center rounded-full border-2 border-[var(--color-ggd-outline)] bg-[radial-gradient(circle_at_30%_25%,rgba(255,255,255,0.9),rgba(255,216,77,0.92)_24%,rgba(255,122,48,0.78)_58%,rgba(78,24,8,0.9))] font-display text-[var(--color-ggd-outline)]">
+                  {index + 1}
+                </div>
+                <div className="mt-2 font-data text-[11px] text-white/75">{name}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {[
+              ['Lịch rơi', 'Mỗi tuần rơi đúng một số trong bộ 1 đến 7, xoay vòng từ Nhất Tinh Châu tới Thất Tinh Châu rồi quay lại.'],
+              ['Trade 1 đổi 1', 'Duplicate được giữ lại và có thể đổi trên Sàn Đổi Châu. Không gift, không 2 đổi 1, không đổi shield/scar/chest/item.'],
+              ['Summon', 'Đủ 1 viên mỗi số 1 đến 7 sẽ Khai Môn Triệu Long. Summon consume đúng 1 viên mỗi số, duplicate còn lại vẫn giữ.'],
+              ['Một reward duy nhất', 'Thần Long AutoDuck chỉ ban Long Lân Hộ Mệnh, subtitle Vảy Rồng. Không có 3 wish option.'],
+              ['Long Lân', 'Long Lân bảo vệ vịt chính và tất cả clone của chủ nhân. Không decay, không có charge như shield thường.'],
+              ['Consume rule', 'Long Lân chỉ bị consume khi thật sự cứu chủ nhân khỏi penalty. Nếu trang bị nhưng không cần cứu, item vẫn còn.'],
+            ].map(([title, text]) => (
+              <div key={title} className="rounded-2xl border-3 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-4">
+                <div className="font-display text-lg text-white text-outlined">{title}</div>
+                <p className="mt-2 font-readable text-sm leading-relaxed text-white/72">{text}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-5 rounded-2xl border-3 border-[var(--color-ggd-outline)] bg-black/25 p-4 font-readable text-sm leading-relaxed text-white/75">
+            Scars là nguyên liệu craft shield, không phải debuff. 2 scars = 1 shield thường.
+          </div>
+        </section>
+
         <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
           <div className="ggd-card-gold ggd-stripe p-5 sm:p-6">
             <div className="font-display text-3xl text-[var(--color-ggd-gold)] text-outlined">👑 Boss Streak Rate</div>

@@ -26,6 +26,7 @@ interface ParticipantSetup {
   selected: boolean
   useShield: boolean
   selectedShieldId?: number
+  selectedDragonScaleItemId?: number
   availableShields: number
   scars: number
   cleanStreak: number
@@ -33,6 +34,7 @@ interface ParticipantSetup {
   isImmortal?: boolean
   activeShields: PlayerData['activeShields']
   activeChest: PlayerData['activeChest']
+  dragonItems: NonNullable<PlayerData['dragonItems']>
 }
 
 interface ChestConfigState {
@@ -87,6 +89,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
             selected: true,
             useShield: Boolean(player.isImmortal),
             selectedShieldId: undefined,
+            selectedDragonScaleItemId: undefined,
             availableShields: player.activeShields.length,
             scars: player.scars,
             cleanStreak: player.cleanStreak,
@@ -94,6 +97,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
             isImmortal: player.isImmortal,
             activeShields: player.activeShields,
             activeChest: player.activeChest,
+            dragonItems: player.dragonItems ?? [],
           }))
         )
 
@@ -121,6 +125,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
   const selectedPlayers = useMemo(() => players.filter((player) => player.selected), [players])
   const selectedCount = selectedPlayers.length
   const shieldsInUse = selectedPlayers.filter((player) => player.useShield).length
+  const dragonScalesInUse = selectedPlayers.filter((player) => Boolean(player.selectedDragonScaleItemId)).length
   const activeSelectedChests = MYSTERY_CHESTS_ENABLED
     ? selectedPlayers
         .map((player) => player.activeChest ? { ownerName: player.name, chest: player.activeChest } : null)
@@ -172,6 +177,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
     (player.selected ? 1000 : 0) +
     (player.isBoss ? 600 : 0) +
     (player.useShield && !player.isImmortal ? 260 : 0) +
+    (player.selectedDragonScaleItemId ? 320 : 0) +
     (player.activeChest ? 180 : 0) +
     (player.scars * 24) +
     (player.cleanStreak * 18) +
@@ -227,6 +233,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
               selected: !player.selected,
               useShield: !player.selected ? player.useShield : Boolean(player.isImmortal),
               selectedShieldId: !player.selected ? player.selectedShieldId : undefined,
+              selectedDragonScaleItemId: !player.selected ? player.selectedDragonScaleItemId : undefined,
             }
           : player
       )
@@ -257,6 +264,25 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
           ...player,
           useShield: !isSameShield,
           selectedShieldId: isSameShield ? undefined : shieldId,
+          selectedDragonScaleItemId: undefined,
+        }
+      })
+    )
+  }
+
+  const handleSelectDragonScale = (userId: number, itemId: number) => {
+    setPlayers((previous) =>
+      previous.map((player) => {
+        if (player.userId !== userId || !player.selected || player.isImmortal) {
+          return player
+        }
+
+        const selected = player.selectedDragonScaleItemId === itemId
+        return {
+          ...player,
+          selectedDragonScaleItemId: selected ? undefined : itemId,
+          useShield: false,
+          selectedShieldId: undefined,
         }
       })
     )
@@ -296,6 +322,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
         userId: player.userId,
         useShield: player.useShield,
         shieldId: player.selectedShieldId,
+        dragonScaleItemId: player.selectedDragonScaleItemId,
       }))
       .sort(() => Math.random() - 0.5)
 
@@ -410,6 +437,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
               <span>🎟 {totalEntries} entries</span>
               <span>👑 {bossCount} boss</span>
               <span>🛡 {armedShieldCount} armed</span>
+              {dragonScalesInUse > 0 && <span>🐉 {dragonScalesInUse} Long Lân</span>}
               {activeSelectedChests.length > 0 && <span>⚙ {activeSelectedChests.length} modifiers</span>}
             </div>
             <button
@@ -433,6 +461,9 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
               {shieldsInUse > 0 && (
                 <span className="ggd-tag bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)]">🛡️ {shieldsInUse} Shield ON</span>
               )}
+              {dragonScalesInUse > 0 && (
+                <span className="ggd-tag bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]">Long Lân {dragonScalesInUse}</span>
+              )}
             </div>
           </div>
 
@@ -449,7 +480,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                     onClick={() => handleTogglePlayerRequest(player.userId)}
                     className={`px-3 py-2.5 cursor-pointer transition-all duration-200 duck-row animate-slide-right opacity-0
                       ${player.selected ? '' : 'opacity-30'}
-                      ${player.useShield ? 'shielded shield-armed' : ''}
+                      ${player.useShield || player.selectedDragonScaleItemId ? 'shielded shield-armed' : ''}
                     `}
                     style={{ animationDelay: `${0.15 + index * 0.05}s` }}
                   >
@@ -481,6 +512,9 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                                 </span>
                               )}
                               {MYSTERY_CHESTS_ENABLED && player.activeChest && <ChestIcon effect={player.activeChest.effect} compact />}
+                              {player.dragonItems.some((item) => item.status === 'ACTIVE') && (
+                                <span className="ggd-tag bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)] text-[10px] px-2 py-0">Long Lân</span>
+                              )}
                               <span className="font-data text-xs text-[var(--color-ggd-muted)]">
                                 {player.scars > 0 ? <span className="text-[var(--color-ggd-orange)]">🤕 {player.scars} Sẹo</span> : 'Sạch sẽ ✨'}
                               </span>
@@ -519,9 +553,43 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
                                   onClick={() => handleSelectShield(player.userId, shield.id)}
                                 />
                               ))}
+                              {player.dragonItems.filter((item) => item.status === 'ACTIVE').map((item) => (
+                                <button
+                                  key={item.id}
+                                  type="button"
+                                  onClick={() => handleSelectDragonScale(player.userId, item.id)}
+                                  title="Item hiếm từ Thần Long AutoDuck. Bảo vệ tất cả entries của chủ nhân trong race này."
+                                  className={`rounded-xl border-2 border-[var(--color-ggd-outline)] px-3 py-1 font-data text-[11px] font-black transition-colors
+                                    ${player.selectedDragonScaleItemId === item.id
+                                      ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)] shadow-[0_0_14px_rgba(255,204,0,0.35)]'
+                                      : 'bg-black/25 text-[var(--color-ggd-gold)] hover:bg-[var(--color-ggd-gold)] hover:text-[var(--color-ggd-outline)]'
+                                    }`}
+                                >
+                                  Long Lân Hộ Mệnh
+                                </button>
+                              ))}
                             </>
                           ) : (
-                            <span className="font-data text-xs text-[var(--color-ggd-muted)]/70">Không có khiên</span>
+                            <>
+                              {player.dragonItems.filter((item) => item.status === 'ACTIVE').map((item) => (
+                                <button
+                                  key={item.id}
+                                  type="button"
+                                  onClick={() => handleSelectDragonScale(player.userId, item.id)}
+                                  title="Item hiếm từ Thần Long AutoDuck. Bảo vệ tất cả entries của chủ nhân trong race này."
+                                  className={`rounded-xl border-2 border-[var(--color-ggd-outline)] px-3 py-1 font-data text-[11px] font-black transition-colors
+                                    ${player.selectedDragonScaleItemId === item.id
+                                      ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]'
+                                      : 'bg-black/25 text-[var(--color-ggd-gold)]'
+                                    }`}
+                                >
+                                  Long Lân Hộ Mệnh
+                                </button>
+                              ))}
+                              {player.dragonItems.filter((item) => item.status === 'ACTIVE').length === 0 && (
+                                <span className="font-data text-xs text-[var(--color-ggd-muted)]/70">Không có khiên</span>
+                              )}
+                            </>
                           )
                         ) : (
                           <span className="font-data text-xs font-black uppercase text-white/40">OUT</span>
@@ -586,6 +654,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
               <div>👑 +{extraBossEntries} clone từ Boss system</div>
               <div>⚙️ +{extraItemEntries} entries từ item clone</div>
               <div>🛡 {shieldsInUse} khiên đang armed</div>
+              <div>🐉 {dragonScalesInUse} Long Lân Hộ Mệnh armed</div>
               <div>🎟 Tổng {totalEntries} entries vào race</div>
             </div>
 
@@ -696,6 +765,7 @@ export function NewRaceContent({ testMode, secretKey }: { testMode: boolean; sec
             <div>🎟 {totalEntries} entries vào race</div>
             <div>👑 {bossCount} Boss active</div>
             <div>🛡 {shieldsInUse} Shield Armed</div>
+            <div>🐉 {dragonScalesInUse} Long Lân Armed</div>
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel className="ggd-btn bg-[var(--color-ggd-panel)] text-[var(--color-ggd-muted)] hover:bg-[var(--color-ggd-surface-2)] text-sm">

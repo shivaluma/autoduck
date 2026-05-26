@@ -56,6 +56,8 @@ type ParticipantInput = {
   useShield: boolean
   shieldId?: number
   isImmortal?: boolean
+  dragonScaleItemId?: number
+  dragonEligible?: boolean
 }
 
 type ParticipantSetup = ParticipantInput & {
@@ -67,6 +69,8 @@ type ParticipantSetup = ParticipantInput & {
   chestEffect?: ChestEffect | null
   chestTargetUserId?: number | null
   borrowedShieldFromUserId?: number | null
+  dragonScaleItemId?: number
+  dragonEligible?: boolean
 }
 
 type RankingEntry = {

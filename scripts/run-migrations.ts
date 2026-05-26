@@ -288,6 +288,189 @@ async function voidLegacyTargetedChests(prisma: PrismaClient) {
   })
 }
 
+async function hasColumn(prisma: PrismaClient, tableName: string, columnName: string) {
+  const rows = await prisma.$queryRawUnsafe<Array<{ name: string }>>(`PRAGMA table_info("${tableName}")`)
+  return rows.some((row) => row.name === columnName)
+}
+
+async function createDragonMetaSystem(prisma: PrismaClient) {
+  if (!(await hasColumn(prisma, 'RaceParticipant', 'dragonEligible'))) {
+    await prisma.$executeRawUnsafe(`ALTER TABLE "RaceParticipant" ADD COLUMN "dragonEligible" BOOLEAN NOT NULL DEFAULT true`)
+  }
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "DragonWeek" (
+      "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      "seasonKey" TEXT NOT NULL DEFAULT 'default',
+      "weekKey" TEXT NOT NULL,
+      "weekStart" DATETIME NOT NULL,
+      "weekEnd" DATETIME NOT NULL,
+      "star" INTEGER NOT NULL,
+      "raceId" INTEGER,
+      "awardedOrbId" INTEGER,
+      "status" TEXT NOT NULL DEFAULT 'SCHEDULED',
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" DATETIME NOT NULL,
+      CONSTRAINT "DragonWeek_raceId_fkey" FOREIGN KEY ("raceId") REFERENCES "Race" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    )
+  `)
+  await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "DragonWeek_seasonKey_weekKey_key" ON "DragonWeek"("seasonKey", "weekKey")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonWeek_star_idx" ON "DragonWeek"("star")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonWeek_raceId_idx" ON "DragonWeek"("raceId")`)
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "DragonOrb" (
+      "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      "currentOwnerId" INTEGER NOT NULL,
+      "originalOwnerId" INTEGER,
+      "originalRaceId" INTEGER,
+      "dragonWeekId" INTEGER,
+      "seasonKey" TEXT NOT NULL DEFAULT 'default',
+      "star" INTEGER NOT NULL,
+      "status" TEXT NOT NULL DEFAULT 'ACTIVE',
+      "source" TEXT NOT NULL DEFAULT 'RACE_WIN',
+      "lockedByTradeId" INTEGER,
+      "lockedBySummonId" INTEGER,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" DATETIME NOT NULL,
+      "consumedAt" DATETIME,
+      "voidedAt" DATETIME,
+      CONSTRAINT "DragonOrb_currentOwnerId_fkey" FOREIGN KEY ("currentOwnerId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT "DragonOrb_originalOwnerId_fkey" FOREIGN KEY ("originalOwnerId") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+      CONSTRAINT "DragonOrb_originalRaceId_fkey" FOREIGN KEY ("originalRaceId") REFERENCES "Race" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+      CONSTRAINT "DragonOrb_dragonWeekId_fkey" FOREIGN KEY ("dragonWeekId") REFERENCES "DragonWeek" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    )
+  `)
+  await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "DragonOrb_originalRaceId_source_key" ON "DragonOrb"("originalRaceId", "source")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonOrb_currentOwnerId_status_idx" ON "DragonOrb"("currentOwnerId", "status")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonOrb_currentOwnerId_seasonKey_status_idx" ON "DragonOrb"("currentOwnerId", "seasonKey", "status")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonOrb_originalRaceId_idx" ON "DragonOrb"("originalRaceId")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonOrb_dragonWeekId_idx" ON "DragonOrb"("dragonWeekId")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonOrb_star_idx" ON "DragonOrb"("star")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonOrb_lockedByTradeId_idx" ON "DragonOrb"("lockedByTradeId")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonOrb_lockedBySummonId_idx" ON "DragonOrb"("lockedBySummonId")`)
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "DragonTrade" (
+      "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      "proposerId" INTEGER NOT NULL,
+      "counterpartyId" INTEGER,
+      "offeredOrbId" INTEGER NOT NULL,
+      "requestedStar" INTEGER NOT NULL,
+      "acceptedById" INTEGER,
+      "acceptedOrbId" INTEGER,
+      "status" TEXT NOT NULL DEFAULT 'PENDING',
+      "message" TEXT,
+      "expiresAt" DATETIME,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "acceptedAt" DATETIME,
+      "cancelledAt" DATETIME,
+      "voidedAt" DATETIME,
+      "updatedAt" DATETIME NOT NULL,
+      CONSTRAINT "DragonTrade_proposerId_fkey" FOREIGN KEY ("proposerId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT "DragonTrade_counterpartyId_fkey" FOREIGN KEY ("counterpartyId") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+      CONSTRAINT "DragonTrade_acceptedById_fkey" FOREIGN KEY ("acceptedById") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+      CONSTRAINT "DragonTrade_offeredOrbId_fkey" FOREIGN KEY ("offeredOrbId") REFERENCES "DragonOrb" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT "DragonTrade_acceptedOrbId_fkey" FOREIGN KEY ("acceptedOrbId") REFERENCES "DragonOrb" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    )
+  `)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonTrade_proposerId_status_idx" ON "DragonTrade"("proposerId", "status")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonTrade_counterpartyId_status_idx" ON "DragonTrade"("counterpartyId", "status")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonTrade_requestedStar_status_idx" ON "DragonTrade"("requestedStar", "status")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonTrade_offeredOrbId_idx" ON "DragonTrade"("offeredOrbId")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonTrade_acceptedOrbId_idx" ON "DragonTrade"("acceptedOrbId")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonTrade_status_createdAt_idx" ON "DragonTrade"("status", "createdAt")`)
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "DragonSummon" (
+      "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      "userId" INTEGER NOT NULL,
+      "seasonKey" TEXT NOT NULL DEFAULT 'default',
+      "status" TEXT NOT NULL DEFAULT 'PENDING',
+      "consumedOrbIdsJson" TEXT,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "resolvedAt" DATETIME,
+      "blockedReason" TEXT,
+      "grantedItemId" INTEGER,
+      CONSTRAINT "DragonSummon_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    )
+  `)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonSummon_userId_status_idx" ON "DragonSummon"("userId", "status")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonSummon_status_idx" ON "DragonSummon"("status")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonSummon_grantedItemId_idx" ON "DragonSummon"("grantedItemId")`)
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "DragonItem" (
+      "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      "userId" INTEGER NOT NULL,
+      "summonId" INTEGER,
+      "type" TEXT NOT NULL DEFAULT 'DRAGON_SCALE',
+      "status" TEXT NOT NULL DEFAULT 'ACTIVE',
+      "source" TEXT NOT NULL DEFAULT 'DRAGON_SUMMON',
+      "label" TEXT NOT NULL DEFAULT 'Long Lân Hộ Mệnh',
+      "subtitle" TEXT NOT NULL DEFAULT 'Vảy Rồng',
+      "payloadJson" TEXT,
+      "equippedForRaceId" INTEGER,
+      "grantedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "equippedAt" DATETIME,
+      "consumedAt" DATETIME,
+      "voidedAt" DATETIME,
+      CONSTRAINT "DragonItem_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT "DragonItem_summonId_fkey" FOREIGN KEY ("summonId") REFERENCES "DragonSummon" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+      CONSTRAINT "DragonItem_equippedForRaceId_fkey" FOREIGN KEY ("equippedForRaceId") REFERENCES "Race" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    )
+  `)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonItem_userId_status_idx" ON "DragonItem"("userId", "status")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonItem_type_status_idx" ON "DragonItem"("type", "status")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonItem_equippedForRaceId_idx" ON "DragonItem"("equippedForRaceId")`)
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "DragonOrbEvent" (
+      "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      "orbId" INTEGER,
+      "userId" INTEGER,
+      "raceId" INTEGER,
+      "tradeId" INTEGER,
+      "summonId" INTEGER,
+      "type" TEXT NOT NULL,
+      "message" TEXT,
+      "payloadJson" TEXT,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "DragonOrbEvent_orbId_fkey" FOREIGN KEY ("orbId") REFERENCES "DragonOrb" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+      CONSTRAINT "DragonOrbEvent_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+      CONSTRAINT "DragonOrbEvent_raceId_fkey" FOREIGN KEY ("raceId") REFERENCES "Race" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+      CONSTRAINT "DragonOrbEvent_tradeId_fkey" FOREIGN KEY ("tradeId") REFERENCES "DragonTrade" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+      CONSTRAINT "DragonOrbEvent_summonId_fkey" FOREIGN KEY ("summonId") REFERENCES "DragonSummon" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    )
+  `)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonOrbEvent_orbId_idx" ON "DragonOrbEvent"("orbId")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonOrbEvent_userId_createdAt_idx" ON "DragonOrbEvent"("userId", "createdAt")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonOrbEvent_raceId_idx" ON "DragonOrbEvent"("raceId")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonOrbEvent_tradeId_idx" ON "DragonOrbEvent"("tradeId")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonOrbEvent_summonId_idx" ON "DragonOrbEvent"("summonId")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonOrbEvent_type_createdAt_idx" ON "DragonOrbEvent"("type", "createdAt")`)
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "DragonItemEvent" (
+      "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      "itemId" INTEGER NOT NULL,
+      "userId" INTEGER NOT NULL,
+      "raceId" INTEGER,
+      "type" TEXT NOT NULL,
+      "message" TEXT,
+      "payloadJson" TEXT,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "DragonItemEvent_itemId_fkey" FOREIGN KEY ("itemId") REFERENCES "DragonItem" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT "DragonItemEvent_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT "DragonItemEvent_raceId_fkey" FOREIGN KEY ("raceId") REFERENCES "Race" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    )
+  `)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonItemEvent_itemId_idx" ON "DragonItemEvent"("itemId")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonItemEvent_userId_createdAt_idx" ON "DragonItemEvent"("userId", "createdAt")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonItemEvent_raceId_idx" ON "DragonItemEvent"("raceId")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonItemEvent_type_createdAt_idx" ON "DragonItemEvent"("type", "createdAt")`)
+}
+
 const migrations: Migration[] = [
   {
     id: '2026-04-23-001-shield-charges-v1',
@@ -318,6 +501,11 @@ const migrations: Migration[] = [
     id: '2026-04-23-006-void-legacy-targeted-chests',
     name: 'Void active legacy targeted chests before Reward Chest V2',
     run: voidLegacyTargetedChests,
+  },
+  {
+    id: '2026-05-26-001-dragon-meta-system',
+    name: 'Create Thất Tinh Dzịt Châu Dragon Orb, trade, summon, and item tables',
+    run: createDragonMetaSystem,
   },
 ]
 

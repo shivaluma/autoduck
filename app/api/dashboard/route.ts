@@ -2,16 +2,18 @@ import { NextResponse } from 'next/server'
 import { getDashboardBrief } from '@/lib/dashboard-brief'
 import { getDashboardRaceLists, getDashboardSummary, getDashboardUsers } from '@/lib/dashboard-data'
 import { prisma } from '@/lib/db'
+import { getDragonState } from '@/lib/dragon/getDragonState'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export async function GET() {
   try {
-    const [players, races, summary] = await Promise.all([
+    const [players, races, summary, dragon] = await Promise.all([
       getDashboardUsers(prisma),
       getDashboardRaceLists(prisma),
       getDashboardSummary(prisma),
+      getDragonState(prisma),
     ])
     const brief = await getDashboardBrief(players, races, summary)
 
@@ -20,6 +22,7 @@ export async function GET() {
       races,
       summary,
       brief,
+      dragon,
     }, {
       headers: {
         'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',

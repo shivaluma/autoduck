@@ -77,6 +77,26 @@ interface SeasonData {
   weeklyTicks: WeeklyTickRow[]
 }
 
+interface DragonAdminState {
+  users: Array<{
+    id: number
+    name: string
+    inventory: {
+      progress: number
+      missingStars: number[]
+      summonReady: boolean
+      claimBlocked: boolean
+      stars: Record<string, { count: number; orbs: Array<{ id: number; star: number; status: string }> }>
+      activeScaleItem?: { id: number } | null
+      equippedScaleItem?: { id: number; equippedForRaceId?: number | null } | null
+    }
+  }>
+  trades: Array<{ id: number; proposerId: number; requestedStar: number; status: string; offeredOrbId: number }>
+  weeks: Array<{ id: number; weekKey: string; star: number; status: string; raceId?: number | null; awardedOrbId?: number | null }>
+  recentOrbEvents: Array<{ id: number; type: string; message?: string | null }>
+  recentItemEvents: Array<{ id: number; type: string; message?: string | null }>
+}
+
 interface Props {
   secret?: string
 }
@@ -104,11 +124,14 @@ export function AdminDashboardContent({ secret }: Props) {
   const [users, setUsers] = useState<UserRow[]>([])
   const [races, setRaces] = useState<RaceRow[]>([])
   const [season, setSeason] = useState<SeasonData | null>(null)
+  const [dragon, setDragon] = useState<DragonAdminState | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'users' | 'races' | 'tools' | 'season'>('users')
+  const [activeTab, setActiveTab] = useState<'users' | 'races' | 'tools' | 'season' | 'dragon'>('users')
   const [seasonTab, setSeasonTab] = useState<'boss' | 'shield' | 'active_chests' | 'chest_history' | 'weekly_tick'>('boss')
   const [shieldOwnerId, setShieldOwnerId] = useState('')
   const [shieldCharges, setShieldCharges] = useState('5')
+  const [dragonUserId, setDragonUserId] = useState('')
+  const [dragonStar, setDragonStar] = useState('1')
   const [msg, setMsg] = useState('')
 
   const fetchAdminData = useCallback(async () => {
@@ -116,21 +139,24 @@ export function AdminDashboardContent({ secret }: Props) {
       return
     }
 
-    const [adminResponse, seasonResponse] = await Promise.all([
+    const [adminResponse, seasonResponse, dragonResponse] = await Promise.all([
       fetch(`/api/admin?secret=${secret}`),
       fetch(`/api/admin/season?secret=${secret}`),
+      fetch(`/api/admin/dragon?secret=${secret}`),
     ])
 
-    if (!adminResponse.ok || !seasonResponse.ok) {
+    if (!adminResponse.ok || !seasonResponse.ok || !dragonResponse.ok) {
       throw new Error('Unauthorized')
     }
 
     const adminData = await adminResponse.json()
     const seasonData = await seasonResponse.json()
+    const dragonData = await dragonResponse.json()
     startTransition(() => {
       setUsers(adminData.users)
       setRaces(adminData.races)
       setSeason(seasonData)
+      setDragon(dragonData)
     })
   }, [secret])
 
@@ -279,6 +305,20 @@ export function AdminDashboardContent({ secret }: Props) {
     }
   }
 
+  const handleDragonAdminAction = async (payload: Record<string, unknown>) => {
+    setMsg('🐉 Dragon action...')
+    const response = await fetch(`/api/admin/dragon?secret=${secret}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    const data = await response.json()
+    setMsg(response.ok ? '✅ Dragon updated' : data.reason || data.error || 'Dragon action failed')
+    if (response.ok) {
+      await fetchAdminData()
+    }
+  }
+
   const handleChange = (id: number, field: keyof UserRow, value: string) => {
     setUsers(users.map((user) => (user.id === id ? { ...user, [field]: value } : user)))
   }
@@ -288,7 +328,7 @@ export function AdminDashboardContent({ secret }: Props) {
       <header className="flex flex-col gap-4 mb-8 border-b-[5px] border-[var(--color-ggd-outline)] pb-5 lg:flex-row lg:items-center lg:justify-between">
         <h1 className="font-display text-3xl text-[var(--color-ggd-gold)] text-outlined sm:text-4xl">🦆 QUẢN LÝ BẦY VỊT ⚡</h1>
         <div className="flex gap-3 overflow-x-auto pb-2 lg:overflow-visible lg:pb-0">
-          {(['users', 'races', 'tools', 'season'] as const).map((tab) => (
+          {(['users', 'races', 'tools', 'season', 'dragon'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -298,7 +338,7 @@ export function AdminDashboardContent({ secret }: Props) {
                   : 'bg-[var(--color-ggd-surface)] text-[var(--color-ggd-muted)]'
               }`}
             >
-              {tab === 'users' ? '🦆 VỊT' : tab === 'races' ? '🏁 TRẬN' : tab === 'tools' ? '🔧 TOOLS' : '⚙️ SEASON'}
+              {tab === 'users' ? '🦆 VỊT' : tab === 'races' ? '🏁 TRẬN' : tab === 'tools' ? '🔧 TOOLS' : tab === 'season' ? '⚙️ SEASON' : '🐉 DRAGON'}
             </button>
           ))}
           <Link href="/" className="ggd-btn shrink-0 bg-[var(--color-ggd-surface)] text-[var(--color-ggd-muted)] text-base px-6 py-2.5">🚰 THOÁT</Link>
@@ -658,6 +698,116 @@ export function AdminDashboardContent({ secret }: Props) {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {activeTab === 'dragon' && dragon && (
+            <div className="space-y-6">
+              <div className="ggd-card-gold ggd-stripe p-6">
+                <div className="font-display text-3xl text-[var(--color-ggd-gold)] text-outlined">Dragon Control</div>
+                <div className="mt-4 flex flex-wrap items-end gap-3">
+                  <label className="flex flex-col gap-1">
+                    <span className="ggd-col-header">User</span>
+                    <select value={dragonUserId} onChange={(event) => setDragonUserId(event.target.value)} className="bg-[var(--color-ggd-surface)] border-3 border-[var(--color-ggd-outline)] rounded-xl px-3 py-2 font-bold text-white">
+                      <option value="">Chọn vịt</option>
+                      {dragon.users.map((user) => <option key={user.id} value={user.id}>#{user.id} {user.name}</option>)}
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-1">
+                    <span className="ggd-col-header">Star</span>
+                    <select value={dragonStar} onChange={(event) => setDragonStar(event.target.value)} className="bg-[var(--color-ggd-surface)] border-3 border-[var(--color-ggd-outline)] rounded-xl px-3 py-2 font-bold text-white">
+                      {[1, 2, 3, 4, 5, 6, 7].map((star) => <option key={star} value={star}>{star}</option>)}
+                    </select>
+                  </label>
+                  <button disabled={!dragonUserId} onClick={() => handleDragonAdminAction({ action: 'grantOrb', userId: Number(dragonUserId), star: Number(dragonStar) })} className="ggd-btn bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)] text-sm px-5 py-2.5 disabled:opacity-40">
+                    Grant Orb
+                  </button>
+                  <button disabled={!dragonUserId} onClick={() => handleDragonAdminAction({ action: 'resolveSummon', userId: Number(dragonUserId) })} className="ggd-btn bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)] text-sm px-5 py-2.5 disabled:opacity-40">
+                    Resolve Summon
+                  </button>
+                  <button disabled={!dragonUserId} onClick={() => handleDragonAdminAction({ action: 'grantScale', userId: Number(dragonUserId) })} className="ggd-btn bg-[var(--color-ggd-sky)] text-[var(--color-ggd-outline)] text-sm px-5 py-2.5 disabled:opacity-40">
+                    Grant Long Lân
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid gap-6 lg:grid-cols-2">
+                <div className="ggd-card p-6">
+                  <div className="font-display text-2xl text-white text-outlined mb-4">Weekly Dragon Schedule</div>
+                  <div className="space-y-3 max-h-[360px] overflow-y-auto pr-2">
+                    {dragon.weeks.map((week) => (
+                      <div key={week.id} className="rounded-xl border-3 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="font-body font-black">{week.weekKey}</span>
+                          <span className="ggd-tag bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]">Star {week.star}</span>
+                        </div>
+                        <div className="mt-3 flex gap-2">
+                          {[1, 2, 3, 4, 5, 6, 7].map((star) => (
+                            <button key={star} onClick={() => handleDragonAdminAction({ action: 'setWeekStar', dragonWeekId: week.id, star })} className={`rounded-lg border-2 border-[var(--color-ggd-outline)] px-2 py-1 font-data text-xs ${week.star === star ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' : 'bg-black/20 text-white/65'}`}>
+                              {star}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="ggd-card p-6">
+                  <div className="font-display text-2xl text-white text-outlined mb-4">Pending Trades</div>
+                  <div className="space-y-3 max-h-[360px] overflow-y-auto pr-2">
+                    {dragon.trades.length > 0 ? dragon.trades.map((trade) => (
+                      <div key={trade.id} className="rounded-xl border-3 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-4">
+                        <div className="font-data text-xs text-white/60">Trade #{trade.id} · offered orb #{trade.offeredOrbId}</div>
+                        <div className="font-body text-white">Requested star {trade.requestedStar}</div>
+                        <button onClick={() => handleDragonAdminAction({ action: 'cancelTrade', tradeId: trade.id })} className="mt-3 ggd-btn bg-[var(--color-ggd-orange)] text-white text-xs px-3 py-2">
+                          Cancel / Void
+                        </button>
+                      </div>
+                    )) : <div className="font-data text-sm text-[var(--color-ggd-muted)]">Không có kèo pending.</div>}
+                  </div>
+                </div>
+              </div>
+
+              <div className="ggd-card p-6">
+                <div className="font-display text-2xl text-white text-outlined mb-4">All Dragon Inventories</div>
+                <div className="space-y-3 max-h-[460px] overflow-y-auto pr-2">
+                  {dragon.users.map((user) => (
+                    <div key={user.id} className="rounded-xl border-3 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <span className="font-body font-black">{user.name}</span>
+                        <span className="ggd-tag bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]">{user.inventory.progress}/7</span>
+                      </div>
+                      <div className="mt-2 font-data text-xs text-white/65">
+                        Stars: {[1, 2, 3, 4, 5, 6, 7].map((star) => `${star}x${user.inventory.stars[String(star)]?.count ?? 0}`).join(' · ')}
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {Object.values(user.inventory.stars).flatMap((bucket) => bucket.orbs).map((orb) => (
+                          <button key={orb.id} onClick={() => handleDragonAdminAction({ action: 'voidOrb', orbId: orb.id })} className="rounded-lg border-2 border-[var(--color-ggd-outline)] bg-black/20 px-2 py-1 font-data text-xs text-white/70">
+                            void orb #{orb.id}
+                          </button>
+                        ))}
+                        {user.inventory.activeScaleItem && (
+                          <button onClick={() => handleDragonAdminAction({ action: 'voidScale', itemId: user.inventory.activeScaleItem?.id })} className="rounded-lg border-2 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-orange)] px-2 py-1 font-data text-xs text-white">
+                            void Long Lân #{user.inventory.activeScaleItem.id}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="ggd-card p-6">
+                <div className="font-display text-2xl text-white text-outlined mb-4">Dragon Audit Log</div>
+                <div className="grid gap-2 md:grid-cols-2">
+                  {[...dragon.recentOrbEvents, ...dragon.recentItemEvents].slice(0, 30).map((event) => (
+                    <div key={`${event.type}-${event.id}`} className="rounded-lg bg-black/20 p-3 font-readable text-sm text-white/70">
+                      {event.message ?? event.type}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </main>

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db'
 import type { ChestEffect } from '@/lib/types'
 import { isImmortalDuck } from '@/lib/immortal-duck'
 import { MYSTERY_CHESTS_ENABLED } from '@/lib/feature-flags'
+import { getDragonInventory } from '@/lib/dragon/getDragonState'
 
 // GET /api/races/[id] - Chi tiết cuộc đua
 export async function GET(
@@ -55,6 +56,29 @@ export async function GET(
         orderBy: { id: 'asc' },
       }),
     ]) : [[], []]
+    const [dragonOrb, dragonItemEvents] = await Promise.all([
+      prisma.dragonOrb.findFirst({
+        where: {
+          originalRaceId: raceId,
+          source: 'RACE_WIN',
+        },
+        include: {
+          currentOwner: true,
+          dragonWeek: true,
+        },
+      }),
+      prisma.dragonItemEvent.findMany({
+        where: {
+          raceId,
+          type: { in: ['PROTECTED', 'NOT_NEEDED', 'CONSUMED'] },
+        },
+        include: {
+          user: true,
+        },
+        orderBy: { createdAt: 'asc' },
+      }),
+    ])
+    const dragonInventory = dragonOrb ? await getDragonInventory(prisma, dragonOrb.currentOwnerId, dragonOrb.seasonKey) : null
 
     const targetUserIds = Array.from(
       new Set(
@@ -133,9 +157,58 @@ export async function GET(
         effect: chest.effect,
         status: chest.status,
       })),
+      dragonAward: dragonOrb ? {
+        awarded: true,
+        winnerUserId: dragonOrb.currentOwnerId,
+        winnerName: dragonOrb.currentOwner?.name ?? null,
+        awardedStar: dragonOrb.star,
+        awardedOrbName: (() => {
+          const names: Record<number, string> = {
+            1: 'Nhất Tinh Châu',
+            2: 'Nhị Tinh Châu',
+            3: 'Tam Tinh Châu',
+            4: 'Tứ Tinh Châu',
+            5: 'Ngũ Tinh Châu',
+            6: 'Lục Tinh Châu',
+            7: 'Thất Tinh Châu',
+          }
+          return names[dragonOrb.star] ?? `${dragonOrb.star} Tinh Châu`
+        })(),
+        dragonWeekId: dragonOrb.dragonWeekId,
+        orbId: dragonOrb.id,
+        duplicateCountForStar: dragonInventory?.stars[String(dragonOrb.star)]?.count ?? undefined,
+        setProgressAfter: dragonInventory?.progress ?? undefined,
+        summonReady: dragonInventory?.summonReady ?? undefined,
+        reason: dragonInventory?.claimBlocked ? dragonInventory.blockedReason : undefined,
+      } : null,
+      dragonScaleEvents: dragonItemEvents.map((event: {
+        type: string
+        userId: number
+        itemId: number
+        message?: string | null
+        payloadJson?: string | null
+        user?: { name: string } | null
+      }) => {
+        let participantIds: string[] = []
+        try {
+          const payload = event.payloadJson ? JSON.parse(event.payloadJson) : null
+          participantIds = Array.isArray(payload?.participantIds) ? payload.participantIds.map(String) : []
+        } catch {
+          participantIds = []
+        }
+
+        return {
+          type: event.type,
+          userId: event.userId,
+          userName: event.user?.name ?? null,
+          itemId: event.itemId,
+          participantIds,
+          message: event.message ?? null,
+        }
+      }),
       participants: race.participants.map((p: {
         userId: number
-        user: { name: string; avatarUrl?: string | null }
+        user: { name: string; avatarUrl?: string | null; shields?: number | null }
         usedShield: boolean
         shieldId?: number | null
         shieldChargesAtStart?: number | null
@@ -148,6 +221,7 @@ export async function GET(
         displayName?: string | null
         chestEffect?: string | null
         chestTargetUserId?: number | null
+        dragonEligible?: boolean | null
       }) => ({
         userId: p.userId,
         name: p.user.name,
@@ -159,12 +233,13 @@ export async function GET(
         shieldBackfired: Boolean(p.shieldBackfired),
         initialRank: p.initialRank,
         gotScar: p.gotScar,
-        isImmortal: isImmortalDuck({ name: p.user.name }),
+        isImmortal: isImmortalDuck({ name: p.user.name, shields: p.user.shields }),
         isClone: p.isClone,
         cloneOfUserId: p.cloneOfUserId,
         cloneIndex: p.cloneIndex,
         chestEffect: MYSTERY_CHESTS_ENABLED ? p.chestEffect : null,
         chestTargetUserId: MYSTERY_CHESTS_ENABLED ? p.chestTargetUserId : null,
+        dragonEligible: p.dragonEligible,
       })),
       commentaries: race.commentaries.map((c: { timestamp: number; content: string }) => ({
         timestamp: c.timestamp,

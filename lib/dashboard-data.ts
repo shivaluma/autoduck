@@ -72,6 +72,16 @@ interface UserWithDashboardState {
     targetUserId?: number | null
     createdAt: Date
   }>
+  dragonItems: Array<{
+    id: number
+    userId: number
+    type: string
+    status: string
+    label: string
+    subtitle: string
+    equippedForRaceId?: number | null
+    grantedAt: Date
+  }>
 }
 
 export async function getDashboardUsers(prisma: PrismaClient): Promise<PlayerData[]> {
@@ -114,6 +124,23 @@ export async function getDashboardUsers(prisma: PrismaClient): Promise<PlayerDat
           rngSeed: true,
           targetUserId: true,
           createdAt: true,
+        },
+      },
+      dragonItems: {
+        where: {
+          type: 'DRAGON_SCALE',
+          status: { in: ['ACTIVE', 'EQUIPPED'] },
+        },
+        orderBy: [{ grantedAt: 'asc' }],
+        select: {
+          id: true,
+          userId: true,
+          type: true,
+          status: true,
+          label: true,
+          subtitle: true,
+          equippedForRaceId: true,
+          grantedAt: true,
         },
       },
     },
@@ -161,6 +188,16 @@ export async function getDashboardUsers(prisma: PrismaClient): Promise<PlayerDat
             createdAt: user.mysteryChests[0].createdAt.toISOString(),
           }
         : null,
+      dragonItems: user.dragonItems.map((item) => ({
+        id: item.id,
+        userId: item.userId,
+        type: item.type,
+        status: item.status,
+        label: item.label,
+        subtitle: item.subtitle,
+        equippedForRaceId: item.equippedForRaceId,
+        grantedAt: item.grantedAt.toISOString(),
+      })),
     }
   })
 }
