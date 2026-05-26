@@ -47,8 +47,8 @@ export function DragonOrbSlot({ star, count, compact = false }: { star: number; 
 
   return (
     <div
-      aria-label={acquired ? `${name} acquired, count ${count}` : `${name} missing`}
-      title={acquired ? `${name} x${count}` : `${name} missing`}
+      aria-label={acquired ? `${name} đã nhập các, số lượng ${count}` : `${name} chưa xuất hiện`}
+      title={acquired ? `${name} đã nhập các · x${count}` : `${name} chưa xuất hiện`}
       className={`relative grid place-items-center rounded-full border-2 border-[var(--color-ggd-outline)] shadow-[inset_0_2px_0_rgba(255,255,255,0.22),0_3px_0_var(--color-ggd-outline)] transition-transform
         ${compact ? 'h-8 w-8 text-xs' : 'h-11 w-11 text-sm'}
         ${acquired
@@ -118,7 +118,7 @@ function DragonWeeklyOmen({ currentWeek }: { currentWeek: NonNullable<DragonStat
             {currentWeek.headline ?? `${orbName} xuất thế.`}
           </div>
           <p className="mt-2 max-w-2xl font-readable text-sm leading-relaxed text-white/72">
-            {currentWeek.subline ?? `Winner official race tuần này sẽ nhận ${orbName}.`} Ai về nhất thì ôm châu về Tàng Châu Các.
+            {currentWeek.subline ?? `Tuần này săn ${orbName}. Vịt cán đích đầu tiên sẽ mang châu về các.`}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <span className="ggd-tag bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]">
@@ -129,7 +129,7 @@ function DragonWeeklyOmen({ currentWeek }: { currentWeek: NonNullable<DragonStat
             </span>
             {currentWeek.isOverride && (
               <span className="ggd-tag bg-white text-[var(--color-ggd-outline)]">
-                Admin override
+                Thiên tượng đổi hướng
               </span>
             )}
           </div>
@@ -140,7 +140,7 @@ function DragonWeeklyOmen({ currentWeek }: { currentWeek: NonNullable<DragonStat
   )
 }
 
-export function DragonCompassCard({ dragon }: { dragon?: DragonStateData | null }) {
+export function DragonCompassCard({ dragon, compact = false }: { dragon?: DragonStateData | null; compact?: boolean }) {
   if (!dragon) {
     return null
   }
@@ -150,72 +150,83 @@ export function DragonCompassCard({ dragon }: { dragon?: DragonStateData | null 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="font-display text-3xl text-[var(--color-ggd-gold)] text-outlined">Thất Tinh La Bàn</div>
-          <p className="mt-1 font-readable text-sm text-white/70">Bảy viên xoay vòng theo tuần. Duplicate là nhiên liệu đổi kèo.</p>
+          <p className="mt-1 font-readable text-sm text-white/70">La Bàn đã xoay. Săn châu, giữ duyên, dư thì lên sàn đổi kèo.</p>
         </div>
-        <Link href="/dragon" className="ggd-btn bg-[var(--color-ggd-gold)] px-4 py-2 text-sm text-[var(--color-ggd-outline)]">
-          Mở Tàng Châu Các
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/dragon" className="ggd-btn bg-[var(--color-ggd-gold)] px-4 py-2 text-sm text-[var(--color-ggd-outline)]">
+            Mở Tàng Châu Các
+          </Link>
+          {compact && (
+            <Link href="/members" className="ggd-btn bg-[var(--color-ggd-neon-green)] px-4 py-2 text-sm text-[var(--color-ggd-outline)]">
+              Xem Long Bảng
+            </Link>
+          )}
+        </div>
       </div>
 
       {dragon.currentWeek && (
         <DragonWeeklyOmen currentWeek={dragon.currentWeek} />
       )}
 
-      <div className="mt-5 grid gap-3 lg:grid-cols-2">
-        {dragon.users.map((user) => {
-          const inventory = user.inventory
-          const badges = [
-            inventory.summonReady && !inventory.claimBlocked ? 'Thất Tinh đã đủ' : null,
-            inventory.claimBlocked ? 'Đủ bộ, nhưng đang giữ Long Lân' : null,
-            inventory.activeScaleItem ? 'Đang giữ Long Lân' : null,
-            inventory.equippedScaleItem ? 'Long Lân đã nhập trận' : null,
-          ].filter((badge): badge is string => Boolean(badge))
+      {!compact && (
+        <>
+          <div className="mt-5 grid gap-3 lg:grid-cols-2">
+            {dragon.users.map((user) => {
+              const inventory = user.inventory
+              const badges = [
+                inventory.summonReady && !inventory.claimBlocked ? 'Thất Tinh đã đủ' : null,
+                inventory.claimBlocked ? 'Đủ bộ, Long Lân còn hộ mệnh' : null,
+                inventory.activeScaleItem ? 'Long Lân trong tay' : null,
+                inventory.equippedScaleItem ? 'Long Lân đã nhập trận' : null,
+              ].filter((badge): badge is string => Boolean(badge))
 
-          return (
-            <article key={user.id} className="rounded-xl border-3 border-[var(--color-ggd-outline)] bg-black/22 p-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <div className="font-body text-base font-black text-white">{user.name}</div>
-                  <div className="font-data text-xs text-white/55">Bộ hiện tại: {inventory.progress}/7</div>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {badges.map((badge) => (
-                    <span key={badge} className="ggd-tag bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)] text-[10px]">
-                      {badge}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {DRAGON_STARS.map((star) => (
-                  <DragonOrbSlot key={star} star={star} count={inventory.stars[String(star)]?.count ?? 0} compact />
-                ))}
-              </div>
-              <div className="mt-3 font-data text-[11px] text-white/55">
-                Thiếu: {inventory.missingStars.length > 0 ? inventory.missingStars.map(getDragonOrbName).join(', ') : 'Không thiếu viên nào'}
-              </div>
-            </article>
-          )
-        })}
-      </div>
-
-      {dragon.immortalUsers.length > 0 && (
-        <div className="mt-4 rounded-xl border-3 border-[var(--color-ggd-outline)] bg-black/24 p-4">
-          {dragon.immortalUsers.map((user) => (
-            <div key={user.id} className="font-data text-sm text-white/70">
-              {user.name} · {user.title} · no orb progress
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="mt-4 grid gap-3 md:grid-cols-2">
-        {[...(dragon.recentOrbEvents ?? []), ...(dragon.recentItemEvents ?? [])].slice(0, 4).map((event) => (
-          <div key={`${event.type}-${event.id}`} className="rounded-lg border-2 border-[var(--color-ggd-outline)]/45 bg-[var(--color-ggd-panel)] px-3 py-2 font-readable text-xs text-white/70">
-            {event.message ?? event.type}
+              return (
+                <article key={user.id} className="rounded-xl border-3 border-[var(--color-ggd-outline)] bg-black/22 p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <div className="font-body text-base font-black text-white">{user.name}</div>
+                      <div className="font-data text-xs text-white/55">Tinh lực: {inventory.progress}/7</div>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {badges.map((badge) => (
+                        <span key={badge} className="ggd-tag bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)] text-[10px]">
+                          {badge}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {DRAGON_STARS.map((star) => (
+                      <DragonOrbSlot key={star} star={star} count={inventory.stars[String(star)]?.count ?? 0} compact />
+                    ))}
+                  </div>
+                  <div className="mt-3 font-data text-[11px] text-white/55">
+                    Còn thiếu: {inventory.missingStars.length > 0 ? inventory.missingStars.map(getDragonOrbName).join(', ') : 'Thất Tinh hội tụ'}
+                  </div>
+                </article>
+              )
+            })}
           </div>
-        ))}
-      </div>
+
+          {dragon.immortalUsers.length > 0 && (
+            <div className="mt-4 rounded-xl border-3 border-[var(--color-ggd-outline)] bg-black/24 p-4">
+              {dragon.immortalUsers.map((user) => (
+                <div key={user.id} className="font-data text-sm text-white/70">
+                  {user.name} · {user.title} · đứng ngoài thiên mệnh
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            {[...(dragon.recentOrbEvents ?? []), ...(dragon.recentItemEvents ?? [])].slice(0, 4).map((event) => (
+              <div key={`${event.type}-${event.id}`} className="rounded-lg border-2 border-[var(--color-ggd-outline)]/45 bg-[var(--color-ggd-panel)] px-3 py-2 font-readable text-xs text-white/70">
+                {event.message ?? event.type}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </section>
   )
 }

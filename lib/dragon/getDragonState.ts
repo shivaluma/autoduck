@@ -114,7 +114,7 @@ export async function getDragonState(prisma: any, seasonKey = DEFAULT_DRAGON_SEA
       ...currentWeek,
       orbName: currentWeekOrbName,
       headline: `${currentWeekOrbName} xuất thế.`,
-      subline: `Winner official race tuần này sẽ nhận ${currentWeekOrbName}.`,
+      subline: `Tuần này săn ${currentWeekOrbName}. Vịt cán đích đầu tiên sẽ mang châu về các.`,
     },
     users: realUsers,
     immortalUsers,

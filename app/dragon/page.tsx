@@ -80,7 +80,7 @@ export default function DragonPage() {
     if (!actor) return
     const acceptedOrb = actorOrbs.find((orb) => orb.star === trade.requestedStar)
     if (!acceptedOrb) return
-    if (!window.confirm('Khớp Kèo Đổi Châu 1 đổi 1?')) return
+    if (!window.confirm('Chốt Kèo Đổi Châu này?')) return
     await postAction({ action: 'acceptTrade', tradeId: trade.id, accepterId: actor.id, acceptedOrbId: acceptedOrb.id })
   }
 
@@ -95,7 +95,7 @@ export default function DragonPage() {
       </header>
 
       <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
-        <DragonCompassCard dragon={dragon} />
+        <DragonCompassCard dragon={dragon} compact />
 
         <section className="grid gap-6 lg:grid-cols-[1fr_0.95fr]">
           <div className="ggd-card p-5">
@@ -106,7 +106,7 @@ export default function DragonPage() {
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <div className="font-body text-lg font-black">{user.name}</div>
-                      <div className="font-data text-xs text-white/55">Progress {user.inventory.progress}/7</div>
+                      <div className="font-data text-xs text-white/55">Tinh lực {user.inventory.progress}/7</div>
                     </div>
                     {user.inventory.summonReady && (
                       <button
@@ -123,10 +123,10 @@ export default function DragonPage() {
                     ))}
                   </div>
                   <div className="mt-3 grid gap-2 font-data text-xs text-white/65 sm:grid-cols-2">
-                    <div>Thiếu: {user.inventory.missingStars.length ? user.inventory.missingStars.map(getDragonOrbName).join(', ') : 'Đủ bộ'}</div>
-                    <div>Trade lock: {user.inventory.tradeLockedOrbs?.length ?? 0}</div>
-                    <div>{user.inventory.activeScaleItem ? 'Đang giữ Long Lân Hộ Mệnh.' : 'Chưa có Long Lân.'}</div>
-                    <div>{user.inventory.equippedScaleItem ? 'Long Lân đã nhập trận.' : 'Chưa equip Long Lân.'}</div>
+                    <div>Còn thiếu: {user.inventory.missingStars.length ? user.inventory.missingStars.map(getDragonOrbName).join(', ') : 'Thất Tinh hội tụ'}</div>
+                    <div>Đang treo kèo: {user.inventory.tradeLockedOrbs?.length ?? 0}</div>
+                    <div>{user.inventory.activeScaleItem ? 'Long Lân đang trong tay.' : 'Chưa có Long Lân.'}</div>
+                    <div>{user.inventory.equippedScaleItem ? 'Long Lân đã nhập trận.' : 'Long Lân chưa nhập trận.'}</div>
                   </div>
                   {user.inventory.claimBlocked && (
                     <p className="mt-3 rounded-lg border-2 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-orange)]/22 p-3 font-readable text-sm text-white/82">
@@ -143,7 +143,7 @@ export default function DragonPage() {
               <div className="font-display text-3xl text-[var(--color-ggd-gold)] text-outlined">Sàn Đổi Châu</div>
               <div className="mt-4 space-y-3">
                 <label className="block">
-                  <span className="ggd-col-header">Người thao tác</span>
+                  <span className="ggd-col-header">Chủ các</span>
                   <select value={selectedActorId} onChange={(event) => setActorUserId(event.target.value)} className="mt-1 w-full rounded-xl border-3 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-surface)] px-3 py-2 font-bold text-white">
                     {(dragon?.users ?? []).map((user) => <option key={user.id} value={user.id}>{user.name}</option>)}
                   </select>
@@ -159,9 +159,9 @@ export default function DragonPage() {
                     <select value={requestedStar} onChange={(event) => setRequestedStar(event.target.value)} className="rounded-xl border-3 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-surface)] px-3 py-2 text-white">
                       {DRAGON_STARS.map((star) => <option key={star} value={star}>Cần {getDragonOrbName(star)}</option>)}
                     </select>
-                    <input value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Lời nhắn optional" className="rounded-xl border-3 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-surface)] px-3 py-2 text-white placeholder:text-white/35" />
+                    <input value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Lời nhắn nếu muốn" className="rounded-xl border-3 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-surface)] px-3 py-2 text-white placeholder:text-white/35" />
                     <button onClick={createTrade} disabled={!offeredOrbId} className="ggd-btn bg-[var(--color-ggd-neon-green)] px-4 py-2 text-sm text-[var(--color-ggd-outline)] disabled:opacity-40">
-                      Tạo Kèo Đổi Châu
+                      Treo Kèo Đổi Châu
                     </button>
                   </div>
                 </div>
@@ -172,7 +172,7 @@ export default function DragonPage() {
                     <div key={trade.id} className="rounded-xl border-3 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-4">
                       <div className="font-data text-xs text-white/55">Kèo #{trade.id}</div>
                       <div className="font-readable text-sm text-white/80">
-                        Offer orb #{trade.offeredOrbId} · cần {getDragonOrbName(trade.requestedStar)}
+                        Châu #{trade.offeredOrbId} đang treo · cần {getDragonOrbName(trade.requestedStar)}
                       </div>
                       {trade.message && <div className="mt-1 font-readable text-xs text-white/58">{trade.message}</div>}
                       <button
@@ -180,40 +180,57 @@ export default function DragonPage() {
                         onClick={() => acceptTrade(trade)}
                         className="mt-3 ggd-btn bg-[var(--color-ggd-gold)] px-3 py-2 text-xs text-[var(--color-ggd-outline)] disabled:opacity-35"
                       >
-                        Accept
+                        Chốt Kèo
                       </button>
                     </div>
                   )
                 })}
+                {(dragon?.trades ?? []).length === 0 && (
+                  <div className="rounded-xl border-3 border-[var(--color-ggd-outline)] bg-black/18 p-4 font-readable text-sm text-white/65">
+                    Sàn đang im ắng. Chưa ai treo kèo.
+                  </div>
+                )}
               </div>
             </section>
 
             <section className="ggd-card p-5">
               <div className="font-display text-2xl text-white text-outlined">Long Điện Vinh Danh</div>
               <div className="mt-3 space-y-2 font-readable text-sm text-white/72">
-                {(dragon?.recentItemEvents ?? []).filter((event) => event.type === 'GRANTED').slice(0, 6).map((event) => (
+                {(() => {
+                  const grantedEvents = (dragon?.recentItemEvents ?? []).filter((event) => event.type === 'GRANTED').slice(0, 6)
+                  if (grantedEvents.length === 0) {
+                    return <div className="rounded-lg bg-black/20 p-3">Long Điện còn tĩnh. Chưa ai gọi rồng.</div>
+                  }
+                  return grantedEvents.map((event) => (
                   <div key={event.id} className="rounded-lg bg-black/20 p-3">{event.message}</div>
-                ))}
+                  ))
+                })()}
               </div>
             </section>
           </div>
         </section>
 
         <section className="ggd-card p-5">
-          <div className="font-display text-2xl text-white text-outlined">Dragon Event History</div>
+          <div className="font-display text-2xl text-white text-outlined">Sử Ký Long Châu</div>
           <div className="mt-4 grid gap-2 md:grid-cols-2">
-            {[...(dragon?.recentOrbEvents ?? []), ...(dragon?.recentItemEvents ?? [])].slice(0, 20).map((event) => (
+            {(() => {
+              const events = [...(dragon?.recentOrbEvents ?? []), ...(dragon?.recentItemEvents ?? [])].slice(0, 20)
+              if (events.length === 0) {
+                return <div className="rounded-lg border-2 border-[var(--color-ggd-outline)]/35 bg-black/18 p-3 font-readable text-sm text-white/70">Thiên tượng chưa ghi thêm dị biến.</div>
+              }
+              return events.map((event) => (
               <div key={`${event.type}-${event.id}`} className="rounded-lg border-2 border-[var(--color-ggd-outline)]/35 bg-black/18 p-3 font-readable text-sm text-white/70">
                 {event.message ?? event.type}
               </div>
-            ))}
+              ))
+            })()}
           </div>
         </section>
 
         <section className="ggd-card-green p-5">
-          <div className="font-display text-2xl text-white text-outlined">Rules summary</div>
+          <div className="font-display text-2xl text-white text-outlined">Luật Truy Châu</div>
           <p className="mt-3 font-readable text-sm leading-relaxed text-white/75">
-            Mỗi official race rơi đúng một Long Châu theo vòng 1 đến 7. Duplicate giữ lại để đổi 1-for-1. Đủ bảy viên thì Khai Môn Triệu Long nhận Long Lân Hộ Mệnh, item không decay và chỉ mất khi thật sự cứu chủ nhân.
+            Mỗi tuần một Long Châu thức giấc. Châu dư đem lên Sàn Đổi Châu. Khi Thất Tinh hội tụ, Khai Môn Triệu Long sẽ mở cổng ban Long Lân Hộ Mệnh.
           </p>
         </section>
 

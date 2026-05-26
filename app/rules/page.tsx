@@ -181,11 +181,11 @@ export default function RulesPage() {
             <div>
               <div className="font-display text-3xl text-[var(--color-ggd-gold)] text-outlined">Thất Tinh Dzịt Châu</div>
               <p className="mt-2 max-w-3xl font-readable text-sm leading-relaxed text-white/75">
-                Mỗi official race weekly có đúng 1 Long Châu rơi. Test race không trao Long Châu, Thomas không nhận Long Châu, và winner nhận viên theo lịch xoay vòng của tuần đó.
+                La Bàn Thất Tinh đã xoay. Mỗi tuần, một Long Châu thức giấc trên đường đua. Vịt thắng trận mang châu về Tàng Châu Các.
               </p>
             </div>
             <Link href="/dragon" className="ggd-btn bg-[var(--color-ggd-gold)] px-4 py-2 text-sm text-[var(--color-ggd-outline)]">
-              Mở Sàn Đổi Châu
+              Mở Tàng Châu Các
             </Link>
           </div>
 
@@ -210,12 +210,12 @@ export default function RulesPage() {
 
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {[
-              ['Lịch rơi', 'Mỗi tuần rơi đúng một số trong bộ 1 đến 7, xoay vòng từ Nhất Tinh Châu tới Thất Tinh Châu rồi quay lại.'],
-              ['Trade 1 đổi 1', 'Duplicate được giữ lại và có thể đổi trên Sàn Đổi Châu. Không gift, không 2 đổi 1, không đổi shield/scar/chest/item.'],
-              ['Summon', 'Đủ 1 viên mỗi số 1 đến 7 sẽ Khai Môn Triệu Long. Summon consume đúng 1 viên mỗi số, duplicate còn lại vẫn giữ.'],
-              ['Vảy Rồng', 'Thần Long AutoDuck mở cổng và ban Long Lân Hộ Mệnh: Vảy Rồng. Đây là báu vật hiếm của Tàng Châu Các.'],
-              ['Long Lân', 'Long Lân bảo vệ vịt chính và tất cả clone của chủ nhân. Không decay, không có charge như shield thường.'],
-              ['Khi nào mất?', 'Long Lân chỉ tan đi khi thật sự cứu chủ nhân khỏi penalty. Nếu trang bị nhưng chưa cần cứu, item vẫn còn.'],
+              ['Thiên Tinh Luân', 'Mỗi tuần, La Bàn gọi tên một viên châu. Hết Thất Tinh lại quay về Nhất Tinh.'],
+              ['Kẻ Về Nhất', 'Vịt cán đích đầu tiên nhận châu của tuần. Vinh quang nhỏ, nghiệp lớn.'],
+              ['Châu Dư Thành Kèo', 'Có dư châu thì đưa lên Sàn Đổi Châu. Một viên đổi một viên, rõ ràng như giao kèo cổ.'],
+              ['Thất Tinh Hội Tụ', 'Đủ bảy viên, cổng rồng mở. Khai Môn Triệu Long bắt đầu.'],
+              ['Vảy Rồng', 'Thần Long AutoDuck ban Long Lân Hộ Mệnh: báu vật hiếm của Tàng Châu Các.'],
+              ['Long Lân Hộ Mệnh', 'Che chở vịt chính và cả đàn clone. Chỉ tan khi thật sự cứu chủ nhân khỏi án phạt.'],
             ].map(([title, text]) => (
               <div key={title} className="rounded-2xl border-3 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-4">
                 <div className="font-display text-lg text-white text-outlined">{title}</div>
@@ -225,7 +225,7 @@ export default function RulesPage() {
           </div>
 
           <div className="mt-5 rounded-2xl border-3 border-[var(--color-ggd-outline)] bg-black/25 p-4 font-readable text-sm leading-relaxed text-white/75">
-            Scars là nguyên liệu craft shield, không phải debuff. 2 scars = 1 shield thường.
+            Sẹo là nguyên liệu luyện khiên, không phải lời nguyền. Gom 2 sẹo là rèn được 1 Khiên thường.
           </div>
         </section>
 
