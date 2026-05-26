@@ -292,7 +292,7 @@ export async function POST(request: Request) {
     for (const participant of participants) {
       if (participant.useShield && typeof participant.dragonScaleItemId === 'number') {
         return NextResponse.json(
-          { error: 'MVP chỉ cho chọn Khiên thường hoặc Long Lân Hộ Mệnh, không dùng cả hai cùng lúc.' },
+          { error: 'Chọn một lớp bảo vệ thôi: Khiên thường hoặc Long Lân Hộ Mệnh.' },
           { status: 400 }
         )
       }

@@ -213,9 +213,9 @@ export default function RulesPage() {
               ['Lịch rơi', 'Mỗi tuần rơi đúng một số trong bộ 1 đến 7, xoay vòng từ Nhất Tinh Châu tới Thất Tinh Châu rồi quay lại.'],
               ['Trade 1 đổi 1', 'Duplicate được giữ lại và có thể đổi trên Sàn Đổi Châu. Không gift, không 2 đổi 1, không đổi shield/scar/chest/item.'],
               ['Summon', 'Đủ 1 viên mỗi số 1 đến 7 sẽ Khai Môn Triệu Long. Summon consume đúng 1 viên mỗi số, duplicate còn lại vẫn giữ.'],
-              ['Một reward duy nhất', 'Thần Long AutoDuck chỉ ban Long Lân Hộ Mệnh, subtitle Vảy Rồng. Không có 3 wish option.'],
+              ['Vảy Rồng', 'Thần Long AutoDuck mở cổng và ban Long Lân Hộ Mệnh: Vảy Rồng. Đây là báu vật hiếm của Tàng Châu Các.'],
               ['Long Lân', 'Long Lân bảo vệ vịt chính và tất cả clone của chủ nhân. Không decay, không có charge như shield thường.'],
-              ['Consume rule', 'Long Lân chỉ bị consume khi thật sự cứu chủ nhân khỏi penalty. Nếu trang bị nhưng không cần cứu, item vẫn còn.'],
+              ['Khi nào mất?', 'Long Lân chỉ tan đi khi thật sự cứu chủ nhân khỏi penalty. Nếu trang bị nhưng chưa cần cứu, item vẫn còn.'],
             ].map(([title, text]) => (
               <div key={title} className="rounded-2xl border-3 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-4">
                 <div className="font-display text-lg text-white text-outlined">{title}</div>
