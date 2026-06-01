@@ -4,6 +4,13 @@ import type { ChestEffect } from '@/lib/types'
 import { isImmortalDuck } from '@/lib/immortal-duck'
 import { MYSTERY_CHESTS_ENABLED } from '@/lib/feature-flags'
 import { getDragonInventory } from '@/lib/dragon/getDragonState'
+import { getDragonOrbName } from '@/lib/dragon/naming'
+import {
+  DRAGON_ORB_BONUS_RACE_SOURCE,
+  DRAGON_ORB_FEATURED_RACE_SOURCE,
+  DRAGON_ORB_LEGACY_RACE_SOURCE,
+  DRAGON_ORB_RACE_SOURCES,
+} from '@/lib/dragon/utils'
 
 // GET /api/races/[id] - Chi tiết cuộc đua
 export async function GET(
@@ -56,16 +63,18 @@ export async function GET(
         orderBy: { id: 'asc' },
       }),
     ]) : [[], []]
-    const [dragonOrb, dragonItemEvents] = await Promise.all([
-      prisma.dragonOrb.findFirst({
+    const [dragonOrbs, dragonItemEvents] = await Promise.all([
+      prisma.dragonOrb.findMany({
         where: {
           originalRaceId: raceId,
-          source: 'RACE_WIN',
+          source: { in: DRAGON_ORB_RACE_SOURCES },
         },
         include: {
           currentOwner: true,
+          originalOwner: true,
           dragonWeek: true,
         },
+        orderBy: [{ source: 'asc' }, { id: 'asc' }],
       }),
       prisma.dragonItemEvent.findMany({
         where: {
@@ -78,7 +87,19 @@ export async function GET(
         orderBy: { createdAt: 'asc' },
       }),
     ])
-    const dragonInventory = dragonOrb ? await getDragonInventory(prisma, dragonOrb.currentOwnerId, dragonOrb.seasonKey) : null
+    const sourceOrder = new Map([
+      [DRAGON_ORB_FEATURED_RACE_SOURCE, 0],
+      [DRAGON_ORB_LEGACY_RACE_SOURCE, 1],
+      [DRAGON_ORB_BONUS_RACE_SOURCE, 2],
+    ])
+    const sortedDragonOrbs = [...dragonOrbs].sort((left: { source: string; id: number }, right: { source: string; id: number }) =>
+      (sourceOrder.get(left.source) ?? 99) - (sourceOrder.get(right.source) ?? 99) || left.id - right.id
+    )
+    const primaryDragonOrb = sortedDragonOrbs[0] ?? null
+    const dragonAwardOwnerId = primaryDragonOrb?.originalOwnerId ?? primaryDragonOrb?.currentOwnerId ?? null
+    const dragonInventory = dragonAwardOwnerId && primaryDragonOrb
+      ? await getDragonInventory(prisma, dragonAwardOwnerId, primaryDragonOrb.seasonKey)
+      : null
 
     const targetUserIds = Array.from(
       new Set(
@@ -157,26 +178,27 @@ export async function GET(
         effect: chest.effect,
         status: chest.status,
       })),
-      dragonAward: dragonOrb ? {
+      dragonAward: primaryDragonOrb ? {
         awarded: true,
-        winnerUserId: dragonOrb.currentOwnerId,
-        winnerName: dragonOrb.currentOwner?.name ?? null,
-        awardedStar: dragonOrb.star,
-        awardedOrbName: (() => {
-          const names: Record<number, string> = {
-            1: 'Nhất Tinh Châu',
-            2: 'Nhị Tinh Châu',
-            3: 'Tam Tinh Châu',
-            4: 'Tứ Tinh Châu',
-            5: 'Ngũ Tinh Châu',
-            6: 'Lục Tinh Châu',
-            7: 'Thất Tinh Châu',
-          }
-          return names[dragonOrb.star] ?? `${dragonOrb.star} Tinh Châu`
-        })(),
-        dragonWeekId: dragonOrb.dragonWeekId,
-        orbId: dragonOrb.id,
-        duplicateCountForStar: dragonInventory?.stars[String(dragonOrb.star)]?.count ?? undefined,
+        winnerUserId: dragonAwardOwnerId ?? primaryDragonOrb.currentOwnerId,
+        winnerName: primaryDragonOrb.originalOwner?.name ?? primaryDragonOrb.currentOwner?.name ?? null,
+        awardedStar: primaryDragonOrb.star,
+        awardedOrbName: getDragonOrbName(primaryDragonOrb.star),
+        awardedOrbs: sortedDragonOrbs.map((orb: {
+          id: number
+          star: number
+          source: string
+        }) => ({
+          id: orb.id,
+          star: orb.star,
+          orbName: getDragonOrbName(orb.star),
+          source: orb.source,
+          kind: orb.source === DRAGON_ORB_BONUS_RACE_SOURCE ? 'BONUS' : 'FEATURED',
+          duplicateCountForStar: dragonInventory?.stars[String(orb.star)]?.count ?? undefined,
+        })),
+        dragonWeekId: primaryDragonOrb.dragonWeekId,
+        orbId: primaryDragonOrb.id,
+        duplicateCountForStar: dragonInventory?.stars[String(primaryDragonOrb.star)]?.count ?? undefined,
         setProgressAfter: dragonInventory?.progress ?? undefined,
         summonReady: dragonInventory?.summonReady ?? undefined,
         reason: dragonInventory?.claimBlocked ? dragonInventory.blockedReason : undefined,

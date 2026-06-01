@@ -127,6 +127,14 @@ export interface RaceStatus {
     winnerUserId?: number
     awardedStar?: number
     awardedOrbName?: string
+    awardedOrbs?: Array<{
+      id: number
+      star: number
+      orbName: string
+      source: string
+      kind: 'FEATURED' | 'BONUS'
+      duplicateCountForStar?: number
+    }>
     dragonWeekId?: number
     duplicateCountForStar?: number
     setProgressAfter?: number

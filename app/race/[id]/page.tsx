@@ -451,11 +451,25 @@ export default function RaceDetailPage({
                         <h3 className="mt-1 font-display text-3xl text-white text-outlined">Thất Tinh Dzịt Châu</h3>
                         {dragonAward?.awarded ? (
                           <div className="mt-3 space-y-1 font-readable text-base text-white/82">
-                            <p>Tuần này rơi: {dragonAward.awardedOrbName}.</p>
-                            <p>{dragonAward.winnerName ?? 'Winner'} đoạt được {dragonAward.awardedOrbName}.</p>
+                            <p>Thiên tượng chính: {dragonAward.awardedOrbName}.</p>
+                            <p>{dragonAward.winnerName ?? 'Winner'} mở Tàng Châu Các và nhận:</p>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {(dragonAward.awardedOrbs?.length ? dragonAward.awardedOrbs : [{
+                                id: dragonAward.orbId ?? 0,
+                                star: dragonAward.awardedStar ?? 0,
+                                orbName: dragonAward.awardedOrbName ?? 'Long Châu',
+                                kind: 'FEATURED' as const,
+                                duplicateCountForStar: dragonAward.duplicateCountForStar,
+                              }]).map((orb) => (
+                                <span key={`${orb.kind}-${orb.id}`} className="ggd-tag bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]">
+                                  {orb.kind === 'BONUS' ? 'Châu phụ' : 'Thiên tượng'} · {orb.orbName}
+                                  {(orb.duplicateCountForStar ?? 0) > 1 ? ` x${orb.duplicateCountForStar}` : ''}
+                                </span>
+                              ))}
+                            </div>
                             {typeof dragonAward.setProgressAfter === 'number' && <p>Bộ hiện tại: {dragonAward.setProgressAfter}/7.</p>}
-                            {(dragonAward.duplicateCountForStar ?? 0) > 1 && (
-                              <p>Đây là viên {dragonAward.awardedOrbName} thứ {dragonAward.duplicateCountForStar}. Có thể đem lên Sàn Đổi Châu.</p>
+                            {dragonAward.awardedOrbs?.some((orb) => (orb.duplicateCountForStar ?? 0) > 1) && (
+                              <p>Châu dư đã có duyên lên Sàn Đổi Châu.</p>
                             )}
                           </div>
                         ) : (

@@ -118,7 +118,7 @@ function DragonWeeklyOmen({ currentWeek }: { currentWeek: NonNullable<DragonStat
             {currentWeek.headline ?? `${orbName} xuất thế.`}
           </div>
           <p className="mt-2 max-w-2xl font-readable text-sm leading-relaxed text-white/72">
-            {currentWeek.subline ?? `Tuần này săn ${orbName}. Vịt cán đích đầu tiên sẽ mang châu về các.`}
+            {currentWeek.subline ?? `Tuần này săn ${orbName}. Vịt cán đích đầu tiên nhận thiên tượng chính và một châu phụ.`}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <span className="ggd-tag bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]">

@@ -2,8 +2,24 @@
 import { getDragonOrbName } from './naming'
 import { getEligibleDragonWinner } from './getEligibleDragonWinner'
 import { getDragonWeekForRace } from './weekSchedule'
-import { DEFAULT_DRAGON_SEASON_KEY, DRAGON_ORB_RACE_SOURCE, isThomasUser, withDragonTransaction } from './utils'
+import {
+  DEFAULT_DRAGON_SEASON_KEY,
+  DRAGON_ORB_BONUS_RACE_SOURCE,
+  DRAGON_ORB_FEATURED_RACE_SOURCE,
+  DRAGON_ORB_RACE_SOURCES,
+  isThomasUser,
+  withDragonTransaction,
+} from './utils'
 import { getSummonReadiness } from './resolveDragonSummon'
+
+export type AwardedDragonOrb = {
+  id: number
+  star: number
+  orbName: string
+  source: string
+  kind: 'FEATURED' | 'BONUS'
+  duplicateCountForStar?: number
+}
 
 export type AwardDragonOrbResult = {
   awarded: boolean
@@ -11,6 +27,7 @@ export type AwardDragonOrbResult = {
   winnerUserId?: number
   awardedStar?: number
   awardedOrbName?: string
+  awardedOrbs?: AwardedDragonOrb[]
   dragonWeekId?: number
   duplicateCountForStar?: number
   setProgressAfter?: number
@@ -18,10 +35,19 @@ export type AwardDragonOrbResult = {
   orbId?: number
 }
 
+function getRandomBonusStar(options: { bonusStar?: number; random?: () => number }) {
+  if (typeof options.bonusStar === 'number') {
+    return Math.min(7, Math.max(1, Math.floor(options.bonusStar)))
+  }
+
+  const random = options.random ?? Math.random
+  return Math.floor(random() * 7) + 1
+}
+
 export async function awardDragonOrbForRace(
   prisma: any,
   raceId: number,
-  options: { seasonKey?: string; seasonStart?: Date } = {}
+  options: { seasonKey?: string; seasonStart?: Date; bonusStar?: number; random?: () => number } = {}
 ): Promise<AwardDragonOrbResult> {
   return withDragonTransaction(prisma, async (tx) => {
     const race = await tx.race.findUnique({
@@ -48,7 +74,7 @@ export async function awardDragonOrbForRace(
     const existingOrb = await tx.dragonOrb.findFirst({
       where: {
         originalRaceId: raceId,
-        source: DRAGON_ORB_RACE_SOURCE,
+        source: { in: DRAGON_ORB_RACE_SOURCES },
       },
     })
 
@@ -68,51 +94,81 @@ export async function awardDragonOrbForRace(
 
     const dragonWeek = await getDragonWeekForRace(tx, race, options)
     const seasonKey = dragonWeek.seasonKey ?? options.seasonKey ?? DEFAULT_DRAGON_SEASON_KEY
-    const orb = await tx.dragonOrb.create({
-      data: {
-        currentOwnerId: eligibleWinner.userId,
-        originalOwnerId: eligibleWinner.userId,
-        originalRaceId: raceId,
-        dragonWeekId: dragonWeek.id,
-        seasonKey,
+    const drops = [
+      {
         star: dragonWeek.star,
-        source: DRAGON_ORB_RACE_SOURCE,
-        status: 'ACTIVE',
+        source: DRAGON_ORB_FEATURED_RACE_SOURCE,
+        kind: 'FEATURED' as const,
       },
-    })
+      {
+        star: getRandomBonusStar(options),
+        source: DRAGON_ORB_BONUS_RACE_SOURCE,
+        kind: 'BONUS' as const,
+      },
+    ]
+    const awardedOrbs: AwardedDragonOrb[] = []
+
+    for (const drop of drops) {
+      const orb = await tx.dragonOrb.create({
+        data: {
+          currentOwnerId: eligibleWinner.userId,
+          originalOwnerId: eligibleWinner.userId,
+          originalRaceId: raceId,
+          dragonWeekId: dragonWeek.id,
+          seasonKey,
+          star: drop.star,
+          source: drop.source,
+          status: 'ACTIVE',
+        },
+      })
+
+      awardedOrbs.push({
+        id: orb.id,
+        star: drop.star,
+        orbName: getDragonOrbName(drop.star),
+        source: drop.source,
+        kind: drop.kind,
+      })
+
+      await tx.dragonOrbEvent.create({
+        data: {
+          orbId: orb.id,
+          userId: eligibleWinner.userId,
+          raceId,
+          type: 'AWARDED',
+          message: drop.kind === 'FEATURED'
+            ? `${winner?.name ?? `User ${eligibleWinner.userId}`} đoạt được thiên tượng ${getDragonOrbName(drop.star)}.`
+            : `${winner?.name ?? `User ${eligibleWinner.userId}`} nhận thêm ${getDragonOrbName(drop.star)} từ La Bàn.`,
+          payloadJson: JSON.stringify({
+            awardedStar: drop.star,
+            dropKind: drop.kind,
+            participantId: eligibleWinner.participantId ?? null,
+            rank: eligibleWinner.rank,
+          }),
+        },
+      })
+    }
 
     await tx.dragonWeek.update({
       where: { id: dragonWeek.id },
       data: {
         raceId,
-        awardedOrbId: orb.id,
+        awardedOrbId: awardedOrbs[0]?.id,
         status: 'AWARDED',
       },
     })
 
-    await tx.dragonOrbEvent.create({
-      data: {
-        orbId: orb.id,
-        userId: eligibleWinner.userId,
-        raceId,
-        type: 'AWARDED',
-        message: `${winner?.name ?? `User ${eligibleWinner.userId}`} đoạt được ${getDragonOrbName(dragonWeek.star)}.`,
-        payloadJson: JSON.stringify({
-          awardedStar: dragonWeek.star,
-          participantId: eligibleWinner.participantId ?? null,
-          rank: eligibleWinner.rank,
-        }),
-      },
-    })
+    for (const awardedOrb of awardedOrbs) {
+      awardedOrb.duplicateCountForStar = await tx.dragonOrb.count({
+        where: {
+          currentOwnerId: eligibleWinner.userId,
+          seasonKey,
+          status: 'ACTIVE',
+          star: awardedOrb.star,
+        },
+      })
+    }
 
-    const duplicateCountForStar = await tx.dragonOrb.count({
-      where: {
-        currentOwnerId: eligibleWinner.userId,
-        seasonKey,
-        status: 'ACTIVE',
-        star: dragonWeek.star,
-      },
-    })
     const readiness = await getSummonReadiness(tx, eligibleWinner.userId, seasonKey)
 
     return {
@@ -120,11 +176,12 @@ export async function awardDragonOrbForRace(
       winnerUserId: eligibleWinner.userId,
       awardedStar: dragonWeek.star,
       awardedOrbName: getDragonOrbName(dragonWeek.star),
+      awardedOrbs,
       dragonWeekId: dragonWeek.id,
-      duplicateCountForStar,
+      duplicateCountForStar: awardedOrbs[0]?.duplicateCountForStar,
       setProgressAfter: readiness.progress,
       summonReady: readiness.ready,
-      orbId: orb.id,
+      orbId: awardedOrbs[0]?.id,
     }
   }) as Promise<AwardDragonOrbResult>
 }

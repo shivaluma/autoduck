@@ -384,7 +384,7 @@ test('dragon weekly omen announces the current drop and honors admin override', 
   assert.equal(overridden.isOverride, true)
 })
 
-test('official race awards exactly one weekly orb and reruns are idempotent', async () => {
+test('official race awards featured plus bonus orb and reruns are idempotent', async () => {
   const prisma = new DragonMockPrisma({
     users: [
       { id: 1, name: 'Thomas', shields: 9999 },
@@ -399,15 +399,16 @@ test('official race awards exactly one weekly orb and reruns are idempotent', as
     ],
   })
 
-  const first = await awardDragonOrbForRace(prisma, 10, { seasonStart: new Date('2026-01-05T00:00:00.000Z') })
-  const second = await awardDragonOrbForRace(prisma, 10, { seasonStart: new Date('2026-01-05T00:00:00.000Z') })
+  const first = await awardDragonOrbForRace(prisma, 10, { seasonStart: new Date('2026-01-05T00:00:00.000Z'), bonusStar: 4 })
+  const second = await awardDragonOrbForRace(prisma, 10, { seasonStart: new Date('2026-01-05T00:00:00.000Z'), bonusStar: 4 })
 
   assert.equal(first.awarded, true)
   assert.equal(first.winnerUserId, 2)
   assert.equal(first.awardedStar, 1)
+  assert.deepEqual((first as any).awardedOrbs.map((orb: { star: number }) => orb.star), [1, 4])
   assert.equal(second.awarded, false)
   assert.equal(second.reason, 'ALREADY_AWARDED')
-  assert.equal([...prisma.dragonOrbs.values()].length, 1)
+  assert.equal([...prisma.dragonOrbs.values()].length, 2)
 })
 
 test('boss clone visual winner awards the orb to the real owner', async () => {

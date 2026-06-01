@@ -181,7 +181,7 @@ export default function RulesPage() {
             <div>
               <div className="font-display text-3xl text-[var(--color-ggd-gold)] text-outlined">Thất Tinh Dzịt Châu</div>
               <p className="mt-2 max-w-3xl font-readable text-sm leading-relaxed text-white/75">
-                La Bàn Thất Tinh đã xoay. Mỗi tuần, một Long Châu thức giấc trên đường đua. Vịt thắng trận mang châu về Tàng Châu Các.
+                La Bàn Thất Tinh đã xoay. Mỗi tuần, một Long Châu thức giấc trên đường đua. Vịt thắng trận mang thiên tượng về các, kèm một viên phụ từ La Bàn.
               </p>
             </div>
             <Link href="/dragon" className="ggd-btn bg-[var(--color-ggd-gold)] px-4 py-2 text-sm text-[var(--color-ggd-outline)]">
@@ -211,7 +211,7 @@ export default function RulesPage() {
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {[
               ['Thiên Tinh Luân', 'Mỗi tuần, La Bàn gọi tên một viên châu. Hết Thất Tinh lại quay về Nhất Tinh.'],
-              ['Kẻ Về Nhất', 'Vịt cán đích đầu tiên nhận châu của tuần. Vinh quang nhỏ, nghiệp lớn.'],
+              ['Kẻ Về Nhất', 'Vịt cán đích đầu tiên nhận châu của tuần và thêm một viên phụ. Vinh quang nhỏ, nghiệp lớn.'],
               ['Châu Dư Thành Kèo', 'Có dư châu thì đưa lên Sàn Đổi Châu. Một viên đổi một viên, rõ ràng như giao kèo cổ.'],
               ['Thất Tinh Hội Tụ', 'Đủ bảy viên, cổng rồng mở. Khai Môn Triệu Long bắt đầu.'],
               ['Vảy Rồng', 'Thần Long AutoDuck ban Long Lân Hộ Mệnh: báu vật hiếm của Tàng Châu Các.'],

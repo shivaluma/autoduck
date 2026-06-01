@@ -980,11 +980,14 @@ async function executeRace(
 
       const dragonAward = await awardDragonOrbForRace(tx, raceId)
       if (dragonAward.awarded) {
+        const lootLine = dragonAward.awardedOrbs?.length
+          ? dragonAward.awardedOrbs.map((orb) => orb.orbName).join(' + ')
+          : dragonAward.awardedOrbName
         await tx.commentaryLog.create({
           data: {
             raceId,
             timestamp: 42,
-            content: `${dragonAward.awardedOrbName} đã rơi vào Tàng Châu Các. Duplicate thì đem lên Sàn Đổi Châu, đừng ôm rồi than thiếu bộ.`,
+            content: `${lootLine} đã rơi vào Tàng Châu Các. La Bàn hào phóng bất thường, cả chuồng bắt đầu tính kèo.`,
           },
         })
       }

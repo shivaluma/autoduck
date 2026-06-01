@@ -230,7 +230,7 @@ export default function DragonPage() {
         <section className="ggd-card-green p-5">
           <div className="font-display text-2xl text-white text-outlined">Luật Truy Châu</div>
           <p className="mt-3 font-readable text-sm leading-relaxed text-white/75">
-            Mỗi tuần một Long Châu thức giấc. Châu dư đem lên Sàn Đổi Châu. Khi Thất Tinh hội tụ, Khai Môn Triệu Long sẽ mở cổng ban Long Lân Hộ Mệnh.
+            Mỗi tuần một Long Châu thức giấc. Vịt thắng trận nhận thiên tượng chính và một châu phụ. Châu dư đem lên Sàn Đổi Châu; Thất Tinh hội tụ thì Khai Môn Triệu Long.
           </p>
         </section>
 
