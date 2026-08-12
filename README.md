@@ -1,5 +1,18 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## ĐUA DZỊT — Season 3
+
+Season 3 is isolated from the v2 chest/boss/dragon modifiers. The Duck Duck Race ranking is entered as the vanilla result; the Season 3 rules engine resolves one Chaos card, Bottom penalties, Shields, King status, secret predictions, Duck News, and prediction-point rewards afterward.
+
+Chaos cards: Normal, Reverse, Duo, Triple Elimination, Cut Line, Constructors, and Bounty Hunt. Duo pairs and Constructors teams are randomized once before the race and persisted for the resolve.
+
+- Player view: `/season-3?token=<personal-token>`
+- Host control: `/admin/season-3` with `RACE_SECRET_KEY`
+- Season 3 API: `/api/season3`, `/api/admin/season3`, `/api/season3/redeem`
+- Apply the database migration with `pnpm db:migrate:app` after generating the Prisma client.
+
+The Season 3 champion is calculated from `championshipPoints` and race wins only; prediction points never affect championship ranking.
+
 ## Getting Started
 
 First, run the development server:

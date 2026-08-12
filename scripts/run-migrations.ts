@@ -471,6 +471,134 @@ async function createDragonMetaSystem(prisma: PrismaClient) {
   await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DragonItemEvent_type_createdAt_idx" ON "DragonItemEvent"("type", "createdAt")`)
 }
 
+async function createSeason3System(prisma: PrismaClient) {
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "Season" (
+      "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      "key" TEXT NOT NULL,
+      "name" TEXT NOT NULL,
+      "year" INTEGER NOT NULL,
+      "weeks" INTEGER NOT NULL DEFAULT 12,
+      "status" TEXT NOT NULL DEFAULT 'active',
+      "championUserId" INTEGER,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "endedAt" DATETIME,
+      CONSTRAINT "Season_championUserId_fkey" FOREIGN KEY ("championUserId") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    )
+  `)
+  await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "Season_key_key" ON "Season"("key")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "Season_status_createdAt_idx" ON "Season"("status", "createdAt")`)
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "SeasonPlayer" (
+      "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      "seasonId" INTEGER NOT NULL,
+      "userId" INTEGER NOT NULL,
+      "accessToken" TEXT NOT NULL,
+      "scars" INTEGER NOT NULL DEFAULT 0,
+      "shields" INTEGER NOT NULL DEFAULT 0,
+      "shieldsUsed" INTEGER NOT NULL DEFAULT 0,
+      "predictionPoints" INTEGER NOT NULL DEFAULT 0,
+      "kingStreak" INTEGER NOT NULL DEFAULT 0,
+      "isKing" BOOLEAN NOT NULL DEFAULT false,
+      "raceWins" INTEGER NOT NULL DEFAULT 0,
+      "raceCount" INTEGER NOT NULL DEFAULT 0,
+      "championshipPoints" INTEGER NOT NULL DEFAULT 0,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" DATETIME NOT NULL,
+      CONSTRAINT "SeasonPlayer_seasonId_fkey" FOREIGN KEY ("seasonId") REFERENCES "Season" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT "SeasonPlayer_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    )
+  `)
+  await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "SeasonPlayer_accessToken_key" ON "SeasonPlayer"("accessToken")`)
+  await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "SeasonPlayer_seasonId_userId_key" ON "SeasonPlayer"("seasonId", "userId")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "SeasonPlayer_seasonId_predictionPoints_idx" ON "SeasonPlayer"("seasonId", "predictionPoints")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "SeasonPlayer_seasonId_isKing_idx" ON "SeasonPlayer"("seasonId", "isKing")`)
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "SeasonWeek" (
+      "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      "seasonId" INTEGER NOT NULL,
+      "weekNumber" INTEGER NOT NULL,
+      "status" TEXT NOT NULL DEFAULT 'open',
+      "chaosType" TEXT NOT NULL,
+      "chaosTargetUserId" INTEGER,
+      "chaosTargetUserId2" INTEGER,
+      "chaosRevealedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "predictionsLockedAt" DATETIME,
+      "raceId" INTEGER,
+      "recap" TEXT,
+      "resolvedAt" DATETIME,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" DATETIME NOT NULL,
+      CONSTRAINT "SeasonWeek_seasonId_fkey" FOREIGN KEY ("seasonId") REFERENCES "Season" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT "SeasonWeek_raceId_fkey" FOREIGN KEY ("raceId") REFERENCES "Race" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    )
+  `)
+  await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "SeasonWeek_raceId_key" ON "SeasonWeek"("raceId")`)
+  await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "SeasonWeek_seasonId_weekNumber_key" ON "SeasonWeek"("seasonId", "weekNumber")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "SeasonWeek_seasonId_status_idx" ON "SeasonWeek"("seasonId", "status")`)
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "SeasonPrediction" (
+      "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      "weekId" INTEGER NOT NULL,
+      "predictorPlayerId" INTEGER NOT NULL,
+      "predictorUserId" INTEGER NOT NULL,
+      "targetUserId" INTEGER NOT NULL,
+      "pointsAwarded" INTEGER NOT NULL DEFAULT 0,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "SeasonPrediction_weekId_fkey" FOREIGN KEY ("weekId") REFERENCES "SeasonWeek" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT "SeasonPrediction_predictorPlayerId_fkey" FOREIGN KEY ("predictorPlayerId") REFERENCES "SeasonPlayer" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT "SeasonPrediction_predictorUserId_fkey" FOREIGN KEY ("predictorUserId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT "SeasonPrediction_targetUserId_fkey" FOREIGN KEY ("targetUserId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    )
+  `)
+  await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "SeasonPrediction_weekId_predictorPlayerId_key" ON "SeasonPrediction"("weekId", "predictorPlayerId")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "SeasonPrediction_weekId_targetUserId_idx" ON "SeasonPrediction"("weekId", "targetUserId")`)
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "SeasonReward" (
+      "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      "seasonId" INTEGER NOT NULL,
+      "key" TEXT NOT NULL,
+      "name" TEXT NOT NULL,
+      "cost" INTEGER NOT NULL,
+      "stock" INTEGER,
+      "active" BOOLEAN NOT NULL DEFAULT true,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "SeasonReward_seasonId_fkey" FOREIGN KEY ("seasonId") REFERENCES "Season" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    )
+  `)
+  await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "SeasonReward_seasonId_key_key" ON "SeasonReward"("seasonId", "key")`)
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "SeasonRedemption" (
+      "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      "seasonId" INTEGER NOT NULL,
+      "seasonPlayerId" INTEGER NOT NULL,
+      "rewardId" INTEGER NOT NULL,
+      "pointsSpent" INTEGER NOT NULL,
+      "status" TEXT NOT NULL DEFAULT 'requested',
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "SeasonRedemption_seasonId_fkey" FOREIGN KEY ("seasonId") REFERENCES "Season" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT "SeasonRedemption_seasonPlayerId_fkey" FOREIGN KEY ("seasonPlayerId") REFERENCES "SeasonPlayer" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT "SeasonRedemption_rewardId_fkey" FOREIGN KEY ("rewardId") REFERENCES "SeasonReward" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    )
+  `)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "SeasonRedemption_seasonId_createdAt_idx" ON "SeasonRedemption"("seasonId", "createdAt")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "SeasonRedemption_seasonPlayerId_createdAt_idx" ON "SeasonRedemption"("seasonPlayerId", "createdAt")`)
+}
+
+async function addSeason3ChaosPayload(prisma: PrismaClient) {
+  try {
+    await prisma.$executeRawUnsafe(`ALTER TABLE "SeasonWeek" ADD COLUMN "chaosPayload" TEXT`)
+  } catch (error) {
+    // SQLite has no IF NOT EXISTS for ADD COLUMN. A repeat run is safe.
+    if (!String(error).toLowerCase().includes('duplicate column')) throw error
+  }
+}
+
 const migrations: Migration[] = [
   {
     id: '2026-04-23-001-shield-charges-v1',
@@ -506,6 +634,16 @@ const migrations: Migration[] = [
     id: '2026-05-26-001-dragon-meta-system',
     name: 'Create Thất Tinh Dzịt Châu Dragon Orb, trade, summon, and item tables',
     run: createDragonMetaSystem,
+  },
+  {
+    id: '2026-08-12-001-season-3-domain',
+    name: 'Create Đua Dzịt Season 3 chaos, prediction, king, and merch tables',
+    run: createSeason3System,
+  },
+  {
+    id: '2026-08-12-002-season-3-chaos-payload',
+    name: 'Persist Season 3 Duo and Constructors groupings',
+    run: addSeason3ChaosPayload,
   },
 ]
 

@@ -34,6 +34,10 @@ model User {
   dragonItems        DragonItem[]
   dragonOrbEvents    DragonOrbEvent[]
   dragonItemEvents   DragonItemEvent[]
+  seasonPlayers      SeasonPlayer[]
+  seasonPredictions  SeasonPrediction[] @relation("PredictionAuthor")
+  seasonTargets      SeasonPrediction[] @relation("PredictionTarget")
+  championSeasons    Season[] @relation("SeasonChampion")
 }
 
 model Race {
@@ -53,6 +57,7 @@ model Race {
   dragonItems    DragonItem[]    @relation("DragonItemEquippedRace")
   dragonOrbEvents  DragonOrbEvent[]
   dragonItemEvents DragonItemEvent[]
+  seasonWeek     SeasonWeek? @relation("SeasonWeekRace")
 
   @@index([createdAt])
   @@index([isTest, createdAt])
@@ -347,4 +352,129 @@ model DragonItemEvent {
   @@index([userId, createdAt])
   @@index([raceId])
   @@index([type, createdAt])
+}
+
+// Season 3 domain. This is deliberately separate from v2 chest/boss/dragon
+// state: each week starts with one vanilla ranking, then resolves deterministically.
+model Season {
+  id             Int       @id @default(autoincrement())
+  key            String    @unique
+  name           String
+  year           Int
+  weeks          Int       @default(12)
+  status         String    @default("active") // draft, active, completed
+  championUserId Int?
+  createdAt      DateTime  @default(now())
+  endedAt        DateTime?
+
+  champion       User?             @relation("SeasonChampion", fields: [championUserId], references: [id], onDelete: SetNull)
+  players        SeasonPlayer[]
+  weeksPlan      SeasonWeek[]
+  rewards        SeasonReward[]
+  redemptions    SeasonRedemption[]
+
+  @@index([status, createdAt])
+}
+
+model SeasonPlayer {
+  id                 Int       @id @default(autoincrement())
+  seasonId           Int
+  userId             Int
+  accessToken        String    @unique
+  scars              Int       @default(0)
+  shields            Int       @default(0)
+  shieldsUsed        Int       @default(0)
+  predictionPoints   Int       @default(0)
+  kingStreak         Int       @default(0)
+  isKing             Boolean   @default(false)
+  raceWins           Int       @default(0)
+  raceCount          Int       @default(0)
+  championshipPoints Int       @default(0)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  season             Season             @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  predictions        SeasonPrediction[] @relation("PredictionAuthorPlayer")
+  redemptions        SeasonRedemption[]
+
+  @@unique([seasonId, userId])
+  @@index([seasonId, predictionPoints])
+  @@index([seasonId, isKing])
+}
+
+model SeasonWeek {
+  id                  Int       @id @default(autoincrement())
+  seasonId            Int
+  weekNumber          Int
+  status              String    @default("open") // open, locked, resolved
+  chaosType           String
+  chaosTargetUserId   Int?
+  chaosTargetUserId2  Int?
+  chaosPayload        String?
+  chaosRevealedAt     DateTime  @default(now())
+  predictionsLockedAt DateTime?
+  raceId              Int?      @unique
+  recap               String?
+  resolvedAt          DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  season              Season             @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  race                Race?              @relation("SeasonWeekRace", fields: [raceId], references: [id], onDelete: SetNull)
+  predictions         SeasonPrediction[]
+
+  @@unique([seasonId, weekNumber])
+  @@index([seasonId, status])
+}
+
+model SeasonPrediction {
+  id                Int       @id @default(autoincrement())
+  weekId            Int
+  predictorPlayerId Int
+  predictorUserId   Int
+  targetUserId      Int
+  pointsAwarded     Int       @default(0)
+  createdAt         DateTime  @default(now())
+
+  week            SeasonWeek   @relation(fields: [weekId], references: [id], onDelete: Cascade)
+  predictorPlayer SeasonPlayer @relation("PredictionAuthorPlayer", fields: [predictorPlayerId], references: [id], onDelete: Cascade)
+  predictor       User         @relation("PredictionAuthor", fields: [predictorUserId], references: [id], onDelete: Cascade)
+  target          User         @relation("PredictionTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
+
+  @@unique([weekId, predictorPlayerId])
+  @@index([weekId, targetUserId])
+}
+
+model SeasonReward {
+  id          Int       @id @default(autoincrement())
+  seasonId    Int
+  key         String
+  name        String
+  cost        Int
+  stock       Int?
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+
+  season      Season             @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  redemptions SeasonRedemption[]
+
+  @@unique([seasonId, key])
+}
+
+model SeasonRedemption {
+  id             Int       @id @default(autoincrement())
+  seasonId       Int
+  seasonPlayerId Int
+  rewardId       Int
+  pointsSpent    Int
+  status         String    @default("requested") // requested, fulfilled, cancelled
+  createdAt      DateTime  @default(now())
+
+  season       Season       @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonPlayer SeasonPlayer @relation(fields: [seasonPlayerId], references: [id], onDelete: Cascade)
+  reward      SeasonReward @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+
+  @@index([seasonId, createdAt])
+  @@index([seasonPlayerId, createdAt])
 }
