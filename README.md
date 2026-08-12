@@ -9,7 +9,8 @@ Chaos cards: Normal, Reverse, Duo, Triple Elimination, Cut Line, Constructors, a
 - Player view: `/season-3?token=<personal-token>`
 - Host control: `/admin/season-3` with `RACE_SECRET_KEY`
 - Season 3 API: `/api/season3`, `/api/admin/season3`, `/api/season3/redeem`
-- Apply the database migration with `pnpm db:migrate:app` after generating the Prisma client.
+- Database auto-bootstrap runs before `pnpm dev`, `pnpm start`, and Docker startup: it performs `prisma db push`, then applies idempotent app migrations. Each applied migration is recorded in `AppMigration.runAt`.
+- Run it manually with `pnpm db:bootstrap`; use `pnpm db:migrate:app` only when you want to run the app migration step without Prisma schema sync.
 
 The Season 3 champion is calculated from `championshipPoints` and race wins only; prediction points never affect championship ranking.
 

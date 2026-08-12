@@ -9,20 +9,13 @@ Xvfb :99 -screen 0 1280x720x24 &
 export DISPLAY=:99
 sleep 1
 
-# 2. Run Prisma DB push (auto-create/migrate tables)
-echo "🗄️  Running Prisma DB push..."
-prisma db push
-echo "✅ Database ready!"
+# 2. Sync schema and run idempotent app migrations
+bash scripts/auto-migrate.sh
 
 # 3. Seed data (only if DB is empty)
 echo "🌱 Checking seed data..."
 tsx prisma/seed.ts
 
-# 4. Run idempotent app migrations
-echo "🧭 Running app migrations..."
-tsx scripts/run-migrations.ts
-echo "✅ App migrations ready!"
-
-# 5. Start Next.js server
+# 4. Start Next.js server
 echo "🚀 Starting Next.js server on port ${PORT:-3000}..."
 exec node server.js

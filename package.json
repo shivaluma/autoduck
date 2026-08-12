@@ -3,12 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "pnpm db:bootstrap && next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "pnpm db:bootstrap && next start",
     "lint": "eslint",
     "test": "node --import tsx --test tests/**/*.test.ts",
     "db:push": "prisma db push",
+    "db:bootstrap": "bash scripts/auto-migrate.sh",
     "db:seed": "tsx prisma/seed.ts",
     "db:migrate:app": "tsx scripts/run-migrations.ts",
     "db:studio": "prisma studio"
