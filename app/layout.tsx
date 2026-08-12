@@ -27,8 +27,8 @@ const beVietnam = Be_Vietnam_Pro({
 });
 
 export const metadata: Metadata = {
-  title: "AUTODUCK 🦆 Quack Quack!",
-  description: "Duck Racing Club — Ai là con vịt tuần này?",
+  title: "ĐUA DZỊT — SEASON 3 🦆",
+  description: "Vanilla Duck Duck Race, Chaos cards, King of the Pond và secret predictions.",
   icons: {
     icon: "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦆</text></svg>",
   },

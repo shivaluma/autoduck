@@ -1,13 +1,5 @@
-import { NewRaceContent } from './content'
+import { redirect } from 'next/navigation'
 
-interface PageProps {
-  searchParams: Promise<{ test?: string; secret?: string }>
-}
-
-export default async function NewRacePage({ searchParams }: PageProps) {
-  const params = await searchParams
-  const testMode = params.test === 'true'
-  const secretKey = params.secret
-
-  return <NewRaceContent testMode={testMode} secretKey={secretKey} />
+export default function NewRacePage() {
+  redirect('/admin/season-3')
 }
