@@ -407,7 +407,7 @@ model SeasonWeek {
   id                  Int       @id @default(autoincrement())
   seasonId            Int
   weekNumber          Int
-  status              String    @default("open") // open, locked, resolved
+  status              String    @default("open") // open, locked, racing, resolved
   chaosType           String
   chaosTargetUserId   Int?
   chaosTargetUserId2  Int?

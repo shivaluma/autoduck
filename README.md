@@ -7,7 +7,7 @@ Season 3 is isolated from the v2 chest/boss/dragon modifiers. The Duck Duck Race
 Chaos cards: Normal, Reverse, Duo, Triple Elimination, Cut Line, Constructors, and Bounty Hunt. Duo pairs and Constructors teams are randomized once before the race and persisted for the resolve.
 
 - Player view: `/season-3?token=<personal-token>`
-- Host control: `/admin/season-3` with `RACE_SECRET_KEY`
+- Host control: `/admin/season-3` with `RACE_SECRET_KEY`. Lock prediction, then start the vanilla Duck Duck Race from the same desk; the real race result is captured automatically and Season 3 resolves without manual ranking entry.
 - Season 3 API: `/api/season3`, `/api/admin/season3`, `/api/season3/redeem`
 - Database auto-bootstrap runs before `pnpm dev`, `pnpm start`, and Docker startup: it performs `prisma db push`, then applies idempotent app migrations. Each applied migration is recorded in `AppMigration.runAt`.
 - Run it manually with `pnpm db:bootstrap`; use `pnpm db:migrate:app` only when you want to run the app migration step without Prisma schema sync.

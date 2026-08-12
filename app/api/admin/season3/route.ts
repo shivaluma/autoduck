@@ -2,16 +2,11 @@ import { randomUUID } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import {
-  applyScarEconomy,
   DEFAULT_SEASON3_REWARDS,
-  generateDuckNews,
-  resolvePredictions,
-  resolveSeason3Race,
   selectChampion,
   selectChaosCard,
-  type ChaosType,
-  type Season3RankingEntry,
 } from '@/lib/season3'
+import { startSeason3Race } from '@/lib/season3-race'
 
 function authorized(request: Request, body?: { secret?: string }) {
   const urlSecret = new URL(request.url).searchParams.get('secret')
@@ -44,7 +39,7 @@ export async function GET(request: Request) {
     orderBy: { createdAt: 'desc' },
     include: {
       players: { include: { user: { select: { id: true, name: true } } }, orderBy: { user: { name: 'asc' } } },
-      weeksPlan: { orderBy: { weekNumber: 'asc' }, include: { predictions: true } },
+      weeksPlan: { orderBy: { weekNumber: 'asc' }, include: { predictions: true, race: { select: { id: true, status: true } } } },
       rewards: { orderBy: { cost: 'asc' } },
     },
   })
@@ -68,7 +63,7 @@ export async function GET(request: Request) {
       isKing: player.isKing,
       kingStreak: player.kingStreak,
     })),
-    weeks: season.weeksPlan.map((week: { id: number; weekNumber: number; status: string; chaosType: string; chaosTargetUserId: number | null; chaosTargetUserId2: number | null; chaosPayload: string | null; predictions: unknown[]; recap: string | null }) => ({
+    weeks: season.weeksPlan.map((week: { id: number; weekNumber: number; status: string; chaosType: string; chaosTargetUserId: number | null; chaosTargetUserId2: number | null; chaosPayload: string | null; predictions: unknown[]; recap: string | null; race: { id: number; status: string } | null }) => ({
       id: week.id,
       weekNumber: week.weekNumber,
       status: week.status,
@@ -78,6 +73,8 @@ export async function GET(request: Request) {
       chaosGroups: parseChaosGroups(week.chaosPayload),
       predictionCount: week.predictions.length,
       recap: week.recap,
+      raceId: week.race?.id ?? null,
+      raceStatus: week.race?.status ?? null,
     })),
     rewards: season.rewards,
   })
@@ -93,8 +90,6 @@ export async function POST(request: Request) {
     weeks?: number
     userIds?: number[]
     weekId?: number
-    ranking?: Array<{ userId: number; rank: number }>
-    shieldUserIds?: number[]
     championUserId?: number
   }
 
@@ -141,6 +136,12 @@ export async function POST(request: Request) {
     const season = await prisma.season.findFirst({ where: { status: 'active' }, include: { players: { include: { user: true } }, weeksPlan: { orderBy: { weekNumber: 'desc' }, include: { predictions: true } } } })
     if (!season) return fail('Chưa có Season active', 404)
 
+    if (body.action === 'start-race') {
+      if (!body.weekId) return fail('weekId là bắt buộc')
+      const race = await startSeason3Race(body.weekId)
+      return NextResponse.json({ ok: true, raceId: race.id, status: race.status })
+    }
+
     if (body.action === 'open-week') {
       const latest = season.weeksPlan[0]
       if (latest && latest.status !== 'resolved') return fail('Tuần hiện tại chưa resolve', 409)
@@ -156,87 +157,6 @@ export async function POST(request: Request) {
       if (!week || week.status !== 'open') return fail('Tuần không ở trạng thái open', 409)
       const updated = await prisma.seasonWeek.update({ where: { id: week.id }, data: { status: 'locked', predictionsLockedAt: new Date() } })
       return NextResponse.json({ ok: true, week: updated })
-    }
-
-    if (body.action === 'resolve') {
-      if (!body.weekId || !body.ranking) return fail('weekId và ranking là bắt buộc')
-      const week = await prisma.seasonWeek.findUnique({ where: { id: body.weekId }, include: { predictions: true } })
-      if (!week || week.seasonId !== season.id || week.status !== 'locked') return fail('Tuần phải được lock trước khi resolve', 409)
-      const playersById = new Map(season.players.map((player: { userId: number; user: { name: string }; shields: number }) => [player.userId, player]))
-      if (body.ranking.length !== season.players.length || body.ranking.some((entry) => !playersById.has(entry.userId))) return fail('Ranking phải chứa đúng toàn bộ Season players')
-      const shieldUserIds = new Set(body.shieldUserIds ?? [])
-      for (const userId of shieldUserIds) {
-        const player = playersById.get(userId) as { shields: number } | undefined
-        if (!player || player.shields < 1) return fail(`Player ${userId} không có Shield để dùng`)
-      }
-      const ranking: Season3RankingEntry[] = body.ranking.map((entry) => ({
-        userId: entry.userId,
-        name: (playersById.get(entry.userId) as { user: { name: string } }).user.name,
-        rank: entry.rank,
-        hasShield: shieldUserIds.has(entry.userId),
-      }))
-      const previousKing = season.players.find((player: { isKing: boolean }) => player.isKing)
-      const chaos = { type: week.chaosType as ChaosType, targetUserId: week.chaosTargetUserId, targetUserId2: week.chaosTargetUserId2, groups: parseChaosGroups(week.chaosPayload) }
-      const resolved = resolveSeason3Race(ranking, chaos, previousKing ? { userId: previousKing.userId, streak: previousKing.kingStreak } : null)
-      const predictionOutcomes = resolvePredictions(week.predictions, resolved.bottomTwo)
-      const targetName = (userId: number | null) => userId === null ? null : (playersById.get(userId) as { user: { name: string } } | undefined)?.user.name ?? null
-      const predictionWinners = predictionOutcomes.filter((outcome) => outcome.correct).map((outcome) => ({ name: (playersById.get(outcome.predictorUserId) as { user: { name: string } }).user.name }))
-      const recap = generateDuckNews({
-        weekNumber: week.weekNumber,
-        scarVictims: resolved.scarVictims,
-        protectedPlayers: resolved.protectedPlayers,
-        chaos,
-        chaosTargetName: targetName(week.chaosTargetUserId),
-        kingName: targetName(resolved.kingUserId),
-        predictionWinners,
-      })
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = await prisma.$transaction(async (tx: any) => {
-        const race = await tx.race.create({
-          data: {
-            status: 'finished',
-            finalVerdict: resolved.scarVictims.map((entry) => entry.name).join(' & ') || 'Không ai bị phạt hôm nay!',
-            finishedAt: new Date(),
-            participants: {
-              create: resolved.ranking.map((entry) => ({
-                userId: entry.userId,
-                initialRank: entry.rank,
-                gotScar: resolved.scarVictims.some((victim) => victim.userId === entry.userId),
-                usedShield: entry.hasShield && resolved.protectedPlayers.some((player) => player.userId === entry.userId),
-              })),
-            },
-          },
-        })
-        const outcomeByUser = new Map(resolved.scarOutcomes.map((outcome) => [outcome.userId, outcome]))
-        for (const player of season.players as Array<{ id: number; userId: number; scars: number; shields: number }>) {
-          const entry = resolved.ranking.find((candidate) => candidate.userId === player.userId)!
-          const outcome = outcomeByUser.get(player.userId)
-          const economy = applyScarEconomy(player.scars, player.shields, outcome?.scarPoints ?? 0, outcome?.shieldConsumed ?? false)
-          const predictionPoints = predictionOutcomes.filter((prediction) => prediction.predictorUserId === player.userId && prediction.correct).length
-          await tx.seasonPlayer.update({
-            where: { id: player.id },
-            data: {
-              scars: economy.scars,
-              shields: economy.shields,
-              shieldsUsed: outcome?.shieldConsumed ? { increment: 1 } : undefined,
-              predictionPoints: predictionPoints ? { increment: predictionPoints } : undefined,
-              raceCount: { increment: 1 },
-              raceWins: entry.rank === 1 ? { increment: 1 } : undefined,
-              championshipPoints: { increment: resolved.ranking.length - entry.rank + 1 },
-              isKing: player.userId === resolved.kingUserId,
-              kingStreak: player.userId === resolved.kingUserId ? resolved.kingStreak : 0,
-            },
-          })
-        }
-        for (const outcome of predictionOutcomes) {
-          const prediction = week.predictions.find((candidate: { predictorUserId: number }) => candidate.predictorUserId === outcome.predictorUserId)
-          if (prediction) await tx.seasonPrediction.update({ where: { id: prediction.id }, data: { pointsAwarded: outcome.pointsAwarded } })
-        }
-        await tx.seasonWeek.update({ where: { id: week.id }, data: { status: 'resolved', raceId: race.id, recap, resolvedAt: new Date() } })
-        return { raceId: race.id, recap }
-      })
-      return NextResponse.json({ ok: true, ...result, resolution: resolved, predictions: predictionOutcomes })
     }
 
     if (body.action === 'end-season') {

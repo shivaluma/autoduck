@@ -1,0 +1,43 @@
+'use client'
+
+import Link from 'next/link'
+import { useEffect, useMemo, useState } from 'react'
+import { RaceLiveView } from '@/app/race/[id]/race-live-view'
+import type { RaceStatus } from '@/lib/types'
+
+export function Season3RaceView({ raceId }: { raceId: number }) {
+  const [race, setRace] = useState<RaceStatus | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let active = true
+    const fetchRace = async () => {
+      const response = await fetch(`/api/races/${raceId}`)
+      if (!active || !response.ok) return
+      const nextRace = await response.json() as RaceStatus
+      setRace(nextRace)
+      setLoading(false)
+    }
+    void fetchRace()
+    const interval = window.setInterval(() => {
+      if (race?.status !== 'finished' && race?.status !== 'failed') void fetchRace()
+    }, 2500)
+    return () => {
+      active = false
+      window.clearInterval(interval)
+    }
+  }, [raceId, race?.status])
+
+  const ranking = useMemo(() => [...(race?.participants ?? [])].sort((left, right) => (left.initialRank ?? 99) - (right.initialRank ?? 99)), [race])
+
+  if (loading) return <main className="flex min-h-screen items-center justify-center text-white"><div className="text-center"><div className="text-7xl">🦆</div><p className="mt-3 font-display text-2xl">Đang chuẩn bị race...</p></div></main>
+  if (!race) return <main className="flex min-h-screen items-center justify-center text-white"><p>Không tìm thấy race.</p></main>
+
+  const isLive = race.status === 'pending' || race.status === 'running'
+  return <main className="mx-auto min-h-screen max-w-5xl space-y-6 p-6 text-white">
+    <header className="flex flex-wrap items-center justify-between gap-3"><div><div className="text-xs font-black tracking-[0.25em] text-[var(--color-ggd-gold)]">ĐUA DZỊT · SEASON 3</div><h1 className="mt-1 font-display text-4xl">🏁 Duck Duck Race</h1></div><Link href="/season-3" className="rounded-xl border-2 border-white/20 px-4 py-2 font-black">POND</Link></header>
+    {isLive && <><section className="rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-6 text-center"><div className="font-display text-4xl text-[var(--color-ggd-neon-green)]">RACE ĐANG CHẠY 🏃💨</div><p className="mt-2 text-white/65">BXH raw sẽ được lấy tự động khi race kết thúc.</p></section><RaceLiveView raceId={raceId} /></>}
+    {race.status === 'failed' && <section className="rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-6 text-center"><div className="font-display text-3xl text-[var(--color-ggd-orange)]">Race lỗi</div><p className="mt-2 text-white/65">Host có thể quay lại admin để chạy lại.</p></section>}
+    {race.status === 'finished' && <><section className="rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-6 text-center"><div className="text-5xl">📰</div><div className="mt-2 font-display text-3xl">RACE COMPLETE</div><p className="mt-3 text-lg font-black text-[var(--color-ggd-gold)]">{race.finalVerdict}</p><p className="mt-2 text-white/60">Chaos, Shield, King và Prediction đã được resolve.</p></section><section className="overflow-hidden rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)]"><div className="border-b-2 border-white/10 px-5 py-4 font-black">FINAL RANKING</div>{ranking.map((player, index) => <div key={`${player.userId}-${player.cloneIndex ?? 'main'}`} className="flex items-center gap-3 border-b border-white/10 px-5 py-4 last:border-0"><span className="w-8 text-2xl font-black text-white/45">{index + 1}</span><span className="flex-1 font-black">{player.displayName ?? player.name}</span>{player.usedShield && <span className="rounded-full bg-[var(--color-ggd-sky)] px-2 py-1 text-xs font-black text-[var(--color-ggd-outline)]">🛡️ CỨU</span>}{player.gotScar && <span className="rounded-full bg-[var(--color-ggd-orange)] px-2 py-1 text-xs font-black">BỊ LÀM DZỊT</span>}</div>)}</section></>}
+  </main>
+}

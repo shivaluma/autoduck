@@ -150,9 +150,13 @@ export function resolveSeason3Race(
   } else if (chaos.type === 'BOUNTY_HUNT') {
     const wanted = ranking.find((entry) => entry.userId === chaos.targetUserId)
     const cutoff = Math.ceil(ranking.length / 2)
-    affected = wanted && wanted.rank > cutoff ? ranking.filter((entry) => entry.rank >= wanted.rank) : []
-    if (wanted && wanted.rank <= cutoff) reasons.set(wanted.userId, 'Wanted escaped into the Top 50%')
-    if (wanted && wanted.rank > cutoff) reasons.set(wanted.userId, 'Wanted failed to escape the Top 50%')
+    if (wanted && wanted.rank > cutoff) {
+      affected = ranking.filter((entry) => entry.rank >= wanted.rank)
+      reasons.set(wanted.userId, 'Wanted failed to escape the Top 50%')
+    } else {
+      affected = ranking.slice(-2)
+      if (wanted) reasons.set(wanted.userId, 'Wanted escaped into the Top 50%; raw Bottom 2 still lose')
+    }
   } else if (chaos.type === 'DUO') {
     const groups = chaos.groups ?? []
     if (groups.length === 0) throw new Error('Duo Chaos requires persisted pairs')

@@ -8,6 +8,7 @@ import {
   selectChaosCard,
   selectChampion,
 } from '../lib/season3'
+import { mapSeason3RaceRanking, type Season3RaceMappingPlayer } from '../lib/season3-race-mapping'
 
 const ranking = [
   { userId: 1, name: 'Thanh', rank: 1, hasShield: false },
@@ -16,6 +17,39 @@ const ranking = [
   { userId: 4, name: 'Long', rank: 4, hasShield: true },
   { userId: 5, name: 'Nam', rank: 5, hasShield: false },
 ]
+
+const seasonPlayers: Season3RaceMappingPlayer[] = ranking.map((entry) => ({
+  userId: entry.userId,
+  scars: 0,
+  shields: entry.hasShield ? 1 : 0,
+  isKing: entry.userId === 1,
+  kingStreak: 2,
+  user: { name: entry.name },
+}))
+
+test('Season 3 bridge maps the real race result and carries shield state', () => {
+  const mapped = mapSeason3RaceRanking([
+    { rank: 2, name: 'Huy' },
+    { rank: 1, name: 'Thanh' },
+    { rank: 3, name: 'Khoa' },
+    { rank: 5, name: 'Nam' },
+    { rank: 4, name: 'Long' },
+  ], seasonPlayers)
+
+  assert.deepEqual(mapped.map((entry) => entry.userId), [2, 1, 3, 5, 4])
+  assert.equal(mapped.find((entry) => entry.userId === 4)?.hasShield, true)
+})
+
+test('Season 3 bridge rejects incomplete or foreign race results', () => {
+  assert.throws(() => mapSeason3RaceRanking([{ rank: 1, name: 'Unknown' }], seasonPlayers), /không thuộc Season 3/)
+  assert.throws(() => mapSeason3RaceRanking([
+    { rank: 1, name: 'Thanh' },
+    { rank: 2, name: 'Thanh' },
+    { rank: 3, name: 'Khoa' },
+    { rank: 4, name: 'Long' },
+    { rank: 5, name: 'Nam' },
+  ], seasonPlayers), /không trả đủ ranking/)
+})
 
 test('Normal keeps vanilla ranking untouched and shield protects the exact Bottom 2 duck', () => {
   const result = resolveSeason3Race(ranking, { type: 'NORMAL', targetUserId: null, targetUserId2: null })
@@ -58,9 +92,11 @@ test('Triple, Cut Line, and Bounty Hunt follow their declared cutoffs', () => {
   assert.deepEqual(cutLine.protectedPlayers.map((entry) => entry.userId), [4])
 
   const escaped = resolveSeason3Race(ranking, { type: 'BOUNTY_HUNT', targetUserId: 3, targetUserId2: null })
-  assert.deepEqual(escaped.scarVictims, [])
+  assert.deepEqual(escaped.scarVictims.map((entry) => entry.userId), [5])
   const caught = resolveSeason3Race(ranking, { type: 'BOUNTY_HUNT', targetUserId: 4, targetUserId2: null })
   assert.deepEqual(caught.scarVictims.map((entry) => entry.userId), [5])
+  const last = resolveSeason3Race(ranking, { type: 'BOUNTY_HUNT', targetUserId: 5, targetUserId2: null })
+  assert.deepEqual(last.scarVictims.map((entry) => entry.userId), [5])
 })
 
 test('prediction points are awarded only for a raw Bottom 2 target', () => {

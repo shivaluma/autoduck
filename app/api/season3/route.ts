@@ -21,7 +21,7 @@ async function getActiveSeason() {
     orderBy: { createdAt: 'desc' },
     include: {
       players: { include: { user: { select: { id: true, name: true, avatarUrl: true } } }, orderBy: { user: { name: 'asc' } } },
-      weeksPlan: { orderBy: { weekNumber: 'asc' }, include: { predictions: { include: { predictor: true, target: true } } } },
+      weeksPlan: { orderBy: { weekNumber: 'asc' }, include: { predictions: { include: { predictor: true, target: true } }, race: { select: { id: true, status: true } } } },
       rewards: { where: { active: true }, orderBy: { cost: 'asc' } },
     },
   })
@@ -85,6 +85,8 @@ export async function GET(request: Request) {
         predictionsLockedAt: currentWeek.predictionsLockedAt,
         predictionCount: currentWeek.predictions.length,
         predictionSubmitted: Boolean(viewer && currentWeek.predictions.some((prediction: { predictorPlayerId: number }) => prediction.predictorPlayerId === viewer.id)),
+        raceId: currentWeek.race?.id ?? null,
+        raceStatus: currentWeek.race?.status ?? null,
         predictions: [],
       } : null,
       latestReveal: latestResolvedWeek ? {
