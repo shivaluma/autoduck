@@ -103,7 +103,7 @@ export function RaceLiveView({ raceId, season3Mode = false }: RaceLiveViewProps)
     let animationFrameId = 0
     const paintFrame = (now: number) => {
       const nextFrame = pendingFrameRef.current
-      if (nextFrame && !isDecodingFrameRef.current && now - lastPaintRef.current >= 90) {
+      if (nextFrame && !isDecodingFrameRef.current && now - lastPaintRef.current >= 50) {
         const currentIndex = activeFrameIndexRef.current
         const nextIndex = currentIndex === 0 ? 1 : 0
         const currentImage = frameRefs.current[currentIndex]

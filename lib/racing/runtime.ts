@@ -25,7 +25,7 @@ function wait(milliseconds: number) {
 
 export async function runAuthoritativeRace(config: RaceConfig, options: RaceRuntimeOptions = {}): Promise<RaceResult> {
   const realtime = options.realtime !== false
-  const snapshotRate = options.snapshotRate ?? 12
+  const snapshotRate = options.snapshotRate ?? 20
   const snapshotEveryTicks = Math.max(1, Math.round(config.tickRate / snapshotRate))
   const persistenceEveryTicks = Math.max(1, Math.round(config.tickRate / (options.persistenceRate ?? 2)))
   const state = createSimulation(config)

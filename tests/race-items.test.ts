@@ -162,13 +162,13 @@ test('Nitro activates deterministically and ends after exactly 2 seconds', () =>
   }
   const runtime = state.byPlayer.get('2')!
   assert.ok(nitroTick > 0)
-  assert.equal(runtime.boostUntilTick, nitroTick + 120)
-  assert.equal(runtime.boostMultiplier, 1.22)
-  assert.equal(itemSpeedMultiplier(runtime, nitroTick), 1.22)
-  assert.equal(itemSpeedMultiplier(runtime, nitroTick + 119), 1.22)
+  assert.equal(runtime.boostUntilTick, nitroTick + 240)
+  assert.equal(runtime.boostMultiplier, 1.25)
+  assert.equal(itemSpeedMultiplier(runtime, nitroTick), 1.25)
+  assert.equal(itemSpeedMultiplier(runtime, nitroTick + 239), 1.25)
 
-  tickItemsWithAutoAI(raceConfig, state, ducks, nitroTick + 120, 60, (type) => events.push(type))
-  assert.equal(itemSpeedMultiplier(runtime, nitroTick + 120), 1)
+  tickItemsWithAutoAI(raceConfig, state, ducks, nitroTick + 240, 60, (type) => events.push(type))
+  assert.equal(itemSpeedMultiplier(runtime, nitroTick + 240), 1)
   assert.deepEqual(events.filter((type) => type.startsWith('NITRO')), ['NITRO_STARTED', 'NITRO_ENDED'])
 })
 

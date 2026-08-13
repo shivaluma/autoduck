@@ -387,13 +387,15 @@ export function evaluateWildCandidates(ctx: EvaluationContext): AutoUseCandidate
   return candidates
 }
 
-export function decideAutoItemAction(ctx: EvaluationContext): AutoUseCandidate | null {
+export function decideReactiveAutoItemAction(ctx: EvaluationContext): AutoUseCandidate | null {
   const attach = (candidate: AutoUseCandidate) => ({ ...candidate, playerId: ctx.playerId })
   const reactive = evaluateReactiveDefense(ctx).map(attach)
-  if (reactive.length > 0) {
-    return reactive.sort((left, right) => right.score - left.score || left.itemKey.localeCompare(right.itemKey))[0]!
-  }
+  if (reactive.length === 0) return null
+  return reactive.sort((left, right) => right.score - left.score || left.itemKey.localeCompare(right.itemKey))[0]!
+}
 
+export function decideOffensiveAutoItemAction(ctx: EvaluationContext): AutoUseCandidate | null {
+  const attach = (candidate: AutoUseCandidate) => ({ ...candidate, playerId: ctx.playerId })
   const candidates = [
     ...evaluatePrepCandidates(ctx),
     ...evaluateWildCandidates(ctx),
@@ -403,6 +405,10 @@ export function decideAutoItemAction(ctx: EvaluationContext): AutoUseCandidate |
   const threshold = dynamicThreshold(ctx)
   if (best.bypassThreshold || best.score >= threshold) return best
   return null
+}
+
+export function decideAutoItemAction(ctx: EvaluationContext): AutoUseCandidate | null {
+  return decideReactiveAutoItemAction(ctx) ?? decideOffensiveAutoItemAction(ctx)
 }
 
 export function revalidatePendingAction(ctx: EvaluationContext, pending: AutoUseCandidate): boolean {

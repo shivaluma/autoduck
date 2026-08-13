@@ -404,7 +404,7 @@ export function PhaserRaceCanvas({
         }
 
         update(_time: number, delta: number) {
-          const smoothing = 1 - Math.exp(-delta / 95)
+          const smoothing = 1 - Math.exp(-delta / 60)
           const positions: Array<{ x: number; y: number }> = []
           for (const view of this.duckViews.values()) {
             view.root.x += (view.targetX - view.root.x) * smoothing

@@ -9,7 +9,7 @@ import {
   tickItemSystem,
   type ItemRaceState,
 } from './items/engine'
-import { tickAutoUseAI } from './auto-use/arbiter'
+import { tickAutoUseDecide, tickAutoUseExecute } from './auto-use/arbiter'
 import {
   announcePickupWorld,
   applyRecordedWildInputs,
@@ -235,7 +235,7 @@ export function stepSimulation(state: RaceSimulationState) {
       emitEvent(state, { type, sourcePlayerId, targetPlayerId, metadata })
     },
   }
-  tickAutoUseAI(autoUseInput)
+  tickAutoUseExecute(autoUseInput)
 
   tickItemSystem(state.itemState, state.ducks, state.tick, state.config.tickRate, (type, sourcePlayerId, targetPlayerId, metadata = {}) => {
     emitEvent(state, { type, sourcePlayerId, targetPlayerId, metadata })
@@ -282,7 +282,7 @@ export function stepSimulation(state: RaceSimulationState) {
     emitEvent(state, { type, sourcePlayerId, targetPlayerId, metadata })
   })
 
-  tickAutoUseAI(autoUseInput)
+  tickAutoUseDecide(autoUseInput)
 
   resolveCollisions(state)
   updateRanks(state)
