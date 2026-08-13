@@ -23,11 +23,18 @@ function wait(milliseconds: number) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds))
 }
 
+function fireAndForget(task: unknown) {
+  if (!task || typeof (task as Promise<unknown>).then !== 'function') return
+  void (task as Promise<unknown>).catch((error) => {
+    console.error('race runtime background task failed', error)
+  })
+}
+
 export async function runAuthoritativeRace(config: RaceConfig, options: RaceRuntimeOptions = {}): Promise<RaceResult> {
   const realtime = options.realtime !== false
-  const snapshotRate = options.snapshotRate ?? 20
+  const snapshotRate = options.snapshotRate ?? 12
   const snapshotEveryTicks = Math.max(1, Math.round(config.tickRate / snapshotRate))
-  const persistenceEveryTicks = Math.max(1, Math.round(config.tickRate / (options.persistenceRate ?? 2)))
+  const persistenceEveryTicks = Math.max(1, Math.round(config.tickRate / (options.persistenceRate ?? 1)))
   const state = createSimulation(config)
   let emittedEventCount = 0
   let persistedEventCount = 0
@@ -47,7 +54,9 @@ export async function runAuthoritativeRace(config: RaceConfig, options: RaceRunt
         ...world,
       })
       raceEventBus.emit(RACE_EVENTS.SNAPSHOT, snapshot)
-      if (options.onSnapshot && (state.tick % persistenceEveryTicks === 0 || state.finished)) await options.onSnapshot(snapshot)
+      if (options.onSnapshot && (state.tick % persistenceEveryTicks === 0 || state.finished)) {
+        fireAndForget(options.onSnapshot(snapshot))
+      }
     }
 
     const newEvents = state.events.slice(emittedEventCount)
@@ -56,7 +65,7 @@ export async function runAuthoritativeRace(config: RaceConfig, options: RaceRunt
     if (options.onEvents && (state.tick % persistenceEveryTicks === 0 || state.finished)) {
       const pendingEvents = state.events.slice(persistedEventCount)
       persistedEventCount = state.events.length
-      if (pendingEvents.length > 0) await options.onEvents(pendingEvents)
+      if (pendingEvents.length > 0) fireAndForget(options.onEvents(pendingEvents))
     }
 
     if (realtime) {

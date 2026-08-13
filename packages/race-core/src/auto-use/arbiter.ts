@@ -171,9 +171,10 @@ function duckNeedsDecide(input: AutoUseTickInput, duck: ItemDuckState) {
 
 export function tickAutoUseExecute(input: AutoUseTickInput) {
   const ducks = sortedDucks(input.ducks)
-  if (!ducks.some((duck) => duckNeedsExecute(input, duck))) return
+  const active = ducks.filter((duck) => duckNeedsExecute(input, duck))
+  if (active.length === 0) return
   const objective = buildRaceObjectiveContext(input.config)
-  for (const duck of ducks) processDuckExecute(input, duck, objective)
+  for (const duck of active) processDuckExecute(input, duck, objective)
 }
 
 export function tickAutoUseDecide(input: AutoUseTickInput) {

@@ -250,10 +250,10 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
     }))
     let lastControlPollTick = -Infinity
     const result = await runAuthoritativeRace(config, {
-      persistenceRate: 2,
+      persistenceRate: 1,
       onSnapshot: (snapshot) => prisma.race.update({ where: { id: raceId }, data: { liveSnapshotJson: JSON.stringify(snapshot) } }),
       beforeTick: async (state) => {
-        if (state.tick - lastControlPollTick < Math.max(1, Math.round(config.tickRate / 10))) return
+        if (state.tick - lastControlPollTick < Math.max(1, Math.round(config.tickRate / 4))) return
         lastControlPollTick = state.tick
         const pending = await prisma.raceWildAction.findMany({ where: { raceId, status: 'PENDING' }, orderBy: { requestedAt: 'asc' }, take: 20 })
         for (const action of pending) {

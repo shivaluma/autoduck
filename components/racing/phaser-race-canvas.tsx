@@ -108,6 +108,11 @@ export function PhaserRaceCanvas({
         private hazardViews = new Map<string, PhaserType.GameObjects.Image>()
         private focusPlayerId: string | null = null
         private focusUntil = 0
+        private pendingWorld: Pick<StateSnapshotMessage, 'ducks' | 'pickups' | 'hazards'> | null = null
+
+        queueWorld(world: Pick<StateSnapshotMessage, 'ducks' | 'pickups' | 'hazards'>) {
+          this.pendingWorld = world
+        }
 
         constructor() { super('duck-race') }
 
@@ -404,7 +409,11 @@ export function PhaserRaceCanvas({
         }
 
         update(_time: number, delta: number) {
-          const smoothing = 1 - Math.exp(-delta / 60)
+          if (this.pendingWorld) {
+            this.applyWorld(this.pendingWorld)
+            this.pendingWorld = null
+          }
+          const smoothing = 1 - Math.exp(-delta / 85)
           const positions: Array<{ x: number; y: number }> = []
           for (const view of this.duckViews.values()) {
             view.root.x += (view.targetX - view.root.x) * smoothing
@@ -467,7 +476,7 @@ export function PhaserRaceCanvas({
         source = new EventSource(`/api/races/${raceId}/live`)
         source.addEventListener('snapshot', (event) => {
           const payload = stateSnapshotMessageSchema.safeParse(JSON.parse((event as MessageEvent<string>).data))
-          if (payload.success) void sceneReady.then(() => scene.applyWorld(payload.data))
+          if (payload.success) void sceneReady.then(() => scene.queueWorld(payload.data))
         })
         source.addEventListener('engine-event', (event) => {
           const raceEvent = raceEventSchema.safeParse(JSON.parse((event as MessageEvent<string>).data))
