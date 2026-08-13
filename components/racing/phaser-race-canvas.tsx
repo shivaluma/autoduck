@@ -276,7 +276,7 @@ export function PhaserRaceCanvas({
 
       const scene = new DuckRaceScene()
       game = new Phaser.Game({
-        type: Phaser.WEBGL, parent: parentId, backgroundColor: '#112b3b', width: mobileViewport ? 720 : 1280, height: mobileViewport ? 720 : 640, scene,
+        type: Phaser.AUTO, parent: parentId, backgroundColor: '#112b3b', width: mobileViewport ? 720 : 1280, height: mobileViewport ? 720 : 640, scene,
         render: { antialias: true, roundPixels: false },
         scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
         fps: { target: 60 },
