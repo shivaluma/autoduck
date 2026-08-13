@@ -15,7 +15,7 @@ export const RACE_ITEM_CATALOG: readonly RaceItemDefinition[] = [
   { id: 'NITRO', name: 'Nitro', icon: '⚡', cost: 2, category: 'major', description: 'Tự tăng tốc khi đang tụt lại.' },
   { id: 'BANANA', name: 'Banana', icon: '🍌', cost: 1, category: 'minor', description: 'Thả bẫy ngay lane phía sau: trượt lùi trên track.' },
   { id: 'FEATHER', name: 'Feather', icon: '🪶', cost: 1, category: 'minor', description: 'Né Banana đầu tiên.' },
-  { id: 'QUACK_HORN', name: 'Quack Horn', icon: '🔊', cost: 1, category: 'minor', description: 'Đẩy ngang các dzịt đứng sát.' },
+  { id: 'QUACK_HORN', name: 'Quack Horn', icon: '🔊', cost: 1, category: 'minor', description: 'Đẩy mạnh ngang các dzịt đang bơi sát.' },
 ] as const
 
 export const AUTO_LOADOUT_PRESETS: readonly RaceItemId[][] = [

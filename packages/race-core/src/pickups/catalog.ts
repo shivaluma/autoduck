@@ -18,7 +18,7 @@ export const WILD_ITEM_CATALOG: readonly WildItemDefinition[] = [
   { id: 'MINI_BUBBLE', displayName: 'Mini Bubble', icon: '🫧', category: 'DEFENSE', behavior: 'HELD', description: 'Chặn một Wild attack trong tối đa 7 giây.' },
   { id: 'MINI_ROCKET', displayName: 'Mini Rocket', icon: '🚀', category: 'ATTACK', behavior: 'HELD', description: 'Bắn dzịt phía trước: chậm còn 10% tốc độ trong 3.6 giây.' },
   { id: 'BANANA', displayName: 'Banana', icon: '🍌', category: 'ATTACK', behavior: 'HELD', description: 'Thả bẫy ngay lane phía sau: trượt lùi trên track + lệch lane.' },
-  { id: 'QUACK_HORN', displayName: 'Quack Horn', icon: '🔊', category: 'UTILITY', behavior: 'HELD', description: 'Đẩy ngang dzịt đang bơi sát.' },
+  { id: 'QUACK_HORN', displayName: 'Quack Horn', icon: '🔊', category: 'UTILITY', behavior: 'HELD', description: 'Đẩy mạnh ngang dzịt đang bơi sát.' },
   { id: 'FEATHER', displayName: 'Feather', icon: '🪽', category: 'DEFENSE', behavior: 'HELD', description: 'Né Banana hoặc hazard nhỏ kế tiếp.' },
   { id: 'SLIPSTREAM_MAGNET', displayName: 'Slipstream Magnet', icon: '🧲', category: 'MOBILITY', behavior: 'INSTANT', description: 'Bám luồng dzịt gần nhất phía trước.' },
 ] as const

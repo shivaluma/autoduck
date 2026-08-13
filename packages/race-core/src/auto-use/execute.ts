@@ -89,6 +89,7 @@ export function executePrepAction(
           ? (target.playerId.localeCompare(duck.playerId) < 0 ? -1 : 1)
           : Math.sign(target.lateralOffset - duck.lateralOffset)
         target.lateralVelocity += direction * ITEM_BALANCE.horn.lateralPush
+        target.lateralOffset = Math.max(-0.95, Math.min(0.95, target.lateralOffset + direction * ITEM_BALANCE.horn.lateralShove))
       }
       emit('HORN_USED', duck.playerId, undefined, { targets: nearby.map((target) => target.playerId), autoReason: candidate.reason })
       return true

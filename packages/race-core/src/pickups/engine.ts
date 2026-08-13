@@ -432,6 +432,7 @@ const HELD_HANDLERS: Record<Exclude<WildItemId, 'MINI_NITRO' | 'TAILWIND' | 'SLI
     for (const target of nearby) {
       const direction = target.lateralOffset === duck.lateralOffset ? (target.playerId.localeCompare(duck.playerId) < 0 ? -1 : 1) : Math.sign(target.lateralOffset - duck.lateralOffset)
       target.lateralVelocity += direction * PICKUP_BALANCE.horn.lateralPush
+      target.lateralOffset = Math.max(-0.95, Math.min(0.95, target.lateralOffset + direction * PICKUP_BALANCE.horn.lateralShove))
     }
     emit('WILD_HORN_USED', duck.playerId, undefined, { targets: nearby.map((target) => target.playerId) })
     return { ok: true }

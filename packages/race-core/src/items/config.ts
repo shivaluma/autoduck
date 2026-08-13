@@ -42,7 +42,8 @@ export const ITEM_BALANCE = {
     armProgress: 0.28,
     progressRadius: 0.015,
     lateralRadius: 0.26,
-    lateralPush: 0.56,
+    lateralPush: 0.72,
+    lateralShove: 0.15,
     fallbackProgress: 0.8,
   },
   autoUse: {

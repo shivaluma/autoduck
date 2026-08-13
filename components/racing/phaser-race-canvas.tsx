@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef } from 'react'
 import type PhaserType from 'phaser'
-import { createSimulation, queueWildItemInput, snapshotRaceWorld, stepSimulation } from '@/packages/race-core/src'
+import { createSimulation, itemActivationForEvent, queueWildItemInput, snapshotRaceWorld, stepSimulation } from '@/packages/race-core/src'
 import { createRiverTrack } from '@/packages/race-core/src/track'
 import { raceConfigSchema, type DuckSnapshot, type RaceConfig, type RaceEvent, type RaceItemId, type RecordedWildItemInput, type StateSnapshotMessage, type WildItemId } from '@/packages/race-protocol/src'
 import { RaceAudioSystem } from './race-audio'
@@ -110,7 +110,7 @@ export function PhaserRaceCanvas({
       const sceneReady = new Promise<void>((resolve) => { markSceneReady = resolve })
 
       class DuckRaceScene extends Phaser.Scene {
-        private duckViews = new Map<string, { root: PhaserType.GameObjects.Container; targetX: number; targetY: number; status: PhaserType.GameObjects.Text }>()
+        private duckViews = new Map<string, { root: PhaserType.GameObjects.Container; targetX: number; targetY: number; status: PhaserType.GameObjects.Text; loadoutIcons: Map<RaceItemId, PhaserType.GameObjects.Text> }>()
         private leaderboard!: PhaserType.GameObjects.Text
         private eventFeed!: PhaserType.GameObjects.Text
         private recentEvents: string[] = []
@@ -233,9 +233,17 @@ export function PhaserRaceCanvas({
           const rank = this.add.text(-33, -34, String(index + 1), {
             color: '#100b20', fontFamily: 'sans-serif', fontSize: '14px', fontStyle: 'bold', backgroundColor: '#ffffffdd', padding: { x: 6, y: 3 },
           }).setOrigin(0.5)
-          const loadout = this.add.text(0, -55, (player.itemIds ?? []).map((item) => ITEM_ICONS[item]).join(' '), {
-            color: '#ffffff', fontFamily: 'sans-serif', fontSize: '19px', stroke: '#100b20', strokeThickness: 5,
-          }).setOrigin(0.5)
+          const loadoutItemIds = player.itemIds ?? []
+          const loadoutIcons = new Map<RaceItemId, PhaserType.GameObjects.Text>()
+          const loadoutSpacing = 22
+          const loadoutStartX = loadoutItemIds.length > 1 ? -loadoutSpacing / 2 : 0
+          const loadoutNodes = loadoutItemIds.map((itemId, itemIndex) => {
+            const icon = this.add.text(loadoutStartX + itemIndex * loadoutSpacing, -55, ITEM_ICONS[itemId], {
+              color: '#ffffff', fontFamily: 'sans-serif', fontSize: '19px', stroke: '#100b20', strokeThickness: 5,
+            }).setOrigin(0.5)
+            loadoutIcons.set(itemId, icon)
+            return icon
+          })
           const status = this.add.text(0, 60, '', { color: '#ffffff', fontFamily: 'sans-serif', fontSize: '16px', stroke: '#100b20', strokeThickness: 4 }).setOrigin(0.5)
           const cosmeticLayers = player.appearance ? COSMETIC_LAYER_ORDER.flatMap((slot) => {
             if ((mobileViewport || scenePlayers.length > 12) && ['aura', 'finish'].includes(slot)) return []
@@ -255,9 +263,15 @@ export function PhaserRaceCanvas({
             ? this.add.image(-3, -25, `avatar-${player.playerId}`).setDisplaySize(24, 24)
             : cosmeticLayers.length === 0 ? this.add.text(-3, -29, ['🧢', '🎩', '👒', '👑'][index % 4], { fontSize: '19px' }).setOrigin(0.5) : null
           const start = track.sample(0, -0.7 + (index / Math.max(1, scenePlayers.length - 1)) * 1.4)
-          const root = this.add.container(start.x, start.y, [body, ...cosmeticLayers, ...(legacyCosmetic ? [legacyCosmetic] : []), name, rank, loadout, status]).setDepth(100 + index)
+          const root = this.add.container(start.x, start.y, [body, ...cosmeticLayers, ...(legacyCosmetic ? [legacyCosmetic] : []), name, rank, ...loadoutNodes, status]).setDepth(100 + index)
           root.setData('rank-label', rank)
-          this.duckViews.set(player.playerId, { root, targetX: start.x, targetY: start.y, status })
+          this.duckViews.set(player.playerId, { root, targetX: start.x, targetY: start.y, status, loadoutIcons })
+        }
+
+        private markPrepItemUsed(playerId: string, itemId: RaceItemId) {
+          const icon = this.duckViews.get(playerId)?.loadoutIcons.get(itemId)
+          if (!icon || icon.alpha <= 0.35) return
+          icon.setAlpha(0.28)
         }
 
         private showCountdown() {
@@ -366,7 +380,32 @@ export function PhaserRaceCanvas({
           }
         }
 
+        private playHornEffect(raceEvent: RaceEvent) {
+          const sourceView = raceEvent.sourcePlayerId ? this.duckViews.get(raceEvent.sourcePlayerId) : null
+          const hornTargets = Array.isArray(raceEvent.metadata.targets) ? raceEvent.metadata.targets.filter((entry): entry is string => typeof entry === 'string') : []
+          if (sourceView) {
+            const ring = (this.ringPool.pop() ?? this.add.circle(0, 0, 28, 0xffe08a, 0.14)).setPosition(sourceView.root.x, sourceView.root.y).setScale(1).setAlpha(1).setVisible(true).setStrokeStyle(5, 0xffe08a, 0.95).setDepth(900)
+            this.tweens.add({ targets: ring, scale: reducedMotion ? 1.6 : 3.4, alpha: 0, duration: reducedMotion ? 200 : 520, onComplete: () => { ring.setVisible(false); this.ringPool.push(ring) } })
+            const blast = (this.textPool.pop() ?? this.add.text(0, 0, '', { fontSize: '24px' })).setText('🔊').setPosition(sourceView.root.x, sourceView.root.y - 8).setAlpha(1).setVisible(true).setDepth(940)
+            this.tweens.add({ targets: blast, y: blast.y - 22, alpha: 0, duration: reducedMotion ? 140 : 360, onComplete: () => { blast.setVisible(false); this.textPool.push(blast) } })
+          }
+          if (!reducedMotion) {
+            for (const targetId of hornTargets) {
+              const targetView = this.duckViews.get(targetId)
+              if (!targetView) continue
+              this.tweens.add({ targets: targetView.root, angle: { from: -10, to: 10 }, yoyo: true, repeat: 2, duration: 80, onComplete: () => targetView.root.setAngle(0) })
+            }
+          }
+          if (raceEvent.sourcePlayerId) {
+            this.focusPlayerId = raceEvent.sourcePlayerId
+            this.focusUntil = this.time.now + 420
+          }
+        }
+
         applyEvent(raceEvent: RaceEvent) {
+          const activation = itemActivationForEvent(raceEvent)
+          if (activation) this.markPrepItemUsed(activation.playerId, activation.itemId)
+
           const source = scenePlayers.find((player) => player.playerId === raceEvent.sourcePlayerId)?.name
           const target = scenePlayers.find((player) => player.playerId === raceEvent.targetPlayerId)?.name
           const messages: Partial<Record<RaceEvent['type'], string>> = {
@@ -405,6 +444,9 @@ export function PhaserRaceCanvas({
             this.recentEvents = [message, ...this.recentEvents].slice(0, 3)
             this.eventFeed.setText(this.recentEvents.join('\n'))
           }
+          if (raceEvent.type === 'HORN_USED' || raceEvent.type === 'WILD_HORN_USED') {
+            this.playHornEffect(raceEvent)
+          }
           const focusId = raceEvent.targetPlayerId ?? raceEvent.sourcePlayerId
           const view = focusId ? this.duckViews.get(focusId) : null
           if (!view) return
@@ -440,7 +482,7 @@ export function PhaserRaceCanvas({
             const wake = (this.ellipsePool.pop() ?? this.add.ellipse(0, 0, 90, 28, 0x9ff5ff, 0.7)).setPosition(view.root.x - 25, view.root.y + 10).setScale(1).setAlpha(0.7).setVisible(true).setDepth(85)
             this.tweens.add({ targets: wake, scaleX: 2.1, alpha: 0, duration: reducedMotion ? 250 : 850, onComplete: () => { wake.setVisible(false); this.ellipsePool.push(wake) } })
           }
-          if (raceEvent.type === 'BUBBLE_POPPED' || raceEvent.type === 'HORN_USED' || raceEvent.type === 'MINI_BUBBLE_BLOCKED' || raceEvent.type === 'MINI_BUBBLE_ACTIVATED' || raceEvent.type === 'WILD_HORN_USED') {
+          if (raceEvent.type === 'BUBBLE_POPPED' || raceEvent.type === 'MINI_BUBBLE_BLOCKED' || raceEvent.type === 'MINI_BUBBLE_ACTIVATED') {
             const ring = (this.ringPool.pop() ?? this.add.circle(0, 0, 28, 0x7de8ff, 0.12)).setPosition(view.root.x, view.root.y).setScale(1).setAlpha(1).setVisible(true).setStrokeStyle(5, 0xb8f4ff, 0.9).setDepth(900)
             this.tweens.add({ targets: ring, scale: reducedMotion ? 1.5 : 3, alpha: 0, duration: reducedMotion ? 200 : 500, onComplete: () => { ring.setVisible(false); this.ringPool.push(ring) } })
           }

@@ -46,7 +46,8 @@ export const PICKUP_BALANCE = {
   horn: {
     progressRadius: 0.013,
     lateralRadius: 0.24,
-    lateralPush: 0.24,
+    lateralPush: 0.4,
+    lateralShove: 0.1,
     endGameProgressRadiusMultiplier: 1.6,
   },
   feather: { durationSeconds: 5, autoFallbackProgress: 0.72, endGameProgress: 0.76 },
