@@ -11,6 +11,7 @@ import {
 } from '../lib/season3'
 import { mapSeason3RaceRanking, type Season3RaceMappingPlayer } from '../lib/season3-race-mapping'
 import { assertSeason3RaceDay, isVietnamMonday } from '../lib/season3-schedule'
+import { canStartSeason3TestRace, getTestRaceRestoreStatus } from '../lib/season3-test-mode'
 
 const ranking = [
   { userId: 1, name: 'Thanh', rank: 1, hasShield: false },
@@ -48,6 +49,15 @@ test('Season 3 race window only opens on Monday in Vietnam time', () => {
   assert.equal(isVietnamMonday(new Date('2026-08-09T16:59:59.000Z')), false)
   assert.doesNotThrow(() => assertSeason3RaceDay(new Date('2026-08-10T00:00:00.000Z')))
   assert.throws(() => assertSeason3RaceDay(new Date('2026-08-09T16:59:59.000Z')), /THỨ HAI hàng tuần/)
+})
+
+test('test race is available during open or locked prep and restores that prep state', () => {
+  assert.equal(canStartSeason3TestRace('open'), true)
+  assert.equal(canStartSeason3TestRace('locked'), true)
+  assert.equal(canStartSeason3TestRace('racing'), false)
+  assert.equal(canStartSeason3TestRace('resolved'), false)
+  assert.equal(getTestRaceRestoreStatus(null), 'open')
+  assert.equal(getTestRaceRestoreStatus(new Date('2026-08-10T00:00:00.000Z')), 'locked')
 })
 
 test('Season 3 bridge rejects incomplete or foreign race results', () => {

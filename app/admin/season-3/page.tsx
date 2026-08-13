@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Season3ChaosCard } from '@/components/season3-chaos-card'
 import { Season3Avatar } from '@/components/season3-avatar'
 import { Season3PointTooltip } from '@/components/season3-point-tooltip'
+import { canStartSeason3TestRace } from '@/lib/season3-test-mode'
 
 type AdminState = {
   season: { id: number; name: string; year: number; weeks: number; status: string } | null
@@ -47,7 +48,7 @@ export default function AdminSeason3Page() {
 
   const currentWeek = useMemo(() => (data?.weeks ?? []).find((week) => week.status !== 'resolved') ?? null, [data])
   const nameById = useMemo(() => new Map((data?.players ?? []).map((player) => [player.id, player.name])), [data])
-  const activePlayerCount = (data?.players.length ?? 0) - (currentWeek?.skippedPlayerIds.length ?? 0)
+  const activePlayerCount = (data?.players?.length ?? 0) - (currentWeek?.skippedPlayerIds.length ?? 0)
 
   async function refresh() {
     if (!secret) return
@@ -123,8 +124,12 @@ export default function AdminSeason3Page() {
         <p className="mt-2 text-sm text-white/60">Target: {nameById.get(currentWeek.chaosTargetUserId ?? -1) ?? '—'}{currentWeek.chaosGroups ? ` · ${currentWeek.chaosGroups.map((group) => group.map((id) => nameById.get(id) ?? id).join(' + ')).join(' / ')}` : ''}</p>
         <p className="mt-2 text-sm text-[var(--color-ggd-sky)]">Đã xác nhận dùng Shield: {currentWeek.shieldConfirmations.length > 0 ? currentWeek.shieldConfirmations.join(', ') : 'Chưa ai'}</p>
         {currentWeek.skippedPlayerIds.length > 0 && <p className="mt-2 text-sm text-white/50">Nghỉ tuần: {currentWeek.skippedPlayerIds.map((id) => nameById.get(id) ?? id).join(', ')}</p>}
-        {currentWeek.status === 'open' && <button onClick={() => void act({ action: 'lock', weekId: currentWeek.id })} className="mt-5 rounded-xl bg-[var(--color-ggd-gold)] px-5 py-3 font-black text-[var(--color-ggd-outline)]">🔒 LOCK PREP</button>}
-        {currentWeek.status === 'locked' && <div className="mt-5 flex flex-wrap items-center gap-3"><button onClick={() => void act({ action: 'start-race', weekId: currentWeek.id })} className="rounded-xl bg-[var(--color-ggd-neon-green)] px-5 py-3 font-black text-[var(--color-ggd-outline)]">🏁 START DUCK RACE</button><button onClick={() => void act({ action: 'start-race', weekId: currentWeek.id, test: true, secret })} className="rounded-xl border-2 border-[var(--color-ggd-gold)] px-5 py-3 font-black text-[var(--color-ggd-gold)]">🧪 TEST RACE</button><button onClick={() => void act({ action: 'unlock', weekId: currentWeek.id })} className="rounded-xl border-2 border-white/20 px-5 py-3 font-black">↩ UNLOCK PREP</button><span className="text-sm text-white/60">🗓️ Race thật: Thứ Hai (giờ Việt Nam) · Test: không đổi stats/point.</span></div>}
+        {canStartSeason3TestRace(currentWeek.status) && <div className="mt-5 flex flex-wrap items-center gap-3">
+          <button onClick={() => void act({ action: 'start-race', weekId: currentWeek.id, test: true })} className="rounded-xl border-2 border-[var(--color-ggd-gold)] px-5 py-3 font-black text-[var(--color-ggd-gold)]">🧪 TEST RACE · ALWAYS ON</button>
+          {currentWeek.status === 'open' && <button onClick={() => void act({ action: 'lock', weekId: currentWeek.id })} className="rounded-xl bg-[var(--color-ggd-gold)] px-5 py-3 font-black text-[var(--color-ggd-outline)]">🔒 LOCK PREP</button>}
+          {currentWeek.status === 'locked' && <><button onClick={() => void act({ action: 'start-race', weekId: currentWeek.id })} className="rounded-xl bg-[var(--color-ggd-neon-green)] px-5 py-3 font-black text-[var(--color-ggd-outline)]">🏁 START OFFICIAL RACE</button><button onClick={() => void act({ action: 'unlock', weekId: currentWeek.id })} className="rounded-xl border-2 border-white/20 px-5 py-3 font-black">↩ UNLOCK PREP</button></>}
+          <span className="text-sm text-white/60">Test không đổi Season · Official chỉ chạy thứ Hai.</span>
+        </div>}
         {currentWeek.status === 'racing' && currentWeek.raceId && <div className="mt-5 flex flex-wrap items-center gap-3"><span className="font-black text-[var(--color-ggd-neon-green)]">🏃 RACE ĐANG CHẠY</span><Link href={`/season-3/race/${currentWeek.raceId}`} className="rounded-xl bg-[var(--color-ggd-gold)] px-5 py-3 font-black text-[var(--color-ggd-outline)]">XEM RACE</Link></div>}
       </section>}
 

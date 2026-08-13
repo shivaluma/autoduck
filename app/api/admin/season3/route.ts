@@ -190,7 +190,7 @@ export async function POST(request: Request) {
     if (body.action === 'start-race') {
       if (!body.weekId) return fail('weekId là bắt buộc')
       try {
-        const testMode = body.test === true && Boolean(process.env.RACE_SECRET_KEY) && body.secret === process.env.RACE_SECRET_KEY
+        const testMode = body.test === true
         const race = await startSeason3Race(body.weekId, { allowOffSchedule: testMode, testMode })
         return NextResponse.json({ ok: true, raceId: race.id, status: race.status })
       } catch (error) {
