@@ -70,6 +70,7 @@ test('Normal keeps vanilla ranking untouched and shield protects the exact Botto
 test('two scars become one shield and using a shield consumes one without moving the penalty', () => {
   assert.deepEqual(applyScarEconomy(1, 0, 1, false), { scars: 0, shields: 1 })
   assert.deepEqual(applyScarEconomy(0, 1, 1, true), { scars: 0, shields: 0 })
+  assert.deepEqual(applyScarEconomy(0, 1, 0, true), { scars: 0, shields: 0 })
 })
 
 test('Reverse turns raw Top 2 into losers without changing raw ranks', () => {

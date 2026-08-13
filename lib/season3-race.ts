@@ -153,12 +153,14 @@ export async function executeSeason3Race(raceId: number, weekId: number) {
 
     await prisma.$transaction(async (tx: typeof prisma) => {
       for (const entry of resolved.ranking) {
+        const player = players.find((candidate) => candidate.userId === entry.userId)
+        const shieldWasUsed = player?.shieldConfirmed === true && player.shields > 0
         await tx.raceParticipant.updateMany({
           where: { raceId, userId: entry.userId, cloneIndex: null },
           data: {
             initialRank: entry.rank,
             gotScar: resolved.scarVictims.some((victim) => victim.userId === entry.userId),
-            usedShield: resolved.protectedPlayers.some((player) => player.userId === entry.userId),
+            usedShield: shieldWasUsed,
           },
         })
       }
@@ -166,7 +168,8 @@ export async function executeSeason3Race(raceId: number, weekId: number) {
       for (const player of players) {
         const outcome = resolved.scarOutcomes.find((candidate) => candidate.userId === player.userId)
         const entry = resolved.ranking.find((candidate) => candidate.userId === player.userId)!
-        const economy = applyScarEconomy(player.scars, player.shields, outcome?.scarPoints ?? 0, outcome?.shieldConsumed ?? false)
+        const shieldWasUsed = player.shieldConfirmed === true && player.shields > 0
+        const economy = applyScarEconomy(player.scars, player.shields, outcome?.scarPoints ?? 0, shieldWasUsed)
         const predictionPoints = predictionOutcomes
           .filter((prediction) => prediction.predictorUserId === player.userId && prediction.correct)
           .length
@@ -176,7 +179,7 @@ export async function executeSeason3Race(raceId: number, weekId: number) {
           data: {
             scars: economy.scars,
             shields: economy.shields,
-            shieldsUsed: outcome?.shieldConsumed ? { increment: 1 } : undefined,
+            shieldsUsed: shieldWasUsed ? { increment: 1 } : undefined,
             predictionPoints: predictionPoints ? { increment: predictionPoints } : undefined,
             raceCount: { increment: 1 },
             raceWins: entry.rank === 1 ? { increment: 1 } : undefined,
