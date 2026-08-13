@@ -4,7 +4,7 @@ import { useEffect, useId, useRef } from 'react'
 import type PhaserType from 'phaser'
 import { createSimulation, snapshotRaceWorld, stepSimulation } from '@/packages/race-core/src'
 import { createRiverTrack } from '@/packages/race-core/src/track'
-import { raceEventSchema, stateSnapshotMessageSchema, type DuckSnapshot, type RaceConfig, type RaceEvent, type RaceItemId, type RecordedWildItemInput, type StateSnapshotMessage, type WildItemId } from '@/packages/race-protocol/src'
+import { raceConfigSchema, type DuckSnapshot, type RaceConfig, type RaceEvent, type RaceItemId, type RecordedWildItemInput, type StateSnapshotMessage, type WildItemId } from '@/packages/race-protocol/src'
 import { RaceAudioSystem } from './race-audio'
 import { COSMETIC_BY_ID } from '@/lib/cosmetics/catalog'
 import { COSMETIC_LAYER_ORDER, type DuckAppearance } from '@/lib/cosmetics/types'
@@ -111,8 +111,11 @@ export function PhaserRaceCanvas({
         private focusPlayerId: string | null = null
         private focusUntil = 0
         private pendingWorld: Pick<StateSnapshotMessage, 'ducks' | 'pickups' | 'hazards' | 'rockets' | 'bananas'> | null = null
+        private lastAppliedSnapshotTick = -1
 
-        queueWorld(world: Pick<StateSnapshotMessage, 'ducks' | 'pickups' | 'hazards' | 'rockets' | 'bananas'>) {
+        queueWorld(world: Pick<StateSnapshotMessage, 'ducks' | 'pickups' | 'hazards' | 'rockets' | 'bananas'>, tick: number) {
+          if (tick <= this.lastAppliedSnapshotTick) return
+          this.lastAppliedSnapshotTick = tick
           this.pendingWorld = world
         }
 
@@ -297,6 +300,7 @@ export function PhaserRaceCanvas({
 
         applyWorld(world: Pick<StateSnapshotMessage, 'ducks' | 'pickups' | 'hazards' | 'rockets' | 'bananas'>) {
           this.applySnapshot(world.ducks)
+          const duckById = new Map(world.ducks.map((duck) => [duck.playerId, duck]))
           const activeIds = new Set(world.pickups.filter((pickup) => pickup.state === 'ACTIVE').map((pickup) => pickup.id))
           for (const pickup of world.pickups) {
             if (pickup.state !== 'ACTIVE' || this.pickupViews.has(pickup.id)) continue
@@ -322,7 +326,7 @@ export function PhaserRaceCanvas({
           }
           const rocketIds = new Set(world.rockets.map((rocket) => rocket.id))
           for (const rocket of world.rockets) {
-            const target = world.ducks.find((duck) => duck.playerId === rocket.targetPlayerId)
+            const target = duckById.get(rocket.targetPlayerId)
             const point = track.sample(Math.min(0.999, rocket.progress), target?.lateralOffset ?? 0)
             const view = this.rocketViews.get(rocket.id) ?? this.add.text(point.x, point.y, '🚀', { fontSize: '28px' }).setDepth(950)
             view.setPosition(point.x, point.y).setVisible(true)
@@ -460,11 +464,13 @@ export function PhaserRaceCanvas({
       }
 
       const scene = new DuckRaceScene()
+      let liveScene: DuckRaceScene | null = null
+      void sceneReady.then(() => { liveScene = scene })
       game = new Phaser.Game({
         type: Phaser.AUTO, parent: parentId, backgroundColor: '#112b3b', width: mobileViewport ? 720 : 1280, height: mobileViewport ? 720 : 640, scene,
         render: { antialias: true, roundPixels: false },
         scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
-        fps: { target: 60 },
+        fps: { target: replayConfig ? 60 : 30 },
       })
 
       if (replayConfig) {
@@ -497,14 +503,33 @@ export function PhaserRaceCanvas({
         }
         void sceneReady.then(() => { replayFrame = requestAnimationFrame(replay) })
       } else {
+        const visualEventTypes = new Set<RaceEvent['type']>([
+          'ROCKET_FIRED', 'ROCKET_HIT', 'ROCKET_BLOCKED', 'BANANA_DROPPED', 'BANANA_HIT', 'BANANA_BLOCKED',
+          'NITRO_STARTED', 'HORN_USED', 'FEATHER_DODGED', 'BUBBLE_POPPED', 'PICKUP_COLLECTED', 'PICKUP_SKIPPED_SLOT_FULL',
+          'WILD_ITEM_GRANTED', 'INSTANT_PICKUP_TRIGGERED', 'MINI_ROCKET_FIRED', 'MINI_ROCKET_HIT', 'MINI_ROCKET_BLOCKED',
+          'WILD_BANANA_DROPPED', 'WILD_BANANA_HIT', 'WILD_BANANA_BLOCKED', 'MINI_BUBBLE_ACTIVATED', 'MINI_BUBBLE_BLOCKED',
+          'WILD_HORN_USED', 'WILD_FEATHER_USED', 'WILD_FEATHER_DODGED', 'HAZARD_HIT', 'HAZARD_DODGED', 'GOLDEN_BOX_COLLECTED', 'DUCK_FINISHED',
+        ])
         source = new EventSource(`/api/races/${raceId}/live`)
         source.addEventListener('snapshot', (event) => {
-          const payload = stateSnapshotMessageSchema.safeParse(JSON.parse((event as MessageEvent<string>).data))
-          if (payload.success) void sceneReady.then(() => scene.queueWorld(payload.data))
+          try {
+            const payload = JSON.parse((event as MessageEvent<string>).data) as StateSnapshotMessage
+            if (payload.type !== 'STATE_SNAPSHOT' || !payload.ducks) return
+            if (!liveScene) return
+            liveScene.queueWorld(payload, payload.tick)
+          } catch {
+            // Ignore malformed snapshot frames.
+          }
         })
         source.addEventListener('engine-event', (event) => {
-          const raceEvent = raceEventSchema.safeParse(JSON.parse((event as MessageEvent<string>).data))
-          if (raceEvent.success) void sceneReady.then(() => scene.applyEvent(raceEvent.data))
+          try {
+            const payload = JSON.parse((event as MessageEvent<string>).data) as RaceEvent
+            if (!payload.type || !visualEventTypes.has(payload.type)) return
+            if (!liveScene) return
+            liveScene.applyEvent(payload)
+          } catch {
+            // Ignore malformed engine events.
+          }
         })
       }
     })

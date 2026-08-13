@@ -169,18 +169,16 @@ function duckNeedsDecide(input: AutoUseTickInput, duck: ItemDuckState) {
   return input.tick >= runtime.nextAutoDecisionTick
 }
 
-export function tickAutoUseExecute(input: AutoUseTickInput) {
+export function tickAutoUseExecute(input: AutoUseTickInput, objective = buildRaceObjectiveContext(input.config)) {
   const ducks = sortedDucks(input.ducks)
   const active = ducks.filter((duck) => duckNeedsExecute(input, duck))
   if (active.length === 0) return
-  const objective = buildRaceObjectiveContext(input.config)
   for (const duck of active) processDuckExecute(input, duck, objective)
 }
 
-export function tickAutoUseDecide(input: AutoUseTickInput) {
+export function tickAutoUseDecide(input: AutoUseTickInput, objective = buildRaceObjectiveContext(input.config)) {
   const ducks = sortedDucks(input.ducks)
   if (!ducks.some((duck) => duckNeedsDecide(input, duck))) return
-  const objective = buildRaceObjectiveContext(input.config)
   for (const duck of ducks) {
     if (duckNeedsDecide(input, duck)) processDuckDecide(input, duck, objective)
   }
@@ -188,6 +186,7 @@ export function tickAutoUseDecide(input: AutoUseTickInput) {
 
 /** Runs execute + decide in one call. Prefer split calls inside stepSimulation for performance. */
 export function tickAutoUseAI(input: AutoUseTickInput) {
-  tickAutoUseExecute(input)
-  tickAutoUseDecide(input)
+  const objective = buildRaceObjectiveContext(input.config)
+  tickAutoUseExecute(input, objective)
+  tickAutoUseDecide(input, objective)
 }

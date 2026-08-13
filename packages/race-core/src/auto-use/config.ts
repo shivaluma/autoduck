@@ -1,5 +1,5 @@
 export const AUTO_USE_CONFIG = {
-  decisionIntervalTicks: 12,
+  decisionIntervalTicks: 15,
   reactionDelayMinSeconds: 0.12,
   reactionDelayMaxSeconds: 0.28,
   cooldownMinSeconds: 0.35,

@@ -62,12 +62,21 @@ export async function GET(
         }
       }
 
-      const eventKey = (payload: { tick: number; type?: string; sourcePlayerId?: string | null; targetPlayerId?: string | null; metadata?: unknown }) => `${payload.tick}:${payload.type ?? ''}:${payload.sourcePlayerId ?? ''}:${payload.targetPlayerId ?? ''}:${JSON.stringify(payload.metadata ?? {})}`
+      const eventKey = (payload: { tick: number; type?: string; sourcePlayerId?: string | null; targetPlayerId?: string | null }) => `${payload.tick}:${payload.type ?? ''}:${payload.sourcePlayerId ?? ''}:${payload.targetPlayerId ?? ''}`
+      const visualEngineEvents = new Set([
+        'ROCKET_FIRED', 'ROCKET_HIT', 'ROCKET_BLOCKED', 'BANANA_DROPPED', 'BANANA_HIT', 'BANANA_BLOCKED',
+        'NITRO_STARTED', 'HORN_USED', 'FEATHER_DODGED', 'BUBBLE_POPPED', 'PICKUP_COLLECTED', 'PICKUP_SKIPPED_SLOT_FULL',
+        'WILD_ITEM_GRANTED', 'INSTANT_PICKUP_TRIGGERED', 'MINI_ROCKET_FIRED', 'MINI_ROCKET_HIT', 'MINI_ROCKET_BLOCKED',
+        'WILD_BANANA_DROPPED', 'WILD_BANANA_HIT', 'WILD_BANANA_BLOCKED', 'MINI_BUBBLE_ACTIVATED', 'MINI_BUBBLE_BLOCKED',
+        'WILD_HORN_USED', 'WILD_FEATHER_USED', 'WILD_FEATHER_DODGED', 'HAZARD_HIT', 'HAZARD_DODGED', 'GOLDEN_BOX_COLLECTED', 'DUCK_FINISHED',
+      ])
       const onEngineEvent = (payload: { raceId: string; tick: number; type?: string; sourcePlayerId?: string; targetPlayerId?: string; metadata?: unknown }) => {
-        if (Number(payload.raceId) === raceId) {
-          seenEventKeys.add(eventKey(payload))
-          sendEvent('engine-event', payload)
-        }
+        if (Number(payload.raceId) !== raceId) return
+        if (!payload.type || !visualEngineEvents.has(payload.type)) return
+        const key = eventKey(payload)
+        if (seenEventKeys.has(key)) return
+        seenEventKeys.add(key)
+        sendEvent('engine-event', payload)
       }
 
       raceEventBus.on(RACE_EVENTS.FRAME, onFrame)

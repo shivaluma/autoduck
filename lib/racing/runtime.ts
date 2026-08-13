@@ -28,6 +28,11 @@ function wait(milliseconds: number) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds))
 }
 
+function maybeAwait<T>(task: T | Promise<T>): T | Promise<T> {
+  if (task && typeof (task as Promise<T>).then === 'function') return task
+  return task
+}
+
 function fireAndForget(task: unknown) {
   if (!task || typeof (task as Promise<unknown>).then !== 'function') return
   void (task as Promise<unknown>).catch((error) => {
@@ -47,26 +52,26 @@ export async function runAuthoritativeRace(config: RaceConfig, options: RaceRunt
   const startedAt = performance.now()
 
   while (!state.finished) {
-    await options.beforeTick?.(state)
+    await maybeAwait(options.beforeTick?.(state))
     stepSimulation(state)
 
     const newEvents = state.events.slice(emittedEventCount) as RaceEvent[]
     emittedEventCount = state.events.length
-    await options.afterTick?.(state, newEvents)
+    await maybeAwait(options.afterTick?.(state, newEvents))
 
     if (state.tick % snapshotEveryTicks === 0 || state.finished) {
       const world = snapshotRaceWorld(state)
-      const snapshot = stateSnapshotMessageSchema.parse({
+      const snapshot: StateSnapshotMessage = {
         type: 'STATE_SNAPSHOT',
         raceId: config.raceId,
         protocolVersion: config.protocolVersion,
         tick: state.tick,
         ...world,
-      })
+      }
       raceEventBus.emit(RACE_EVENTS.SNAPSHOT, snapshot)
       if (options.onLiveSnapshot) fireAndForget(options.onLiveSnapshot(snapshot))
       if (persistDuringRace && options.onSnapshot && (state.tick % persistenceEveryTicks === 0 || state.finished)) {
-        fireAndForget(options.onSnapshot(snapshot))
+        fireAndForget(options.onSnapshot(stateSnapshotMessageSchema.parse(snapshot)))
       }
     }
 

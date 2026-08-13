@@ -11,6 +11,7 @@ import {
   type ItemRaceState,
 } from './items/engine'
 import { tickAutoUseDecide, tickAutoUseExecute } from './auto-use/arbiter'
+import { buildRaceObjectiveContext } from './auto-use/objective'
 import {
   announcePickupWorld,
   applyRecordedWildInputs,
@@ -236,7 +237,8 @@ export function stepSimulation(state: RaceSimulationState) {
       emitEvent(state, { type, sourcePlayerId, targetPlayerId, metadata })
     },
   }
-  tickAutoUseExecute(autoUseInput)
+  const autoObjective = buildRaceObjectiveContext(state.config)
+  tickAutoUseExecute(autoUseInput, autoObjective)
 
   tickItemSystem(state.itemState, state.ducks, state.tick, state.config.tickRate, (type, sourcePlayerId, targetPlayerId, metadata = {}) => {
     emitEvent(state, { type, sourcePlayerId, targetPlayerId, metadata })
@@ -283,7 +285,7 @@ export function stepSimulation(state: RaceSimulationState) {
     emitEvent(state, { type, sourcePlayerId, targetPlayerId, metadata })
   })
 
-  tickAutoUseDecide(autoUseInput)
+  tickAutoUseDecide(autoUseInput, autoObjective)
 
   resolveCollisions(state)
   updateRanks(state)

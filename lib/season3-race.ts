@@ -259,6 +259,7 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
     try {
       result = await runAuthoritativeRace(config, {
         persistDuringRace: false,
+        snapshotRate: 8,
         onLiveSnapshot: (snapshot) => liveSession.publishSnapshot(snapshot),
         beforeTick: (state) => {
           if (state.tick - lastControlPollTick < Math.max(1, Math.round(config.tickRate / 4))) return
