@@ -5,6 +5,11 @@ import { canStartSeason3TestRace, getSeason3RaceMode } from '@/lib/season3-test-
 import { createRaceCommit, createRaceSeed } from '@/lib/racing/audit'
 import { parseRaceConfig, persistRaceEvents, persistedRaceResult, serializeRaceConfig } from '@/lib/racing/persistence'
 import { buildGoldenTrackReward } from '@/lib/racing/golden-reward'
+import {
+  persistLiveRaceWildActions,
+  startLiveRaceSession,
+  stopLiveRaceSession,
+} from '@/lib/racing/live-race-session'
 import { parseItemIds, selectAutoLoadout, serializeItemIds } from '@/lib/racing/loadout'
 import { runAuthoritativeRace } from '@/lib/racing/runtime'
 import { buildRaceItemTelemetry, persistRaceItemTelemetry } from '@/lib/racing/telemetry'
@@ -249,51 +254,39 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
       shieldConfirmed: shieldConfirmedIds.has(player.id),
     }))
     let lastControlPollTick = -Infinity
-    const result = await runAuthoritativeRace(config, {
-      persistenceRate: 1,
-      onSnapshot: (snapshot) => prisma.race.update({ where: { id: raceId }, data: { liveSnapshotJson: JSON.stringify(snapshot) } }),
-      beforeTick: async (state) => {
-        if (state.tick - lastControlPollTick < Math.max(1, Math.round(config.tickRate / 4))) return
-        lastControlPollTick = state.tick
-        const pending = await prisma.raceWildAction.findMany({ where: { raceId, status: 'PENDING' }, orderBy: { requestedAt: 'asc' }, take: 20 })
-        for (const action of pending) {
-          const authoritativeTick = state.tick + 1
-          const claimed = await prisma.raceWildAction.updateMany({
-            where: { id: action.id, status: 'PENDING' },
-            data: { status: 'QUEUED', authoritativeTick },
-          })
-          if (claimed.count !== 1) continue
-          queueWildItemInput(state, {
-            raceId: String(raceId),
-            playerId: action.playerId,
-            wildItemInstanceId: action.wildItemInstanceId,
-            action: 'USE',
-            clientActionId: action.clientActionId,
-          }, authoritativeTick)
-        }
-      },
-      onEvents: async (events) => {
-        await persistRaceEvents(prisma, raceId, events)
-        for (const raceEvent of events.filter((entry) => entry.type === 'WILD_ITEM_MANUAL_INPUT')) {
-          const clientActionId = typeof raceEvent.metadata.clientActionId === 'string' ? raceEvent.metadata.clientActionId : null
-          if (!clientActionId || !raceEvent.sourcePlayerId) continue
-          const applied = raceEvent.metadata.applied === true
-          await prisma.raceWildAction.updateMany({
-            where: { raceId, playerId: raceEvent.sourcePlayerId, clientActionId, status: 'QUEUED' },
-            data: {
-              status: applied ? 'APPLIED' : 'REJECTED',
-              authoritativeTick: raceEvent.tick,
-              resultJson: JSON.stringify({ applied, reason: raceEvent.metadata.reason ?? null, targetPlayerId: raceEvent.targetPlayerId ?? null }),
-              resolvedAt: new Date(),
-            },
-          })
-        }
-      },
-    })
-    await prisma.raceWildAction.updateMany({
-      where: { raceId, status: { in: ['PENDING', 'QUEUED'] } },
-      data: { status: 'REJECTED', resultJson: JSON.stringify({ applied: false, reason: 'RACE_FINISHED' }), resolvedAt: new Date() },
-    })
+    const liveSession = startLiveRaceSession(raceId)
+    let result
+    try {
+      result = await runAuthoritativeRace(config, {
+        persistDuringRace: false,
+        onLiveSnapshot: (snapshot) => liveSession.publishSnapshot(snapshot),
+        beforeTick: (state) => {
+          if (state.tick - lastControlPollTick < Math.max(1, Math.round(config.tickRate / 4))) return
+          lastControlPollTick = state.tick
+          for (const action of liveSession.drainPendingWildActions()) {
+            const authoritativeTick = state.tick + 1
+            liveSession.markQueued(action, authoritativeTick)
+            queueWildItemInput(state, {
+              raceId: String(raceId),
+              playerId: action.playerId,
+              wildItemInstanceId: action.wildItemInstanceId,
+              action: 'USE',
+              clientActionId: action.clientActionId,
+            }, authoritativeTick)
+          }
+        },
+        afterTick: (_state, newEvents) => {
+          for (const raceEvent of newEvents) {
+            if (raceEvent.type === 'WILD_ITEM_MANUAL_INPUT') liveSession.resolveFromEvent(raceEvent)
+          }
+        },
+      })
+      liveSession.finalizeUnresolved('RACE_FINISHED')
+      await persistRaceEvents(prisma, raceId, result.events)
+      await persistLiveRaceWildActions(prisma, raceId, liveSession.getAllWildActions())
+    } finally {
+      stopLiveRaceSession(raceId)
+    }
     await transitionPersistedRaceState(prisma, raceId, 'RACING', 'FINISHED')
     if (!race.isTest) {
       await Promise.all([

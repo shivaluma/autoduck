@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { raceEventBus, RACE_EVENTS } from '@/lib/event-bus'
 import { prisma } from '@/lib/db'
+import { getLiveRaceSession } from '@/lib/racing/live-race-session'
 
 export const dynamic = 'force-dynamic'
 
@@ -80,6 +81,14 @@ export async function GET(
         if (polling) return
         polling = true
         try {
+          const session = getLiveRaceSession(raceId)
+          if (session?.latestSnapshot && session.latestSnapshot.tick > latestSnapshotTick) {
+            latestSnapshotTick = session.latestSnapshot.tick
+            sendEvent('snapshot', session.latestSnapshot)
+          }
+
+          if (session) return
+
           const [race, events] = await Promise.all([
             prisma.race.findUnique({ where: { id: raceId }, select: { liveSnapshotJson: true } }),
             prisma.raceEngineEvent.findMany({ where: { raceId, id: { gt: lastPersistedEventId } }, orderBy: { id: 'asc' }, take: 200 }),
