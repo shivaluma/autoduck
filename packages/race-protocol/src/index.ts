@@ -1,8 +1,8 @@
 import { z } from 'zod'
 
 export const RACE_PROTOCOL_VERSION = '1.0.0'
-export const RACE_ENGINE_VERSION = '1.0.0'
-export const RACE_BALANCE_VERSION = 'S3.1'
+export const RACE_ENGINE_VERSION = '1.1.0'
+export const RACE_BALANCE_VERSION = 'S3.2'
 export const DEFAULT_TRACK_VERSION = 'river-01-v1'
 export const RACE_TICK_RATE = 60
 
@@ -73,6 +73,20 @@ export interface StateSnapshotMessage {
 export type RaceEventType =
   | 'RACE_STARTED'
   | 'DUCK_COLLISION'
+  | 'ITEM_ACTIVATED'
+  | 'ROCKET_FIRED'
+  | 'ROCKET_HIT'
+  | 'ROCKET_BLOCKED'
+  | 'ROCKET_EXPIRED'
+  | 'BANANA_DROPPED'
+  | 'BANANA_HIT'
+  | 'BANANA_BLOCKED'
+  | 'BANANA_EXPIRED'
+  | 'NITRO_STARTED'
+  | 'NITRO_ENDED'
+  | 'HORN_USED'
+  | 'FEATHER_DODGED'
+  | 'BUBBLE_POPPED'
   | 'DUCK_FINISHED'
   | 'RACE_FINISHED'
 

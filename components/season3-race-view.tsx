@@ -32,7 +32,14 @@ export function Season3RaceView({ raceId }: { raceId: number }) {
   }, [raceId, race?.status])
 
   const ranking = useMemo(() => [...(race?.participants ?? [])].sort((left, right) => (left.initialRank ?? 99) - (right.initialRank ?? 99)), [race])
-  const racePlayers = useMemo(() => (race?.participants ?? []).filter((player) => !player.isClone).map((player) => ({ playerId: String(player.userId), name: player.displayName ?? player.name })), [race])
+  const racePlayers = useMemo(() => {
+    const loadouts = new Map((race?.engine?.loadouts ?? []).map((loadout) => [loadout.playerId, loadout.itemIds]))
+    return (race?.participants ?? []).filter((player) => !player.isClone).map((player) => ({
+      playerId: String(player.userId),
+      name: player.displayName ?? player.name,
+      itemIds: loadouts.get(String(player.userId)) ?? [],
+    }))
+  }, [race])
 
   if (loading) return <main className="flex min-h-screen items-center justify-center text-white"><div className="text-center"><div className="text-7xl">🦆</div><p className="mt-3 font-display text-2xl">Đang chuẩn bị race...</p></div></main>
   if (!race) return <main className="flex min-h-screen items-center justify-center text-white"><p>Không tìm thấy race.</p></main>

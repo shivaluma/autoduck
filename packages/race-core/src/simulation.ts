@@ -2,6 +2,13 @@ import type { DuckSnapshot, RaceConfig, RaceEvent, RaceResult } from '../../race
 import { CORE_BALANCE } from './config'
 import { createRaceRng, type DeterministicRng } from './rng'
 import { createRiverTrack, currentAt, type RaceTrack } from './track'
+import {
+  createItemRaceState,
+  itemActiveEffects,
+  itemSpeedMultiplier,
+  tickItemSystem,
+  type ItemRaceState,
+} from './items/engine'
 
 const clamp = (value: number, minimum: number, maximum: number) => Math.max(minimum, Math.min(maximum, value))
 
@@ -32,6 +39,8 @@ export interface RaceSimulationState {
   finished: boolean
   recordEvents: boolean
   rngByPlayer: Map<string, DeterministicRng>
+  itemState: ItemRaceState
+  lastCollisionEventTick: Map<string, number>
 }
 
 export interface SimulationOptions {
@@ -95,6 +104,8 @@ export function createSimulation(config: RaceConfig, options: SimulationOptions 
     finished: false,
     recordEvents: options.recordEvents !== false,
     rngByPlayer,
+    itemState: createItemRaceState(config),
+    lastCollisionEventTick: new Map(),
   }
   if (state.recordEvents) state.events.push(event(state, { type: 'RACE_STARTED', metadata: { playerCount: ducks.length } }))
   return state
@@ -132,13 +143,16 @@ function resolveCollisions(state: RaceSimulationState) {
       lateralDelta.set(right.playerId, (lateralDelta.get(right.playerId) ?? 0) - direction * push)
       speedDelta.set(left.playerId, (speedDelta.get(left.playerId) ?? 0) - CORE_BALANCE.collisionSpeedLoss * left.speed)
       speedDelta.set(right.playerId, (speedDelta.get(right.playerId) ?? 0) - CORE_BALANCE.collisionSpeedLoss * right.speed)
-      if (state.recordEvents) {
+      const pairKey = `${left.playerId}:${right.playerId}`
+      const lastEventTick = state.lastCollisionEventTick.get(pairKey) ?? -Infinity
+      if (state.recordEvents && state.tick - lastEventTick >= Math.round(state.config.tickRate * 0.5)) {
         state.events.push(event(state, {
           type: 'DUCK_COLLISION',
           sourcePlayerId: left.playerId,
           targetPlayerId: right.playerId,
           metadata: {},
         }))
+        state.lastCollisionEventTick.set(pairKey, state.tick)
       }
     }
   }
@@ -165,6 +179,10 @@ export function stepSimulation(state: RaceSimulationState) {
   const deltaSeconds = 1 / state.config.tickRate
   const tickStartMs = (state.tick - 1) * (1000 / state.config.tickRate)
 
+  tickItemSystem(state.itemState, state.ducks, state.tick, state.config.tickRate, (type, sourcePlayerId, targetPlayerId, metadata = {}) => {
+    if (state.recordEvents) state.events.push(event(state, { type, sourcePlayerId, targetPlayerId, metadata }))
+  })
+
   for (const duck of state.ducks) {
     if (duck.finished) continue
     duck.previousProgress = duck.progress
@@ -172,13 +190,15 @@ export function stepSimulation(state: RaceSimulationState) {
     const current = currentAt(state.track, duck.progress)
     const currentMultiplier = current?.speedMultiplier ?? 1
     const currentLateralForce = current?.lateralForce ?? 0
+    const itemRuntime = state.itemState.byPlayer.get(duck.playerId)!
+    duck.activeEffects = itemActiveEffects(itemRuntime, state.tick)
     const targetSpeed = duck.desiredSpeed + duck.acceleration
     duck.speed += (targetSpeed - duck.speed) * CORE_BALANCE.speedResponse * deltaSeconds
     const desiredLateralVelocity = (duck.desiredLateralOffset - duck.lateralOffset) * CORE_BALANCE.lateralResponse + currentLateralForce
     duck.lateralVelocity += (desiredLateralVelocity - duck.lateralVelocity) * 2.8 * deltaSeconds
     duck.lateralVelocity = clamp(duck.lateralVelocity, -CORE_BALANCE.maximumLateralVelocity, CORE_BALANCE.maximumLateralVelocity)
     duck.lateralOffset = clamp(duck.lateralOffset + duck.lateralVelocity * deltaSeconds, -0.95, 0.95)
-    duck.progress += Math.max(0, duck.speed * currentMultiplier * deltaSeconds)
+    duck.progress += Math.max(0, duck.speed * currentMultiplier * itemSpeedMultiplier(itemRuntime, state.tick) * deltaSeconds)
 
     if (duck.progress >= 1) {
       const travelled = duck.progress - duck.previousProgress

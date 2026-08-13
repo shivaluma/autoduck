@@ -116,6 +116,7 @@ export interface RaceStatus {
     config: import('@/packages/race-protocol/src').RaceConfig | null
     resultDigest: string | null
     events: import('@/packages/race-protocol/src').RaceEvent[]
+    loadouts: import('@/packages/race-protocol/src').RaceLoadout[]
   } | null
   consumedChests?: {
     id: number

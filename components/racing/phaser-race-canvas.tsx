@@ -4,9 +4,15 @@ import { useEffect, useId } from 'react'
 import type PhaserType from 'phaser'
 import { createSimulation, snapshotSimulation, stepSimulation } from '@/packages/race-core/src'
 import { createRiverTrack } from '@/packages/race-core/src/track'
-import type { DuckSnapshot, RaceConfig } from '@/packages/race-protocol/src'
+import type { DuckSnapshot, RaceConfig, RaceEvent, RaceItemId } from '@/packages/race-protocol/src'
 
-type PlayerLabel = { playerId: string; name: string }
+type PlayerLabel = { playerId: string; name: string; itemIds?: RaceItemId[] }
+
+const ITEM_ICONS: Record<RaceItemId, string> = {
+  BUBBLE_SHIELD: '🫧', HOMING_ROCKET: '🚀', NITRO: '⚡', BANANA: '🍌', FEATHER: '🪶', QUACK_HORN: '🔊',
+}
+
+const EFFECT_ICONS: Record<string, string> = { BUBBLE_SHIELD: '🫧', FEATHER: '🪶', NITRO: '⚡', SLOWED: '💫' }
 
 export function PhaserRaceCanvas({ raceId, players, replayConfig }: { raceId: number; players: PlayerLabel[]; replayConfig?: RaceConfig | null }) {
   const parentId = `duck-race-${useId().replace(/:/g, '')}`
@@ -23,9 +29,13 @@ export function PhaserRaceCanvas({ raceId, players, replayConfig }: { raceId: nu
       const Phaser = module.default
       const track = createRiverTrack(replayConfig?.trackVersion)
       const scenePlayers = JSON.parse(serializedPlayers) as PlayerLabel[]
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
       class DuckRaceScene extends Phaser.Scene {
-        private duckViews = new Map<string, { root: PhaserType.GameObjects.Container; targetX: number; targetY: number }>()
+        private duckViews = new Map<string, { root: PhaserType.GameObjects.Container; targetX: number; targetY: number; status: PhaserType.GameObjects.Text }>()
+        private leaderboard!: PhaserType.GameObjects.Text
+        private eventFeed!: PhaserType.GameObjects.Text
+        private recentEvents: string[] = []
 
         constructor() { super('duck-race') }
 
@@ -38,6 +48,15 @@ export function PhaserRaceCanvas({ raceId, players, replayConfig }: { raceId: nu
             color: replayConfig ? '#ffcc00' : '#3dff8f', fontFamily: 'sans-serif', fontSize: '18px', fontStyle: 'bold',
             backgroundColor: '#100b20cc', padding: { x: 12, y: 8 },
           }).setScrollFactor(0).setDepth(1000)
+          this.leaderboard = this.add.text(this.scale.width - 22, 18, '', {
+            color: '#ffffff', fontFamily: 'monospace', fontSize: '16px', fontStyle: 'bold', lineSpacing: 6,
+            backgroundColor: '#100b20d9', padding: { x: 14, y: 12 }, stroke: '#100b20', strokeThickness: 2,
+          }).setOrigin(1, 0).setScrollFactor(0).setDepth(1000)
+          this.eventFeed = this.add.text(18, this.scale.height - 18, '', {
+            color: '#ffffff', fontFamily: 'sans-serif', fontSize: '17px', fontStyle: 'bold', lineSpacing: 7,
+            backgroundColor: '#100b20d9', padding: { x: 14, y: 11 }, stroke: '#100b20', strokeThickness: 3,
+          }).setOrigin(0, 1).setScrollFactor(0).setDepth(1000)
+          if (!replayConfig) this.showCountdown()
         }
 
         private drawRiver() {
@@ -80,10 +99,28 @@ export function PhaserRaceCanvas({ raceId, players, replayConfig }: { raceId: nu
           const rank = this.add.text(-33, -34, String(index + 1), {
             color: '#100b20', fontFamily: 'sans-serif', fontSize: '14px', fontStyle: 'bold', backgroundColor: '#ffffffdd', padding: { x: 6, y: 3 },
           }).setOrigin(0.5)
+          const loadout = this.add.text(0, -55, (player.itemIds ?? []).map((item) => ITEM_ICONS[item]).join(' '), {
+            color: '#ffffff', fontFamily: 'sans-serif', fontSize: '19px', stroke: '#100b20', strokeThickness: 5,
+          }).setOrigin(0.5)
+          const status = this.add.text(0, 60, '', { color: '#ffffff', fontFamily: 'sans-serif', fontSize: '16px', stroke: '#100b20', strokeThickness: 4 }).setOrigin(0.5)
           const start = track.sample(0, -0.7 + (index / Math.max(1, scenePlayers.length - 1)) * 1.4)
-          const root = this.add.container(start.x, start.y, [body, name, rank]).setDepth(100 + index)
+          const root = this.add.container(start.x, start.y, [body, name, rank, loadout, status]).setDepth(100 + index)
           root.setData('rank-label', rank)
-          this.duckViews.set(player.playerId, { root, targetX: start.x, targetY: start.y })
+          this.duckViews.set(player.playerId, { root, targetX: start.x, targetY: start.y, status })
+        }
+
+        private showCountdown() {
+          const countdown = this.add.text(this.scale.width / 2, this.scale.height / 2, '3', {
+            color: '#ffcc00', fontFamily: 'sans-serif', fontSize: '110px', fontStyle: 'bold', stroke: '#100b20', strokeThickness: 12,
+          }).setOrigin(0.5).setScrollFactor(0).setDepth(1500)
+          let value = 3
+          this.time.addEvent({ delay: 750, repeat: 3, callback: () => {
+            value -= 1
+            countdown.setText(value > 0 ? String(value) : 'QUACK!')
+            countdown.setScale(1.4).setAlpha(1)
+            this.tweens.add({ targets: countdown, scale: 1, duration: 250 })
+            if (value < 0) countdown.destroy()
+          } })
         }
 
         applySnapshot(ducks: DuckSnapshot[]) {
@@ -94,7 +131,61 @@ export function PhaserRaceCanvas({ raceId, players, replayConfig }: { raceId: nu
             view.targetX = point.x
             view.targetY = point.y
             ;(view.root.getData('rank-label') as PhaserType.GameObjects.Text).setText(String(duck.rank))
+            view.status.setText(duck.activeEffects.map((effect) => EFFECT_ICONS[effect] ?? '').join(' '))
             view.root.setDepth(100 + scenePlayers.length - duck.rank)
+          }
+          this.leaderboard.setText(ducks.slice(0, 12).map((duck) => {
+            const player = scenePlayers.find((candidate) => candidate.playerId === duck.playerId)
+            const effect = duck.activeEffects.map((entry) => EFFECT_ICONS[entry] ?? '').join('')
+            return `${String(duck.rank).padStart(2)}  ${player?.name ?? duck.playerId} ${effect}`
+          }).join('\n'))
+        }
+
+        applyEvent(raceEvent: RaceEvent) {
+          const source = scenePlayers.find((player) => player.playerId === raceEvent.sourcePlayerId)?.name
+          const target = scenePlayers.find((player) => player.playerId === raceEvent.targetPlayerId)?.name
+          const messages: Partial<Record<RaceEvent['type'], string>> = {
+            ROCKET_FIRED: `🚀 ${source} → ${target}`,
+            ROCKET_HIT: `💥 ${target} trúng Rocket!`,
+            ROCKET_BLOCKED: `🫧 ${target} BLOCKED!`,
+            BANANA_DROPPED: `🍌 ${source} thả Banana`,
+            BANANA_HIT: `🍌 ${target} trượt vỏ chuối!`,
+            BANANA_BLOCKED: `🛡️ ${target} né được Banana`,
+            NITRO_STARTED: `⚡ ${source} NITRO!`,
+            HORN_USED: `🔊 ${source} QUACKED THE PACK`,
+            FEATHER_DODGED: `🪶 ${source} DODGED!`,
+            BUBBLE_POPPED: `🫧 ${source} POP!`,
+          }
+          const message = messages[raceEvent.type]
+          if (message) {
+            this.recentEvents = [message, ...this.recentEvents].slice(0, 3)
+            this.eventFeed.setText(this.recentEvents.join('\n'))
+          }
+          const focusId = raceEvent.targetPlayerId ?? raceEvent.sourcePlayerId
+          const view = focusId ? this.duckViews.get(focusId) : null
+          if (!view) return
+          if (raceEvent.type === 'ROCKET_FIRED' && raceEvent.sourcePlayerId && raceEvent.targetPlayerId) {
+            const sourceView = this.duckViews.get(raceEvent.sourcePlayerId)
+            const targetView = this.duckViews.get(raceEvent.targetPlayerId)
+            if (sourceView && targetView) {
+              const rocket = this.add.text(sourceView.root.x, sourceView.root.y, '🚀', { fontSize: '28px' }).setDepth(950)
+              this.tweens.add({ targets: rocket, x: targetView.root.x, y: targetView.root.y, duration: reducedMotion ? 120 : 480, onComplete: () => rocket.destroy() })
+            }
+          }
+          if (raceEvent.type === 'BANANA_DROPPED') {
+            const banana = this.add.text(view.root.x, view.root.y + 16, '🍌', { fontSize: '26px' }).setDepth(80)
+            this.tweens.add({ targets: banana, alpha: 0, duration: reducedMotion ? 700 : 4500, onComplete: () => banana.destroy() })
+          }
+          if (raceEvent.type === 'NITRO_STARTED') {
+            const wake = this.add.ellipse(view.root.x - 25, view.root.y + 10, 90, 28, 0x9ff5ff, 0.7).setDepth(85)
+            this.tweens.add({ targets: wake, scaleX: 2.1, alpha: 0, duration: reducedMotion ? 250 : 850, onComplete: () => wake.destroy() })
+          }
+          if (raceEvent.type === 'BUBBLE_POPPED' || raceEvent.type === 'HORN_USED') {
+            const ring = this.add.circle(view.root.x, view.root.y, 28, 0x7de8ff, 0.12).setStrokeStyle(5, 0xb8f4ff, 0.9).setDepth(900)
+            this.tweens.add({ targets: ring, scale: reducedMotion ? 1.5 : 3, alpha: 0, duration: reducedMotion ? 200 : 500, onComplete: () => ring.destroy() })
+          }
+          if (!reducedMotion && (raceEvent.type === 'ROCKET_HIT' || raceEvent.type === 'BANANA_HIT')) {
+            this.tweens.add({ targets: view.root, angle: { from: -8, to: 8 }, yoyo: true, repeat: 2, duration: 90, onComplete: () => view.root.setAngle(0) })
           }
         }
 
@@ -130,6 +221,7 @@ export function PhaserRaceCanvas({ raceId, players, replayConfig }: { raceId: nu
         const simulation = createSimulation(replayConfig)
         let previous = performance.now()
         let accumulator = 0
+        let replayEventCount = 0
         const tickMs = 1000 / replayConfig.tickRate
         const replay = (now: number) => {
           if (!active || simulation.finished) return
@@ -140,6 +232,8 @@ export function PhaserRaceCanvas({ raceId, players, replayConfig }: { raceId: nu
             accumulator -= tickMs
           }
           scene.applySnapshot(snapshotSimulation(simulation))
+          for (const raceEvent of simulation.events.slice(replayEventCount)) scene.applyEvent(raceEvent)
+          replayEventCount = simulation.events.length
           replayFrame = requestAnimationFrame(replay)
         }
         replayFrame = requestAnimationFrame(replay)
@@ -148,6 +242,9 @@ export function PhaserRaceCanvas({ raceId, players, replayConfig }: { raceId: nu
         source.addEventListener('snapshot', (event) => {
           const payload = JSON.parse((event as MessageEvent<string>).data) as { ducks: DuckSnapshot[] }
           scene.applySnapshot(payload.ducks)
+        })
+        source.addEventListener('engine-event', (event) => {
+          scene.applyEvent(JSON.parse((event as MessageEvent<string>).data) as RaceEvent)
         })
       }
     })

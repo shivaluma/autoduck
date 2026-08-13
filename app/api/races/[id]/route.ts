@@ -51,6 +51,8 @@ export async function GET(
       )
     }
 
+    const engineConfig = race.engineConfigJson ? JSON.parse(race.engineConfigJson) : null
+
     const [consumedChests, awardedChests] = MYSTERY_CHESTS_ENABLED ? await Promise.all([
       prisma.mysteryChest.findMany({
         where: {
@@ -142,7 +144,8 @@ export async function GET(
         trackVersion: race.trackVersion,
         seedCommit: race.seedCommit,
         seed: race.status === 'finished' ? race.raceSeed : null,
-        config: race.status === 'finished' && race.engineConfigJson ? JSON.parse(race.engineConfigJson) : null,
+        config: race.status === 'finished' ? engineConfig : null,
+        loadouts: engineConfig?.loadouts ?? [],
         resultDigest: race.resultDigest,
         events: race.engineEvents.map((event: {
           type: string
