@@ -274,14 +274,29 @@ export function PhaserRaceCanvas({
           icon.setAlpha(0.28)
         }
 
+        private finishCelebrationCount = 0
+
         private showCountdown() {
-          const countdown = this.add.text(this.scale.width / 2, this.scale.height / 2, '3', {
-            color: '#ffcc00', fontFamily: 'sans-serif', fontSize: '110px', fontStyle: 'bold', stroke: '#100b20', strokeThickness: 12,
+          const centerX = this.scale.width / 2
+          const centerY = this.scale.height / 2
+          const overlay = this.add.rectangle(centerX, centerY, this.scale.width, this.scale.height, 0x100b20, reducedMotion ? 0.2 : 0.38).setScrollFactor(0).setDepth(1490)
+          const countdown = this.add.text(centerX, centerY, '3', {
+            color: '#ff6b6b', fontFamily: 'sans-serif', fontSize: '110px', fontStyle: 'bold', stroke: '#100b20', strokeThickness: 12,
           }).setOrigin(0.5).setScrollFactor(0).setDepth(1500)
-          const showcase = this.add.text(this.scale.width / 2, this.scale.height / 2 + 105, '', {
+          const countdownLabel = this.add.text(centerX, centerY - 88, 'GET READY', {
+            color: '#ffffff', fontFamily: 'sans-serif', fontSize: '18px', fontStyle: 'bold', letterSpacing: 4,
+            backgroundColor: '#100b20cc', padding: { x: 12, y: 6 },
+          }).setOrigin(0.5).setScrollFactor(0).setDepth(1500).setAlpha(0.85)
+          const showcase = this.add.text(centerX, centerY + 105, '', {
             color: '#ffffff', fontFamily: 'sans-serif', fontSize: mobileViewport ? '13px' : '17px', fontStyle: 'bold', align: 'center',
             backgroundColor: '#100b20dd', padding: { x: 14, y: 9 }, stroke: '#100b20', strokeThickness: 2,
-          }).setOrigin(0.5).setScrollFactor(0).setDepth(1500)
+          }).setOrigin(0.5).setScrollFactor(0).setDepth(1500).setAlpha(0)
+          const tickColors = ['#ff6b6b', '#ffcc00', '#3dff8f', '#ffffff'] as const
+          const pulseCountdown = (color: string) => {
+            if (reducedMotion) return
+            const pulse = this.add.circle(centerX, centerY, 42, 0xffffff, 0.08).setScrollFactor(0).setDepth(1495).setStrokeStyle(4, parseInt(color.replace('#', ''), 16), 0.9)
+            this.tweens.add({ targets: pulse, scale: 2.8, alpha: 0, duration: 420, onComplete: () => pulse.destroy() })
+          }
           let showcaseIndex = 0
           const showPlayer = () => {
             const player = scenePlayers[showcaseIndex % scenePlayers.length]!
@@ -290,6 +305,8 @@ export function PhaserRaceCanvas({
               return id ? [COSMETIC_BY_ID.get(id)?.name].filter(Boolean) : []
             }) : []
             showcase.setText(`${player.name}${names.length ? `\n${names.slice(0, 3).join(' · ')}` : ''}`)
+            showcase.setAlpha(0).setY(centerY + 118)
+            this.tweens.add({ targets: showcase, alpha: 1, y: centerY + 105, duration: reducedMotion ? 120 : 220 })
             showcaseIndex += 1
           }
           showPlayer()
@@ -297,11 +314,24 @@ export function PhaserRaceCanvas({
           let value = 3
           this.time.addEvent({ delay: 750, repeat: 3, callback: () => {
             value -= 1
+            const color = tickColors[Math.max(0, value)] ?? '#ffffff'
             countdown.setText(value > 0 ? String(value) : 'QUACK!')
+            countdown.setColor(color)
+            countdownLabel.setText(value > 0 ? 'GET READY' : 'GO GO GO')
             audio.countdown(value <= 0)
-            countdown.setScale(1.4).setAlpha(1)
-            this.tweens.add({ targets: countdown, scale: 1, duration: 250 })
-            if (value < 0) { countdown.destroy(); showcase.destroy() }
+            countdown.setScale(1.45).setAlpha(1)
+            this.tweens.add({ targets: countdown, scale: 1, duration: reducedMotion ? 120 : 260, ease: 'Back.Out' })
+            pulseCountdown(color)
+            if (value === 0 && !reducedMotion) {
+              const flash = this.add.rectangle(centerX, centerY, this.scale.width, this.scale.height, 0xffffff, 0.22).setScrollFactor(0).setDepth(1498)
+              this.tweens.add({ targets: flash, alpha: 0, duration: 280, onComplete: () => flash.destroy() })
+              for (const view of this.duckViews.values()) {
+                this.tweens.add({ targets: view.root, scaleX: 1.12, scaleY: 1.12, yoyo: true, duration: 140, repeat: 1, onComplete: () => view.root.setScale(1) })
+              }
+            }
+            if (value < 0) {
+              this.tweens.add({ targets: [overlay, countdown, countdownLabel, showcase], alpha: 0, duration: reducedMotion ? 120 : 280, onComplete: () => { overlay.destroy(); countdown.destroy(); countdownLabel.destroy(); showcase.destroy() } })
+            }
           } })
         }
 
@@ -380,25 +410,234 @@ export function PhaserRaceCanvas({
           }
         }
 
+        private duckView(playerId?: string | null) {
+          return playerId ? this.duckViews.get(playerId) ?? null : null
+        }
+
+        private focusCamera(playerId: string, duration = 450) {
+          this.focusPlayerId = playerId
+          this.focusUntil = this.time.now + duration
+        }
+
+        private floatEmoji(x: number, y: number, emoji: string, fontSize = '22px', duration = 320) {
+          const label = (this.textPool.pop() ?? this.add.text(0, 0, '', { fontSize, fontFamily: 'sans-serif' })).setText(emoji).setPosition(x, y).setAlpha(1).setVisible(true).setDepth(940)
+          this.tweens.add({
+            targets: label,
+            y: y - 24,
+            alpha: 0,
+            duration: reducedMotion ? Math.min(duration, 180) : duration,
+            onComplete: () => { label.setVisible(false); this.textPool.push(label) },
+          })
+        }
+
+        private burstRing(x: number, y: number, strokeColor: number, fillColor = strokeColor, fillAlpha = 0.14, maxScale = 3) {
+          const ring = (this.ringPool.pop() ?? this.add.circle(0, 0, 28, fillColor, fillAlpha)).setPosition(x, y).setScale(1).setAlpha(1).setVisible(true).setStrokeStyle(5, strokeColor, 0.9).setDepth(900)
+          this.tweens.add({
+            targets: ring,
+            scale: reducedMotion ? 1.5 : maxScale,
+            alpha: 0,
+            duration: reducedMotion ? 200 : 480,
+            onComplete: () => { ring.setVisible(false); this.ringPool.push(ring) },
+          })
+        }
+
+        private wobbleDuck(playerId?: string | null) {
+          if (reducedMotion || !playerId) return
+          const view = this.duckView(playerId)
+          if (!view) return
+          this.tweens.add({ targets: view.root, angle: { from: -10, to: 10 }, yoyo: true, repeat: 2, duration: 85, onComplete: () => view.root.setAngle(0) })
+        }
+
+        private trackPoint(progress?: unknown, lateralOffset?: unknown) {
+          if (typeof progress !== 'number') return null
+          return track.sample(progress, typeof lateralOffset === 'number' ? lateralOffset : 0)
+        }
+
         private playHornEffect(raceEvent: RaceEvent) {
-          const sourceView = raceEvent.sourcePlayerId ? this.duckViews.get(raceEvent.sourcePlayerId) : null
+          const sourceView = this.duckView(raceEvent.sourcePlayerId)
           const hornTargets = Array.isArray(raceEvent.metadata.targets) ? raceEvent.metadata.targets.filter((entry): entry is string => typeof entry === 'string') : []
           if (sourceView) {
-            const ring = (this.ringPool.pop() ?? this.add.circle(0, 0, 28, 0xffe08a, 0.14)).setPosition(sourceView.root.x, sourceView.root.y).setScale(1).setAlpha(1).setVisible(true).setStrokeStyle(5, 0xffe08a, 0.95).setDepth(900)
-            this.tweens.add({ targets: ring, scale: reducedMotion ? 1.6 : 3.4, alpha: 0, duration: reducedMotion ? 200 : 520, onComplete: () => { ring.setVisible(false); this.ringPool.push(ring) } })
-            const blast = (this.textPool.pop() ?? this.add.text(0, 0, '', { fontSize: '24px' })).setText('🔊').setPosition(sourceView.root.x, sourceView.root.y - 8).setAlpha(1).setVisible(true).setDepth(940)
-            this.tweens.add({ targets: blast, y: blast.y - 22, alpha: 0, duration: reducedMotion ? 140 : 360, onComplete: () => { blast.setVisible(false); this.textPool.push(blast) } })
+            this.burstRing(sourceView.root.x, sourceView.root.y, 0xffe08a, 0xffe08a, 0.14, 3.4)
+            this.floatEmoji(sourceView.root.x, sourceView.root.y - 8, '🔊', '24px', 360)
           }
           if (!reducedMotion) {
-            for (const targetId of hornTargets) {
-              const targetView = this.duckViews.get(targetId)
-              if (!targetView) continue
-              this.tweens.add({ targets: targetView.root, angle: { from: -10, to: 10 }, yoyo: true, repeat: 2, duration: 80, onComplete: () => targetView.root.setAngle(0) })
-            }
+            for (const targetId of hornTargets) this.wobbleDuck(targetId)
           }
-          if (raceEvent.sourcePlayerId) {
-            this.focusPlayerId = raceEvent.sourcePlayerId
-            this.focusUntil = this.time.now + 420
+          if (raceEvent.sourcePlayerId) this.focusCamera(raceEvent.sourcePlayerId, 420)
+        }
+
+        private playActionEffects(raceEvent: RaceEvent) {
+          const type = raceEvent.type
+          const source = this.duckView(raceEvent.sourcePlayerId)
+          const target = this.duckView(raceEvent.targetPlayerId)
+
+          if (type === 'HORN_USED' || type === 'WILD_HORN_USED') {
+            this.playHornEffect(raceEvent)
+            return
+          }
+
+          if (type === 'ROCKET_FIRED' || type === 'MINI_ROCKET_FIRED') {
+            if (source) this.floatEmoji(source.root.x, source.root.y - 10, '🚀', '24px', 280)
+            if (source && target) {
+              const trail = this.add.graphics().setDepth(930)
+              trail.lineStyle(4, 0xff8844, 0.85).lineBetween(source.root.x, source.root.y, target.root.x, target.root.y)
+              this.tweens.add({ targets: trail, alpha: 0, duration: reducedMotion ? 120 : 260, onComplete: () => trail.destroy() })
+            }
+            if (raceEvent.sourcePlayerId) this.focusCamera(raceEvent.sourcePlayerId, 380)
+            return
+          }
+
+          if (type === 'ROCKET_HIT' || type === 'MINI_ROCKET_HIT') {
+            const hitView = target ?? source
+            if (hitView) {
+              this.burstRing(hitView.root.x, hitView.root.y, 0xff5a4a, 0xff5a4a, 0.18, 3.2)
+              this.floatEmoji(hitView.root.x, hitView.root.y - 12, '💥', '26px', 420)
+              this.wobbleDuck(raceEvent.targetPlayerId)
+            }
+            if (raceEvent.targetPlayerId) this.focusCamera(raceEvent.targetPlayerId, 520)
+            return
+          }
+
+          if (type === 'ROCKET_BLOCKED' || type === 'MINI_ROCKET_BLOCKED') {
+            const blockView = target ?? source
+            if (blockView) {
+              this.burstRing(blockView.root.x, blockView.root.y, 0x7de8ff, 0x7de8ff, 0.2, 2.6)
+              this.floatEmoji(blockView.root.x, blockView.root.y - 10, '🫧', '24px')
+            }
+            if (raceEvent.targetPlayerId) this.focusCamera(raceEvent.targetPlayerId, 400)
+            return
+          }
+
+          if (type === 'BANANA_DROPPED' || type === 'WILD_BANANA_DROPPED') {
+            const point = this.trackPoint(raceEvent.metadata.progress, raceEvent.metadata.lateralOffset) ?? (source ? { x: source.root.x, y: source.root.y } : null)
+            if (point) {
+              this.floatEmoji(point.x, point.y, '🍌', '28px', 500)
+              this.burstRing(point.x, point.y, 0xffe66d, 0xffe66d, 0.1, 2.2)
+            }
+            if (raceEvent.sourcePlayerId) this.focusCamera(raceEvent.sourcePlayerId, 350)
+            return
+          }
+
+          if (type === 'BANANA_HIT' || type === 'WILD_BANANA_HIT') {
+            if (target) {
+              this.floatEmoji(target.root.x, target.root.y - 8, '💫', '24px', 480)
+              this.burstRing(target.root.x, target.root.y, 0xffe08a, 0xffe08a, 0.14, 2.8)
+              this.wobbleDuck(raceEvent.targetPlayerId)
+            }
+            if (raceEvent.targetPlayerId) this.focusCamera(raceEvent.targetPlayerId, 480)
+            return
+          }
+
+          if (type === 'BANANA_BLOCKED' || type === 'WILD_BANANA_BLOCKED') {
+            if (target) this.floatEmoji(target.root.x, target.root.y - 10, '🪽', '22px')
+            return
+          }
+
+          if (type === 'NITRO_STARTED' || (type === 'INSTANT_PICKUP_TRIGGERED' && raceEvent.metadata.itemId === 'MINI_NITRO')) {
+            if (source) {
+              for (let index = 0; index < 3; index += 1) {
+                const wake = (this.ellipsePool.pop() ?? this.add.ellipse(0, 0, 80, 22, 0x9ff5ff, 0.65)).setPosition(source.root.x - 22 - index * 10, source.root.y + 8).setAlpha(0.65).setVisible(true).setDepth(85)
+                this.tweens.add({ targets: wake, scaleX: 2.2 + index * 0.2, alpha: 0, duration: reducedMotion ? 200 : 600 + index * 80, onComplete: () => { wake.setVisible(false); this.ellipsePool.push(wake) } })
+              }
+              this.floatEmoji(source.root.x, source.root.y - 16, '⚡', '26px', 520)
+              if (!reducedMotion) this.tweens.add({ targets: source.root, scaleX: 1.08, scaleY: 1.08, yoyo: true, duration: 120, repeat: 1, onComplete: () => source.root.setScale(1) })
+            }
+            if (raceEvent.sourcePlayerId) this.focusCamera(raceEvent.sourcePlayerId, 420)
+            return
+          }
+
+          if (type === 'INSTANT_PICKUP_TRIGGERED' && raceEvent.metadata.itemId === 'TAILWIND') {
+            if (source) this.floatEmoji(source.root.x, source.root.y - 12, '🌊', '24px', 480)
+            return
+          }
+
+          if (type === 'INSTANT_PICKUP_TRIGGERED' && raceEvent.metadata.itemId === 'SLIPSTREAM_MAGNET') {
+            if (source) {
+              this.floatEmoji(source.root.x, source.root.y - 12, '🧲', '22px', 420)
+              this.burstRing(source.root.x, source.root.y, 0xb8f4ff, 0x55d4ff, 0.12, 2.3)
+            }
+            return
+          }
+
+          if (type === 'BUBBLE_POPPED' || type === 'MINI_BUBBLE_BLOCKED') {
+            const bubbleView = source ?? target
+            if (bubbleView) {
+              this.burstRing(bubbleView.root.x, bubbleView.root.y, 0xb8f4ff, 0x7de8ff, 0.22, 3)
+              this.floatEmoji(bubbleView.root.x, bubbleView.root.y - 10, '💧', '18px', 360)
+            }
+            return
+          }
+
+          if (type === 'MINI_BUBBLE_ACTIVATED') {
+            if (source) {
+              this.burstRing(source.root.x, source.root.y, 0xb8f4ff, 0x7de8ff, 0.16, 2.4)
+              this.floatEmoji(source.root.x, source.root.y - 14, '🫧', '22px')
+            }
+            return
+          }
+
+          if (type === 'FEATHER_DODGED' || type === 'WILD_FEATHER_DODGED' || type === 'HAZARD_DODGED') {
+            if (source) {
+              this.floatEmoji(source.root.x, source.root.y - 18, '🪽', '24px', 520)
+              if (!reducedMotion) this.tweens.add({ targets: source.root, y: source.root.y - 8, yoyo: true, repeat: 1, duration: 100 })
+            }
+            return
+          }
+
+          if (type === 'WILD_FEATHER_USED' && source) {
+            this.floatEmoji(source.root.x, source.root.y - 14, '🪽', '22px')
+            this.burstRing(source.root.x, source.root.y, 0xd8c7ff, 0xd8c7ff, 0.12, 2.2)
+            return
+          }
+
+          if (type === 'HAZARD_HIT' && source) {
+            const hazardEmoji = ({ ANCHOR: '⚓', WHIRLPOOL: '🌀', ICE_PATCH: '🧊', STICKY_GOO: '🟢' } as Record<string, string>)[String(raceEvent.metadata.hazardType)] ?? '☠️'
+            this.floatEmoji(source.root.x, source.root.y - 10, hazardEmoji, '26px', 460)
+            this.burstRing(source.root.x, source.root.y, 0x9bd4ff, 0x4a90a4, 0.16, 2.6)
+            this.wobbleDuck(raceEvent.sourcePlayerId)
+            this.focusCamera(raceEvent.sourcePlayerId, 460)
+            return
+          }
+
+          if (type === 'PICKUP_COLLECTED' || type === 'WILD_ITEM_GRANTED') {
+            if (source) {
+              this.burstRing(source.root.x, source.root.y, 0x9ff5ff, 0x55d4ff, 0.14, 2.4)
+              const itemIcon = type === 'WILD_ITEM_GRANTED' ? (WILD_ICONS[raceEvent.metadata.itemId as WildItemId] ?? '📦') : '📦'
+              this.floatEmoji(source.root.x, source.root.y - 14, itemIcon, '24px', 560)
+            }
+            return
+          }
+
+          if (type === 'GOLDEN_BOX_COLLECTED' && source) {
+            this.burstRing(source.root.x, source.root.y, 0xffe66d, 0xffcc00, 0.24, 3.6)
+            this.floatEmoji(source.root.x, source.root.y - 16, '🪙', '30px', 720)
+            if (!reducedMotion) {
+              for (let index = 0; index < 4; index += 1) {
+                this.time.delayedCall(index * 70, () => this.floatEmoji(source.root.x + (index - 2) * 14, source.root.y - 8, '✨', '16px', 400))
+              }
+            }
+            this.focusCamera(raceEvent.sourcePlayerId!, 620)
+            return
+          }
+
+          if (type === 'DUCK_FINISHED' && source) {
+            this.finishCelebrationCount += 1
+            const place = this.finishCelebrationCount
+            const medals = ['🏆', '🥈', '🥉'] as const
+            const medal = place <= 3 ? medals[place - 1] : '🏁'
+            const ringColor = place === 1 ? 0xffd700 : place === 2 ? 0xdde4ee : place === 3 ? 0xffa45b : 0xffffff
+            this.burstRing(source.root.x, source.root.y, ringColor, ringColor, place <= 3 ? 0.22 : 0.1, place === 1 ? 4 : 2.8)
+            this.floatEmoji(source.root.x, source.root.y - 20, medal, place === 1 ? '34px' : '28px', place === 1 ? 900 : 620)
+            this.floatEmoji(source.root.x, source.root.y - 46, `#${place}`, place === 1 ? '22px' : '18px', 520)
+            if (!reducedMotion) {
+              this.tweens.add({ targets: source.root, scaleX: place === 1 ? 1.18 : 1.1, scaleY: place === 1 ? 1.18 : 1.1, yoyo: true, duration: place === 1 ? 180 : 130, repeat: place === 1 ? 2 : 1, onComplete: () => source.root.setScale(1) })
+              if (place === 1) {
+                for (let index = 0; index < 6; index += 1) {
+                  this.time.delayedCall(index * 60, () => this.floatEmoji(source.root.x + (index % 3 - 1) * 22, source.root.y - 12, index % 2 === 0 ? '🎉' : '✨', '20px', 520))
+                }
+              }
+            }
+            if (raceEvent.sourcePlayerId) this.focusCamera(raceEvent.sourcePlayerId, place === 1 ? 900 : place <= 3 ? 620 : 380)
           }
         }
 
@@ -444,9 +683,7 @@ export function PhaserRaceCanvas({
             this.recentEvents = [message, ...this.recentEvents].slice(0, 3)
             this.eventFeed.setText(this.recentEvents.join('\n'))
           }
-          if (raceEvent.type === 'HORN_USED' || raceEvent.type === 'WILD_HORN_USED') {
-            this.playHornEffect(raceEvent)
-          }
+          this.playActionEffects(raceEvent)
           const focusId = raceEvent.targetPlayerId ?? raceEvent.sourcePlayerId
           const view = focusId ? this.duckViews.get(focusId) : null
           if (!view) return
@@ -466,28 +703,6 @@ export function PhaserRaceCanvas({
               const finish = this.add.image(view.root.x, view.root.y, `cosmetic-${finishId}`).setDisplaySize(130, 130).setDepth(920).setAlpha(1)
               this.tweens.add({ targets: finish, scale: reducedMotion ? 1.15 : 1.8, alpha: 0, duration: reducedMotion ? 250 : 800, onComplete: () => finish.destroy() })
             }
-          }
-          if (!reducedMotion && ['ROCKET_HIT', 'ROCKET_BLOCKED', 'BANANA_HIT', 'BUBBLE_POPPED', 'MINI_ROCKET_HIT', 'MINI_ROCKET_BLOCKED', 'WILD_BANANA_HIT', 'GOLDEN_BOX_COLLECTED'].includes(raceEvent.type)) {
-            this.focusPlayerId = focusId ?? null
-            this.focusUntil = this.time.now + 450
-          }
-          if ((raceEvent.type === 'ROCKET_FIRED' || raceEvent.type === 'MINI_ROCKET_FIRED') && raceEvent.sourcePlayerId && raceEvent.targetPlayerId) {
-            const sourceView = this.duckViews.get(raceEvent.sourcePlayerId)
-            if (sourceView) {
-              const flash = (this.textPool.pop() ?? this.add.text(0, 0, '', { fontSize: '22px' })).setText('🚀').setPosition(sourceView.root.x, sourceView.root.y).setAlpha(1).setVisible(true).setDepth(940)
-              this.tweens.add({ targets: flash, y: flash.y - 18, alpha: 0, duration: reducedMotion ? 120 : 280, onComplete: () => { flash.setVisible(false); this.textPool.push(flash) } })
-            }
-          }
-          if (raceEvent.type === 'NITRO_STARTED' || (raceEvent.type === 'INSTANT_PICKUP_TRIGGERED' && raceEvent.metadata.itemId === 'MINI_NITRO')) {
-            const wake = (this.ellipsePool.pop() ?? this.add.ellipse(0, 0, 90, 28, 0x9ff5ff, 0.7)).setPosition(view.root.x - 25, view.root.y + 10).setScale(1).setAlpha(0.7).setVisible(true).setDepth(85)
-            this.tweens.add({ targets: wake, scaleX: 2.1, alpha: 0, duration: reducedMotion ? 250 : 850, onComplete: () => { wake.setVisible(false); this.ellipsePool.push(wake) } })
-          }
-          if (raceEvent.type === 'BUBBLE_POPPED' || raceEvent.type === 'MINI_BUBBLE_BLOCKED' || raceEvent.type === 'MINI_BUBBLE_ACTIVATED') {
-            const ring = (this.ringPool.pop() ?? this.add.circle(0, 0, 28, 0x7de8ff, 0.12)).setPosition(view.root.x, view.root.y).setScale(1).setAlpha(1).setVisible(true).setStrokeStyle(5, 0xb8f4ff, 0.9).setDepth(900)
-            this.tweens.add({ targets: ring, scale: reducedMotion ? 1.5 : 3, alpha: 0, duration: reducedMotion ? 200 : 500, onComplete: () => { ring.setVisible(false); this.ringPool.push(ring) } })
-          }
-          if (!reducedMotion && ['ROCKET_HIT', 'BANANA_HIT', 'MINI_ROCKET_HIT', 'WILD_BANANA_HIT', 'HAZARD_HIT'].includes(raceEvent.type)) {
-            this.tweens.add({ targets: view.root, angle: { from: -8, to: 8 }, yoyo: true, repeat: 2, duration: 90, onComplete: () => view.root.setAngle(0) })
           }
         }
 
