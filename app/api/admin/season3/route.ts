@@ -38,7 +38,7 @@ export async function GET(request: Request) {
     where: { status: 'active' },
     orderBy: { createdAt: 'desc' },
     include: {
-      players: { include: { user: { select: { id: true, name: true } } }, orderBy: { user: { name: 'asc' } } },
+      players: { include: { user: { select: { id: true, name: true, avatarUrl: true } } }, orderBy: { user: { name: 'asc' } } },
       weeksPlan: { orderBy: { weekNumber: 'asc' }, include: { predictions: true, shieldChoices: { include: { seasonPlayer: { include: { user: true } } } }, race: { select: { id: true, status: true } } } },
       rewards: { orderBy: { cost: 'asc' } },
     },
@@ -53,9 +53,10 @@ export async function GET(request: Request) {
       weeks: season.weeks,
       status: season.status,
     },
-    players: season.players.map((player: { id: number; userId: number; accessToken: string; user: { name: string }; scars: number; shields: number; predictionPoints: number; isKing: boolean; kingStreak: number }) => ({
+    players: season.players.map((player: { id: number; userId: number; accessToken: string; user: { name: string; avatarUrl: string | null }; scars: number; shields: number; predictionPoints: number; isKing: boolean; kingStreak: number }) => ({
       id: player.userId,
       name: player.user.name,
+      avatarUrl: player.user.avatarUrl,
       personalLink: `/season-3?token=${encodeURIComponent(player.accessToken)}`,
       scars: player.scars,
       shields: player.shields,

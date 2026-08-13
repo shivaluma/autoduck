@@ -118,7 +118,7 @@ export function RaceCelebration({
                 {/* Avatar */}
                 <div className={`relative ${isVictim ? 'ring-3 ring-[#ff3333] ring-offset-2 ring-offset-black' : ''} rounded-full`}>
                   <Image
-                    src={p.avatarUrl || '/placeholder-avatar.png'}
+                    src={p.avatarUrl || '/placeholder-avatar.svg'}
                     alt={p.name}
                     width={48}
                     height={48}
@@ -270,7 +270,7 @@ export function RaceCelebration({
               <div className="absolute -inset-4 bg-[#ff3333] rounded-full blur-2xl opacity-25 animate-pulse" />
 
               <Image
-                src={v.avatarUrl || '/placeholder-avatar.png'}
+                src={v.avatarUrl || '/placeholder-avatar.svg'}
                 alt={v.name}
                 width={144}
                 height={144}

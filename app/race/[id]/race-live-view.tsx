@@ -8,6 +8,7 @@ import { MYSTERY_CHESTS_ENABLED } from '@/lib/feature-flags'
 
 interface RaceLiveViewProps {
   raceId: number
+  season3Mode?: boolean
 }
 
 interface Commentary {
@@ -28,7 +29,7 @@ interface LiveFrame {
   timestamp?: number
 }
 
-export function RaceLiveView({ raceId }: RaceLiveViewProps) {
+export function RaceLiveView({ raceId, season3Mode = false }: RaceLiveViewProps) {
   const [status, setStatus] = useState<'connecting' | 'live' | 'offline'>('connecting')
   const [commentaries, setCommentaries] = useState<Commentary[]>([])
   const [result, setResult] = useState<RaceFinishedEvent | null>(null)
@@ -306,7 +307,7 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
             />
           </Card>
 
-          {bossArc.length > 0 && (
+          {!season3Mode && bossArc.length > 0 && (
             <div className="ggd-card-gold p-4">
               <div className="font-display text-lg text-[var(--color-ggd-gold)] text-outlined">👑 BOSS DUCK ARC</div>
               <div className="font-data text-sm text-white/80 mt-1">
@@ -315,7 +316,7 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
             </div>
           )}
 
-          {curseSwaps.length > 0 && (
+          {!season3Mode && curseSwaps.length > 0 && (
             <div className="ggd-card-orange p-4">
               <div className="font-display text-lg text-white text-outlined">⚠️ Curse Swap</div>
               <div className="font-data text-sm text-white/80 mt-1">
@@ -359,7 +360,7 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
             </ScrollArea>
           </Card>
 
-          {MYSTERY_CHESTS_ENABLED && (
+          {!season3Mode && MYSTERY_CHESTS_ENABLED && (
             <Card className="ggd-card p-4">
               <div className="font-display text-lg text-white text-outlined mb-3">🎁 EFFECTS ACTIVE</div>
               <div className="space-y-2">
@@ -377,7 +378,7 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
             </Card>
           )}
 
-          <Card className="ggd-card p-4 flex-1">
+          {!season3Mode && <Card className="ggd-card p-4 flex-1">
             <div className="font-display text-lg text-white text-outlined mb-3">👤 CLONES</div>
             <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1">
               {clones.length > 0 ? clones.map((clone) => {
@@ -394,7 +395,7 @@ export function RaceLiveView({ raceId }: RaceLiveViewProps) {
                 <div className="font-data text-sm text-[var(--color-ggd-muted)]">Không có clone active.</div>
               )}
             </div>
-          </Card>
+          </Card>}
         </div>
       </div>
     </div>

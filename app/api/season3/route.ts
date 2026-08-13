@@ -55,6 +55,7 @@ export async function GET(request: Request) {
       viewer: viewer ? {
         userId: viewer.userId,
         name: viewer.user.name,
+        avatarUrl: viewer.user.avatarUrl,
         predictionPoints: viewer.predictionPoints,
         scars: viewer.scars,
         shields: viewer.shields,

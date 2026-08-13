@@ -3,10 +3,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Season3ChaosCard } from '@/components/season3-chaos-card'
+import { Season3Avatar } from '@/components/season3-avatar'
 
 type AdminState = {
   season: { id: number; name: string; year: number; weeks: number; status: string } | null
-  players: Array<{ id: number; name: string; personalLink: string; scars: number; shields: number; predictionPoints: number; isKing: boolean; kingStreak: number }>
+  players: Array<{ id: number; name: string; avatarUrl?: string | null; personalLink: string; scars: number; shields: number; predictionPoints: number; isKing: boolean; kingStreak: number }>
   weeks: Array<{
     id: number
     weekNumber: number
@@ -96,7 +97,7 @@ export default function AdminSeason3Page() {
     </section> : <>
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {data.players.map((player) => <div key={player.id} className="rounded-2xl border-2 border-white/15 bg-[var(--color-ggd-surface-2)] p-4">
-          <div className="font-black">{player.isKing ? '👑 ' : ''}{player.name}</div>
+          <div className="flex items-center gap-3"><Season3Avatar name={player.name} avatarUrl={player.avatarUrl} size={40} /><div className="font-black">{player.isKing ? '👑 ' : ''}{player.name}</div></div>
           <div className="mt-1 text-sm text-white/60">🩹 {player.scars} · 🛡️ {player.shields} · 🔮 {player.predictionPoints}</div>
           <a className="mt-3 block truncate text-xs text-[var(--color-ggd-neon-green)]" href={player.personalLink}>{player.personalLink}</a>
         </div>)}
