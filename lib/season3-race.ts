@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/db'
 import { mapSeason3RaceRanking } from '@/lib/season3-race-mapping'
 import { assertSeason3RaceDay } from '@/lib/season3-schedule'
-import { canStartSeason3TestRace, getTestRaceRestoreStatus, type Season3PrepStatus } from '@/lib/season3-test-mode'
+import { canStartSeason3TestRace, getSeason3RaceMode } from '@/lib/season3-test-mode'
 import { createRaceCommit, createRaceSeed } from '@/lib/racing/audit'
 import { parseRaceConfig, persistRaceEvents, persistedRaceResult, serializeRaceConfig } from '@/lib/racing/persistence'
 import { parseItemIds, selectAutoLoadout, serializeItemIds } from '@/lib/racing/loadout'
@@ -88,11 +88,11 @@ export async function startSeason3Race(weekId: number, options: { allowOffSchedu
   if (testMode ? !canStartSeason3TestRace(week.status) : week.status !== 'locked') {
     throw new Error(testMode ? 'Test Race chỉ chạy khi prep đang mở hoặc đã lock' : 'Phải lock prep trước khi đua')
   }
-  const prepStatus = week.status as Season3PrepStatus
-  if (week.race && week.race.status !== 'failed') return week.race
+  const raceMode = getSeason3RaceMode(testMode)
+  if (!testMode && week.race && week.race.status !== 'failed') return week.race
 
   const claimedRaceId = week.race?.id ?? null
-  const raceSeed = week.raceSeed ?? createRaceSeed()
+  const raceSeed = testMode ? createRaceSeed() : (week.raceSeed ?? createRaceSeed())
   const skippedPlayerIds = parseSkippedPlayerIds(week.skippedPlayerIdsJson)
   const activePlayers = (week.season.players as Season3RacePlayer[]).filter((player) => !skippedPlayerIds.has(player.userId))
   if (activePlayers.length < 2 || activePlayers.length > 16) throw new Error('Race cần 2–16 dzịt active')
@@ -106,7 +106,7 @@ export async function startSeason3Race(weekId: number, options: { allowOffSchedu
     }
   })
   const claim = await prisma.$transaction(async (tx: typeof prisma) => {
-    if (!testMode) {
+    if (raceMode.mutatesSeason) {
       for (const loadout of immutableLoadouts) {
         if (loadoutByPlayer.has(loadout.player.id)) continue
         await tx.seasonLoadout.create({
@@ -136,16 +136,18 @@ export async function startSeason3Race(weekId: number, options: { allowOffSchedu
       },
     })
 
-    const claimed = await tx.seasonWeek.updateMany({
-      where: { id: week.id, status: prepStatus, raceId: claimedRaceId },
-      data: { status: 'racing', raceId: created.id },
-    })
+    if (raceMode.claimsOfficialWeek) {
+      const claimed = await tx.seasonWeek.updateMany({
+        where: { id: week.id, status: 'locked', raceId: claimedRaceId },
+        data: { status: 'racing', raceId: created.id },
+      })
 
-    if (claimed.count !== 1) {
-      await tx.race.delete({ where: { id: created.id } })
-      const current = await tx.seasonWeek.findUnique({ where: { id: week.id }, include: { race: true } })
-      if (!current?.race) throw new Error('Không thể claim Season 3 week để start race')
-      return { race: current.race, claimed: false }
+      if (claimed.count !== 1) {
+        await tx.race.delete({ where: { id: created.id } })
+        const current = await tx.seasonWeek.findUnique({ where: { id: week.id }, include: { race: true } })
+        if (!current?.race) throw new Error('Không thể claim Season 3 week để start race')
+        return { race: current.race, claimed: false }
+      }
     }
 
     const config = raceConfigSchema.parse({
@@ -181,7 +183,7 @@ export async function startSeason3Race(weekId: number, options: { allowOffSchedu
   })
 
   if (claim.claimed) {
-    void executeSeason3Race(claim.race.id, week.id, { testRestoreStatus: testMode ? prepStatus : undefined }).catch((error: unknown) => {
+    void executeSeason3Race(claim.race.id, week.id, { testMode }).catch((error: unknown) => {
       console.error(`Season 3 race ${claim.race.id} failed:`, error)
     })
   }
@@ -189,8 +191,8 @@ export async function startSeason3Race(weekId: number, options: { allowOffSchedu
   return claim.race
 }
 
-export async function executeSeason3Race(raceId: number, weekId: number, options: { testRestoreStatus?: Season3PrepStatus } = {}) {
-  let failureRestoreStatus: Season3PrepStatus = options.testRestoreStatus ?? 'locked'
+export async function executeSeason3Race(raceId: number, weekId: number, options: { testMode?: boolean } = {}) {
+  let testRace = options.testMode === true
   try {
     const week = await prisma.seasonWeek.findUnique({
       where: { id: weekId },
@@ -202,10 +204,11 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
     })
     const race = await prisma.race.findUnique({ where: { id: raceId } })
 
-    if (!week || !race || week.status !== 'racing' || week.raceId !== raceId) {
+    if (!week || !race) {
       throw new Error('Season 3 race không còn hợp lệ')
     }
-    if (race.isTest) failureRestoreStatus = options.testRestoreStatus ?? getTestRaceRestoreStatus(week.predictionsLockedAt)
+    testRace = race.isTest
+    if (!testRace && (week.status !== 'racing' || week.raceId !== raceId)) throw new Error('Season 3 official race không còn hợp lệ')
 
     if (!race.engineConfigJson) throw new Error('Race thiếu immutable engine config')
     const config = parseRaceConfig(race.engineConfigJson)
@@ -214,8 +217,8 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
     await prisma.race.update({ where: { id: raceId }, data: { status: 'running' } })
 
     const shieldConfirmedIds = new Set(week.shieldChoices.map((choice: { seasonPlayerId: number }) => choice.seasonPlayerId))
-    const skippedPlayerIds = parseSkippedPlayerIds(week.skippedPlayerIdsJson)
-    const players = (week.season.players as Season3RacePlayer[]).filter((player) => !skippedPlayerIds.has(player.userId)).map((player) => ({
+    const configuredPlayerIds = new Set(config.players.map((player) => Number(player.playerId)))
+    const players = (week.season.players as Season3RacePlayer[]).filter((player) => configuredPlayerIds.has(player.userId)).map((player) => ({
       ...player,
       shieldConfirmed: shieldConfirmedIds.has(player.id),
     }))
@@ -324,22 +327,19 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
         },
       })
       if (transitionedRace.count !== 1) throw new Error(`Race ${raceId} is no longer in FINISHED`)
-      await tx.seasonWeek.update({
-        where: { id: week.id },
-        data: race.isTest
-          ? { status: options.testRestoreStatus ?? getTestRaceRestoreStatus(week.predictionsLockedAt), raceId: null }
-          : { status: 'resolved', recap, resolvedAt: new Date() },
-      })
+      if (!race.isTest) {
+        await tx.seasonWeek.update({
+          where: { id: week.id },
+          data: { status: 'resolved', recap, resolvedAt: new Date() },
+        })
+      }
     })
     if (race.isTest) await transitionPersistedRaceState(prisma, raceId, 'RESOLVED', 'ARCHIVED')
 
     return { raceId, recap, resolution: resolved, predictions: predictionOutcomes }
   } catch (error) {
     await prisma.race.update({ where: { id: raceId }, data: { status: 'failed' } }).catch(() => undefined)
-    await prisma.seasonWeek.update({
-      where: { id: weekId },
-      data: { status: failureRestoreStatus, raceId: null },
-    }).catch(() => undefined)
+    if (!testRace) await prisma.seasonWeek.update({ where: { id: weekId }, data: { status: 'locked', raceId: null } }).catch(() => undefined)
     throw error
   }
 }

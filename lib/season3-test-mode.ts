@@ -4,6 +4,8 @@ export function canStartSeason3TestRace(status: string): status is Season3PrepSt
   return status === 'open' || status === 'locked'
 }
 
-export function getTestRaceRestoreStatus(predictionsLockedAt: Date | null | undefined): Season3PrepStatus {
-  return predictionsLockedAt ? 'locked' : 'open'
+export function getSeason3RaceMode(testMode: boolean) {
+  return testMode
+    ? { claimsOfficialWeek: false, mutatesSeason: false } as const
+    : { claimsOfficialWeek: true, mutatesSeason: true } as const
 }

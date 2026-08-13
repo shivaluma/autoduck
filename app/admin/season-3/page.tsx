@@ -45,6 +45,7 @@ export default function AdminSeason3Page() {
   const [secret, setSecret] = useState('')
   const [data, setData] = useState<AdminState | null>(null)
   const [message, setMessage] = useState('')
+  const [testRaceId, setTestRaceId] = useState<number | null>(null)
 
   const currentWeek = useMemo(() => (data?.weeks ?? []).find((week) => week.status !== 'resolved') ?? null, [data])
   const nameById = useMemo(() => new Map((data?.players ?? []).map((player) => [player.id, player.name])), [data])
@@ -87,6 +88,14 @@ export default function AdminSeason3Page() {
     if (result.response.ok) await refresh()
   }
 
+  async function startTestRace() {
+    window.localStorage.setItem('autoduck-season3-secret', secret)
+    if (!currentWeek) return
+    const result = await callAdmin(secret, { action: 'start-race', weekId: currentWeek.id, test: true })
+    setMessage(result.data.error ?? (result.response.ok ? 'Test Race đã bắt đầu. Prep official vẫn mở.' : 'Không chạy được Test Race.'))
+    if (result.response.ok && result.data.raceId) setTestRaceId(result.data.raceId)
+  }
+
   return <main className="mx-auto max-w-6xl space-y-6 p-6 text-white">
     <header className="rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-6 shadow-[0_8px_0_var(--color-ggd-outline)]">
       <div className="text-sm font-black tracking-[0.25em] text-[var(--color-ggd-gold)]">HOST CONTROL</div>
@@ -116,6 +125,11 @@ export default function AdminSeason3Page() {
 
       {currentWeek && <Season3ChaosCard compact type={currentWeek.chaosType} weekNumber={currentWeek.weekNumber} targetName={nameById.get(currentWeek.chaosTargetUserId ?? -1)} groups={currentWeek.chaosGroups?.map((group) => group.map((id) => nameById.get(id) ?? String(id)))} predictionCount={currentWeek.predictionCount} playerCount={activePlayerCount} />}
 
+      {currentWeek && canStartSeason3TestRace(currentWeek.status) && <section className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border-4 border-[var(--color-ggd-gold)] bg-[var(--color-ggd-surface-2)] p-5">
+        <div><div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-gold)]">TEST MODE · ALWAYS AVAILABLE</div><h2 className="mt-1 font-display text-2xl">🧪 Test Race</h2><p className="mt-1 text-sm text-white/60">Chạy riêng. Member vẫn setup Official Race bình thường.</p></div>
+        <div className="flex flex-wrap gap-2"><button onClick={() => void startTestRace()} className="rounded-xl bg-[var(--color-ggd-gold)] px-5 py-3 font-black text-[var(--color-ggd-outline)]">START TEST RACE</button>{testRaceId && <Link href={`/season-3/race/${testRaceId}`} className="rounded-xl border-2 border-white/20 px-5 py-3 font-black">XEM TEST RACE</Link>}</div>
+      </section>}
+
       {currentWeek && <section className="rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-display text-2xl">WEEK {currentWeek.weekNumber} · {currentWeek.chaosType}</h2>
@@ -125,10 +139,9 @@ export default function AdminSeason3Page() {
         <p className="mt-2 text-sm text-[var(--color-ggd-sky)]">Đã xác nhận dùng Shield: {currentWeek.shieldConfirmations.length > 0 ? currentWeek.shieldConfirmations.join(', ') : 'Chưa ai'}</p>
         {currentWeek.skippedPlayerIds.length > 0 && <p className="mt-2 text-sm text-white/50">Nghỉ tuần: {currentWeek.skippedPlayerIds.map((id) => nameById.get(id) ?? id).join(', ')}</p>}
         {canStartSeason3TestRace(currentWeek.status) && <div className="mt-5 flex flex-wrap items-center gap-3">
-          <button onClick={() => void act({ action: 'start-race', weekId: currentWeek.id, test: true })} className="rounded-xl border-2 border-[var(--color-ggd-gold)] px-5 py-3 font-black text-[var(--color-ggd-gold)]">🧪 TEST RACE · ALWAYS ON</button>
-          {currentWeek.status === 'open' && <button onClick={() => void act({ action: 'lock', weekId: currentWeek.id })} className="rounded-xl bg-[var(--color-ggd-gold)] px-5 py-3 font-black text-[var(--color-ggd-outline)]">🔒 LOCK PREP</button>}
+          {currentWeek.status === 'open' && <button onClick={() => void act({ action: 'lock', weekId: currentWeek.id })} className="rounded-xl bg-[var(--color-ggd-gold)] px-5 py-3 font-black text-[var(--color-ggd-outline)]">🔒 LOCK OFFICIAL PREP</button>}
           {currentWeek.status === 'locked' && <><button onClick={() => void act({ action: 'start-race', weekId: currentWeek.id })} className="rounded-xl bg-[var(--color-ggd-neon-green)] px-5 py-3 font-black text-[var(--color-ggd-outline)]">🏁 START OFFICIAL RACE</button><button onClick={() => void act({ action: 'unlock', weekId: currentWeek.id })} className="rounded-xl border-2 border-white/20 px-5 py-3 font-black">↩ UNLOCK PREP</button></>}
-          <span className="text-sm text-white/60">Test không đổi Season · Official chỉ chạy thứ Hai.</span>
+          <span className="text-sm text-white/60">Lock khi mọi người setup xong. Official chỉ chạy thứ Hai.</span>
         </div>}
         {currentWeek.status === 'racing' && currentWeek.raceId && <div className="mt-5 flex flex-wrap items-center gap-3"><span className="font-black text-[var(--color-ggd-neon-green)]">🏃 RACE ĐANG CHẠY</span><Link href={`/season-3/race/${currentWeek.raceId}`} className="rounded-xl bg-[var(--color-ggd-gold)] px-5 py-3 font-black text-[var(--color-ggd-outline)]">XEM RACE</Link></div>}
       </section>}
