@@ -44,6 +44,7 @@ export function executePrepAction(
         sourcePlayerId: duck.playerId,
         targetPlayerId: target.playerId,
         progress: duck.progress,
+        spawnedAtTick: tick,
         expiresAtTick: tick + Math.round(ITEM_BALANCE.rocket.lifetimeSeconds * tickRate),
         kind: 'PREP',
         speedPerSecond: ITEM_BALANCE.rocket.projectileSpeed,
@@ -57,14 +58,15 @@ export function executePrepAction(
     }
     case 'BANANA': {
       if (!hasUnused(runtime, 'BANANA')) return false
-      const progress = Math.max(0, duck.progress - 0.003)
-      if (itemState.bananas.some((banana) => Math.abs(banana.progress - progress) < ITEM_BALANCE.banana.minimumTrapSpacing)) return false
+      const progress = Math.max(0, duck.progress - ITEM_BALANCE.banana.dropBehindProgress)
+      if (itemState.bananas.some((banana) => Math.abs(banana.progress - progress) < ITEM_BALANCE.banana.minimumTrapSpacing && Math.abs(banana.lateralOffset - duck.lateralOffset) < ITEM_BALANCE.banana.hitLateralRadius)) return false
       runtime.usedItems.add('BANANA')
       itemState.bananas.push({
         id: itemState.nextObjectId++,
         sourcePlayerId: duck.playerId,
         progress,
         lateralOffset: duck.lateralOffset,
+        armedAtTick: tick + Math.round(ITEM_BALANCE.banana.armingSeconds * tickRate),
         expiresAtTick: tick + Math.round(ITEM_BALANCE.banana.lifetimeSeconds * tickRate),
         kind: 'PREP',
         hitProgressRadius: ITEM_BALANCE.banana.hitProgressRadius,
@@ -125,7 +127,7 @@ export function executeWildAction(
   const result = activateWildItem(
     itemState,
     ducks,
-    { playerId: duck.playerId, wildItemInstanceId: candidate.wildItemInstanceId },
+    { playerId: duck.playerId, wildItemInstanceId: candidate.wildItemInstanceId, targetPlayerId: candidate.targetPlayerId },
     tick,
     tickRate,
     'AUTO',

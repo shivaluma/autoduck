@@ -8,6 +8,7 @@ import {
   stepSimulation,
   tickAutoUseAI,
   tickPickupSystem,
+  tickItemSystem,
   activateWildItem,
 } from '../packages/race-core/src'
 import { raceConfigSchema, type RaceEventType, type WildItemId } from '../packages/race-protocol/src'
@@ -183,19 +184,32 @@ test('all five held Wild Item handlers execute without hard control', () => {
   }
 })
 
-test('Wild Banana selects deterministic safe placement away from a nearby duck', () => {
+test('Wild Banana drops in-lane behind the holder so the chaser can hit it', () => {
   const state = createSimulation(config('57'.repeat(32), { pickupConfig: { enabled: false, hazardsEnabled: false, autoItemsEnabled: false } }))
   const source = state.ducks[0]!
-  const blocker = state.ducks[1]!
+  const chaser = state.ducks[1]!
   source.progress = 0.5
   source.lateralOffset = 0
-  blocker.progress = 0.497
-  blocker.lateralOffset = 0
+  chaser.progress = 0.497
+  chaser.lateralOffset = 0
+  chaser.previousProgress = 0.496
   const runtime = state.itemState.byPlayer.get(source.playerId)!
   runtime.wildItem = { instanceId: 'safe-banana', itemId: 'BANANA', acquiredAtTick: 1 }
-  assert.equal(activateWildItem(state.itemState, state.ducks, { playerId: source.playerId, wildItemInstanceId: 'safe-banana' }, 30, 60, 'AUTO', () => undefined).ok, true)
+  const events: RaceEventType[] = []
+  assert.equal(activateWildItem(state.itemState, state.ducks, { playerId: source.playerId, wildItemInstanceId: 'safe-banana' }, 30, 60, 'AUTO', (type) => events.push(type)).ok, true)
   const banana = state.itemState.bananas[0]!
-  assert.ok(Math.abs(banana.lateralOffset - blocker.lateralOffset) >= 0.14)
+  assert.equal(banana.lateralOffset, source.lateralOffset)
+  assert.ok(source.progress - banana.progress >= 0.01)
+
+  chaser.previousProgress = banana.progress - 0.02
+  chaser.progress = banana.progress + 0.002
+  chaser.lateralOffset = banana.lateralOffset
+  const before = chaser.progress
+  for (let tick = banana.armedAtTick; tick <= banana.armedAtTick + 2; tick += 1) {
+    tickItemSystem(state.itemState, state.ducks, tick, 60, (type) => events.push(type))
+  }
+  assert.ok(events.includes('WILD_BANANA_HIT'))
+  assert.ok(chaser.progress < before)
 })
 
 test('manual Wild input is persisted in event stream and replay deterministic', () => {

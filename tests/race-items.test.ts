@@ -203,16 +203,19 @@ test('Banana expires, Horn pushes only laterally, and neither hard-stuns', () =>
     { playerId: '3', itemIds: ['NITRO', 'FEATHER'] },
   ])
   const bananaState = createItemRaceState(raceConfig)
-  const bananaDucks = [duck('1', 0.78, 1, 0), duck('3', 0.775, 2, 0.145)]
+  const bananaDucks = [duck('1', 0.78, 1, 0), duck('3', 0.76, 2, 0)]
   const bananaEvents: RaceEventType[] = []
   for (let tick = 1; tick <= 80; tick += 1) {
     tickItemsWithAutoAI(raceConfig, bananaState, bananaDucks, tick, 60, (type) => bananaEvents.push(type))
+    if (bananaEvents.includes('BANANA_DROPPED')) break
   }
   assert.ok(bananaEvents.includes('BANANA_DROPPED'))
   const banana = bananaState.bananas[0]
   assert.ok(banana)
   bananaDucks[0].progress = 0.9
-  bananaDucks[1].progress = 0.91
+  bananaDucks[1].progress = 0.5
+  bananaDucks[1].previousProgress = 0.5
+  bananaDucks[1].lateralOffset = 0.8
   tickItemsWithAutoAI(raceConfig, bananaState, bananaDucks, banana.expiresAtTick, 60, (type) => bananaEvents.push(type))
   assert.ok(bananaEvents.includes('BANANA_EXPIRED'))
 
@@ -230,6 +233,59 @@ test('Banana expires, Horn pushes only laterally, and neither hard-stuns', () =>
   assert.ok(hornEvents.includes('HORN_USED'))
   assert.notEqual(hornDucks[0].lateralVelocity, 0)
   assert.equal(itemActiveEffects(hornState.byPlayer.get('2')!, 1).includes('BUBBLE_SHIELD'), true)
+})
+
+test('Rocket hits the duck ahead and applies the configured slow', () => {
+  const raceConfig = config([{ playerId: '2', itemIds: ['HOMING_ROCKET', 'FEATHER'] }])
+  const state = createItemRaceState(raceConfig)
+  const ducks = [duck('1', 0.48, 1), duck('2', 0.4, 2)]
+  const events: RaceEventType[] = []
+  let firedAt = 0
+  for (let tick = 1; tick <= 200; tick += 1) {
+    tickItemsWithAutoAI(raceConfig, state, ducks, tick, 60, (type) => {
+      events.push(type)
+      if (type === 'ROCKET_FIRED' && firedAt === 0) firedAt = tick
+    })
+    if (events.includes('ROCKET_HIT')) break
+    ducks[0].progress += 0.0003
+    ducks[1].progress += 0.0003
+  }
+  assert.ok(events.includes('ROCKET_FIRED'))
+  assert.ok(events.includes('ROCKET_HIT'))
+  const target = state.byPlayer.get('1')!
+  assert.equal(target.slowMultiplier, ITEM_BALANCE.rocket.slowMultiplier)
+  assert.ok(target.slowUntilTick > firedAt)
+  assert.equal(itemSpeedMultiplier(target, firedAt + 3), ITEM_BALANCE.rocket.slowMultiplier)
+})
+
+test('Banana stays in-lane and knocks the chasing duck backward', () => {
+  const raceConfig = config([{ playerId: '2', itemIds: ['NITRO', 'BANANA'] }])
+  const state = createItemRaceState(raceConfig)
+  const ducks = [duck('1', 0.74, 2, 0), duck('2', 0.78, 1, 0)]
+  ducks[0].previousProgress = 0.74
+  const events: RaceEventType[] = []
+  for (let tick = 1; tick <= 80; tick += 1) {
+    tickItemsWithAutoAI(raceConfig, state, ducks, tick, 60, (type) => events.push(type))
+    if (events.includes('BANANA_DROPPED')) break
+  }
+  assert.ok(events.includes('BANANA_DROPPED'))
+  const banana = state.bananas[0]!
+  assert.ok(banana)
+  assert.equal(banana.lateralOffset, 0)
+  assert.ok(ducks[1].progress - banana.progress >= ITEM_BALANCE.banana.dropBehindProgress - 0.001)
+
+  const before = ducks[0].progress
+  ducks[0].previousProgress = banana.progress - 0.02
+  ducks[0].progress = banana.progress + 0.002
+  ducks[0].lateralOffset = banana.lateralOffset
+  for (let tick = banana.armedAtTick; tick <= banana.armedAtTick + 2; tick += 1) {
+    tickItemSystem(state, ducks, tick, 60, (type) => events.push(type))
+    if (events.includes('BANANA_HIT')) break
+  }
+  assert.ok(events.includes('BANANA_HIT'))
+  assert.ok(ducks[0].progress < before)
+  assert.ok(ducks[0].progress <= banana.progress + 0.002 - ITEM_BALANCE.banana.progressKnockback + 0.0001)
+  assert.notEqual(ducks[0].lateralVelocity, 0)
 })
 
 test('prep items auto-burn near the finish line instead of staying unused', () => {

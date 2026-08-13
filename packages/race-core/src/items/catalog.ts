@@ -11,9 +11,9 @@ export interface RaceItemDefinition {
 
 export const RACE_ITEM_CATALOG: readonly RaceItemDefinition[] = [
   { id: 'BUBBLE_SHIELD', name: 'Bubble Shield', icon: '🫧', cost: 2, category: 'major', description: 'Chặn Rocket hoặc Banana đầu tiên.' },
-  { id: 'HOMING_ROCKET', name: 'Homing Rocket', icon: '🚀', cost: 2, category: 'major', description: 'Tự bắn dzịt gần nhất phía trước.' },
+  { id: 'HOMING_ROCKET', name: 'Homing Rocket', icon: '🚀', cost: 2, category: 'major', description: 'Bắn dzịt phía trước: chậm còn 10% tốc độ trong 4.4 giây.' },
   { id: 'NITRO', name: 'Nitro', icon: '⚡', cost: 2, category: 'major', description: 'Tự tăng tốc khi đang tụt lại.' },
-  { id: 'BANANA', name: 'Banana', icon: '🍌', cost: 1, category: 'minor', description: 'Tự thả bẫy phía sau.' },
+  { id: 'BANANA', name: 'Banana', icon: '🍌', cost: 1, category: 'minor', description: 'Thả bẫy ngay lane phía sau: trượt lùi trên track.' },
   { id: 'FEATHER', name: 'Feather', icon: '🪶', cost: 1, category: 'minor', description: 'Né Banana đầu tiên.' },
   { id: 'QUACK_HORN', name: 'Quack Horn', icon: '🔊', cost: 1, category: 'minor', description: 'Đẩy ngang các dzịt đứng sát.' },
 ] as const

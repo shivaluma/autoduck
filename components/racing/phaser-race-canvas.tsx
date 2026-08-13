@@ -106,11 +106,13 @@ export function PhaserRaceCanvas({
         private ringPool: PhaserType.GameObjects.Arc[] = []
         private pickupViews = new Map<string, PhaserType.GameObjects.Container>()
         private hazardViews = new Map<string, PhaserType.GameObjects.Image>()
+        private rocketViews = new Map<number, PhaserType.GameObjects.Text>()
+        private bananaViews = new Map<number, PhaserType.GameObjects.Text>()
         private focusPlayerId: string | null = null
         private focusUntil = 0
-        private pendingWorld: Pick<StateSnapshotMessage, 'ducks' | 'pickups' | 'hazards'> | null = null
+        private pendingWorld: Pick<StateSnapshotMessage, 'ducks' | 'pickups' | 'hazards' | 'rockets' | 'bananas'> | null = null
 
-        queueWorld(world: Pick<StateSnapshotMessage, 'ducks' | 'pickups' | 'hazards'>) {
+        queueWorld(world: Pick<StateSnapshotMessage, 'ducks' | 'pickups' | 'hazards' | 'rockets' | 'bananas'>) {
           this.pendingWorld = world
         }
 
@@ -293,7 +295,7 @@ export function PhaserRaceCanvas({
           }).join('\n'))
         }
 
-        applyWorld(world: Pick<StateSnapshotMessage, 'ducks' | 'pickups' | 'hazards'>) {
+        applyWorld(world: Pick<StateSnapshotMessage, 'ducks' | 'pickups' | 'hazards' | 'rockets' | 'bananas'>) {
           this.applySnapshot(world.ducks)
           const activeIds = new Set(world.pickups.filter((pickup) => pickup.state === 'ACTIVE').map((pickup) => pickup.id))
           for (const pickup of world.pickups) {
@@ -317,6 +319,33 @@ export function PhaserRaceCanvas({
             const image = this.add.image(point.x, point.y, `hazard-${hazard.type}`).setDisplaySize(hazard.type === 'WHIRLPOOL' ? 76 : 58, hazard.type === 'WHIRLPOOL' ? 76 : 58).setDepth(68)
             if (!reducedMotion && hazard.type === 'WHIRLPOOL') this.tweens.add({ targets: image, angle: 360, duration: 1800, repeat: -1 })
             this.hazardViews.set(hazard.id, image)
+          }
+          const rocketIds = new Set(world.rockets.map((rocket) => rocket.id))
+          for (const rocket of world.rockets) {
+            const target = world.ducks.find((duck) => duck.playerId === rocket.targetPlayerId)
+            const point = track.sample(Math.min(0.999, rocket.progress), target?.lateralOffset ?? 0)
+            const view = this.rocketViews.get(rocket.id) ?? this.add.text(point.x, point.y, '🚀', { fontSize: '28px' }).setDepth(950)
+            view.setPosition(point.x, point.y).setVisible(true)
+            this.rocketViews.set(rocket.id, view)
+          }
+          for (const [rocketId, view] of this.rocketViews) {
+            if (rocketIds.has(rocketId)) continue
+            this.rocketViews.delete(rocketId)
+            view.setVisible(false)
+            this.textPool.push(view)
+          }
+          const bananaIds = new Set(world.bananas.map((banana) => banana.id))
+          for (const banana of world.bananas) {
+            const point = track.sample(banana.progress, banana.lateralOffset)
+            const view = this.bananaViews.get(banana.id) ?? this.add.text(point.x, point.y, '🍌', { fontSize: '26px' }).setDepth(80)
+            view.setPosition(point.x, point.y).setVisible(true).setAlpha(1)
+            this.bananaViews.set(banana.id, view)
+          }
+          for (const [bananaId, view] of this.bananaViews) {
+            if (bananaIds.has(bananaId)) continue
+            this.bananaViews.delete(bananaId)
+            view.setVisible(false)
+            this.textPool.push(view)
           }
         }
 
@@ -385,15 +414,10 @@ export function PhaserRaceCanvas({
           }
           if ((raceEvent.type === 'ROCKET_FIRED' || raceEvent.type === 'MINI_ROCKET_FIRED') && raceEvent.sourcePlayerId && raceEvent.targetPlayerId) {
             const sourceView = this.duckViews.get(raceEvent.sourcePlayerId)
-            const targetView = this.duckViews.get(raceEvent.targetPlayerId)
-            if (sourceView && targetView) {
-              const rocket = (this.textPool.pop() ?? this.add.text(0, 0, '', { fontSize: '28px' })).setText('🚀').setPosition(sourceView.root.x, sourceView.root.y).setAlpha(1).setVisible(true).setDepth(950)
-              this.tweens.add({ targets: rocket, x: targetView.root.x, y: targetView.root.y, duration: reducedMotion ? 120 : 480, onComplete: () => { rocket.setVisible(false); this.textPool.push(rocket) } })
+            if (sourceView) {
+              const flash = (this.textPool.pop() ?? this.add.text(0, 0, '', { fontSize: '22px' })).setText('🚀').setPosition(sourceView.root.x, sourceView.root.y).setAlpha(1).setVisible(true).setDepth(940)
+              this.tweens.add({ targets: flash, y: flash.y - 18, alpha: 0, duration: reducedMotion ? 120 : 280, onComplete: () => { flash.setVisible(false); this.textPool.push(flash) } })
             }
-          }
-          if (raceEvent.type === 'BANANA_DROPPED' || raceEvent.type === 'WILD_BANANA_DROPPED') {
-            const banana = (this.textPool.pop() ?? this.add.text(0, 0, '', { fontSize: '26px' })).setText('🍌').setPosition(view.root.x, view.root.y + 16).setAlpha(1).setVisible(true).setDepth(80)
-            this.tweens.add({ targets: banana, alpha: 0, duration: reducedMotion ? 700 : 4500, onComplete: () => { banana.setVisible(false); this.textPool.push(banana) } })
           }
           if (raceEvent.type === 'NITRO_STARTED' || (raceEvent.type === 'INSTANT_PICKUP_TRIGGERED' && raceEvent.metadata.itemId === 'MINI_NITRO')) {
             const wake = (this.ellipsePool.pop() ?? this.add.ellipse(0, 0, 90, 28, 0x9ff5ff, 0.7)).setPosition(view.root.x - 25, view.root.y + 10).setScale(1).setAlpha(0.7).setVisible(true).setDepth(85)

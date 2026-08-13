@@ -361,6 +361,7 @@ function resolveHazards(pickupState: PickupRaceState, itemState: ItemRaceState, 
 function createWildRocket(itemState: ItemRaceState, duck: ItemDuckState, target: ItemDuckState, tick: number, tickRate: number): RocketRuntime {
   return {
     id: itemState.nextObjectId++, sourcePlayerId: duck.playerId, targetPlayerId: target.playerId, progress: duck.progress,
+    spawnedAtTick: tick,
     expiresAtTick: tick + Math.round(PICKUP_BALANCE.miniRocket.lifetimeSeconds * tickRate), kind: 'WILD',
     speedPerSecond: PICKUP_BALANCE.miniRocket.projectileSpeed, hitRadius: PICKUP_BALANCE.miniRocket.hitRadius,
     slowMultiplier: PICKUP_BALANCE.miniRocket.slowMultiplier, slowDurationSeconds: PICKUP_BALANCE.miniRocket.slowDurationSeconds,
@@ -368,19 +369,17 @@ function createWildRocket(itemState: ItemRaceState, duck: ItemDuckState, target:
   }
 }
 
-function createWildBanana(itemState: ItemRaceState, duck: ItemDuckState, ducks: ItemDuckState[], tick: number, tickRate: number): BananaRuntime | null {
-  const candidates = [0.003, 0.006, 0.009].flatMap((offset) => [0, -0.16, 0.16].map((lateralShift) => ({
-    progress: Math.max(0, duck.progress - offset),
-    lateralOffset: clamp(duck.lateralOffset + lateralShift, -0.82, 0.82),
-  })))
-  const candidate = candidates.find((point) => point.progress <= 0.985
-    && !itemState.bananas.some((banana) => Math.abs(banana.progress - point.progress) < PICKUP_BALANCE.banana.minimumTrapSpacing && Math.abs(banana.lateralOffset - point.lateralOffset) < PICKUP_BALANCE.banana.hitLateralRadius)
-    && !ducks.some((other) => other.playerId !== duck.playerId && !other.finished
-      && Math.abs(other.progress - point.progress) < PICKUP_BALANCE.banana.hitProgressRadius
-      && Math.abs(other.lateralOffset - point.lateralOffset) < PICKUP_BALANCE.banana.hitLateralRadius))
-  if (!candidate) return null
+function createWildBanana(itemState: ItemRaceState, duck: ItemDuckState, tick: number, tickRate: number): BananaRuntime | null {
+  const offsets = [PICKUP_BALANCE.banana.dropBehindProgress, PICKUP_BALANCE.banana.dropBehindProgress + 0.012, PICKUP_BALANCE.banana.dropBehindProgress + 0.024]
+  const progress = offsets
+    .map((offset) => Math.max(0, duck.progress - offset))
+    .find((point) => point <= 0.985 && !itemState.bananas.some((banana) =>
+      Math.abs(banana.progress - point) < PICKUP_BALANCE.banana.minimumTrapSpacing
+      && Math.abs(banana.lateralOffset - duck.lateralOffset) < PICKUP_BALANCE.banana.hitLateralRadius))
+  if (progress === undefined) return null
   return {
-    id: itemState.nextObjectId++, sourcePlayerId: duck.playerId, progress: candidate.progress, lateralOffset: candidate.lateralOffset,
+    id: itemState.nextObjectId++, sourcePlayerId: duck.playerId, progress, lateralOffset: duck.lateralOffset,
+    armedAtTick: tick + Math.round(PICKUP_BALANCE.banana.armingSeconds * tickRate),
     expiresAtTick: tick + Math.round(PICKUP_BALANCE.banana.lifetimeSeconds * tickRate), kind: 'WILD',
     hitProgressRadius: PICKUP_BALANCE.banana.hitProgressRadius, hitLateralRadius: PICKUP_BALANCE.banana.hitLateralRadius,
     progressKnockback: PICKUP_BALANCE.banana.progressKnockback,
@@ -388,7 +387,7 @@ function createWildBanana(itemState: ItemRaceState, duck: ItemDuckState, ducks: 
   }
 }
 
-type HeldHandler = (context: { itemState: ItemRaceState; runtime: DuckItemRuntime; duck: ItemDuckState; ducks: ItemDuckState[]; tick: number; tickRate: number; emit: EmitPickupEvent }) => WildUseResult
+type HeldHandler = (context: { itemState: ItemRaceState; runtime: DuckItemRuntime; duck: ItemDuckState; ducks: ItemDuckState[]; tick: number; tickRate: number; targetPlayerId?: string; emit: EmitPickupEvent }) => WildUseResult
 
 const HELD_HANDLERS: Record<Exclude<WildItemId, 'MINI_NITRO' | 'TAILWIND' | 'SLIPSTREAM_MAGNET'>, HeldHandler> = {
   MINI_BUBBLE: ({ runtime, duck, tick, tickRate, emit }) => {
@@ -397,20 +396,23 @@ const HELD_HANDLERS: Record<Exclude<WildItemId, 'MINI_NITRO' | 'TAILWIND' | 'SLI
     emit('MINI_BUBBLE_ACTIVATED', duck.playerId, undefined, { untilTick: runtime.wildBubbleUntilTick })
     return { ok: true }
   },
-  MINI_ROCKET: ({ itemState, duck, ducks, tick, tickRate, emit }) => {
+  MINI_ROCKET: ({ itemState, duck, ducks, tick, tickRate, targetPlayerId, emit }) => {
     const maximumDistance = duck.progress >= PICKUP_BALANCE.autoUse.forceBurnProgress
       ? PICKUP_BALANCE.miniRocket.maximumTargetDistance * PICKUP_BALANCE.miniRocket.forceBurnTargetDistanceMultiplier
       : duck.progress >= PICKUP_BALANCE.autoUse.endGameBurnProgress
         ? PICKUP_BALANCE.miniRocket.maximumTargetDistance * PICKUP_BALANCE.miniRocket.endGameTargetDistanceMultiplier
         : PICKUP_BALANCE.miniRocket.maximumTargetDistance
-    const target = nearestAhead(duck, ducks, maximumDistance, itemState, tick)
+    const preferred = targetPlayerId
+      ? ducks.find((candidate) => candidate.playerId === targetPlayerId && !candidate.finished && candidate.progress > duck.progress && candidate.progress - duck.progress <= maximumDistance)
+      : undefined
+    const target = preferred ?? nearestAhead(duck, ducks, maximumDistance, itemState, tick)
     if (!target) return { ok: false, reason: 'NO_TARGET' }
     itemState.rockets.push(createWildRocket(itemState, duck, target, tick, tickRate))
     emit('MINI_ROCKET_FIRED', duck.playerId, target.playerId, {})
     return { ok: true, targetPlayerId: target.playerId }
   },
-  BANANA: ({ itemState, duck, ducks, tick, tickRate, emit }) => {
-    const banana = createWildBanana(itemState, duck, ducks, tick, tickRate)
+  BANANA: ({ itemState, duck, tick, tickRate, emit }) => {
+    const banana = createWildBanana(itemState, duck, tick, tickRate)
     if (!banana) return { ok: false, reason: 'NOT_USEABLE' }
     itemState.bananas.push(banana)
     emit('WILD_BANANA_DROPPED', duck.playerId, undefined, { id: banana.id, progress: banana.progress, lateralOffset: banana.lateralOffset })
@@ -442,7 +444,7 @@ const HELD_HANDLERS: Record<Exclude<WildItemId, 'MINI_NITRO' | 'TAILWIND' | 'SLI
   },
 }
 
-export function activateWildItem(itemState: ItemRaceState, ducks: ItemDuckState[], input: { playerId: string; wildItemInstanceId: string }, tick: number, tickRate: number, mode: 'MANUAL' | 'AUTO', emit: EmitPickupEvent): WildUseResult {
+export function activateWildItem(itemState: ItemRaceState, ducks: ItemDuckState[], input: { playerId: string; wildItemInstanceId: string; targetPlayerId?: string }, tick: number, tickRate: number, mode: 'MANUAL' | 'AUTO', emit: EmitPickupEvent): WildUseResult {
   const duck = ducks.find((candidate) => candidate.playerId === input.playerId)
   const runtime = itemState.byPlayer.get(input.playerId)
   if (!duck || !runtime?.wildItem) return { ok: false, reason: 'NO_ITEM' }
@@ -450,7 +452,7 @@ export function activateWildItem(itemState: ItemRaceState, ducks: ItemDuckState[
   const definition = getWildItem(runtime.wildItem.itemId)
   if (definition.behavior !== 'HELD') return { ok: false, reason: 'NOT_USEABLE' }
   const handler = HELD_HANDLERS[runtime.wildItem.itemId as keyof typeof HELD_HANDLERS]
-  const result = handler({ itemState, runtime, duck, ducks, tick, tickRate, emit })
+  const result = handler({ itemState, runtime, duck, ducks, tick, tickRate, targetPlayerId: input.targetPlayerId, emit })
   if (!result.ok) return result
   const consumed = runtime.wildItem
   runtime.wildItem = null

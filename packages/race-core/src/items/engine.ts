@@ -5,6 +5,7 @@ import { resolveIncomingRaceEffect, type ItemDefenseState } from './interactions
 export interface ItemDuckState {
   playerId: string
   progress: number
+  previousProgress?: number
   lateralOffset: number
   lateralVelocity: number
   currentRank: number
@@ -41,6 +42,7 @@ export interface RocketRuntime {
   sourcePlayerId: string
   targetPlayerId: string
   progress: number
+  spawnedAtTick: number
   expiresAtTick: number
   kind: 'PREP' | 'WILD'
   speedPerSecond: number
@@ -55,6 +57,7 @@ export interface BananaRuntime {
   sourcePlayerId: string
   progress: number
   lateralOffset: number
+  armedAtTick: number
   expiresAtTick: number
   kind: 'PREP' | 'WILD'
   hitProgressRadius: number
@@ -130,6 +133,14 @@ export function applyItemBoost(runtime: DuckItemRuntime, multiplier: number, dur
   }
 }
 
+function bananaTouches(duck: ItemDuckState, banana: BananaRuntime) {
+  const previous = duck.previousProgress ?? duck.progress
+  const minimum = Math.min(previous, duck.progress) - banana.hitProgressRadius
+  const maximum = Math.max(previous, duck.progress) + banana.hitProgressRadius
+  if (banana.progress < minimum || banana.progress > maximum) return false
+  return Math.abs(duck.lateralOffset - banana.lateralOffset) <= banana.hitLateralRadius
+}
+
 function updateRockets(itemState: ItemRaceState, ducks: ItemDuckState[], tick: number, tickRate: number, emit: EmitItemEvent) {
   const keep: RocketRuntime[] = []
   for (const rocket of itemState.rockets.sort((left, right) => left.id - right.id)) {
@@ -149,7 +160,8 @@ function updateRockets(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
       continue
     }
     rocket.progress += rocket.speedPerSecond / tickRate
-    if (rocket.progress + rocket.hitRadius < target.progress) {
+    const armingTicks = ITEM_BALANCE.rocket.armingTicks
+    if (tick < rocket.spawnedAtTick + armingTicks || rocket.progress + rocket.hitRadius < target.progress) {
       keep.push(rocket)
       continue
     }
@@ -181,10 +193,13 @@ function updateBananas(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
       emit(banana.kind === 'WILD' ? 'WILD_BANANA_EXPIRED' : 'BANANA_EXPIRED', banana.sourcePlayerId, undefined, { id: banana.id })
       continue
     }
+    if (tick < banana.armedAtTick) {
+      keep.push(banana)
+      continue
+    }
     const target = ducks.filter((duck) => !duck.finished && duck.playerId !== banana.sourcePlayerId)
       .sort((left, right) => left.playerId.localeCompare(right.playerId))
-      .find((duck) => Math.abs(duck.progress - banana.progress) <= banana.hitProgressRadius
-        && Math.abs(duck.lateralOffset - banana.lateralOffset) <= banana.hitLateralRadius)
+      .find((duck) => bananaTouches(duck, banana))
     if (!target) {
       keep.push(banana)
       continue
@@ -197,7 +212,7 @@ function updateBananas(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
     if (outcome === 'HIT') {
       const knockback = banana.progressKnockback
       target.progress = Math.max(0, target.progress - knockback)
-      target.previousProgress = Math.min(target.previousProgress, target.progress)
+      if (target.previousProgress !== undefined) target.previousProgress = Math.min(target.previousProgress, target.progress)
       const direction = target.lateralOffset >= banana.lateralOffset ? 1 : -1
       target.lateralVelocity += direction * banana.lateralSlip
       emit(hitType, banana.sourcePlayerId, target.playerId, { knockback })
@@ -218,6 +233,25 @@ function updateBananas(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
     }
   }
   itemState.bananas = keep
+}
+
+export function snapshotItemWorld(itemState: ItemRaceState) {
+  return {
+    rockets: itemState.rockets.map((rocket) => ({
+      id: rocket.id,
+      sourcePlayerId: rocket.sourcePlayerId,
+      targetPlayerId: rocket.targetPlayerId,
+      progress: rocket.progress,
+      kind: rocket.kind,
+    })),
+    bananas: itemState.bananas.map((banana) => ({
+      id: banana.id,
+      sourcePlayerId: banana.sourcePlayerId,
+      progress: banana.progress,
+      lateralOffset: banana.lateralOffset,
+      kind: banana.kind,
+    })),
+  }
 }
 
 export function tickItemSystem(

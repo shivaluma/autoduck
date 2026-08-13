@@ -74,15 +74,17 @@ function predictLateral(duck: ItemDuckState, horizonSeconds: number) {
 }
 
 function bananaIntersectionScore(source: ItemDuckState, target: ItemDuckState, horizonSeconds: number) {
-  const trapProgress = Math.max(0, source.progress - 0.003)
+  const trapProgress = Math.max(0, source.progress - ITEM_BALANCE.banana.dropBehindProgress)
   const trapLateral = source.lateralOffset
   const predictedLateral = predictLateral(target, horizonSeconds)
   const progressGap = source.progress - target.progress
-  if (progressGap <= 0 || progressGap > 0.08) return 0
+  if (progressGap <= 0 || progressGap > 0.12) return 0
   const lateralGap = Math.abs(predictedLateral - trapLateral)
   const radius = ITEM_BALANCE.banana.hitLateralRadius
-  if (lateralGap > radius * 1.4) return 0
-  return clamp((1 - lateralGap / (radius * 1.4)) * 100, 0, 100)
+  if (lateralGap > radius * 1.25) return 0
+  const arrivalGap = Math.abs(target.progress - trapProgress)
+  const onPath = arrivalGap < 0.08 ? 1 : 0.4
+  return clamp((1 - lateralGap / (radius * 1.25)) * 100 * onPath, 0, 100)
 }
 
 function rocketTargets(ctx: EvaluationContext, kind: 'PREP' | 'WILD') {
@@ -107,7 +109,9 @@ function rocketTargets(ctx: EvaluationContext, kind: 'PREP' | 'WILD') {
       const penalty = ctx.objective.offensiveTargetPenalty(source.playerId, target.playerId)
       if (!Number.isFinite(penalty)) return null
       score += ctx.objective.opponentThreat(source.playerId, target.playerId) * 10
-      score += clamp((maxDistance - (target.progress - source.progress)) / maxDistance * 20, 0, 20)
+      score += clamp((maxDistance - (target.progress - source.progress)) / maxDistance * 14, 0, 14)
+      const gap = target.progress - source.progress
+      if (gap > 0.02 && gap < maxDistance * 0.75) score += 12
       if (ctx.objective.isCurrentlyLosing(source.playerId, source.currentRank) && target.currentRank === source.currentRank - 1) score += 35
       if (source.progress >= AUTO_USE_CONFIG.progressLate) score += 15
       if (targetRuntime.bubbleAvailable || targetRuntime.wildBubbleAvailable) score -= 25

@@ -162,6 +162,20 @@ export const stateSnapshotMessageSchema = z.object({
     lateralOffset: z.number().min(-1).max(1),
     radius: z.number().positive(),
   })).default([]),
+  rockets: z.array(z.object({
+    id: z.number().int().nonnegative(),
+    sourcePlayerId: playerIdSchema,
+    targetPlayerId: playerIdSchema,
+    progress: z.number().min(0).max(2),
+    kind: z.enum(['PREP', 'WILD']),
+  })).default([]),
+  bananas: z.array(z.object({
+    id: z.number().int().nonnegative(),
+    sourcePlayerId: playerIdSchema,
+    progress: z.number().min(0).max(1),
+    lateralOffset: z.number().min(-1).max(1),
+    kind: z.enum(['PREP', 'WILD']),
+  })).default([]),
 })
 export type StateSnapshotMessage = z.infer<typeof stateSnapshotMessageSchema>
 

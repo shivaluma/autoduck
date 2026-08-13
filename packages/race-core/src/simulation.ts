@@ -6,6 +6,7 @@ import {
   createItemRaceState,
   itemActiveEffects,
   itemSpeedMultiplier,
+  snapshotItemWorld,
   tickItemSystem,
   type ItemRaceState,
 } from './items/engine'
@@ -307,7 +308,7 @@ export function snapshotSimulation(state: RaceSimulationState): DuckSnapshot[] {
 }
 
 export function snapshotRaceWorld(state: RaceSimulationState) {
-  return { ducks: snapshotSimulation(state), ...snapshotPickupWorld(state.pickupState) }
+  return { ducks: snapshotSimulation(state), ...snapshotPickupWorld(state.pickupState), ...snapshotItemWorld(state.itemState) }
 }
 
 export function resultFromSimulation(state: RaceSimulationState): RaceResult {
