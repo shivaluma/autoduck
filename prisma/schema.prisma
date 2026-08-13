@@ -447,6 +447,7 @@ model SeasonWeek {
   recap               String?
   resolvedAt          DateTime?
   raceSeed            String?
+  chaosSeed           String?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 

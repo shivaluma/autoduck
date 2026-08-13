@@ -10,6 +10,7 @@ import { startSeason3Race } from '@/lib/season3-race'
 import { Season3ScheduleError } from '@/lib/season3-schedule'
 import { createRaceSeed } from '@/lib/racing/audit'
 import { selectAutoLoadout, serializeItemIds } from '@/lib/racing/loadout'
+import { createRaceRng } from '@/packages/race-core/src'
 
 function authorized(request: Request, body?: { secret?: string }) {
   const urlSecret = new URL(request.url).searchParams.get('secret')
@@ -116,7 +117,9 @@ export async function POST(request: Request) {
         ? await prisma.user.findMany({ where: { id: { in: body.userIds } }, orderBy: { name: 'asc' } })
         : await prisma.user.findMany({ orderBy: { name: 'asc' } })
       if (users.length < 2) return fail('Season cần ít nhất 2 players')
-      const chaos = selectChaosCard(users.map((user: { id: number; name: string }) => ({ userId: user.id, name: user.name })))
+      const chaosSeed = createRaceSeed()
+      const chaosRng = createRaceRng(chaosSeed, 'chaos:week:1')
+      const chaos = selectChaosCard(users.map((user: { id: number; name: string }) => ({ userId: user.id, name: user.name })), () => chaosRng.next())
       const season = await prisma.season.create({
         data: {
           key: body.key ?? 'S3',
@@ -132,6 +135,7 @@ export async function POST(request: Request) {
               chaosTargetUserId: chaos.targetUserId,
               chaosTargetUserId2: chaos.targetUserId2,
               chaosPayload: chaosPayload(chaos.groups),
+              chaosSeed,
             },
           },
         },
@@ -160,8 +164,10 @@ export async function POST(request: Request) {
       if (latest && latest.status !== 'resolved') return fail('Tuần hiện tại chưa resolve', 409)
       const nextWeekNumber = (latest?.weekNumber ?? 0) + 1
       if (nextWeekNumber > season.weeks) return fail('Season đã đủ số tuần')
-      const chaos = selectChaosCard(season.players.map((player: { userId: number; user: { name: string } }) => ({ userId: player.userId, name: player.user.name })))
-      const week = await prisma.seasonWeek.create({ data: { seasonId: season.id, weekNumber: nextWeekNumber, chaosType: chaos.type, chaosTargetUserId: chaos.targetUserId, chaosTargetUserId2: chaos.targetUserId2, chaosPayload: chaosPayload(chaos.groups) } })
+      const chaosSeed = createRaceSeed()
+      const chaosRng = createRaceRng(chaosSeed, `chaos:week:${nextWeekNumber}`)
+      const chaos = selectChaosCard(season.players.map((player: { userId: number; user: { name: string } }) => ({ userId: player.userId, name: player.user.name })), () => chaosRng.next())
+      const week = await prisma.seasonWeek.create({ data: { seasonId: season.id, weekNumber: nextWeekNumber, chaosType: chaos.type, chaosTargetUserId: chaos.targetUserId, chaosTargetUserId2: chaos.targetUserId2, chaosPayload: chaosPayload(chaos.groups), chaosSeed } })
       return NextResponse.json({ ok: true, week })
     }
 

@@ -18,6 +18,13 @@ export const raceLoadoutSchema = z.object({
 })
 export type RaceLoadout = z.infer<typeof raceLoadoutSchema>
 
+export const raceChaosConfigSchema = z.object({
+  type: z.enum(['NORMAL', 'REVERSE', 'DUO', 'TRIPLE_ELIMINATION', 'CUT_LINE', 'CONSTRUCTORS', 'BOUNTY_HUNT']),
+  targetPlayerId: playerIdSchema.nullable().optional(),
+  groups: z.array(z.array(playerIdSchema)).optional(),
+})
+export type RaceChaosConfig = z.infer<typeof raceChaosConfigSchema>
+
 export const racePlayerConfigSchema = z.object({
   playerId: playerIdSchema,
   name: z.string().min(1).max(80),
@@ -34,6 +41,7 @@ export const raceConfigSchema = z.object({
   tickRate: z.literal(RACE_TICK_RATE).default(RACE_TICK_RATE),
   players: z.array(racePlayerConfigSchema).min(2).max(16),
   loadouts: z.array(raceLoadoutSchema).default([]),
+  chaosConfig: raceChaosConfigSchema.optional(),
 })
 
 export type RacePlayerConfig = z.infer<typeof racePlayerConfigSchema>

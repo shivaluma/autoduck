@@ -1,3 +1,9 @@
+import {
+  prepareChaosRule,
+  resolveChaosRule,
+  type ChaosRuleId,
+} from '@/packages/race-core/src'
+
 export const SEASON3_KEY = 'S3'
 export const SEASON3_WEEKS = 12
 
@@ -78,33 +84,23 @@ export function chaosLabel(type: ChaosType) {
   }[type]
 }
 
-function shuffle<T>(items: T[], random: () => number) {
-  const shuffled = [...items]
-  for (let index = shuffled.length - 1; index > 0; index -= 1) {
-    const swapIndex = Math.floor(random() * (index + 1))
-    ;[shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]]
-  }
-  return shuffled
-}
-
-export function selectChaosCard(players: Season3Player[], random: () => number = Math.random): ChaosCard {
+export function selectChaosCard(players: Season3Player[], random: () => number): ChaosCard {
   if (players.length === 0) {
     throw new Error('Cannot select a chaos card without players')
   }
 
   const type = CHAOS_CARDS[Math.min(CHAOS_CARDS.length - 1, Math.floor(random() * CHAOS_CARDS.length))]
-  const shuffledIds = shuffle(players.map((player) => player.userId), random)
-  const groups = type === 'DUO'
-    ? Array.from({ length: Math.ceil(shuffledIds.length / 2) }, (_, index) => shuffledIds.slice(index * 2, index * 2 + 2))
-    : type === 'CONSTRUCTORS'
-      ? [shuffledIds.slice(0, Math.ceil(shuffledIds.length / 2)), shuffledIds.slice(Math.ceil(shuffledIds.length / 2))]
-      : undefined
+  const prepared = prepareChaosRule(
+    type as ChaosRuleId,
+    players.map((player) => ({ playerId: String(player.userId) })),
+    random,
+  )
 
   return {
     type,
-    targetUserId: type === 'BOUNTY_HUNT' ? shuffledIds[0] : null,
+    targetUserId: prepared.targetPlayerId ? Number(prepared.targetPlayerId) : null,
     targetUserId2: null,
-    groups,
+    groups: prepared.groups?.map((group) => group.map(Number)),
   }
 }
 
@@ -135,44 +131,20 @@ export function resolveSeason3Race(
   assertRanking(inputRanking)
   const ranking = [...inputRanking].sort(byRank)
   const bottomTwo = ranking.slice(-2)
-  const reasons = new Map<number, string>()
-  let affected: Season3RankingEntry[]
-
-  if (chaos.type === 'NORMAL') {
-    affected = ranking.slice(-2)
-  } else if (chaos.type === 'REVERSE') {
-    affected = ranking.slice(0, 2)
-    affected.forEach((entry) => reasons.set(entry.userId, 'Reverse made a raw Top 2 loser'))
-  } else if (chaos.type === 'TRIPLE_ELIMINATION') {
-    affected = ranking.slice(-3)
-  } else if (chaos.type === 'CUT_LINE') {
-    affected = ranking.slice(Math.ceil(ranking.length / 2))
-  } else if (chaos.type === 'BOUNTY_HUNT') {
-    const wanted = ranking.find((entry) => entry.userId === chaos.targetUserId)
-    const cutoff = Math.ceil(ranking.length / 2)
-    if (wanted && wanted.rank > cutoff) {
-      affected = ranking.filter((entry) => entry.rank >= wanted.rank)
-      reasons.set(wanted.userId, 'Wanted failed to escape the Top 50%')
-    } else {
-      affected = ranking.slice(-2)
-      if (wanted) reasons.set(wanted.userId, 'Wanted escaped into the Top 50%; raw Bottom 2 still lose')
-    }
-  } else if (chaos.type === 'DUO') {
-    const groups = chaos.groups ?? []
-    if (groups.length === 0) throw new Error('Duo Chaos requires persisted pairs')
-    const rankedGroups = groups.map((group) => ({ group, total: group.reduce((sum, userId) => sum + (ranking.find((entry) => entry.userId === userId)?.rank ?? 0), 0) }))
-    const worstTotal = Math.max(...rankedGroups.map((entry) => entry.total))
-    const worstGroup = rankedGroups.find((entry) => entry.total === worstTotal)?.group ?? []
-    affected = ranking.filter((entry) => worstGroup.includes(entry.userId))
-    affected.forEach((entry) => reasons.set(entry.userId, 'Duo had the worst total rank'))
-  } else {
-    const groups = chaos.groups ?? []
-    if (groups.length !== 2) throw new Error('Constructors Chaos requires two persisted teams')
-    const totals = groups.map((group) => group.reduce((sum, userId) => sum + (ranking.find((entry) => entry.userId === userId)?.rank ?? 0), 0))
-    const losingIndexes = totals[0] === totals[1] ? [0, 1] : [totals[0] > totals[1] ? 0 : 1]
-    affected = ranking.filter((entry) => losingIndexes.some((index) => groups[index].includes(entry.userId)))
-    affected.forEach((entry) => reasons.set(entry.userId, 'Constructors team had the worse total rank'))
-  }
+  const chaosResult = resolveChaosRule(
+    chaos.type as ChaosRuleId,
+    ranking.map((entry) => ({ playerId: String(entry.userId), rank: entry.rank })),
+    {
+      targetPlayerId: chaos.targetUserId === null ? null : String(chaos.targetUserId),
+      groups: chaos.groups?.map((group) => group.map(String)),
+    },
+  )
+  const affectedIds = new Set(chaosResult.loserPlayerIds.map(Number))
+  const reasonByPlayer = chaosResult.metadata.reasonByPlayer
+  const reasons = typeof reasonByPlayer === 'object' && reasonByPlayer !== null
+    ? reasonByPlayer as Record<string, string>
+    : {}
+  const affected = ranking.filter((entry) => affectedIds.has(entry.userId))
 
   affected.sort(byRank)
 
@@ -186,7 +158,7 @@ export function resolveSeason3Race(
       scarPoints,
       protectedByShield,
       shieldConsumed: protectedByShield,
-      reason: protectedByShield ? 'Shield saved this duck' : reasons.get(entry.userId) ?? `${chaosLabel(chaos.type)} penalty`,
+      reason: protectedByShield ? 'Shield saved this duck' : reasons[String(entry.userId)] ?? `${chaosLabel(chaos.type)} làm dzịt`,
     }
   })
 

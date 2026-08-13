@@ -139,6 +139,11 @@ export async function startSeason3Race(weekId: number, options: { allowOffSchedu
         name: player.user.name,
       })),
       loadouts: immutableLoadouts.map((loadout) => ({ playerId: String(loadout.player.userId), itemIds: loadout.itemIds, source: loadout.source })),
+      chaosConfig: {
+        type: week.chaosType,
+        targetPlayerId: week.chaosTargetUserId === null ? null : String(week.chaosTargetUserId),
+        groups: parseChaosGroups(week.chaosPayload)?.map((group) => group.map(String)),
+      },
     })
     const race = await tx.race.update({
       where: { id: created.id },
