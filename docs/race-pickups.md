@@ -1,4 +1,4 @@
-# Race Pickups — S3.4
+# Race Pickups — S3.6
 
 Quack Boxes add readable, temporary race chaos without changing persistent power. The race core owns every spawn, collision, loot roll, target, effect, and Golden QP award. Phaser only renders authoritative snapshots and events.
 
@@ -25,7 +25,7 @@ hazards:{raceId}
 
 Gameplay never calls `Math.random()`. Cosmetic changes cannot advance a gameplay stream. Immutable race config records `pickupSpawnVersion`, `wildItemBalanceVersion`, `hazardBalanceVersion`, and the track version.
 
-A collision is resolved by distance to the pickup center, crossing fraction within the tick, then stable player ID. Standard boxes are single-use. A duck can collect at most two regular pickups and cannot touch another standard box while holding a Wild Item; that box remains for another duck. Golden Boxes ignore the slot and cap.
+A collision is resolved by distance to the pickup center, crossing fraction within the tick, then stable player ID. Standard boxes are single-use. A duck can collect at most three regular pickups and cannot touch another standard box while holding a Wild Item; that box remains for another duck. Golden Boxes ignore the slot and cap.
 
 ## Wild Slot and loot
 
@@ -33,24 +33,24 @@ Each duck has one race-only Wild Slot. Held items occupy it; instant items trigg
 
 | Rank bucket | Attack | Defense | Mobility | Utility |
 | --- | ---: | ---: | ---: | ---: |
-| Front | 30% | 35% | 10% | 25% |
-| Middle | 30% | 25% | 25% | 20% |
-| Back | 20% | 27% | 38% | 15% |
+| Front | 26% | 34% | 18% | 22% |
+| Middle | 34% | 20% | 28% | 18% |
+| Back | 30% | 16% | 44% | 10% |
 
 The launch pool is exactly eight items:
 
 | Item | Kind | Effect |
 | --- | --- | --- |
-| Mini Nitro | Instant | Short +8% boost |
-| Tailwind | Instant | Smoother +5% boost |
+| Mini Nitro | Instant | Short +12% boost |
+| Tailwind | Instant | Smoother +8% boost |
 | Mini Bubble | Held | Blocks one eligible Wild attack, expires after 7s |
-| Mini Rocket | Held | Nearest eligible duck ahead, short -8% slow |
-| Banana | Held | Six-second trap, short -5% slow and small slip |
+| Mini Rocket | Held | Nearest eligible duck ahead, -28% slow for 1.8s |
+| Banana | Held | Six-second trap, -35% slow for 1.8s and small slip |
 | Quack Horn | Held | Small lateral pack push |
 | Feather | Held | Dodges one Banana or minor hazard during 5s |
 | Slipstream Magnet | Instant | Small acceleration toward the nearest wake |
 
-Positive speed is capped at `+20%`; negative speed at `-25%`. Overlapping slows use the strongest value. Offensive hits grant 1.25s item immunity, and Rocket hits grant two-second Rocket target protection. No pickup can stop, reverse, teleport, or remove a duck.
+Positive speed is capped at `+25%`; negative speed at `-45%`. Overlapping slows use the strongest value. Offensive hits grant 1s item immunity, and Rocket hits grant two-second Rocket target protection. No pickup can stop, reverse, teleport, or remove a duck.
 
 ## Manual and automatic use
 
@@ -73,7 +73,7 @@ Applied manual commands emit `WILD_ITEM_MANUAL_INPUT` with their authoritative t
 
 Normal races spawn zero to two hazards, weighted toward zero or one. Anchor, Whirlpool, Ice Patch, and Sticky Goo have distinct silhouettes and mild bounded effects. Authored anchors always leave safe lateral space.
 
-Golden Box spawn probability defaults to 12%, at 35–75% progress. Official collection creates one idempotent `CurrencyTransaction`:
+Golden Box spawn probability defaults to 15%, at 35–75% progress. Official collection creates one idempotent `CurrencyTransaction`:
 
 ```text
 reason: TRACK_GOLDEN_BOX

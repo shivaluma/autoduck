@@ -2,10 +2,10 @@ import { z } from 'zod'
 
 export const RACE_PROTOCOL_VERSION = '1.0.0'
 export const RACE_ENGINE_VERSION = '1.2.0'
-export const RACE_BALANCE_VERSION = 'S3.4'
+export const RACE_BALANCE_VERSION = 'S3.6'
 export const DEFAULT_TRACK_VERSION = 'river-01-v2'
 export const PICKUP_SPAWN_VERSION = 'pickups-v1'
-export const WILD_ITEM_BALANCE_VERSION = 'wild-items-v1'
+export const WILD_ITEM_BALANCE_VERSION = 'wild-items-v3'
 export const HAZARD_BALANCE_VERSION = 'hazards-v1'
 export const RACE_TICK_RATE = 60
 
@@ -73,7 +73,7 @@ export const pickupConfigSchema = z.object({
   hazardsEnabled: z.boolean().default(true),
   positionAwareLoot: z.boolean().default(true),
   spawnMultiplier: z.number().min(0).max(3).default(1),
-  regularPickupCap: z.number().int().min(1).max(3).default(2),
+  regularPickupCap: z.number().int().min(1).max(3).default(3),
   manualItemsEnabled: z.boolean().default(true),
   autoItemsEnabled: z.boolean().default(true),
   chaosBoxEnabled: z.boolean().default(false),

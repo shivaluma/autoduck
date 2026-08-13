@@ -93,18 +93,18 @@ test('Wild Feather dodges both Banana variants and minor hazards, but not Rocket
 test('post-hit immunity prevents chain hits and Rocket target protection lasts two seconds', () => {
   const target = defense([])
   assert.equal(resolveIncomingRaceEffect(target, 'ROCKET', 10, 60), 'HIT')
-  assert.equal(target.itemImmunityUntilTick, 85)
+  assert.equal(target.itemImmunityUntilTick, 70)
   assert.equal(target.rocketProtectionUntilTick, 130)
-  assert.equal(resolveIncomingRaceEffect(target, 'BANANA', 70, 60), 'IMMUNE')
-  assert.equal(resolveIncomingRaceEffect(target, 'BANANA', 86, 60), 'HIT')
+  assert.equal(resolveIncomingRaceEffect(target, 'BANANA', 69, 60), 'IMMUNE')
+  assert.equal(resolveIncomingRaceEffect(target, 'BANANA', 70, 60), 'HIT')
 })
 
 test('slow effects use the strongest active value without weaker duration extension', () => {
   const runtime = defense([])
-  applyItemSlow(runtime, 0.8, 0.85, 10, 60)
+  applyItemSlow(runtime, 0.6, 2, 10, 60)
   const firstExpiry = runtime.slowUntilTick
-  applyItemSlow(runtime, 0.86, 0.75, 20, 60)
-  assert.equal(runtime.slowMultiplier, 0.8)
+  applyItemSlow(runtime, 0.7, 1.5, 20, 60)
+  assert.equal(runtime.slowMultiplier, 0.6)
   assert.equal(runtime.slowUntilTick, firstExpiry)
   runtime.boostMultiplier = 1.5
   runtime.boostUntilTick = 100
@@ -112,16 +112,16 @@ test('slow effects use the strongest active value without weaker duration extens
   assert.ok(itemSpeedMultiplier(runtime, 30) <= ITEM_BALANCE.maximumSpeedMultiplier)
 })
 
-test('Nitro activates deterministically and ends after exactly 1.6 seconds', () => {
+test('Nitro activates deterministically and ends after exactly 2 seconds', () => {
   const state = createItemRaceState(config([{ playerId: '2', itemIds: ['NITRO', 'BANANA'] }]))
   const ducks = [duck('1', 0.62, 1), duck('2', 0.55, 4)]
   const events: RaceEventType[] = []
   tickItemSystem(state, ducks, 10, 60, (type) => events.push(type))
   const runtime = state.byPlayer.get('2')!
-  assert.equal(runtime.boostUntilTick, 106)
-  assert.equal(itemSpeedMultiplier(runtime, 105), 1.18)
-  tickItemSystem(state, ducks, 106, 60, (type) => events.push(type))
-  assert.equal(itemSpeedMultiplier(runtime, 106), 1)
+  assert.equal(runtime.boostUntilTick, 130)
+  assert.equal(itemSpeedMultiplier(runtime, 129), 1.22)
+  tickItemSystem(state, ducks, 130, 60, (type) => events.push(type))
+  assert.equal(itemSpeedMultiplier(runtime, 130), 1)
   assert.deepEqual(events.filter((type) => type.startsWith('NITRO')), ['NITRO_STARTED', 'NITRO_ENDED'])
 })
 

@@ -13,11 +13,11 @@ export interface WildItemDefinition {
 }
 
 export const WILD_ITEM_CATALOG: readonly WildItemDefinition[] = [
-  { id: 'MINI_NITRO', displayName: 'Mini Nitro', icon: '⚡', category: 'MOBILITY', behavior: 'INSTANT', description: '+8% tốc độ trong 0.85 giây.' },
-  { id: 'TAILWIND', displayName: 'Tailwind', icon: '🌊', category: 'UTILITY', behavior: 'INSTANT', description: '+5% tốc độ và bơi ổn định trong 1.1 giây.' },
+  { id: 'MINI_NITRO', displayName: 'Mini Nitro', icon: '⚡', category: 'MOBILITY', behavior: 'INSTANT', description: '+12% tốc độ trong 1.2 giây.' },
+  { id: 'TAILWIND', displayName: 'Tailwind', icon: '🌊', category: 'UTILITY', behavior: 'INSTANT', description: '+8% tốc độ và bơi ổn định trong 1.4 giây.' },
   { id: 'MINI_BUBBLE', displayName: 'Mini Bubble', icon: '🫧', category: 'DEFENSE', behavior: 'HELD', description: 'Chặn một Wild attack trong tối đa 7 giây.' },
-  { id: 'MINI_ROCKET', displayName: 'Mini Rocket', icon: '🚀', category: 'ATTACK', behavior: 'HELD', description: 'Bắn dzịt gần nhất phía trước trong tầm.' },
-  { id: 'BANANA', displayName: 'Banana', icon: '🍌', category: 'ATTACK', behavior: 'HELD', description: 'Thả bẫy ngắn phía sau.' },
+  { id: 'MINI_ROCKET', displayName: 'Mini Rocket', icon: '🚀', category: 'ATTACK', behavior: 'HELD', description: 'Bắn dzịt gần nhất phía trước: -28% tốc độ trong 1.8 giây.' },
+  { id: 'BANANA', displayName: 'Banana', icon: '🍌', category: 'ATTACK', behavior: 'HELD', description: 'Thả bẫy phía sau: -35% tốc độ trong 1.8 giây.' },
   { id: 'QUACK_HORN', displayName: 'Quack Horn', icon: '🔊', category: 'UTILITY', behavior: 'HELD', description: 'Đẩy ngang dzịt đang bơi sát.' },
   { id: 'FEATHER', displayName: 'Feather', icon: '🪽', category: 'DEFENSE', behavior: 'HELD', description: 'Né Banana hoặc hazard nhỏ kế tiếp.' },
   { id: 'SLIPSTREAM_MAGNET', displayName: 'Slipstream Magnet', icon: '🧲', category: 'MOBILITY', behavior: 'INSTANT', description: 'Bám luồng dzịt gần nhất phía trước.' },

@@ -45,11 +45,11 @@ function config(index: number, playerCount: number, pickups: boolean, autoItemsE
     pickupConfig: {
       enabled: pickups,
       goldenBoxEnabled: pickups,
-      goldenBoxProbability: 0.12,
+      goldenBoxProbability: 0.15,
       hazardsEnabled: pickups,
       positionAwareLoot: true,
       spawnMultiplier: pickups ? 1 : 0,
-      regularPickupCap: 2,
+      regularPickupCap: 3,
       manualItemsEnabled: true,
       autoItemsEnabled,
       chaosBoxEnabled: false,

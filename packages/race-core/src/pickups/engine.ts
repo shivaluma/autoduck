@@ -114,7 +114,7 @@ function pickupConfig(config: RaceConfig): ResolvedPickupConfig {
 
 function boxCount(playerCount: number, zone: PickupZone, multiplier: number) {
   if (multiplier <= 0 || zone.spawnRatio <= 0) return 0
-  const normal = clamp(Math.round(playerCount * 0.4), 2, 5)
+  const normal = clamp(Math.round(playerCount * 0.5), 2, 5)
   return clamp(Math.round(normal * multiplier * zone.spawnRatio), 2, zone.candidateAnchors.length)
 }
 
@@ -167,7 +167,7 @@ function createHazards(config: RaceConfig, zones: HazardZone[], resolved: Resolv
   if (!resolved.hazardsEnabled) return []
   const rng = createRaceRng(config.seed, `hazards:${config.raceId}`)
   const countRoll = rng.next()
-  const count = countRoll < 0.65 ? 0 : countRoll < 0.98 ? 1 : 2
+  const count = countRoll < 0.45 ? 0 : countRoll < 0.9 ? 1 : 2
   return shuffled(zones, rng).slice(0, count).map((zone, index) => {
     const anchor = zone.anchors[rng.integer(0, zone.anchors.length - 1)]!
     const type = zone.allowedTypes[rng.integer(0, zone.allowedTypes.length - 1)]!

@@ -37,7 +37,7 @@ export function buildRacePickupTelemetry(raceId: number, config: RaceConfig, off
       hazardsEnabled: false,
       positionAwareLoot: config.pickupConfig?.positionAwareLoot ?? true,
       spawnMultiplier: 0,
-      regularPickupCap: config.pickupConfig?.regularPickupCap ?? 2,
+      regularPickupCap: config.pickupConfig?.regularPickupCap ?? 3,
       manualItemsEnabled: config.pickupConfig?.manualItemsEnabled ?? true,
       autoItemsEnabled: config.pickupConfig?.autoItemsEnabled ?? true,
       chaosBoxEnabled: false,

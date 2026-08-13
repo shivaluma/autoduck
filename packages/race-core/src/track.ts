@@ -65,7 +65,7 @@ export function createRiverTrack(version = 'river-01-v2'): RaceTrack {
     id: `pickup-zone-${zoneIndex + 1}`,
     startProgress: center - 0.025,
     endProgress: center + 0.025,
-    spawnRatio: 0.67,
+    spawnRatio: 0.85,
     allowedTypes: ['QUACK_BOX', 'GOLDEN_BOX'],
     candidateAnchors: pickupOffsets.map((lateralOffset, anchorIndex) => ({
       id: `z${zoneIndex + 1}-a${anchorIndex + 1}`,
