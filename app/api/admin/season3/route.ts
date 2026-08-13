@@ -39,7 +39,7 @@ export async function GET(request: Request) {
     orderBy: { createdAt: 'desc' },
     include: {
       players: { include: { user: { select: { id: true, name: true } } }, orderBy: { user: { name: 'asc' } } },
-      weeksPlan: { orderBy: { weekNumber: 'asc' }, include: { predictions: true, race: { select: { id: true, status: true } } } },
+      weeksPlan: { orderBy: { weekNumber: 'asc' }, include: { predictions: true, shieldChoices: { include: { seasonPlayer: { include: { user: true } } } }, race: { select: { id: true, status: true } } } },
       rewards: { orderBy: { cost: 'asc' } },
     },
   })
@@ -63,7 +63,7 @@ export async function GET(request: Request) {
       isKing: player.isKing,
       kingStreak: player.kingStreak,
     })),
-    weeks: season.weeksPlan.map((week: { id: number; weekNumber: number; status: string; chaosType: string; chaosTargetUserId: number | null; chaosTargetUserId2: number | null; chaosPayload: string | null; predictions: unknown[]; recap: string | null; race: { id: number; status: string } | null }) => ({
+    weeks: season.weeksPlan.map((week: { id: number; weekNumber: number; status: string; chaosType: string; chaosTargetUserId: number | null; chaosTargetUserId2: number | null; chaosPayload: string | null; predictions: unknown[]; shieldChoices: Array<{ seasonPlayer: { user: { name: string } } }>; recap: string | null; race: { id: number; status: string } | null }) => ({
       id: week.id,
       weekNumber: week.weekNumber,
       status: week.status,
@@ -72,6 +72,7 @@ export async function GET(request: Request) {
       chaosTargetUserId2: week.chaosTargetUserId2,
       chaosGroups: parseChaosGroups(week.chaosPayload),
       predictionCount: week.predictions.length,
+      shieldConfirmations: week.shieldChoices.map((choice) => choice.seasonPlayer.user.name),
       recap: week.recap,
       raceId: week.race?.id ?? null,
       raceStatus: week.race?.status ?? null,

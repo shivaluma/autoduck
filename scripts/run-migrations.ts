@@ -599,6 +599,22 @@ async function addSeason3ChaosPayload(prisma: PrismaClient) {
   }
 }
 
+async function addSeason3ShieldChoices(prisma: PrismaClient) {
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "SeasonShieldChoice" (
+      "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      "weekId" INTEGER NOT NULL,
+      "seasonPlayerId" INTEGER NOT NULL,
+      "userId" INTEGER NOT NULL,
+      "confirmedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "SeasonShieldChoice_weekId_fkey" FOREIGN KEY ("weekId") REFERENCES "SeasonWeek"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT "SeasonShieldChoice_seasonPlayerId_fkey" FOREIGN KEY ("seasonPlayerId") REFERENCES "SeasonPlayer"("id") ON DELETE CASCADE ON UPDATE CASCADE
+    )
+  `)
+  await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "SeasonShieldChoice_weekId_seasonPlayerId_key" ON "SeasonShieldChoice"("weekId", "seasonPlayerId")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "SeasonShieldChoice_weekId_userId_idx" ON "SeasonShieldChoice"("weekId", "userId")`)
+}
+
 const migrations: Migration[] = [
   {
     id: '2026-04-23-001-shield-charges-v1',
@@ -644,6 +660,11 @@ const migrations: Migration[] = [
     id: '2026-08-12-002-season-3-chaos-payload',
     name: 'Persist Season 3 Duo and Constructors groupings',
     run: addSeason3ChaosPayload,
+  },
+  {
+    id: '2026-08-13-001-season-3-shield-choices',
+    name: 'Create Season 3 per-week Shield confirmations',
+    run: addSeason3ShieldChoices,
   },
 ]
 

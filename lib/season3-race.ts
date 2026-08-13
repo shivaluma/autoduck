@@ -15,6 +15,7 @@ type Season3RacePlayer = {
   userId: number
   scars: number
   shields: number
+  shieldConfirmed?: boolean
   isKing: boolean
   kingStreak: number
   user: { name: string }
@@ -103,7 +104,8 @@ export async function executeSeason3Race(raceId: number, weekId: number) {
     const week = await prisma.seasonWeek.findUnique({
       where: { id: weekId },
       include: {
-        predictions: true,
+      predictions: true,
+        shieldChoices: true,
         season: { include: { players: { include: { user: true } } } },
       },
     })
@@ -115,7 +117,11 @@ export async function executeSeason3Race(raceId: number, weekId: number) {
 
     await prisma.race.update({ where: { id: raceId }, data: { status: 'running' } })
 
-    const players = week.season.players as Season3RacePlayer[]
+    const shieldConfirmedIds = new Set(week.shieldChoices.map((choice: { seasonPlayerId: number }) => choice.seasonPlayerId))
+    const players = (week.season.players as Season3RacePlayer[]).map((player) => ({
+      ...player,
+      shieldConfirmed: shieldConfirmedIds.has(player.id),
+    }))
     const result = await runRaceWorker(
       players.map((player) => ({ name: player.user.name, useShield: false })),
       raceId,

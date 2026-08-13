@@ -21,7 +21,7 @@ async function getActiveSeason() {
     orderBy: { createdAt: 'desc' },
     include: {
       players: { include: { user: { select: { id: true, name: true, avatarUrl: true } } }, orderBy: { user: { name: 'asc' } } },
-      weeksPlan: { orderBy: { weekNumber: 'asc' }, include: { predictions: { include: { predictor: true, target: true } }, race: { select: { id: true, status: true } } } },
+      weeksPlan: { orderBy: { weekNumber: 'asc' }, include: { predictions: { include: { predictor: true, target: true } }, shieldChoices: true, race: { select: { id: true, status: true } } } },
       rewards: { where: { active: true }, orderBy: { cost: 'asc' } },
     },
   })
@@ -85,6 +85,7 @@ export async function GET(request: Request) {
         predictionsLockedAt: currentWeek.predictionsLockedAt,
         predictionCount: currentWeek.predictions.length,
         predictionSubmitted: Boolean(viewer && currentWeek.predictions.some((prediction: { predictorPlayerId: number }) => prediction.predictorPlayerId === viewer.id)),
+        shieldConfirmed: Boolean(viewer && currentWeek.shieldChoices.some((choice: { seasonPlayerId: number }) => choice.seasonPlayerId === viewer.id)),
         raceId: currentWeek.race?.id ?? null,
         raceStatus: currentWeek.race?.status ?? null,
         predictions: [],
@@ -111,15 +112,31 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json() as { token?: string; targetUserId?: number }
-    if (!body.token || typeof body.targetUserId !== 'number') return jsonError('Token và targetUserId là bắt buộc')
+    const body = await request.json() as { token?: string; targetUserId?: number; action?: string; useShield?: boolean }
+    if (!body.token) return jsonError('Token là bắt buộc')
 
     const season = await getActiveSeason()
     if (!season) return jsonError('Chưa có Season 3 active', 404)
     const player = season.players.find((candidate: { accessToken: string }) => candidate.accessToken === body.token)
     if (!player) return jsonError('Personal link không hợp lệ', 401)
     const week = season.weeksPlan.find((candidate: { status: string }) => candidate.status === 'open')
-    if (!week) return jsonError('Prediction đã đóng hoặc tuần đã resolve', 409)
+    if (!week) return jsonError('Tuần đã đóng hoặc đã resolve', 409)
+
+    if (body.action === 'shield') {
+      if (player.shields < 1) return jsonError('Bạn không có Shield để xác nhận')
+      if (body.useShield === false) {
+        await prisma.seasonShieldChoice.deleteMany({ where: { weekId: week.id, seasonPlayerId: player.id } })
+        return NextResponse.json({ ok: true, shieldConfirmed: false, message: 'Đã bỏ xác nhận dùng Shield.' })
+      }
+      await prisma.seasonShieldChoice.upsert({
+        where: { weekId_seasonPlayerId: { weekId: week.id, seasonPlayerId: player.id } },
+        create: { weekId: week.id, seasonPlayerId: player.id, userId: player.userId },
+        update: { confirmedAt: new Date() },
+      })
+      return NextResponse.json({ ok: true, shieldConfirmed: true, message: 'Đã xác nhận dùng Shield tuần này.' })
+    }
+
+    if (typeof body.targetUserId !== 'number') return jsonError('targetUserId là bắt buộc')
     if (player.userId === body.targetUserId) return jsonError('Không được pick bản thân')
     if (!season.players.some((candidate: { userId: number }) => candidate.userId === body.targetUserId)) return jsonError('Target không thuộc Season 3')
 

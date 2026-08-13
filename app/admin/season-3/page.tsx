@@ -16,6 +16,7 @@ type AdminState = {
     chaosTargetUserId2: number | null
     chaosGroups?: number[][]
     predictionCount: number
+    shieldConfirmations: string[]
     recap: string | null
     raceId: number | null
     raceStatus: string | null
@@ -106,9 +107,10 @@ export default function AdminSeason3Page() {
       {currentWeek && <section className="rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-display text-2xl">WEEK {currentWeek.weekNumber} · {currentWeek.chaosType}</h2>
-          <span className="rounded-full bg-[var(--color-ggd-orange)] px-4 py-2 font-black">Predictions {currentWeek.predictionCount}/{data.players.length}</span>
+          <div className="flex flex-wrap gap-2"><span className="rounded-full bg-[var(--color-ggd-orange)] px-4 py-2 font-black">Predictions {currentWeek.predictionCount}/{data.players.length}</span><span className="rounded-full bg-[var(--color-ggd-sky)] px-4 py-2 font-black text-[var(--color-ggd-outline)]">🛡️ Shield {currentWeek.shieldConfirmations.length}/{data.players.length}</span></div>
         </div>
         <p className="mt-2 text-sm text-white/60">Target: {nameById.get(currentWeek.chaosTargetUserId ?? -1) ?? '—'}{currentWeek.chaosGroups ? ` · ${currentWeek.chaosGroups.map((group) => group.map((id) => nameById.get(id) ?? id).join(' + ')).join(' / ')}` : ''}</p>
+        <p className="mt-2 text-sm text-[var(--color-ggd-sky)]">Đã xác nhận dùng Shield: {currentWeek.shieldConfirmations.length > 0 ? currentWeek.shieldConfirmations.join(', ') : 'Chưa ai'}</p>
         {currentWeek.status === 'open' && <button onClick={() => void act({ action: 'lock', weekId: currentWeek.id })} className="mt-5 rounded-xl bg-[var(--color-ggd-gold)] px-5 py-3 font-black text-[var(--color-ggd-outline)]">🔒 LOCK PREDICTIONS</button>}
         {currentWeek.status === 'locked' && <div className="mt-5 flex flex-wrap items-center gap-3"><button onClick={() => void act({ action: 'start-race', weekId: currentWeek.id })} className="rounded-xl bg-[var(--color-ggd-neon-green)] px-5 py-3 font-black text-[var(--color-ggd-outline)]">🏁 START DUCK RACE</button><span className="text-sm text-white/60">BXH sẽ lấy tự động từ Duck Duck Race.</span></div>}
         {currentWeek.status === 'racing' && currentWeek.raceId && <div className="mt-5 flex flex-wrap items-center gap-3"><span className="font-black text-[var(--color-ggd-neon-green)]">🏃 RACE ĐANG CHẠY</span><Link href={`/season-3/race/${currentWeek.raceId}`} className="rounded-xl bg-[var(--color-ggd-gold)] px-5 py-3 font-black text-[var(--color-ggd-outline)]">XEM RACE</Link></div>}

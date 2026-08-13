@@ -3,6 +3,7 @@ import type { Season3RankingEntry } from '@/lib/season3'
 export type Season3RaceMappingPlayer = {
   userId: number
   shields: number
+  shieldConfirmed?: boolean
   user: { name: string }
 }
 
@@ -18,7 +19,7 @@ export function mapSeason3RaceRanking(
       userId: player.userId,
       name: player.user.name,
       rank: entry.rank,
-      hasShield: player.shields > 0,
+      hasShield: player.shields > 0 && player.shieldConfirmed === true,
     }
   })
 

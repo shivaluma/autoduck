@@ -396,6 +396,7 @@ model SeasonPlayer {
   season             Season             @relation(fields: [seasonId], references: [id], onDelete: Cascade)
   user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   predictions        SeasonPrediction[] @relation("PredictionAuthorPlayer")
+  shieldChoices      SeasonShieldChoice[]
   redemptions        SeasonRedemption[]
 
   @@unique([seasonId, userId])
@@ -423,6 +424,7 @@ model SeasonWeek {
   season              Season             @relation(fields: [seasonId], references: [id], onDelete: Cascade)
   race                Race?              @relation("SeasonWeekRace", fields: [raceId], references: [id], onDelete: SetNull)
   predictions         SeasonPrediction[]
+  shieldChoices       SeasonShieldChoice[]
 
   @@unique([seasonId, weekNumber])
   @@index([seasonId, status])
@@ -444,6 +446,20 @@ model SeasonPrediction {
 
   @@unique([weekId, predictorPlayerId])
   @@index([weekId, targetUserId])
+}
+
+model SeasonShieldChoice {
+  id             Int      @id @default(autoincrement())
+  weekId         Int
+  seasonPlayerId Int
+  userId         Int
+  confirmedAt    DateTime @default(now())
+
+  week         SeasonWeek   @relation(fields: [weekId], references: [id], onDelete: Cascade)
+  seasonPlayer SeasonPlayer @relation(fields: [seasonPlayerId], references: [id], onDelete: Cascade)
+
+  @@unique([weekId, seasonPlayerId])
+  @@index([weekId, userId])
 }
 
 model SeasonReward {

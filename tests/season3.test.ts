@@ -22,6 +22,7 @@ const seasonPlayers: Season3RaceMappingPlayer[] = ranking.map((entry) => ({
   userId: entry.userId,
   scars: 0,
   shields: entry.hasShield ? 1 : 0,
+  shieldConfirmed: entry.hasShield,
   isKing: entry.userId === 1,
   kingStreak: 2,
   user: { name: entry.name },
@@ -49,6 +50,12 @@ test('Season 3 bridge rejects incomplete or foreign race results', () => {
     { rank: 4, name: 'Long' },
     { rank: 5, name: 'Nam' },
   ], seasonPlayers), /không trả đủ ranking/)
+})
+
+test('Season 3 bridge does not auto-use an unconfirmed Shield', () => {
+  const players = seasonPlayers.map((player) => player.userId === 4 ? { ...player, shieldConfirmed: false } : player)
+  const mapped = mapSeason3RaceRanking(ranking.map(({ userId, name, rank }) => ({ userId, name, rank })), players)
+  assert.equal(mapped.find((entry) => entry.userId === 4)?.hasShield, false)
 })
 
 test('Normal keeps vanilla ranking untouched and shield protects the exact Bottom 2 duck', () => {
