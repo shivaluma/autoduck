@@ -115,6 +115,7 @@ export function createItemRaceState(config: RaceConfig): ItemRaceState {
       nitroSpeedMultiplier: config.itemTuning?.nitroSpeedMultiplier ?? ITEM_BALANCE.nitro.speedMultiplier,
       rocketSlowMultiplier: config.itemTuning?.rocketSlowMultiplier ?? ITEM_BALANCE.rocket.slowMultiplier,
       bananaKnockbackMultiplier: config.itemTuning?.bananaKnockbackMultiplier ?? 1,
+      bananaSlowMultiplier: config.itemTuning?.bananaSlowMultiplier ?? 1,
     },
   }
 }

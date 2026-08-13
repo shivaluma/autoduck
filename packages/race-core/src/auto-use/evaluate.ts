@@ -5,7 +5,7 @@ import { PICKUP_BALANCE } from '../pickups/config'
 import type { ItemDuckState, ItemRaceState } from '../items/engine'
 import type { PickupRaceState } from '../pickups/engine'
 import { AUTO_USE_CONFIG } from './config'
-import type { AutoUseCandidate, RaceObjectiveContext } from './types'
+import type { AutoUseCandidate, AutoUseCandidateDraft, RaceObjectiveContext } from './types'
 
 export interface EvaluationContext {
   tick: number
@@ -48,7 +48,7 @@ function baseSpeed() {
 
 function dynamicThreshold(ctx: EvaluationContext) {
   const progress = duckById(ctx.ducks, ctx.playerId).progress
-  let threshold = AUTO_USE_CONFIG.thresholds.early
+  let threshold: number = AUTO_USE_CONFIG.thresholds.early
   if (progress >= AUTO_USE_CONFIG.progressFinal) threshold = AUTO_USE_CONFIG.thresholds.finalStretch
   else if (progress >= AUTO_USE_CONFIG.progressLate) threshold = AUTO_USE_CONFIG.thresholds.late
   else if (progress >= AUTO_USE_CONFIG.progressMid) threshold = AUTO_USE_CONFIG.thresholds.mid
@@ -123,7 +123,7 @@ function rocketTargets(ctx: EvaluationContext, kind: 'PREP' | 'WILD') {
     .sort((left, right) => right.score - left.score || left.target.playerId.localeCompare(right.target.playerId))
 }
 
-export function evaluateReactiveDefense(ctx: EvaluationContext): AutoUseCandidate[] {
+export function evaluateReactiveDefense(ctx: EvaluationContext): AutoUseCandidateDraft[] {
   if (!ctx.wildAutoUseEnabled) return []
   const runtime = ctx.itemState.byPlayer.get(ctx.playerId)!
   const duck = duckById(ctx.ducks, ctx.playerId)
@@ -134,7 +134,7 @@ export function evaluateReactiveDefense(ctx: EvaluationContext): AutoUseCandidat
     return etaProgress >= 0 && etaProgress < 0.035
       && Math.abs(predictLateral(duck, 0.45) - banana.lateralOffset) <= banana.hitLateralRadius * 1.2
   })
-  const reactive: AutoUseCandidate[] = []
+  const reactive: AutoUseCandidateDraft[] = []
 
   if (incomingRocket && runtime.wildItem?.itemId === 'MINI_BUBBLE') {
     reactive.push({
@@ -163,11 +163,11 @@ export function evaluateReactiveDefense(ctx: EvaluationContext): AutoUseCandidat
   return reactive
 }
 
-export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate[] {
+export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidateDraft[] {
   if (!ctx.prepAutoUseEnabled) return []
   const runtime = ctx.itemState.byPlayer.get(ctx.playerId)!
   const duck = duckById(ctx.ducks, ctx.playerId)
-  const candidates: AutoUseCandidate[] = []
+  const candidates: AutoUseCandidateDraft[] = []
   const danger = ctx.objective.dangerScore(duck.playerId, duck.currentRank, duck.progress, ctx.ducks)
   const pressure = inventoryPressure(ctx)
 
@@ -249,7 +249,7 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
   return candidates
 }
 
-export function evaluateWildCandidates(ctx: EvaluationContext): AutoUseCandidate[] {
+export function evaluateWildCandidates(ctx: EvaluationContext): AutoUseCandidateDraft[] {
   if (!ctx.wildAutoUseEnabled) return []
   const runtime = ctx.itemState.byPlayer.get(ctx.playerId)!
   const wild = runtime.wildItem
@@ -257,7 +257,7 @@ export function evaluateWildCandidates(ctx: EvaluationContext): AutoUseCandidate
   const duck = duckById(ctx.ducks, ctx.playerId)
   const pressure = inventoryPressure(ctx)
   const danger = ctx.objective.dangerScore(duck.playerId, duck.currentRank, duck.progress, ctx.ducks)
-  const candidates: AutoUseCandidate[] = []
+  const candidates: AutoUseCandidateDraft[] = []
   const itemId = wild.itemId
 
   if (itemId === 'MINI_ROCKET') {
@@ -392,14 +392,14 @@ export function evaluateWildCandidates(ctx: EvaluationContext): AutoUseCandidate
 }
 
 export function decideReactiveAutoItemAction(ctx: EvaluationContext): AutoUseCandidate | null {
-  const attach = (candidate: AutoUseCandidate) => ({ ...candidate, playerId: ctx.playerId })
+  const attach = (candidate: AutoUseCandidateDraft): AutoUseCandidate => ({ ...candidate, playerId: ctx.playerId })
   const reactive = evaluateReactiveDefense(ctx).map(attach)
   if (reactive.length === 0) return null
   return reactive.sort((left, right) => right.score - left.score || left.itemKey.localeCompare(right.itemKey))[0]!
 }
 
 export function decideOffensiveAutoItemAction(ctx: EvaluationContext): AutoUseCandidate | null {
-  const attach = (candidate: AutoUseCandidate) => ({ ...candidate, playerId: ctx.playerId })
+  const attach = (candidate: AutoUseCandidateDraft): AutoUseCandidate => ({ ...candidate, playerId: ctx.playerId })
   const candidates = [
     ...evaluatePrepCandidates(ctx),
     ...evaluateWildCandidates(ctx),

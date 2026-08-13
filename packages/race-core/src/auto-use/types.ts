@@ -22,6 +22,8 @@ export interface AutoUseCandidate {
   wildItemInstanceId?: string
 }
 
+export type AutoUseCandidateDraft = Omit<AutoUseCandidate, 'playerId'>
+
 export interface RaceObjectiveContext {
   mode: ChaosRuleId
   playerCount: number
