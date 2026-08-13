@@ -41,7 +41,7 @@ export function Season3RaceView({ raceId }: { raceId: number }) {
   const ranking = useMemo(() => [...(race?.participants ?? [])].sort((left, right) => (left.initialRank ?? 99) - (right.initialRank ?? 99)), [race])
   const racePlayers = useMemo(() => {
     const loadouts = new Map((race?.engine?.loadouts ?? []).map((loadout) => [loadout.playerId, loadout.itemIds]))
-    const cosmetics = new Map((race?.engine?.config?.players ?? []).map((player) => [player.playerId, parseAppearance(player.cosmeticKey)]))
+    const cosmetics = new Map((race?.engine?.players ?? race?.engine?.config?.players ?? []).map((player) => [player.playerId, parseAppearance(player.cosmeticKey)]))
     return (race?.participants ?? []).filter((player) => !player.isClone).map((player) => ({
       playerId: String(player.userId),
       name: player.displayName ?? player.name,

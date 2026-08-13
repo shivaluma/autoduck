@@ -32,12 +32,12 @@ export type DuckAppearance = Partial<Record<`${CosmeticSlot}Id`, string>> & {
 }
 
 export const DUCK_COSMETIC_ANCHORS = {
-  head: { x: 132, y: 62 },
-  face: { x: 154, y: 101 },
-  neck: { x: 123, y: 125 },
-  body: { x: 124, y: 151 },
-  back: { x: 83, y: 127 },
-  tail: { x: 55, y: 144 },
+  head: { x: 158, y: 30 },
+  face: { x: 176, y: 78 },
+  neck: { x: 128, y: 124 },
+  body: { x: 124, y: 160 },
+  back: { x: 72, y: 143 },
+  tail: { x: 42, y: 158 },
   petLeft: { x: 34, y: 178 },
   petRight: { x: 218, y: 178 },
   auraCenter: { x: 128, y: 137 },

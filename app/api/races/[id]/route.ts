@@ -5,6 +5,7 @@ import { isImmortalDuck } from '@/lib/immortal-duck'
 import { MYSTERY_CHESTS_ENABLED } from '@/lib/feature-flags'
 import { getDragonInventory } from '@/lib/dragon/getDragonState'
 import { getDragonOrbName } from '@/lib/dragon/naming'
+import { publicRaceEngineVisibility } from '@/lib/racing/public-engine'
 import {
   DRAGON_ORB_BONUS_RACE_SOURCE,
   DRAGON_ORB_FEATURED_RACE_SOURCE,
@@ -52,6 +53,7 @@ export async function GET(
     }
 
     const engineConfig = race.engineConfigJson ? JSON.parse(race.engineConfigJson) : null
+    const engineVisibility = publicRaceEngineVisibility(race.status, race.raceSeed, engineConfig)
 
     const [consumedChests, awardedChests] = MYSTERY_CHESTS_ENABLED ? await Promise.all([
       prisma.mysteryChest.findMany({
@@ -143,8 +145,9 @@ export async function GET(
         balanceVersion: race.balanceVersion,
         trackVersion: race.trackVersion,
         seedCommit: race.seedCommit,
-        seed: race.status === 'finished' ? race.raceSeed : null,
-        config: race.status === 'finished' ? engineConfig : null,
+        seed: engineVisibility.seed,
+        config: engineVisibility.config,
+        players: engineVisibility.players,
         chaosConfig: engineConfig?.chaosConfig ?? null,
         loadouts: engineConfig?.loadouts ?? [],
         resultDigest: race.resultDigest,
