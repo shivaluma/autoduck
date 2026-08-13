@@ -8,6 +8,8 @@ import {
 } from '@/lib/season3'
 import { startSeason3Race } from '@/lib/season3-race'
 import { Season3ScheduleError } from '@/lib/season3-schedule'
+import { createRaceSeed } from '@/lib/racing/audit'
+import { selectAutoLoadout, serializeItemIds } from '@/lib/racing/loadout'
 
 function authorized(request: Request, body?: { secret?: string }) {
   const urlSecret = new URL(request.url).searchParams.get('secret')
@@ -40,7 +42,7 @@ export async function GET(request: Request) {
     orderBy: { createdAt: 'desc' },
     include: {
       players: { include: { user: { select: { id: true, name: true, avatarUrl: true } } }, orderBy: { user: { name: 'asc' } } },
-      weeksPlan: { orderBy: { weekNumber: 'asc' }, include: { predictions: true, shieldChoices: { include: { seasonPlayer: { include: { user: true } } } }, race: { select: { id: true, status: true } } } },
+      weeksPlan: { orderBy: { weekNumber: 'asc' }, include: { predictions: true, loadouts: true, shieldChoices: { include: { seasonPlayer: { include: { user: true } } } }, race: { select: { id: true, status: true } } } },
       rewards: { orderBy: { cost: 'asc' } },
     },
   })
@@ -65,7 +67,7 @@ export async function GET(request: Request) {
       isKing: player.isKing,
       kingStreak: player.kingStreak,
     })),
-    weeks: season.weeksPlan.map((week: { id: number; weekNumber: number; status: string; chaosType: string; chaosTargetUserId: number | null; chaosTargetUserId2: number | null; chaosPayload: string | null; predictions: unknown[]; shieldChoices: Array<{ seasonPlayer: { user: { name: string } } }>; recap: string | null; race: { id: number; status: string } | null }) => ({
+    weeks: season.weeksPlan.map((week: { id: number; weekNumber: number; status: string; chaosType: string; chaosTargetUserId: number | null; chaosTargetUserId2: number | null; chaosPayload: string | null; predictions: unknown[]; loadouts: Array<{ status: string }>; shieldChoices: Array<{ seasonPlayer: { user: { name: string } } }>; recap: string | null; race: { id: number; status: string } | null }) => ({
       id: week.id,
       weekNumber: week.weekNumber,
       status: week.status,
@@ -74,6 +76,7 @@ export async function GET(request: Request) {
       chaosTargetUserId2: week.chaosTargetUserId2,
       chaosGroups: parseChaosGroups(week.chaosPayload),
       predictionCount: week.predictions.length,
+      loadoutReadyCount: week.loadouts.filter((loadout) => loadout.status === 'ready' || loadout.status === 'auto').length,
       shieldConfirmations: week.shieldChoices.map((choice) => choice.seasonPlayer.user.name),
       recap: week.recap,
       raceId: week.race?.id ?? null,
@@ -165,7 +168,22 @@ export async function POST(request: Request) {
     if (body.action === 'lock') {
       const week = body.weekId ? await prisma.seasonWeek.findUnique({ where: { id: body.weekId } }) : season.weeksPlan.find((candidate: { status: string }) => candidate.status === 'open')
       if (!week || week.status !== 'open') return fail('Tuần không ở trạng thái open', 409)
-      const updated = await prisma.seasonWeek.update({ where: { id: week.id }, data: { status: 'locked', predictionsLockedAt: new Date() } })
+      const seed = week.raceSeed ?? createRaceSeed()
+      const existing = await prisma.seasonLoadout.findMany({ where: { weekId: week.id } })
+      const existingByPlayer = new Map<number, { seasonPlayerId: number; status: string }>(existing.map((loadout: { seasonPlayerId: number; status: string }) => [loadout.seasonPlayerId, loadout] as const))
+      const updated = await prisma.$transaction(async (tx: typeof prisma) => {
+        for (const player of season.players) {
+          const loadout = existingByPlayer.get(player.id)
+          if (loadout?.status === 'ready') continue
+          const itemIds = selectAutoLoadout(seed, String(player.userId))
+          await tx.seasonLoadout.upsert({
+            where: { weekId_seasonPlayerId: { weekId: week.id, seasonPlayerId: player.id } },
+            create: { weekId: week.id, seasonPlayerId: player.id, userId: player.userId, itemIdsJson: serializeItemIds(itemIds), status: 'auto', lockedAt: new Date() },
+            update: { itemIdsJson: serializeItemIds(itemIds), status: 'auto', lockedAt: new Date() },
+          })
+        }
+        return tx.seasonWeek.update({ where: { id: week.id }, data: { status: 'locked', predictionsLockedAt: new Date(), raceSeed: seed } })
+      })
       return NextResponse.json({ ok: true, week: updated })
     }
 

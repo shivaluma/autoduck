@@ -3,6 +3,7 @@ import { mapSeason3RaceRanking } from '@/lib/season3-race-mapping'
 import { assertSeason3RaceDay } from '@/lib/season3-schedule'
 import { createRaceCommit, createRaceSeed } from '@/lib/racing/audit'
 import { parseRaceConfig, persistRaceEvents, persistedRaceResult, serializeRaceConfig } from '@/lib/racing/persistence'
+import { parseItemIds, selectAutoLoadout, serializeItemIds } from '@/lib/racing/loadout'
 import { runAuthoritativeRace } from '@/lib/racing/runtime'
 import {
   DEFAULT_TRACK_VERSION,
@@ -11,6 +12,7 @@ import {
   RACE_PROTOCOL_VERSION,
   RACE_TICK_RATE,
   raceConfigSchema,
+  type RaceItemId,
 } from '@/packages/race-protocol/src'
 import {
   applyScarEconomy,
@@ -63,6 +65,7 @@ export async function startSeason3Race(weekId: number, options: { allowOffSchedu
     where: { id: weekId },
     include: {
       race: true,
+      loadouts: true,
       season: { include: { players: { include: { user: true } } } },
     },
   })
@@ -72,8 +75,23 @@ export async function startSeason3Race(weekId: number, options: { allowOffSchedu
   if (week.race && week.race.status !== 'failed') return week.race
 
   const claimedRaceId = week.race?.id ?? null
-  const raceSeed = createRaceSeed()
+  const raceSeed = week.raceSeed ?? createRaceSeed()
+  const loadoutByPlayer = new Map<number, { seasonPlayerId: number; itemIdsJson: string; status: string }>(week.loadouts.map((loadout: { seasonPlayerId: number; itemIdsJson: string; status: string }) => [loadout.seasonPlayerId, loadout] as const))
+  const immutableLoadouts: Array<{ player: Season3RacePlayer; itemIds: RaceItemId[]; source: 'PLAYER' | 'AUTO' }> = week.season.players.map((player: Season3RacePlayer) => {
+    const selected = loadoutByPlayer.get(player.id)
+    return {
+      player,
+      itemIds: selected ? parseItemIds(selected.itemIdsJson) : selectAutoLoadout(raceSeed, String(player.userId)),
+      source: selected?.status === 'ready' ? 'PLAYER' as const : 'AUTO' as const,
+    }
+  })
   const claim = await prisma.$transaction(async (tx: typeof prisma) => {
+    for (const loadout of immutableLoadouts) {
+      if (loadoutByPlayer.has(loadout.player.id)) continue
+      await tx.seasonLoadout.create({
+        data: { weekId: week.id, seasonPlayerId: loadout.player.id, userId: loadout.player.userId, itemIdsJson: serializeItemIds(loadout.itemIds), status: 'auto', lockedAt: new Date() },
+      })
+    }
     const created = await tx.race.create({
       data: {
         status: 'pending',
@@ -120,6 +138,7 @@ export async function startSeason3Race(weekId: number, options: { allowOffSchedu
         playerId: String(player.userId),
         name: player.user.name,
       })),
+      loadouts: immutableLoadouts.map((loadout) => ({ playerId: String(loadout.player.userId), itemIds: loadout.itemIds, source: loadout.source })),
     })
     const race = await tx.race.update({
       where: { id: created.id },

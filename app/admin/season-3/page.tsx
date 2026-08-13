@@ -18,6 +18,7 @@ type AdminState = {
     chaosTargetUserId2: number | null
     chaosGroups?: number[][]
     predictionCount: number
+    loadoutReadyCount: number
     shieldConfirmations: string[]
     recap: string | null
     raceId: number | null
@@ -109,7 +110,7 @@ export default function AdminSeason3Page() {
       {currentWeek && <section className="rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-display text-2xl">WEEK {currentWeek.weekNumber} · {currentWeek.chaosType}</h2>
-          <div className="flex flex-wrap gap-2"><span className="rounded-full bg-[var(--color-ggd-orange)] px-4 py-2 font-black">Predictions {currentWeek.predictionCount}/{data.players.length}</span><span className="rounded-full bg-[var(--color-ggd-sky)] px-4 py-2 font-black text-[var(--color-ggd-outline)]">🛡️ Shield {currentWeek.shieldConfirmations.length}/{data.players.length}</span></div>
+          <div className="flex flex-wrap gap-2"><span className="rounded-full bg-[var(--color-ggd-neon-green)] px-4 py-2 font-black text-[var(--color-ggd-outline)]">🎒 Ready {currentWeek.loadoutReadyCount}/{data.players.length}</span><span className="rounded-full bg-[var(--color-ggd-orange)] px-4 py-2 font-black">Predictions {currentWeek.predictionCount}/{data.players.length}</span><span className="rounded-full bg-[var(--color-ggd-sky)] px-4 py-2 font-black text-[var(--color-ggd-outline)]">🛡️ Shield {currentWeek.shieldConfirmations.length}/{data.players.length}</span></div>
         </div>
         <p className="mt-2 text-sm text-white/60">Target: {nameById.get(currentWeek.chaosTargetUserId ?? -1) ?? '—'}{currentWeek.chaosGroups ? ` · ${currentWeek.chaosGroups.map((group) => group.map((id) => nameById.get(id) ?? id).join(' + ')).join(' / ')}` : ''}</p>
         <p className="mt-2 text-sm text-[var(--color-ggd-sky)]">Đã xác nhận dùng Shield: {currentWeek.shieldConfirmations.length > 0 ? currentWeek.shieldConfirmations.join(', ') : 'Chưa ai'}</p>

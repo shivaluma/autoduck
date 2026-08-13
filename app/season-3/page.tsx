@@ -5,13 +5,15 @@ import Link from 'next/link'
 import { Season3ChaosCard } from '@/components/season3-chaos-card'
 import { Season3Avatar } from '@/components/season3-avatar'
 import { Season3PointTooltip } from '@/components/season3-point-tooltip'
+import type { RaceItemId } from '@/packages/race-protocol/src'
 
 type SeasonData = {
   season: { name: string; year: number; weeks: number } | null
   viewer: { userId: number; name: string; avatarUrl?: string | null; predictionPoints: number; scars: number; shields: number; isKing: boolean; kingStreak: number } | null
   personalLink: string | null
+  raceItems: Array<{ id: RaceItemId; name: string; icon: string; cost: 1 | 2; category: 'major' | 'minor'; description: string }>
   players: Array<{ id: number; name: string; avatarUrl?: string | null; predictionPoints: number; scars: number; shields: number; isKing: boolean; kingStreak: number }>
-  currentWeek: { id: number; weekNumber: number; status: string; chaosType: string; chaosTargetName: string | null; chaosGroups?: number[][]; predictionCount: number; predictionSubmitted: boolean; shieldConfirmed: boolean; raceId: number | null; raceStatus: string | null } | null
+  currentWeek: { id: number; weekNumber: number; status: string; chaosType: string; chaosTargetName: string | null; chaosGroups?: number[][]; predictionCount: number; predictionSubmitted: boolean; shieldConfirmed: boolean; loadoutReadyCount: number; loadout: { itemIds: RaceItemId[]; status: string }; raceId: number | null; raceStatus: string | null } | null
   history: Array<{ id: number; weekNumber: number; chaosType: string; recap: string | null }>
   latestReveal: { weekNumber: number; recap: string | null; predictions: Array<{ predictorName: string; targetName: string; pointsAwarded: number }> } | null
   rewards: Array<{ key: string; name: string; cost: number; stock: number | null }>
@@ -36,6 +38,7 @@ export default function Season3Page() {
   const [data, setData] = useState<SeasonData | null>(null)
   const [selectedTarget, setSelectedTarget] = useState<number | null>(null)
   const [message, setMessage] = useState('')
+  const [selectedItems, setSelectedItems] = useState<RaceItemId[]>([])
   const [loading, setLoading] = useState(true)
 
   async function load() {
@@ -43,6 +46,7 @@ export default function Season3Page() {
     const response = await fetch(`/api/season3${token ? `?token=${encodeURIComponent(token)}` : ''}`, { cache: 'no-store' })
     const next = await response.json() as SeasonData
     setData(next)
+    setSelectedItems(next.currentWeek?.loadout.itemIds ?? [])
     setLoading(false)
   }
 
@@ -50,7 +54,7 @@ export default function Season3Page() {
     const queryToken = new URLSearchParams(window.location.search).get('token') ?? ''
     void fetch(`/api/season3${queryToken ? `?token=${encodeURIComponent(queryToken)}` : ''}`, { cache: 'no-store' })
       .then((response) => response.json())
-      .then((next: SeasonData) => { setToken(queryToken); setData(next); setLoading(false) })
+      .then((next: SeasonData) => { setToken(queryToken); setData(next); setSelectedItems(next.currentWeek?.loadout.itemIds ?? []); setLoading(false) })
       .catch(() => { setMessage('Không tải được Season 3.'); setLoading(false) })
   }, [])
 
@@ -78,12 +82,32 @@ export default function Season3Page() {
     if (response.ok) await load()
   }
 
+  async function saveLoadout() {
+    if (!token) return
+    const response = await fetch('/api/season3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, action: 'loadout', itemIds: selectedItems, ready: true }) })
+    const result = await response.json() as { error?: string; message?: string }
+    setMessage(result.message ?? result.error ?? '')
+    if (response.ok) await load()
+  }
+
   if (loading) return <main className="mx-auto max-w-6xl p-6 text-white"><div className="animate-pulse rounded-3xl bg-white/10 p-8 font-display text-3xl">Đang gọi bầy vịt...</div></main>
   if (!data?.season) return <main className="mx-auto max-w-6xl p-6 text-white"><div className="rounded-[2rem] border-4 border-black bg-[var(--color-ggd-panel)] p-8 shadow-[0_8px_0_black]"><div className="text-sm font-black tracking-[0.25em] text-[var(--color-ggd-gold)]">DUCK POND OFFLINE</div><h1 className="mt-2 font-display text-5xl">Season 3 chưa mở 🦆</h1><p className="mt-3 text-white/65">Host chưa bật season. Quay lại sau nhé.</p></div></main>
 
   const week = data.currentWeek
   const eligiblePlayers = data.players.filter((player) => player.id !== data.viewer?.userId)
   const groupNames = week?.chaosGroups?.map((group) => group.map((id) => data.players.find((player) => player.id === id)?.name ?? String(id)))
+  const selectedCost = selectedItems.reduce((sum, itemId) => sum + (data.raceItems.find((item) => item.id === itemId)?.cost ?? 0), 0)
+  const selectedMajor = selectedItems.some((itemId) => data.raceItems.find((item) => item.id === itemId)?.category === 'major')
+
+  function toggleItem(itemId: RaceItemId) {
+    if (selectedItems.includes(itemId)) {
+      setSelectedItems(selectedItems.filter((selected) => selected !== itemId))
+      return
+    }
+    const item = data!.raceItems.find((candidate) => candidate.id === itemId)!
+    if (selectedItems.length >= 2 || selectedCost + item.cost > 3 || (item.category === 'major' && selectedMajor)) return
+    setSelectedItems([...selectedItems, itemId])
+  }
 
   return <main className="mx-auto max-w-6xl space-y-6 p-4 pb-12 text-white sm:p-6 lg:p-8">
     <header className="relative overflow-hidden rounded-[2rem] border-4 border-[var(--color-ggd-outline)] bg-[radial-gradient(circle_at_85%_15%,rgba(61,255,143,.22),transparent_34%),linear-gradient(135deg,#241548,#110b24)] p-6 shadow-[0_8px_0_var(--color-ggd-outline)] sm:p-8">
@@ -95,6 +119,8 @@ export default function Season3Page() {
     </header>
 
     {week ? <Season3ChaosCard type={week.chaosType} weekNumber={week.weekNumber} targetName={week.chaosTargetName} groups={groupNames} predictionCount={week.predictionCount} playerCount={data.players.length} /> : <section className="rounded-[2rem] border-4 border-[var(--color-ggd-gold)] bg-[var(--color-ggd-gold)]/10 p-6 text-center"><div className="text-5xl">🏆</div><h2 className="mt-2 font-display text-4xl">Season complete</h2><p className="mt-2 text-white/65">Golden Duck đang chờ host chốt champion.</p></section>}
+
+    {data.viewer && week?.status === 'open' && <section className="rounded-[2rem] border-4 border-[var(--color-ggd-neon-green)]/70 bg-[var(--color-ggd-panel)] p-5 shadow-[0_6px_0_var(--color-ggd-outline)]"><div className="flex flex-wrap items-end justify-between gap-3"><div><div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-neon-green)]">RACE PREP</div><h2 className="font-display text-3xl">🎒 Chọn loadout</h2></div><div className="font-black text-[var(--color-ggd-gold)]">{selectedCost}/3 Prep Credits</div></div><div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{data.raceItems.map((item) => { const selected = selectedItems.includes(item.id); const disabled = !selected && (selectedItems.length >= 2 || selectedCost + item.cost > 3 || (item.category === 'major' && selectedMajor)); return <button key={item.id} disabled={disabled} onClick={() => toggleItem(item.id)} className={`rounded-2xl border-2 p-4 text-left transition disabled:cursor-not-allowed disabled:opacity-30 ${selected ? 'border-[var(--color-ggd-neon-green)] bg-[var(--color-ggd-neon-green)]/15' : 'border-white/10 bg-black/20 hover:border-white/35'}`}><div className="flex items-center gap-3"><span className="text-3xl">{item.icon}</span><div><div className="font-black">{item.name}</div><div className="text-xs font-bold text-[var(--color-ggd-gold)]">{item.cost} Credit · {item.category}</div></div>{selected && <span className="ml-auto">✓</span>}</div><p className="mt-2 text-xs text-white/55">{item.description}</p></button>})}</div><button disabled={selectedCost !== 3 || selectedItems.length !== 2} onClick={() => void saveLoadout()} className="mt-4 w-full rounded-xl bg-[var(--color-ggd-neon-green)] px-5 py-3 font-black text-[var(--color-ggd-outline)] disabled:cursor-not-allowed disabled:opacity-30">{week.loadout.status === 'ready' ? '✓ UPDATE LOADOUT' : '🔒 LOCK LOADOUT'}</button></section>}
 
     <div className="grid gap-6 lg:grid-cols-[1.1fr_.9fr]">
       {data.viewer ? <section className="overflow-hidden rounded-[2rem] border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-surface-2)] shadow-[0_6px_0_var(--color-ggd-outline)]"><div className="flex items-center gap-4 border-b-2 border-white/10 bg-black/15 p-5"><Season3Avatar name={data.viewer.name} avatarUrl={data.viewer.avatarUrl} size={64} /><div><div className="text-xs font-black tracking-widest text-white/45">YOUR POND STATUS</div><h2 className="font-display text-3xl">{data.viewer.isKing ? '👑 ' : ''}{data.viewer.name}</h2></div><div className="ml-auto rounded-xl bg-black/25 px-3 py-2 text-center"><div className="font-display text-2xl text-[var(--color-ggd-gold)]">{data.viewer.isKing ? `x${data.viewer.kingStreak}` : '—'}</div><div className="text-[9px] font-black text-white/45">KING STREAK</div></div></div><div className="grid grid-cols-3 gap-3 p-5"><StatTile icon="🔮" label="Points" value={data.viewer.predictionPoints} tone="text-[var(--color-ggd-lavender)]" tooltip /><StatTile icon="🩹" label="Scars" value={data.viewer.scars} tone="text-[var(--color-ggd-orange)]" /><StatTile icon="🛡️" label="Shields" value={data.viewer.shields} tone="text-[var(--color-ggd-sky)]" /></div>{week?.status === 'open' && <div className="border-t-2 border-white/10 p-5"><div className="flex flex-wrap items-center justify-between gap-3"><div><div className="font-black">🛡️ Dùng Shield tuần này?</div><p className="text-sm text-white/55">Đã dùng là mất, kể cả khi không bị làm dzịt.</p></div>{week.shieldConfirmed ? <button onClick={() => void confirmShield(false)} className="rounded-xl border-2 border-[var(--color-ggd-sky)] px-4 py-2 font-black text-[var(--color-ggd-sky)]">✓ ĐÃ XÁC NHẬN</button> : <button disabled={data.viewer.shields < 1} onClick={() => void confirmShield(true)} className="rounded-xl bg-[var(--color-ggd-sky)] px-4 py-2 font-black text-[var(--color-ggd-outline)] disabled:cursor-not-allowed disabled:opacity-35">XÁC NHẬN DÙNG</button>}</div></div>}</section> : <section className="rounded-[2rem] border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-surface-2)] p-6"><div className="text-4xl">🔐</div><h2 className="mt-2 font-display text-3xl">Your secret duck link</h2><p className="mt-2 text-white/65">Mở personal link host gửi để pick bí mật. Không cần account, không ai thấy target của bạn.</p></section>}

@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { RACE_ITEM_CATALOG, validateLoadout } from '@/packages/race-core/src'
+import { raceItemIdSchema } from '@/packages/race-protocol/src'
+import { parseItemIds, serializeItemIds } from '@/lib/racing/loadout'
 
 function parseChaosGroups(payload: string | null | undefined) {
   if (!payload) return undefined
@@ -21,7 +24,7 @@ async function getActiveSeason() {
     orderBy: { createdAt: 'desc' },
     include: {
       players: { include: { user: { select: { id: true, name: true, avatarUrl: true } } }, orderBy: { user: { name: 'asc' } } },
-      weeksPlan: { orderBy: { weekNumber: 'asc' }, include: { predictions: { include: { predictor: true, target: true } }, shieldChoices: true, race: { select: { id: true, status: true } } } },
+      weeksPlan: { orderBy: { weekNumber: 'asc' }, include: { predictions: { include: { predictor: true, target: true } }, shieldChoices: true, loadouts: true, race: { select: { id: true, status: true } } } },
       rewards: { where: { active: true }, orderBy: { cost: 'asc' } },
     },
   })
@@ -36,6 +39,7 @@ export async function GET(request: Request) {
     const viewer = token ? season.players.find((player: { accessToken: string }) => player.accessToken === token) : null
     const currentWeek = season.weeksPlan.find((week: { status: string }) => week.status !== 'resolved') ?? null
     const latestResolvedWeek = [...season.weeksPlan].reverse().find((week: { status: string }) => week.status === 'resolved') ?? null
+    const viewerLoadout = viewer && currentWeek ? currentWeek.loadouts.find((loadout: { seasonPlayerId: number }) => loadout.seasonPlayerId === viewer.id) : null
     const revealPredictions = (resolvedWeek: typeof latestResolvedWeek) => resolvedWeek
       ? resolvedWeek.predictions.map((prediction: { predictor: { name: string }; target: { name: string }; pointsAwarded: number }) => ({
           predictorName: prediction.predictor.name,
@@ -63,6 +67,7 @@ export async function GET(request: Request) {
         kingStreak: viewer.kingStreak,
       } : null,
       personalLink: viewer ? `/season-3?token=${encodeURIComponent(viewer.accessToken)}` : null,
+      raceItems: RACE_ITEM_CATALOG,
       players: season.players.map((player: { user: { id: number; name: string; avatarUrl: string | null }; userId: number; predictionPoints: number; scars: number; shields: number; isKing: boolean; kingStreak: number }) => ({
         id: player.user.id,
         name: player.user.name,
@@ -87,6 +92,8 @@ export async function GET(request: Request) {
         predictionCount: currentWeek.predictions.length,
         predictionSubmitted: Boolean(viewer && currentWeek.predictions.some((prediction: { predictorPlayerId: number }) => prediction.predictorPlayerId === viewer.id)),
         shieldConfirmed: Boolean(viewer && currentWeek.shieldChoices.some((choice: { seasonPlayerId: number }) => choice.seasonPlayerId === viewer.id)),
+        loadoutReadyCount: currentWeek.loadouts.filter((loadout: { status: string }) => loadout.status === 'ready' || loadout.status === 'auto').length,
+        loadout: viewerLoadout ? { itemIds: parseItemIds(viewerLoadout.itemIdsJson), status: viewerLoadout.status } : { itemIds: [], status: 'draft' },
         raceId: currentWeek.race?.id ?? null,
         raceStatus: currentWeek.race?.status ?? null,
         predictions: [],
@@ -113,7 +120,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json() as { token?: string; targetUserId?: number; action?: string; useShield?: boolean }
+    const body = await request.json() as { token?: string; targetUserId?: number; action?: string; useShield?: boolean; itemIds?: unknown[]; ready?: boolean }
     if (!body.token) return jsonError('Token là bắt buộc')
 
     const season = await getActiveSeason()
@@ -135,6 +142,19 @@ export async function POST(request: Request) {
         update: { confirmedAt: new Date() },
       })
       return NextResponse.json({ ok: true, shieldConfirmed: true, message: 'Đã xác nhận dùng Shield tuần này.' })
+    }
+
+    if (body.action === 'loadout') {
+      const itemIds = (body.itemIds ?? []).map((item) => raceItemIdSchema.parse(item))
+      const validation = validateLoadout(itemIds)
+      if (body.ready && !validation.ready) return jsonError('Loadout cần dùng đủ 3 Prep Credits với 1 Major + 1 Minor')
+      const status = body.ready ? 'ready' : 'draft'
+      await prisma.seasonLoadout.upsert({
+        where: { weekId_seasonPlayerId: { weekId: week.id, seasonPlayerId: player.id } },
+        create: { weekId: week.id, seasonPlayerId: player.id, userId: player.userId, itemIdsJson: serializeItemIds(itemIds), status, lockedAt: body.ready ? new Date() : null },
+        update: { itemIdsJson: serializeItemIds(itemIds), status, lockedAt: body.ready ? new Date() : null },
+      })
+      return NextResponse.json({ ok: true, status, message: body.ready ? 'Loadout đã khóa.' : 'Đã lưu loadout.' })
     }
 
     if (typeof body.targetUserId !== 'number') return jsonError('targetUserId là bắt buộc')

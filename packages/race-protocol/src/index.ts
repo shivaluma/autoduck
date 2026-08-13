@@ -8,6 +8,15 @@ export const RACE_TICK_RATE = 60
 
 export const playerIdSchema = z.string().min(1).max(128)
 export const raceSeedSchema = z.string().regex(/^[a-f0-9]{64}$/i, 'Race seed must be 32-byte hex')
+export const raceItemIdSchema = z.enum(['BUBBLE_SHIELD', 'HOMING_ROCKET', 'NITRO', 'BANANA', 'FEATHER', 'QUACK_HORN'])
+export type RaceItemId = z.infer<typeof raceItemIdSchema>
+
+export const raceLoadoutSchema = z.object({
+  playerId: playerIdSchema,
+  itemIds: z.array(raceItemIdSchema).max(2),
+  source: z.enum(['PLAYER', 'AUTO']),
+})
+export type RaceLoadout = z.infer<typeof raceLoadoutSchema>
 
 export const racePlayerConfigSchema = z.object({
   playerId: playerIdSchema,
@@ -24,6 +33,7 @@ export const raceConfigSchema = z.object({
   trackVersion: z.string().min(1).default(DEFAULT_TRACK_VERSION),
   tickRate: z.literal(RACE_TICK_RATE).default(RACE_TICK_RATE),
   players: z.array(racePlayerConfigSchema).min(2).max(16),
+  loadouts: z.array(raceLoadoutSchema).default([]),
 })
 
 export type RacePlayerConfig = z.infer<typeof racePlayerConfigSchema>

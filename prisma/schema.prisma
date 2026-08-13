@@ -425,6 +425,7 @@ model SeasonPlayer {
   predictions   SeasonPrediction[]   @relation("PredictionAuthorPlayer")
   shieldChoices SeasonShieldChoice[]
   redemptions   SeasonRedemption[]
+  loadouts      SeasonLoadout[]
 
   @@unique([seasonId, userId])
   @@index([seasonId, predictionPoints])
@@ -445,6 +446,7 @@ model SeasonWeek {
   raceId              Int?      @unique
   recap               String?
   resolvedAt          DateTime?
+  raceSeed            String?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
@@ -452,9 +454,29 @@ model SeasonWeek {
   race          Race?                @relation("SeasonWeekRace", fields: [raceId], references: [id], onDelete: SetNull)
   predictions   SeasonPrediction[]
   shieldChoices SeasonShieldChoice[]
+  loadouts      SeasonLoadout[]
 
   @@unique([seasonId, weekNumber])
   @@index([seasonId, status])
+}
+
+model SeasonLoadout {
+  id             Int       @id @default(autoincrement())
+  weekId         Int
+  seasonPlayerId Int
+  userId         Int
+  itemIdsJson    String
+  status         String    @default("draft") // draft, ready, auto
+  lockedAt       DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  week         SeasonWeek   @relation(fields: [weekId], references: [id], onDelete: Cascade)
+  seasonPlayer SeasonPlayer @relation(fields: [seasonPlayerId], references: [id], onDelete: Cascade)
+
+  @@unique([weekId, seasonPlayerId])
+  @@index([weekId, status])
+  @@index([weekId, userId])
 }
 
 model SeasonPrediction {
