@@ -22,14 +22,14 @@ model User {
   updatedAt   DateTime  @updatedAt
 
   raceParticipations RaceParticipant[]
-  ownedShields       Shield[]          @relation("ShieldOwner")
-  loanedShieldsOut   Shield[]          @relation("ShieldLoanedTo")
+  ownedShields       Shield[]           @relation("ShieldOwner")
+  loanedShieldsOut   Shield[]           @relation("ShieldLoanedTo")
   mysteryChests      MysteryChest[]
-  dragonOrbs         DragonOrb[]       @relation("DragonOrbCurrentOwner")
-  originalDragonOrbs DragonOrb[]       @relation("DragonOrbOriginalOwner")
-  dragonTradesMade   DragonTrade[]     @relation("DragonTradeProposer")
-  dragonTradesTarget DragonTrade[]     @relation("DragonTradeCounterparty")
-  dragonTradesTaken  DragonTrade[]     @relation("DragonTradeAcceptedBy")
+  dragonOrbs         DragonOrb[]        @relation("DragonOrbCurrentOwner")
+  originalDragonOrbs DragonOrb[]        @relation("DragonOrbOriginalOwner")
+  dragonTradesMade   DragonTrade[]      @relation("DragonTradeProposer")
+  dragonTradesTarget DragonTrade[]      @relation("DragonTradeCounterparty")
+  dragonTradesTaken  DragonTrade[]      @relation("DragonTradeAcceptedBy")
   dragonSummons      DragonSummon[]
   dragonItems        DragonItem[]
   dragonOrbEvents    DragonOrbEvent[]
@@ -37,31 +37,58 @@ model User {
   seasonPlayers      SeasonPlayer[]
   seasonPredictions  SeasonPrediction[] @relation("PredictionAuthor")
   seasonTargets      SeasonPrediction[] @relation("PredictionTarget")
-  championSeasons    Season[] @relation("SeasonChampion")
+  championSeasons    Season[]           @relation("SeasonChampion")
 }
 
 model Race {
-  id           Int       @id @default(autoincrement())
-  status       String    @default("pending") // pending, running, finished, failed
-  videoUrl     String?
-  finalVerdict String? // Câu chốt "Ai là con dzịt"
-  createdAt    DateTime  @default(now())
-  finishedAt   DateTime?
-  isTest       Boolean   @default(false)
+  id               Int       @id @default(autoincrement())
+  status           String    @default("pending") // pending, running, finished, failed
+  videoUrl         String?
+  finalVerdict     String? // Câu chốt "Ai là con dzịt"
+  createdAt        DateTime  @default(now())
+  finishedAt       DateTime?
+  isTest           Boolean   @default(false)
+  engineState      String    @default("CREATED")
+  protocolVersion  String?
+  engineVersion    String?
+  balanceVersion   String?
+  trackVersion     String?
+  seedCommit       String?
+  raceSeed         String?
+  engineConfigJson String?
+  resultDigest     String?
 
-  participants   RaceParticipant[]
-  commentaries   CommentaryLog[]
-  commentaryJobs CommentaryJob[]
-  dragonWeeks    DragonWeek[]
-  dragonOrbs     DragonOrb[]     @relation("DragonOrbOriginalRace")
-  dragonItems    DragonItem[]    @relation("DragonItemEquippedRace")
+  participants     RaceParticipant[]
+  commentaries     CommentaryLog[]
+  commentaryJobs   CommentaryJob[]
+  dragonWeeks      DragonWeek[]
+  dragonOrbs       DragonOrb[]       @relation("DragonOrbOriginalRace")
+  dragonItems      DragonItem[]      @relation("DragonItemEquippedRace")
   dragonOrbEvents  DragonOrbEvent[]
   dragonItemEvents DragonItemEvent[]
-  seasonWeek     SeasonWeek? @relation("SeasonWeekRace")
+  seasonWeek       SeasonWeek?       @relation("SeasonWeekRace")
+  engineEvents     RaceEngineEvent[]
 
   @@index([createdAt])
   @@index([isTest, createdAt])
   @@index([status, isTest, finishedAt, id])
+}
+
+model RaceEngineEvent {
+  id                    Int      @id @default(autoincrement())
+  raceId                Int
+  type                  String
+  tick                  Int
+  timestampWithinRaceMs Float
+  sourcePlayerId        String?
+  targetPlayerId        String?
+  metadataJson          String
+  createdAt             DateTime @default(now())
+
+  race Race @relation(fields: [raceId], references: [id], onDelete: Cascade)
+
+  @@index([raceId, tick, id])
+  @@index([raceId, type])
 }
 
 model RaceParticipant {
@@ -175,19 +202,19 @@ model CommentaryJob {
 }
 
 model DragonWeek {
-  id            Int      @id @default(autoincrement())
-  seasonKey     String   @default("default")
-  weekKey       String
-  weekStart     DateTime
-  weekEnd       DateTime
-  star          Int
-  raceId        Int?
-  awardedOrbId  Int?
-  status        String   @default("SCHEDULED")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  seasonKey    String   @default("default")
+  weekKey      String
+  weekStart    DateTime
+  weekEnd      DateTime
+  star         Int
+  raceId       Int?
+  awardedOrbId Int?
+  status       String   @default("SCHEDULED")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  race Race? @relation(fields: [raceId], references: [id], onDelete: SetNull)
+  race Race?       @relation(fields: [raceId], references: [id], onDelete: SetNull)
   orbs DragonOrb[] @relation("DragonWeekOrbs")
 
   @@unique([seasonKey, weekKey])
@@ -196,29 +223,29 @@ model DragonWeek {
 }
 
 model DragonOrb {
-  id               Int      @id @default(autoincrement())
+  id               Int       @id @default(autoincrement())
   currentOwnerId   Int
   originalOwnerId  Int?
   originalRaceId   Int?
   dragonWeekId     Int?
-  seasonKey        String   @default("default")
+  seasonKey        String    @default("default")
   star             Int
-  status           String   @default("ACTIVE")
-  source           String   @default("RACE_WIN")
+  status           String    @default("ACTIVE")
+  source           String    @default("RACE_WIN")
   lockedByTradeId  Int?
   lockedBySummonId Int?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
   consumedAt       DateTime?
   voidedAt         DateTime?
 
-  currentOwner User @relation("DragonOrbCurrentOwner", fields: [currentOwnerId], references: [id], onDelete: Cascade)
-  originalOwner User? @relation("DragonOrbOriginalOwner", fields: [originalOwnerId], references: [id], onDelete: SetNull)
-  originalRace Race? @relation("DragonOrbOriginalRace", fields: [originalRaceId], references: [id], onDelete: SetNull)
-  dragonWeek DragonWeek? @relation("DragonWeekOrbs", fields: [dragonWeekId], references: [id], onDelete: SetNull)
-  offeredTrades DragonTrade[] @relation("DragonTradeOfferedOrb")
-  acceptedTrades DragonTrade[] @relation("DragonTradeAcceptedOrb")
-  orbEvents DragonOrbEvent[]
+  currentOwner   User             @relation("DragonOrbCurrentOwner", fields: [currentOwnerId], references: [id], onDelete: Cascade)
+  originalOwner  User?            @relation("DragonOrbOriginalOwner", fields: [originalOwnerId], references: [id], onDelete: SetNull)
+  originalRace   Race?            @relation("DragonOrbOriginalRace", fields: [originalRaceId], references: [id], onDelete: SetNull)
+  dragonWeek     DragonWeek?      @relation("DragonWeekOrbs", fields: [dragonWeekId], references: [id], onDelete: SetNull)
+  offeredTrades  DragonTrade[]    @relation("DragonTradeOfferedOrb")
+  acceptedTrades DragonTrade[]    @relation("DragonTradeAcceptedOrb")
+  orbEvents      DragonOrbEvent[]
 
   @@unique([originalRaceId, source])
   @@index([currentOwnerId, status])
@@ -242,10 +269,10 @@ model DragonOrbEvent {
   payloadJson String?
   createdAt   DateTime @default(now())
 
-  orb DragonOrb? @relation(fields: [orbId], references: [id], onDelete: SetNull)
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
-  race Race? @relation(fields: [raceId], references: [id], onDelete: SetNull)
-  trade DragonTrade? @relation(fields: [tradeId], references: [id], onDelete: SetNull)
+  orb    DragonOrb?    @relation(fields: [orbId], references: [id], onDelete: SetNull)
+  user   User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  race   Race?         @relation(fields: [raceId], references: [id], onDelete: SetNull)
+  trade  DragonTrade?  @relation(fields: [tradeId], references: [id], onDelete: SetNull)
   summon DragonSummon? @relation(fields: [summonId], references: [id], onDelete: SetNull)
 
   @@index([orbId])
@@ -257,28 +284,28 @@ model DragonOrbEvent {
 }
 
 model DragonTrade {
-  id             Int      @id @default(autoincrement())
+  id             Int       @id @default(autoincrement())
   proposerId     Int
   counterpartyId Int?
   offeredOrbId   Int
   requestedStar  Int
   acceptedById   Int?
   acceptedOrbId  Int?
-  status         String   @default("PENDING")
+  status         String    @default("PENDING")
   message        String?
   expiresAt      DateTime?
-  createdAt      DateTime @default(now())
+  createdAt      DateTime  @default(now())
   acceptedAt     DateTime?
   cancelledAt    DateTime?
   voidedAt       DateTime?
-  updatedAt      DateTime @updatedAt
+  updatedAt      DateTime  @updatedAt
 
-  proposer User @relation("DragonTradeProposer", fields: [proposerId], references: [id], onDelete: Cascade)
-  counterparty User? @relation("DragonTradeCounterparty", fields: [counterpartyId], references: [id], onDelete: SetNull)
-  acceptedBy User? @relation("DragonTradeAcceptedBy", fields: [acceptedById], references: [id], onDelete: SetNull)
-  offeredOrb DragonOrb @relation("DragonTradeOfferedOrb", fields: [offeredOrbId], references: [id], onDelete: Cascade)
-  acceptedOrb DragonOrb? @relation("DragonTradeAcceptedOrb", fields: [acceptedOrbId], references: [id], onDelete: SetNull)
-  orbEvents DragonOrbEvent[]
+  proposer     User             @relation("DragonTradeProposer", fields: [proposerId], references: [id], onDelete: Cascade)
+  counterparty User?            @relation("DragonTradeCounterparty", fields: [counterpartyId], references: [id], onDelete: SetNull)
+  acceptedBy   User?            @relation("DragonTradeAcceptedBy", fields: [acceptedById], references: [id], onDelete: SetNull)
+  offeredOrb   DragonOrb        @relation("DragonTradeOfferedOrb", fields: [offeredOrbId], references: [id], onDelete: Cascade)
+  acceptedOrb  DragonOrb?       @relation("DragonTradeAcceptedOrb", fields: [acceptedOrbId], references: [id], onDelete: SetNull)
+  orbEvents    DragonOrbEvent[]
 
   @@index([proposerId, status])
   @@index([counterpartyId, status])
@@ -289,19 +316,19 @@ model DragonTrade {
 }
 
 model DragonSummon {
-  id                 Int      @id @default(autoincrement())
+  id                 Int       @id @default(autoincrement())
   userId             Int
-  seasonKey          String   @default("default")
-  status             String   @default("PENDING")
+  seasonKey          String    @default("default")
+  status             String    @default("PENDING")
   consumedOrbIdsJson String?
-  createdAt          DateTime @default(now())
+  createdAt          DateTime  @default(now())
   resolvedAt         DateTime?
   blockedReason      String?
   grantedItemId      Int?
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   orbEvents DragonOrbEvent[]
-  items DragonItem[]
+  items     DragonItem[]
 
   @@index([userId, status])
   @@index([status])
@@ -309,25 +336,25 @@ model DragonSummon {
 }
 
 model DragonItem {
-  id                Int      @id @default(autoincrement())
+  id                Int       @id @default(autoincrement())
   userId            Int
   summonId          Int?
-  type              String   @default("DRAGON_SCALE")
-  status            String   @default("ACTIVE")
-  source            String   @default("DRAGON_SUMMON")
-  label             String   @default("Long Lân Hộ Mệnh")
-  subtitle          String   @default("Vảy Rồng")
+  type              String    @default("DRAGON_SCALE")
+  status            String    @default("ACTIVE")
+  source            String    @default("DRAGON_SUMMON")
+  label             String    @default("Long Lân Hộ Mệnh")
+  subtitle          String    @default("Vảy Rồng")
   payloadJson       String?
   equippedForRaceId Int?
-  grantedAt         DateTime @default(now())
+  grantedAt         DateTime  @default(now())
   equippedAt        DateTime?
   consumedAt        DateTime?
   voidedAt          DateTime?
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  summon DragonSummon? @relation(fields: [summonId], references: [id], onDelete: SetNull)
-  equippedForRace Race? @relation("DragonItemEquippedRace", fields: [equippedForRaceId], references: [id], onDelete: SetNull)
-  events DragonItemEvent[]
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  summon          DragonSummon?     @relation(fields: [summonId], references: [id], onDelete: SetNull)
+  equippedForRace Race?             @relation("DragonItemEquippedRace", fields: [equippedForRaceId], references: [id], onDelete: SetNull)
+  events          DragonItemEvent[]
 
   @@index([userId, status])
   @@index([type, status])
@@ -345,8 +372,8 @@ model DragonItemEvent {
   createdAt   DateTime @default(now())
 
   item DragonItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  race Race? @relation(fields: [raceId], references: [id], onDelete: SetNull)
+  user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  race Race?      @relation(fields: [raceId], references: [id], onDelete: SetNull)
 
   @@index([itemId])
   @@index([userId, createdAt])
@@ -367,37 +394,37 @@ model Season {
   createdAt      DateTime  @default(now())
   endedAt        DateTime?
 
-  champion       User?             @relation("SeasonChampion", fields: [championUserId], references: [id], onDelete: SetNull)
-  players        SeasonPlayer[]
-  weeksPlan      SeasonWeek[]
-  rewards        SeasonReward[]
-  redemptions    SeasonRedemption[]
+  champion    User?              @relation("SeasonChampion", fields: [championUserId], references: [id], onDelete: SetNull)
+  players     SeasonPlayer[]
+  weeksPlan   SeasonWeek[]
+  rewards     SeasonReward[]
+  redemptions SeasonRedemption[]
 
   @@index([status, createdAt])
 }
 
 model SeasonPlayer {
-  id                 Int       @id @default(autoincrement())
+  id                 Int      @id @default(autoincrement())
   seasonId           Int
   userId             Int
-  accessToken        String    @unique
-  scars              Int       @default(0)
-  shields            Int       @default(0)
-  shieldsUsed        Int       @default(0)
-  predictionPoints   Int       @default(0)
-  kingStreak         Int       @default(0)
-  isKing             Boolean   @default(false)
-  raceWins           Int       @default(0)
-  raceCount          Int       @default(0)
-  championshipPoints Int       @default(0)
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  accessToken        String   @unique
+  scars              Int      @default(0)
+  shields            Int      @default(0)
+  shieldsUsed        Int      @default(0)
+  predictionPoints   Int      @default(0)
+  kingStreak         Int      @default(0)
+  isKing             Boolean  @default(false)
+  raceWins           Int      @default(0)
+  raceCount          Int      @default(0)
+  championshipPoints Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-  season             Season             @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  predictions        SeasonPrediction[] @relation("PredictionAuthorPlayer")
-  shieldChoices      SeasonShieldChoice[]
-  redemptions        SeasonRedemption[]
+  season        Season               @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  user          User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  predictions   SeasonPrediction[]   @relation("PredictionAuthorPlayer")
+  shieldChoices SeasonShieldChoice[]
+  redemptions   SeasonRedemption[]
 
   @@unique([seasonId, userId])
   @@index([seasonId, predictionPoints])
@@ -421,23 +448,23 @@ model SeasonWeek {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  season              Season             @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  race                Race?              @relation("SeasonWeekRace", fields: [raceId], references: [id], onDelete: SetNull)
-  predictions         SeasonPrediction[]
-  shieldChoices       SeasonShieldChoice[]
+  season        Season               @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  race          Race?                @relation("SeasonWeekRace", fields: [raceId], references: [id], onDelete: SetNull)
+  predictions   SeasonPrediction[]
+  shieldChoices SeasonShieldChoice[]
 
   @@unique([seasonId, weekNumber])
   @@index([seasonId, status])
 }
 
 model SeasonPrediction {
-  id                Int       @id @default(autoincrement())
+  id                Int      @id @default(autoincrement())
   weekId            Int
   predictorPlayerId Int
   predictorUserId   Int
   targetUserId      Int
-  pointsAwarded     Int       @default(0)
-  createdAt         DateTime  @default(now())
+  pointsAwarded     Int      @default(0)
+  createdAt         DateTime @default(now())
 
   week            SeasonWeek   @relation(fields: [weekId], references: [id], onDelete: Cascade)
   predictorPlayer SeasonPlayer @relation("PredictionAuthorPlayer", fields: [predictorPlayerId], references: [id], onDelete: Cascade)
@@ -463,14 +490,14 @@ model SeasonShieldChoice {
 }
 
 model SeasonReward {
-  id          Int       @id @default(autoincrement())
-  seasonId    Int
-  key         String
-  name        String
-  cost        Int
-  stock       Int?
-  active      Boolean   @default(true)
-  createdAt   DateTime  @default(now())
+  id        Int      @id @default(autoincrement())
+  seasonId  Int
+  key       String
+  name      String
+  cost      Int
+  stock     Int?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
 
   season      Season             @relation(fields: [seasonId], references: [id], onDelete: Cascade)
   redemptions SeasonRedemption[]
@@ -479,17 +506,17 @@ model SeasonReward {
 }
 
 model SeasonRedemption {
-  id             Int       @id @default(autoincrement())
+  id             Int      @id @default(autoincrement())
   seasonId       Int
   seasonPlayerId Int
   rewardId       Int
   pointsSpent    Int
-  status         String    @default("requested") // requested, fulfilled, cancelled
-  createdAt      DateTime  @default(now())
+  status         String   @default("requested") // requested, fulfilled, cancelled
+  createdAt      DateTime @default(now())
 
   season       Season       @relation(fields: [seasonId], references: [id], onDelete: Cascade)
   seasonPlayer SeasonPlayer @relation(fields: [seasonPlayerId], references: [id], onDelete: Cascade)
-  reward      SeasonReward @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+  reward       SeasonReward @relation(fields: [rewardId], references: [id], onDelete: Cascade)
 
   @@index([seasonId, createdAt])
   @@index([seasonPlayerId, createdAt])

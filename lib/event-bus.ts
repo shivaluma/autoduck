@@ -11,4 +11,6 @@ export const RACE_EVENTS = {
   COMMENTARY: 'commentary', // Payload: { raceId, text, timestamp }
   STATUS: 'status', // Payload: { raceId, status }
   FINISHED: 'finished', // Payload: { raceId, winner, victims, verdict }
+  SNAPSHOT: 'snapshot', // Payload: { raceId, tick, ducks }
+  ENGINE_EVENT: 'engine-event', // Payload: authoritative RaceEvent
 }

@@ -38,6 +38,9 @@ export async function GET(
         commentaries: {
           orderBy: { timestamp: 'asc' },
         },
+        engineEvents: {
+          orderBy: [{ tick: 'asc' }, { id: 'asc' }],
+        },
       },
     })
 
@@ -131,6 +134,33 @@ export async function GET(
       finalVerdict: race.finalVerdict,
       createdAt: race.createdAt,
       finishedAt: race.finishedAt,
+      engine: race.engineVersion ? {
+        state: race.engineState,
+        protocolVersion: race.protocolVersion,
+        engineVersion: race.engineVersion,
+        balanceVersion: race.balanceVersion,
+        trackVersion: race.trackVersion,
+        seedCommit: race.seedCommit,
+        seed: race.status === 'finished' ? race.raceSeed : null,
+        config: race.status === 'finished' && race.engineConfigJson ? JSON.parse(race.engineConfigJson) : null,
+        resultDigest: race.resultDigest,
+        events: race.engineEvents.map((event: {
+          type: string
+          tick: number
+          timestampWithinRaceMs: number
+          sourcePlayerId: string | null
+          targetPlayerId: string | null
+          metadataJson: string
+        }) => ({
+          raceId: String(race.id),
+          type: event.type,
+          tick: event.tick,
+          timestampWithinRaceMs: event.timestampWithinRaceMs,
+          sourcePlayerId: event.sourcePlayerId,
+          targetPlayerId: event.targetPlayerId,
+          metadata: JSON.parse(event.metadataJson),
+        })),
+      } : null,
       consumedChests: consumedChests.map((chest: {
         id: number
         ownerId: number

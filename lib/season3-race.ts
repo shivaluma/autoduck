@@ -1,7 +1,17 @@
 import { prisma } from '@/lib/db'
-import { runRaceWorker } from '@/lib/race-worker'
 import { mapSeason3RaceRanking } from '@/lib/season3-race-mapping'
 import { assertSeason3RaceDay } from '@/lib/season3-schedule'
+import { createRaceCommit, createRaceSeed } from '@/lib/racing/audit'
+import { parseRaceConfig, persistRaceEvents, persistedRaceResult, serializeRaceConfig } from '@/lib/racing/persistence'
+import { runAuthoritativeRace } from '@/lib/racing/runtime'
+import {
+  DEFAULT_TRACK_VERSION,
+  RACE_BALANCE_VERSION,
+  RACE_ENGINE_VERSION,
+  RACE_PROTOCOL_VERSION,
+  RACE_TICK_RATE,
+  raceConfigSchema,
+} from '@/packages/race-protocol/src'
 import {
   applyScarEconomy,
   generateDuckNews,
@@ -62,11 +72,18 @@ export async function startSeason3Race(weekId: number, options: { allowOffSchedu
   if (week.race && week.race.status !== 'failed') return week.race
 
   const claimedRaceId = week.race?.id ?? null
+  const raceSeed = createRaceSeed()
   const claim = await prisma.$transaction(async (tx: typeof prisma) => {
     const created = await tx.race.create({
       data: {
         status: 'pending',
         isTest: options.testMode === true,
+        engineState: 'LOCKED',
+        protocolVersion: RACE_PROTOCOL_VERSION,
+        engineVersion: RACE_ENGINE_VERSION,
+        balanceVersion: RACE_BALANCE_VERSION,
+        trackVersion: DEFAULT_TRACK_VERSION,
+        raceSeed,
         participants: {
           create: week.season.players.map((player: Season3RacePlayer) => ({
             userId: player.userId,
@@ -91,7 +108,29 @@ export async function startSeason3Race(weekId: number, options: { allowOffSchedu
       return { race: current.race, claimed: false }
     }
 
-    return { race: created, claimed: true }
+    const config = raceConfigSchema.parse({
+      raceId: String(created.id),
+      seed: raceSeed,
+      protocolVersion: RACE_PROTOCOL_VERSION,
+      engineVersion: RACE_ENGINE_VERSION,
+      balanceVersion: RACE_BALANCE_VERSION,
+      trackVersion: DEFAULT_TRACK_VERSION,
+      tickRate: RACE_TICK_RATE,
+      players: week.season.players.map((player: Season3RacePlayer) => ({
+        playerId: String(player.userId),
+        name: player.user.name,
+      })),
+    })
+    const race = await tx.race.update({
+      where: { id: created.id },
+      data: {
+        engineState: 'COUNTDOWN',
+        engineConfigJson: serializeRaceConfig(config),
+        seedCommit: createRaceCommit(config),
+      },
+    })
+
+    return { race, claimed: true }
   })
 
   if (claim.claimed) {
@@ -119,19 +158,20 @@ export async function executeSeason3Race(raceId: number, weekId: number) {
       throw new Error('Season 3 race không còn hợp lệ')
     }
 
-    await prisma.race.update({ where: { id: raceId }, data: { status: 'running' } })
+    if (!race.engineConfigJson) throw new Error('Race thiếu immutable engine config')
+    const config = parseRaceConfig(race.engineConfigJson)
+    await new Promise((resolve) => setTimeout(resolve, 3000))
+    await prisma.race.update({ where: { id: raceId }, data: { status: 'running', engineState: 'RACING' } })
 
     const shieldConfirmedIds = new Set(week.shieldChoices.map((choice: { seasonPlayerId: number }) => choice.seasonPlayerId))
     const players = (week.season.players as Season3RacePlayer[]).map((player) => ({
       ...player,
       shieldConfirmed: shieldConfirmedIds.has(player.id),
     }))
-    const result = await runRaceWorker(
-      players.map((player) => ({ name: player.user.name, useShield: false })),
-      raceId,
-    )
+    const result = await runAuthoritativeRace(config)
+    await persistRaceEvents(prisma, raceId, result.events)
 
-    const ranking = mapSeason3RaceRanking(result.rawRanking, players)
+    const ranking = mapSeason3RaceRanking(result.standings.map((entry) => ({ rank: entry.rank, name: entry.name })), players)
 
     const previousKing = players.find((player) => player.isKing)
     const chaos = chaosFromWeek(week)
@@ -205,7 +245,9 @@ export async function executeSeason3Race(raceId: number, weekId: number) {
         where: { id: raceId },
         data: {
           status: 'finished',
-          videoUrl: result.videoUrl,
+          engineState: race.isTest ? 'ARCHIVED' : 'RESOLVED',
+          videoUrl: null,
+          ...persistedRaceResult(result),
           finalVerdict: resolved.scarVictims.map((entry) => `${entry.name} bị làm dzịt`).join(' & ') || 'Khiên đã cứu hết người bị phạt.',
           finishedAt: new Date(),
         },

@@ -1,0 +1,16 @@
+export const CORE_BALANCE = {
+  tickRate: 60,
+  targetDurationSeconds: 56,
+  maximumDurationSeconds: 90,
+  speedVariation: 0.05,
+  accelerationVariation: 0.04,
+  impulseMinSeconds: 0.7,
+  impulseMaxSeconds: 1.4,
+  speedResponse: 1.65,
+  lateralResponse: 2.25,
+  maximumLateralVelocity: 0.75,
+  collisionProgressRadius: 0.008,
+  collisionLateralRadius: 0.16,
+  collisionPush: 0.025,
+  collisionSpeedLoss: 0.008,
+} as const

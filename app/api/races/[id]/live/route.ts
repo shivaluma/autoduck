@@ -19,11 +19,11 @@ export async function GET(
   const safeStream = new ReadableStream({
     start(controller) {
       const encoder = new TextEncoder()
-      const sendEvent = (event: string, data: any) => {
+      const sendEvent = (event: string, data: unknown) => {
         try {
           const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`
           controller.enqueue(encoder.encode(payload))
-        } catch (e) {
+        } catch {
           // Controller might be closed
           cleanup()
         }
@@ -43,15 +43,25 @@ export async function GET(
         }
       }
 
-      const onFinished = (payload: { raceId: number; winner: any; victims: any[]; verdict: string }) => {
+      const onFinished = (payload: { raceId: number; winner: unknown; victims: unknown[]; verdict: string }) => {
         if (payload.raceId === raceId) {
           sendEvent('finished', payload)
         }
       }
 
+      const onSnapshot = (payload: { raceId: number; protocolVersion: string; tick: number; ducks: unknown[] }) => {
+        if (payload.raceId === raceId) sendEvent('snapshot', payload)
+      }
+
+      const onEngineEvent = (payload: { raceId: string }) => {
+        if (Number(payload.raceId) === raceId) sendEvent('engine-event', payload)
+      }
+
       raceEventBus.on(RACE_EVENTS.FRAME, onFrame)
       raceEventBus.on(RACE_EVENTS.COMMENTARY, onCommentary)
       raceEventBus.on(RACE_EVENTS.FINISHED, onFinished)
+      raceEventBus.on(RACE_EVENTS.SNAPSHOT, onSnapshot)
+      raceEventBus.on(RACE_EVENTS.ENGINE_EVENT, onEngineEvent)
 
       const heartbeat = setInterval(() => {
         sendEvent('ping', { time: Date.now() })
@@ -62,6 +72,8 @@ export async function GET(
         raceEventBus.off(RACE_EVENTS.FRAME, onFrame)
         raceEventBus.off(RACE_EVENTS.COMMENTARY, onCommentary)
         raceEventBus.off(RACE_EVENTS.FINISHED, onFinished)
+        raceEventBus.off(RACE_EVENTS.SNAPSHOT, onSnapshot)
+        raceEventBus.off(RACE_EVENTS.ENGINE_EVENT, onEngineEvent)
       }
     },
     cancel() {

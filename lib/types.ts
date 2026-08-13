@@ -105,6 +105,18 @@ export interface RaceStatus {
   status: 'pending' | 'running' | 'finished' | 'failed'
   videoUrl: string | null
   finalVerdict: string | null
+  engine?: {
+    state: string
+    protocolVersion: string | null
+    engineVersion: string | null
+    balanceVersion: string | null
+    trackVersion: string | null
+    seedCommit: string | null
+    seed: string | null
+    config: import('@/packages/race-protocol/src').RaceConfig | null
+    resultDigest: string | null
+    events: import('@/packages/race-protocol/src').RaceEvent[]
+  } | null
   consumedChests?: {
     id: number
     ownerId: number
