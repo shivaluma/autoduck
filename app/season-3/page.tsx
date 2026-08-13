@@ -114,7 +114,7 @@ export default function Season3Page() {
       <div className="pointer-events-none absolute -right-5 -top-12 rotate-12 text-[10rem] opacity-10">🦆</div>
       <div className="relative z-[1] flex flex-wrap items-start justify-between gap-5">
         <div><div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-ggd-neon-green)]/40 bg-[var(--color-ggd-neon-green)]/10 px-3 py-1 text-xs font-black tracking-[0.2em] text-[var(--color-ggd-neon-green)]"><span className="h-2 w-2 animate-pulse rounded-full bg-[var(--color-ggd-neon-green)]" /> SEASON {data.season.year}</div><h1 className="mt-3 font-display text-5xl leading-none sm:text-6xl">ĐUA DZỊT <span className="text-[var(--color-ggd-gold)]">S3</span></h1></div>
-        <div className="rounded-2xl border-2 border-white/15 bg-black/25 p-4 text-right"><div className="text-[10px] font-black tracking-widest text-white/45">THỂ LỆ</div><div className="mt-1 font-display text-3xl">{data.season.weeks} TUẦN</div><div className="mt-1 text-xs text-white/55">1 Chaos / tuần</div></div>
+        <div className="rounded-2xl border-2 border-white/15 bg-black/25 p-4 text-right"><div className="text-[10px] font-black tracking-widest text-white/45">THỂ LỆ</div><Link href="/season-3/rules" className="mt-1 block font-display text-3xl text-[var(--color-ggd-gold)] transition hover:text-[var(--color-ggd-neon-green)]">{data.season.weeks} TUẦN</Link><div className="mt-1 text-xs text-white/55">1 Chaos / tuần · <Link href="/season-3/rules" className="font-bold text-[var(--color-ggd-neon-green)] underline-offset-2 hover:underline">đọc luật đầy đủ</Link></div></div>
       </div>
     </header>
 
