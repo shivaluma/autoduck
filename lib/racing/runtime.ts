@@ -3,8 +3,9 @@ import { raceEventBus, RACE_EVENTS } from '@/lib/event-bus'
 import {
   createSimulation,
   resultFromSimulation,
-  snapshotSimulation,
+  snapshotRaceWorld,
   stepSimulation,
+  type RaceSimulationState,
 } from '@/packages/race-core/src'
 import type { DuckSnapshot, RaceConfig, RaceEvent, RaceResult } from '@/packages/race-protocol/src'
 import { stateSnapshotMessageSchema } from '@/packages/race-protocol/src'
@@ -13,8 +14,9 @@ export interface RaceRuntimeOptions {
   realtime?: boolean
   snapshotRate?: number
   persistenceRate?: number
-  onSnapshot?: (snapshot: { raceId: string; protocolVersion: string; tick: number; ducks: DuckSnapshot[] }) => void | Promise<void>
-  onEvents?: (events: RaceEvent[]) => void | Promise<void>
+  onSnapshot?: (snapshot: { raceId: string; protocolVersion: string; tick: number; ducks: DuckSnapshot[]; pickups: unknown[]; hazards: unknown[] }) => unknown | Promise<unknown>
+  onEvents?: (events: RaceEvent[]) => unknown | Promise<unknown>
+  beforeTick?: (state: RaceSimulationState) => unknown | Promise<unknown>
 }
 
 function wait(milliseconds: number) {
@@ -32,15 +34,17 @@ export async function runAuthoritativeRace(config: RaceConfig, options: RaceRunt
   const startedAt = performance.now()
 
   while (!state.finished) {
+    await options.beforeTick?.(state)
     stepSimulation(state)
 
     if (state.tick % snapshotEveryTicks === 0 || state.finished) {
+      const world = snapshotRaceWorld(state)
       const snapshot = stateSnapshotMessageSchema.parse({
         type: 'STATE_SNAPSHOT',
         raceId: config.raceId,
         protocolVersion: config.protocolVersion,
         tick: state.tick,
-        ducks: snapshotSimulation(state),
+        ...world,
       })
       raceEventBus.emit(RACE_EVENTS.SNAPSHOT, snapshot)
       if (options.onSnapshot && (state.tick % persistenceEveryTicks === 0 || state.finished)) await options.onSnapshot(snapshot)

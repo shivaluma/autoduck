@@ -1,4 +1,4 @@
-import type { RaceConfig, RaceEventType, RaceItemId, RaceItemTuning } from '../../../race-protocol/src'
+import type { RaceConfig, RaceEventType, RaceItemId, RaceItemTuning, WildItemId } from '../../../race-protocol/src'
 import { ITEM_BALANCE } from './config'
 import { resolveIncomingRaceEffect, type ItemDefenseState } from './interactions'
 
@@ -18,6 +18,14 @@ export interface DuckItemRuntime extends ItemDefenseState {
   slowUntilTick: number
   boostMultiplier: number
   boostUntilTick: number
+  wildItem: { instanceId: string; itemId: WildItemId; acquiredAtTick: number } | null
+  regularPickupCount: number
+  wildBubbleAvailable: boolean
+  wildBubbleUntilTick: number
+  wildFeatherAvailable: boolean
+  wildFeatherUntilTick: number
+  tailwindUntilTick: number
+  magnetUntilTick: number
 }
 
 export interface RocketRuntime {
@@ -26,6 +34,12 @@ export interface RocketRuntime {
   targetPlayerId: string
   progress: number
   expiresAtTick: number
+  kind: 'PREP' | 'WILD'
+  speedPerSecond: number
+  hitRadius: number
+  slowMultiplier: number
+  slowDurationSeconds: number
+  retargeted: boolean
 }
 
 export interface BananaRuntime {
@@ -34,6 +48,12 @@ export interface BananaRuntime {
   progress: number
   lateralOffset: number
   expiresAtTick: number
+  kind: 'PREP' | 'WILD'
+  hitProgressRadius: number
+  hitLateralRadius: number
+  slowMultiplier: number
+  slowDurationSeconds: number
+  lateralSlip: number
 }
 
 export interface ItemRaceState {
@@ -62,6 +82,14 @@ export function createItemRaceState(config: RaceConfig): ItemRaceState {
         slowUntilTick: 0,
         boostMultiplier: 1,
         boostUntilTick: 0,
+        wildItem: null,
+        regularPickupCount: 0,
+        wildBubbleAvailable: false,
+        wildBubbleUntilTick: 0,
+        wildFeatherAvailable: false,
+        wildFeatherUntilTick: 0,
+        tailwindUntilTick: 0,
+        magnetUntilTick: 0,
       }]
     })),
     rockets: [],
@@ -110,6 +138,9 @@ function activateRocket(itemState: ItemRaceState, runtime: DuckItemRuntime, duck
   itemState.rockets.push({
     id: itemState.nextObjectId++, sourcePlayerId: duck.playerId, targetPlayerId: target.playerId,
     progress: duck.progress, expiresAtTick: tick + Math.round(ITEM_BALANCE.rocket.lifetimeSeconds * tickRate),
+    kind: 'PREP', speedPerSecond: ITEM_BALANCE.rocket.projectileSpeed, hitRadius: ITEM_BALANCE.rocket.hitRadius,
+    slowMultiplier: itemState.tuning.rocketSlowMultiplier, slowDurationSeconds: ITEM_BALANCE.rocket.slowDurationSeconds,
+    retargeted: false,
   })
   emit('ROCKET_FIRED', duck.playerId, target.playerId, {})
 }
@@ -124,6 +155,9 @@ function activateBanana(itemState: ItemRaceState, runtime: DuckItemRuntime, duck
   itemState.bananas.push({
     id: itemState.nextObjectId++, sourcePlayerId: duck.playerId, progress, lateralOffset: duck.lateralOffset,
     expiresAtTick: tick + Math.round(ITEM_BALANCE.banana.lifetimeSeconds * tickRate),
+    kind: 'PREP', hitProgressRadius: ITEM_BALANCE.banana.hitProgressRadius, hitLateralRadius: ITEM_BALANCE.banana.hitLateralRadius,
+    slowMultiplier: itemState.tuning.bananaSlowMultiplier, slowDurationSeconds: ITEM_BALANCE.banana.slowDurationSeconds,
+    lateralSlip: ITEM_BALANCE.banana.lateralSlip,
   })
   emit('BANANA_DROPPED', duck.playerId, undefined, { progress, lateralOffset: duck.lateralOffset })
 }
@@ -151,29 +185,52 @@ export function applyItemSlow(runtime: DuckItemRuntime, multiplier: number, dura
   }
 }
 
+export function applyItemBoost(runtime: DuckItemRuntime, multiplier: number, durationSeconds: number, tick: number, tickRate: number) {
+  if (tick >= runtime.boostUntilTick || multiplier > runtime.boostMultiplier) {
+    runtime.boostMultiplier = Math.min(ITEM_BALANCE.maximumSpeedMultiplier, multiplier)
+    runtime.boostUntilTick = tick + Math.round(durationSeconds * tickRate)
+  }
+}
+
 function updateRockets(itemState: ItemRaceState, ducks: ItemDuckState[], tick: number, tickRate: number, emit: EmitItemEvent) {
   const keep: RocketRuntime[] = []
   for (const rocket of itemState.rockets.sort((left, right) => left.id - right.id)) {
-    const target = ducks.find((duck) => duck.playerId === rocket.targetPlayerId)
+    let target = ducks.find((duck) => duck.playerId === rocket.targetPlayerId)
+    if (rocket.kind === 'WILD' && (!target || target.finished) && !rocket.retargeted && tick < rocket.expiresAtTick) {
+      target = ducks.filter((duck) => !duck.finished && duck.playerId !== rocket.sourcePlayerId && duck.progress > rocket.progress)
+        .filter((duck) => tick >= itemState.byPlayer.get(duck.playerId)!.rocketProtectionUntilTick)
+        .sort((left, right) => left.progress - right.progress || left.playerId.localeCompare(right.playerId))[0]
+      if (target) {
+        rocket.targetPlayerId = target.playerId
+        rocket.retargeted = true
+      }
+    }
+    const expiredType = rocket.kind === 'WILD' ? 'MINI_ROCKET_EXPIRED' : 'ROCKET_EXPIRED'
     if (!target || target.finished || tick >= rocket.expiresAtTick) {
-      emit('ROCKET_EXPIRED', rocket.sourcePlayerId, rocket.targetPlayerId, {})
+      emit(expiredType, rocket.sourcePlayerId, rocket.targetPlayerId, {})
       continue
     }
-    rocket.progress += ITEM_BALANCE.rocket.projectileSpeed / tickRate
-    if (rocket.progress + ITEM_BALANCE.rocket.hitRadius < target.progress) {
+    rocket.progress += rocket.speedPerSecond / tickRate
+    if (rocket.progress + rocket.hitRadius < target.progress) {
       keep.push(rocket)
       continue
     }
     const defense = itemState.byPlayer.get(target.playerId)!
-    const outcome = resolveIncomingRaceEffect(defense, 'ROCKET', tick, tickRate)
+    const incoming = rocket.kind === 'WILD' ? 'MINI_ROCKET' : 'ROCKET'
+    const outcome = resolveIncomingRaceEffect(defense, incoming, tick, tickRate)
+    const hitType = rocket.kind === 'WILD' ? 'MINI_ROCKET_HIT' : 'ROCKET_HIT'
+    const blockedType = rocket.kind === 'WILD' ? 'MINI_ROCKET_BLOCKED' : 'ROCKET_BLOCKED'
     if (outcome === 'HIT') {
-      applyItemSlow(defense, itemState.tuning.rocketSlowMultiplier, ITEM_BALANCE.rocket.slowDurationSeconds, tick, tickRate)
-      emit('ROCKET_HIT', rocket.sourcePlayerId, target.playerId, {})
+      applyItemSlow(defense, rocket.slowMultiplier, rocket.slowDurationSeconds, tick, tickRate)
+      emit(hitType, rocket.sourcePlayerId, target.playerId, {})
+    } else if (outcome === 'BLOCKED_MINI_BUBBLE') {
+      emit('MINI_BUBBLE_BLOCKED', target.playerId, rocket.sourcePlayerId, { blocked: incoming })
+      emit(blockedType, rocket.sourcePlayerId, target.playerId, { defense: 'MINI_BUBBLE' })
     } else if (outcome === 'BLOCKED_BUBBLE') {
       emit('BUBBLE_POPPED', target.playerId, rocket.sourcePlayerId, { blocked: 'ROCKET' })
-      emit('ROCKET_BLOCKED', rocket.sourcePlayerId, target.playerId, { defense: 'BUBBLE_SHIELD' })
+      emit(blockedType, rocket.sourcePlayerId, target.playerId, { defense: 'BUBBLE_SHIELD' })
     } else {
-      emit('ROCKET_BLOCKED', rocket.sourcePlayerId, target.playerId, { defense: 'IMMUNITY' })
+      emit(blockedType, rocket.sourcePlayerId, target.playerId, { defense: 'IMMUNITY' })
     }
   }
   itemState.rockets = keep
@@ -183,27 +240,36 @@ function updateBananas(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
   const keep: BananaRuntime[] = []
   for (const banana of itemState.bananas.sort((left, right) => left.id - right.id)) {
     if (tick >= banana.expiresAtTick) {
-      emit('BANANA_EXPIRED', banana.sourcePlayerId, undefined, { id: banana.id })
+      emit(banana.kind === 'WILD' ? 'WILD_BANANA_EXPIRED' : 'BANANA_EXPIRED', banana.sourcePlayerId, undefined, { id: banana.id })
       continue
     }
     const target = ducks.filter((duck) => !duck.finished && duck.playerId !== banana.sourcePlayerId)
       .sort((left, right) => left.playerId.localeCompare(right.playerId))
-      .find((duck) => Math.abs(duck.progress - banana.progress) <= ITEM_BALANCE.banana.hitProgressRadius
-        && Math.abs(duck.lateralOffset - banana.lateralOffset) <= ITEM_BALANCE.banana.hitLateralRadius)
+      .find((duck) => Math.abs(duck.progress - banana.progress) <= banana.hitProgressRadius
+        && Math.abs(duck.lateralOffset - banana.lateralOffset) <= banana.hitLateralRadius)
     if (!target) {
       keep.push(banana)
       continue
     }
     const defense = itemState.byPlayer.get(target.playerId)!
-    const outcome = resolveIncomingRaceEffect(defense, 'BANANA', tick, tickRate)
+    const incoming = banana.kind === 'WILD' ? 'WILD_BANANA' : 'BANANA'
+    const outcome = resolveIncomingRaceEffect(defense, incoming, tick, tickRate)
+    const hitType = banana.kind === 'WILD' ? 'WILD_BANANA_HIT' : 'BANANA_HIT'
+    const blockedType = banana.kind === 'WILD' ? 'WILD_BANANA_BLOCKED' : 'BANANA_BLOCKED'
     if (outcome === 'HIT') {
-      applyItemSlow(defense, itemState.tuning.bananaSlowMultiplier, ITEM_BALANCE.banana.slowDurationSeconds, tick, tickRate)
+      applyItemSlow(defense, banana.slowMultiplier, banana.slowDurationSeconds, tick, tickRate)
       const direction = target.lateralOffset >= banana.lateralOffset ? 1 : -1
-      target.lateralVelocity += direction * ITEM_BALANCE.banana.lateralSlip
-      emit('BANANA_HIT', banana.sourcePlayerId, target.playerId, {})
+      target.lateralVelocity += direction * banana.lateralSlip
+      emit(hitType, banana.sourcePlayerId, target.playerId, {})
+    } else if (outcome === 'BLOCKED_MINI_BUBBLE') {
+      emit('MINI_BUBBLE_BLOCKED', target.playerId, banana.sourcePlayerId, { blocked: incoming })
+      emit(blockedType, banana.sourcePlayerId, target.playerId, { blocked: true, defense: 'MINI_BUBBLE' })
     } else if (outcome === 'BLOCKED_BUBBLE') {
       emit('BUBBLE_POPPED', target.playerId, banana.sourcePlayerId, { blocked: 'BANANA' })
-      emit('BANANA_BLOCKED', banana.sourcePlayerId, target.playerId, { defense: 'BUBBLE_SHIELD' })
+      emit(blockedType, banana.sourcePlayerId, target.playerId, { blocked: true, defense: 'BUBBLE_SHIELD' })
+    } else if (outcome === 'DODGED_WILD_FEATHER') {
+      emit('WILD_FEATHER_DODGED', target.playerId, banana.sourcePlayerId, {})
+      emit(blockedType, banana.sourcePlayerId, target.playerId, { blocked: true, defense: 'WILD_FEATHER' })
     } else if (outcome === 'DODGED_FEATHER') {
       emit('FEATHER_DODGED', target.playerId, banana.sourcePlayerId, {})
       emit('BANANA_BLOCKED', banana.sourcePlayerId, target.playerId, { defense: 'FEATHER' })
@@ -251,5 +317,9 @@ export function itemActiveEffects(runtime: DuckItemRuntime, tick: number) {
   if (runtime.featherAvailable) effects.push('FEATHER')
   if (tick < runtime.boostUntilTick) effects.push('NITRO')
   if (tick < runtime.slowUntilTick) effects.push('SLOWED')
+  if (runtime.wildBubbleAvailable && tick < runtime.wildBubbleUntilTick) effects.push('MINI_BUBBLE')
+  if (runtime.wildFeatherAvailable && tick < runtime.wildFeatherUntilTick) effects.push('WILD_FEATHER')
+  if (tick < runtime.tailwindUntilTick) effects.push('TAILWIND')
+  if (tick < runtime.magnetUntilTick) effects.push('SLIPSTREAM_MAGNET')
   return effects
 }

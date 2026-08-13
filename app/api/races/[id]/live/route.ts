@@ -61,8 +61,8 @@ export async function GET(
         }
       }
 
-      const eventKey = (payload: { tick: number; type?: string; sourcePlayerId?: string | null; targetPlayerId?: string | null }) => `${payload.tick}:${payload.type ?? ''}:${payload.sourcePlayerId ?? ''}:${payload.targetPlayerId ?? ''}`
-      const onEngineEvent = (payload: { raceId: string; tick: number; type?: string; sourcePlayerId?: string; targetPlayerId?: string }) => {
+      const eventKey = (payload: { tick: number; type?: string; sourcePlayerId?: string | null; targetPlayerId?: string | null; metadata?: unknown }) => `${payload.tick}:${payload.type ?? ''}:${payload.sourcePlayerId ?? ''}:${payload.targetPlayerId ?? ''}:${JSON.stringify(payload.metadata ?? {})}`
+      const onEngineEvent = (payload: { raceId: string; tick: number; type?: string; sourcePlayerId?: string; targetPlayerId?: string; metadata?: unknown }) => {
         if (Number(payload.raceId) === raceId) {
           seenEventKeys.add(eventKey(payload))
           sendEvent('engine-event', payload)

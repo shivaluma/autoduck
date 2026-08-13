@@ -3,6 +3,7 @@ import test from 'node:test'
 import { COSMETIC_CATALOG, DEFAULT_APPEARANCE, STARTER_COSMETIC_IDS } from '../lib/cosmetics/catalog'
 import { applyQuackTransaction, calculateOfficialRaceQuackRewards } from '../lib/cosmetics/economy'
 import { normalizeAppearance, saveAppearance } from '../lib/cosmetics/inventory'
+import { buildGoldenTrackReward } from '../lib/racing/golden-reward'
 
 test('official winner gets 5 QP and a correct two-loser prediction gets 2 QP', () => {
   const rewards = calculateOfficialRaceQuackRewards({
@@ -44,7 +45,8 @@ test('perfect week can be disabled without changing base rewards', () => {
 })
 
 test('starter catalog provides the promised distinct customization options', () => {
-  const starter = COSMETIC_CATALOG.filter((item) => STARTER_COSMETIC_IDS.includes(item.id))
+  const starterIds = new Set<string>(STARTER_COSMETIC_IDS)
+  const starter = COSMETIC_CATALOG.filter((item) => starterIds.has(item.id))
   const count = (slot: string) => starter.filter((item) => item.slot === slot).length
   assert.equal(count('bodyColor'), 8)
   assert.equal(count('head'), 3)
@@ -72,6 +74,48 @@ test('QP spend cannot make balance negative and creates no orphan ledger row', a
   await assert.rejects(() => applyQuackTransaction(tx as never, { seasonPlayerId: 1, amount: -3, reason: 'GACHA_PULL', idempotencyKey: 'test' }))
   assert.equal(balance, 2)
   assert.equal(ledger.length, 0)
+})
+
+test('Golden track reward is official-only, +1 QP, and idempotent', async () => {
+  const input = {
+    official: true,
+    raceId: 42,
+    pickupId: 'gold:mid:a3',
+    seasonPlayerId: 7,
+    weekId: 9,
+    weekNumber: 4,
+  }
+  assert.equal(buildGoldenTrackReward({ ...input, official: false }), null)
+  const reward = buildGoldenTrackReward(input)!
+  assert.equal(reward.amount, 1)
+  assert.equal(reward.reason, 'TRACK_GOLDEN_BOX')
+
+  let balance = 10
+  let existing: Record<string, unknown> | null = null
+  let createdIdempotencyKey: unknown = null
+  let updateCount = 0
+  const tx = {
+    currencyTransaction: {
+      findUnique: async () => existing,
+      create: async ({ data }: { data: Record<string, unknown> }) => {
+        existing = data
+        createdIdempotencyKey = data.idempotencyKey
+        return data
+      },
+    },
+    seasonPlayer: {
+      update: async ({ data }: { data: { quackPoints: { increment: number } } }) => {
+        updateCount += 1
+        balance += data.quackPoints.increment
+        return { quackPoints: balance }
+      },
+    },
+  }
+  await applyQuackTransaction(tx as never, reward)
+  await applyQuackTransaction(tx as never, reward)
+  assert.equal(balance, 11)
+  assert.equal(updateCount, 1)
+  assert.equal(createdIdempotencyKey, 'race:42:golden-box:gold:mid:a3')
 })
 
 test('server rejects equipping an unowned cosmetic', async () => {

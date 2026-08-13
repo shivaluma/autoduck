@@ -10,11 +10,13 @@ import { DuckCloset } from '@/components/cosmetics/duck-closet'
 import type { CosmeticDefinition, DuckAppearance } from '@/lib/cosmetics/types'
 import { QuackEconomy } from '@/components/cosmetics/quack-economy'
 import { Duckdex } from '@/components/cosmetics/duckdex'
+import { LiveWildItemPanel } from '@/components/racing/live-wild-item-panel'
 
 type SeasonData = {
   season: { name: string; year: number; weeks: number } | null
   viewer: { userId: number; name: string; avatarUrl?: string | null; predictionPoints: number; quackPoints: number; scars: number; shields: number; isKing: boolean; kingStreak: number; cosmeticsOnboarded: boolean; appearance: DuckAppearance & { favoriteId?: string | null }; inventory: Array<{ cosmeticId: string; isNew?: boolean; source?: string; obtainedAt?: string }> } | null
   personalLink: string | null
+  liveRace: { id: number; status: string; isTest: boolean } | null
   raceItems: Array<{ id: RaceItemId; name: string; icon: string; cost: 1 | 2; category: 'major' | 'minor'; description: string }>
   cosmeticCatalog: CosmeticDefinition[]
   players: Array<{ id: number; name: string; avatarUrl?: string | null; predictionPoints: number; scars: number; shields: number; isKing: boolean; kingStreak: number }>
@@ -124,6 +126,8 @@ export default function Season3Page() {
     </header>
 
     {week ? <Season3ChaosCard type={week.chaosType} weekNumber={week.weekNumber} targetName={week.chaosTargetName} groups={groupNames} predictionCount={week.predictionCount} playerCount={data.players.length - week.skippedPlayerIds.length} /> : <section className="rounded-[2rem] border-4 border-[var(--color-ggd-gold)] bg-[var(--color-ggd-gold)]/10 p-6 text-center"><div className="text-5xl">🏆</div><h2 className="mt-2 font-display text-4xl">Season complete</h2><p className="mt-2 text-white/65">Golden Duck đang chờ host chốt champion.</p></section>}
+
+    {data.viewer && data.liveRace && <LiveWildItemPanel raceId={data.liveRace.id} token={token} isTest={data.liveRace.isTest} />}
 
     {data.viewer && week?.status === 'open' && !week.viewerSkipped && <section className="rounded-[2rem] border-4 border-[var(--color-ggd-neon-green)]/70 bg-[var(--color-ggd-panel)] p-5 shadow-[0_6px_0_var(--color-ggd-outline)]"><div className="flex flex-wrap items-end justify-between gap-3"><div><div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-neon-green)]">RACE PREP</div><h2 className="font-display text-3xl">🎒 Chọn loadout</h2></div><div className="font-black text-[var(--color-ggd-gold)]">{selectedCost}/3 Prep Credits</div></div><div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{data.raceItems.map((item) => { const selected = selectedItems.includes(item.id); const disabled = !selected && (selectedItems.length >= 2 || selectedCost + item.cost > 3 || (item.category === 'major' && selectedMajor)); return <button key={item.id} disabled={disabled} onClick={() => toggleItem(item.id)} className={`rounded-2xl border-2 p-4 text-left transition disabled:cursor-not-allowed disabled:opacity-30 ${selected ? 'border-[var(--color-ggd-neon-green)] bg-[var(--color-ggd-neon-green)]/15' : 'border-white/10 bg-black/20 hover:border-white/35'}`}><div className="flex items-center gap-3"><span className="text-3xl">{item.icon}</span><div><div className="font-black">{item.name}</div><div className="text-xs font-bold text-[var(--color-ggd-gold)]">{item.cost} Credit · {item.category}</div></div>{selected && <span className="ml-auto">✓</span>}</div><p className="mt-2 text-xs text-white/55">{item.description}</p></button>})}</div><button disabled={selectedCost !== 3 || selectedItems.length !== 2} onClick={() => void saveLoadout()} className="mt-4 w-full rounded-xl bg-[var(--color-ggd-neon-green)] px-5 py-3 font-black text-[var(--color-ggd-outline)] disabled:cursor-not-allowed disabled:opacity-30">{week.loadout.status === 'ready' ? '✓ UPDATE LOADOUT' : '🔒 LOCK LOADOUT'}</button></section>}
 

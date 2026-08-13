@@ -1,4 +1,4 @@
-import type { RaceConfig, RaceEvent, RaceResult } from '@/packages/race-protocol/src'
+import type { RaceConfig, RaceEvent, RaceResult, RecordedWildItemInput } from '@/packages/race-protocol/src'
 import { raceConfigSchema, raceEventSchema } from '@/packages/race-protocol/src'
 import { createResultDigest } from './audit'
 
@@ -37,4 +37,22 @@ export function persistedRaceResult(result: RaceResult) {
     balanceVersion: result.balanceVersion,
     trackVersion: result.trackVersion,
   }
+}
+
+export function recordedWildInputsFromEvents(events: RaceEvent[]): RecordedWildItemInput[] {
+  return events.filter((raceEvent) => raceEvent.type === 'WILD_ITEM_MANUAL_INPUT')
+    .flatMap((raceEvent) => {
+      const instanceId = raceEvent.metadata.instanceId
+      const clientActionId = raceEvent.metadata.clientActionId
+      if (!raceEvent.sourcePlayerId || typeof instanceId !== 'string' || typeof clientActionId !== 'string') return []
+      return [{
+        raceId: raceEvent.raceId,
+        playerId: raceEvent.sourcePlayerId,
+        wildItemInstanceId: instanceId,
+        action: 'USE' as const,
+        clientActionId,
+        authoritativeTick: raceEvent.tick,
+      }]
+    })
+    .sort((left, right) => left.authoritativeTick - right.authoritativeTick || left.clientActionId.localeCompare(right.clientActionId))
 }

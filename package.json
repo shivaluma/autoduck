@@ -10,6 +10,8 @@
     "test": "node --import tsx --test tests/**/*.test.ts",
     "test:race": "node --import tsx --test tests/race-core.test.ts",
     "race:simulate": "tsx scripts/race-simulate.ts",
+    "race:simulate-pickups": "tsx scripts/race-simulate-pickups.ts",
+    "race:validate-pickups": "tsx scripts/validate-race-pickups.ts",
     "race:replay": "tsx scripts/race-replay.ts",
     "race:profile": "tsx scripts/race-profile.ts",
     "cosmetics:generate": "tsx scripts/generate-cosmetics.ts",

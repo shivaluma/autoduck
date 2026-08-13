@@ -2,9 +2,9 @@
 
 import { useEffect, useId, useRef } from 'react'
 import type PhaserType from 'phaser'
-import { createSimulation, snapshotSimulation, stepSimulation } from '@/packages/race-core/src'
+import { createSimulation, snapshotRaceWorld, stepSimulation } from '@/packages/race-core/src'
 import { createRiverTrack } from '@/packages/race-core/src/track'
-import { duckSnapshotSchema, raceEventSchema, type DuckSnapshot, type RaceConfig, type RaceEvent, type RaceItemId } from '@/packages/race-protocol/src'
+import { raceEventSchema, stateSnapshotMessageSchema, type DuckSnapshot, type RaceConfig, type RaceEvent, type RaceItemId, type RecordedWildItemInput, type StateSnapshotMessage, type WildItemId } from '@/packages/race-protocol/src'
 import { RaceAudioSystem } from './race-audio'
 import { COSMETIC_BY_ID } from '@/lib/cosmetics/catalog'
 import { COSMETIC_LAYER_ORDER, type DuckAppearance } from '@/lib/cosmetics/types'
@@ -16,6 +16,26 @@ const ITEM_ICONS: Record<RaceItemId, string> = {
 }
 
 const EFFECT_ICONS: Record<string, string> = { BUBBLE_SHIELD: '🫧', FEATHER: '🪶', NITRO: '⚡', SLOWED: '💫' }
+const WILD_ICONS: Record<WildItemId, string> = {
+  MINI_NITRO: '⚡', TAILWIND: '🌊', MINI_BUBBLE: '🫧', MINI_ROCKET: '🚀', BANANA: '🍌', QUACK_HORN: '🔊', FEATHER: '🪽', SLIPSTREAM_MAGNET: '🧲',
+}
+const PICKUP_TEXTURES = {
+  'pickup-QUACK_BOX': '/race-pickups/box-idle.svg',
+  'pickup-GOLDEN_BOX': '/race-pickups/golden-box.svg',
+  'pickup-CHAOS_BOX': '/race-pickups/chaos-box.svg',
+  'hazard-ANCHOR': '/race-pickups/hazard-anchor.svg',
+  'hazard-WHIRLPOOL': '/race-pickups/hazard-whirlpool.svg',
+  'hazard-ICE_PATCH': '/race-pickups/hazard-ice.svg',
+  'hazard-STICKY_GOO': '/race-pickups/hazard-goo.svg',
+  'wild-MINI_NITRO': '/race-pickups/item-mini-nitro.svg',
+  'wild-TAILWIND': '/race-pickups/item-tailwind.svg',
+  'wild-MINI_BUBBLE': '/race-pickups/item-mini-bubble.svg',
+  'wild-MINI_ROCKET': '/race-pickups/item-mini-rocket.svg',
+  'wild-BANANA': '/race-pickups/item-banana.svg',
+  'wild-QUACK_HORN': '/race-pickups/item-quack-horn.svg',
+  'wild-FEATHER': '/race-pickups/item-feather.svg',
+  'wild-SLIPSTREAM_MAGNET': '/race-pickups/item-magnet.svg',
+} as const
 
 export interface ReplayInspection {
   tick: number
@@ -30,19 +50,24 @@ export function PhaserRaceCanvas({
   replayConfig,
   replaySpeed = 1,
   replayPaused = false,
+  replayManualInputs = [],
   onReplayInspect,
   chaosType,
+  debugPickups = false,
 }: {
   raceId: number
   players: PlayerLabel[]
   replayConfig?: RaceConfig | null
   replaySpeed?: 1 | 2 | 4
   replayPaused?: boolean
+  replayManualInputs?: RecordedWildItemInput[]
   onReplayInspect?: (inspection: ReplayInspection) => void
   chaosType?: string
+  debugPickups?: boolean
 }) {
   const parentId = `duck-race-${useId().replace(/:/g, '')}`
   const serializedPlayers = JSON.stringify(players)
+  const serializedManualInputs = JSON.stringify(replayManualInputs)
   const playbackRef = useRef({ speed: replaySpeed, paused: replayPaused })
   const inspectRef = useRef(onReplayInspect)
 
@@ -79,12 +104,15 @@ export function PhaserRaceCanvas({
         private textPool: PhaserType.GameObjects.Text[] = []
         private ellipsePool: PhaserType.GameObjects.Ellipse[] = []
         private ringPool: PhaserType.GameObjects.Arc[] = []
+        private pickupViews = new Map<string, PhaserType.GameObjects.Container>()
+        private hazardViews = new Map<string, PhaserType.GameObjects.Image>()
         private focusPlayerId: string | null = null
         private focusUntil = 0
 
         constructor() { super('duck-race') }
 
         preload() {
+          for (const [key, path] of Object.entries(PICKUP_TEXTURES)) this.load.svg(key, path, { width: 128, height: 128 })
           for (const player of scenePlayers) {
             if (player.avatarUrl) this.load.image(`avatar-${player.playerId}`, player.avatarUrl)
             if (player.appearance) {
@@ -101,6 +129,7 @@ export function PhaserRaceCanvas({
           this.cameras.main.setBackgroundColor('#112b3b')
           this.cameras.main.setBounds(-250, -850, track.length + 500, 1700)
           this.drawRiver()
+          if (debugPickups) this.drawPickupDebug()
           scenePlayers.forEach((player, index) => this.createDuck(player, index))
           const chaosLabel = chaosType ?? replayConfig?.chaosConfig?.type
           this.add.text(18, 16, `${replayConfig ? '↻ REPLAY' : '● LIVE'}${chaosLabel ? ` · 🎴 ${chaosLabel.replaceAll('_', ' ')}` : ''}`, {
@@ -144,6 +173,26 @@ export function PhaserRaceCanvas({
               else currents.lineTo(point.x, point.y)
             }
             currents.strokePath()
+          }
+        }
+
+        private drawPickupDebug() {
+          const graphics = this.add.graphics().setDepth(60)
+          graphics.lineStyle(3, 0x9ff5ff, 0.7)
+          for (const zone of track.pickupZones) {
+            for (const anchor of zone.candidateAnchors) {
+              const progress = (zone.startProgress + zone.endProgress) / 2 + anchor.progressOffset
+              const point = track.sample(progress, anchor.lateralOffset)
+              graphics.strokeCircle(point.x, point.y, 24)
+              this.add.text(point.x, point.y + 27, `${zone.id}\n${anchor.id}`, { fontFamily: 'monospace', fontSize: '9px', color: '#caffff', backgroundColor: '#102438bb', align: 'center' }).setOrigin(0.5, 0).setDepth(61)
+            }
+          }
+          graphics.lineStyle(3, 0xff6b7a, 0.75)
+          for (const zone of track.hazardZones) {
+            for (const anchor of zone.anchors) {
+              const point = track.sample(anchor.progress, anchor.lateralOffset)
+              graphics.strokeCircle(point.x, point.y, anchor.radius * 150)
+            }
           }
         }
 
@@ -227,14 +276,43 @@ export function PhaserRaceCanvas({
             view.targetX = point.x
             view.targetY = point.y
             ;(view.root.getData('rank-label') as PhaserType.GameObjects.Text).setText(String(duck.rank))
-            view.status.setText(duck.activeEffects.map((effect) => EFFECT_ICONS[effect] ?? '').join(' '))
+            const wild = duck.wildItem ? `🎒${WILD_ICONS[duck.wildItem.itemId]}` : ''
+            view.status.setText([wild, ...duck.activeEffects.map((effect) => EFFECT_ICONS[effect] ?? WILD_ICONS[effect as WildItemId] ?? '')].filter(Boolean).join(' '))
             view.root.setDepth(100 + scenePlayers.length - duck.rank)
           }
           this.leaderboard.setText(ducks.slice(0, 12).map((duck) => {
             const player = scenePlayers.find((candidate) => candidate.playerId === duck.playerId)
             const effect = duck.activeEffects.map((entry) => EFFECT_ICONS[entry] ?? '').join('')
-            return `${String(duck.rank).padStart(2)}  ${player?.name ?? duck.playerId} ${effect}`
+            const wild = duck.wildItem ? ` 🎒${WILD_ICONS[duck.wildItem.itemId]}` : ''
+            return `${String(duck.rank).padStart(2)}  ${player?.name ?? duck.playerId} ${effect}${wild}`
           }).join('\n'))
+        }
+
+        applyWorld(world: Pick<StateSnapshotMessage, 'ducks' | 'pickups' | 'hazards'>) {
+          this.applySnapshot(world.ducks)
+          const activeIds = new Set(world.pickups.filter((pickup) => pickup.state === 'ACTIVE').map((pickup) => pickup.id))
+          for (const pickup of world.pickups) {
+            if (pickup.state !== 'ACTIVE' || this.pickupViews.has(pickup.id)) continue
+            const point = track.sample(pickup.progress, pickup.lateralOffset)
+            const beam = pickup.type === 'GOLDEN_BOX' ? this.add.rectangle(0, -70, 18, 150, 0xffe66d, 0.18) : null
+            const image = this.add.image(0, 0, `pickup-${pickup.type}`).setDisplaySize(pickup.type === 'GOLDEN_BOX' ? 62 : 52, pickup.type === 'GOLDEN_BOX' ? 62 : 52)
+            const view = this.add.container(point.x, point.y, [...(beam ? [beam] : []), image]).setDepth(72)
+            if (!reducedMotion) this.tweens.add({ targets: view, y: point.y - 7, angle: { from: -5, to: 5 }, duration: pickup.type === 'GOLDEN_BOX' ? 620 : 900, yoyo: true, repeat: -1, ease: 'Sine.InOut' })
+            this.pickupViews.set(pickup.id, view)
+          }
+          for (const [pickupId, view] of this.pickupViews) {
+            if (activeIds.has(pickupId)) continue
+            this.pickupViews.delete(pickupId)
+            this.tweens.killTweensOf(view)
+            this.tweens.add({ targets: view, scale: reducedMotion ? 1.1 : 1.55, alpha: 0, duration: reducedMotion ? 120 : 360, onComplete: () => view.destroy() })
+          }
+          for (const hazard of world.hazards) {
+            if (this.hazardViews.has(hazard.id)) continue
+            const point = track.sample(hazard.progress, hazard.lateralOffset)
+            const image = this.add.image(point.x, point.y, `hazard-${hazard.type}`).setDisplaySize(hazard.type === 'WHIRLPOOL' ? 76 : 58, hazard.type === 'WHIRLPOOL' ? 76 : 58).setDepth(68)
+            if (!reducedMotion && hazard.type === 'WHIRLPOOL') this.tweens.add({ targets: image, angle: 360, duration: 1800, repeat: -1 })
+            this.hazardViews.set(hazard.id, image)
+          }
         }
 
         applyEvent(raceEvent: RaceEvent) {
@@ -251,6 +329,24 @@ export function PhaserRaceCanvas({
             HORN_USED: `🔊 ${source} QUACKED THE PACK`,
             FEATHER_DODGED: `🪶 ${source} DODGED!`,
             BUBBLE_POPPED: `🫧 ${source} POP!`,
+            PICKUP_COLLECTED: `📦 ${source} mở Quack Box`,
+            PICKUP_SKIPPED_SLOT_FULL: `🎒 ${source} đang FULL`,
+            WILD_ITEM_GRANTED: `${WILD_ICONS[raceEvent.metadata.itemId as WildItemId] ?? '🎒'} ${source} nhặt ${String(raceEvent.metadata.itemId ?? '').replaceAll('_', ' ')}`,
+            INSTANT_PICKUP_TRIGGERED: `${WILD_ICONS[raceEvent.metadata.itemId as WildItemId] ?? '⚡'} ${source} kích hoạt ${String(raceEvent.metadata.itemId ?? '').replaceAll('_', ' ')}`,
+            MINI_ROCKET_FIRED: `🚀 ${source} → ${target}`,
+            MINI_ROCKET_HIT: `💥 ${target} trúng Mini Rocket!`,
+            MINI_ROCKET_BLOCKED: `🫧 ${target} BLOCKED!`,
+            WILD_BANANA_DROPPED: `🍌 ${source} thả Wild Banana`,
+            WILD_BANANA_HIT: `🍌 ${target} đụng Banana!`,
+            WILD_BANANA_BLOCKED: `🪽 ${target} né Banana`,
+            MINI_BUBBLE_ACTIVATED: `🫧 ${source} bật Mini Bubble`,
+            MINI_BUBBLE_BLOCKED: `🫧 ${source} BLOCKED!`,
+            WILD_HORN_USED: `🔊 ${source} QUACK!`,
+            WILD_FEATHER_USED: `🪽 ${source} bật Feather`,
+            WILD_FEATHER_DODGED: `🪽 ${source} DODGED!`,
+            HAZARD_HIT: `☠️ ${source} đụng ${String(raceEvent.metadata.hazardType ?? 'hazard').replaceAll('_', ' ')}`,
+            HAZARD_DODGED: `🪽 ${source} né hazard!`,
+            GOLDEN_BOX_COLLECTED: `🪙 ${source} FOUND THE GOLDEN BOX!`,
           }
           const message = messages[raceEvent.type]
           audio.raceEvent(raceEvent.type)
@@ -261,6 +357,15 @@ export function PhaserRaceCanvas({
           const focusId = raceEvent.targetPlayerId ?? raceEvent.sourcePlayerId
           const view = focusId ? this.duckViews.get(focusId) : null
           if (!view) return
+          const revealedItem = raceEvent.metadata.itemId as WildItemId | undefined
+          if (revealedItem && this.textures.exists(`wild-${revealedItem}`)) {
+            const icon = this.add.image(view.root.x, view.root.y - 58, `wild-${revealedItem}`).setDisplaySize(46, 46).setDepth(980).setAlpha(1)
+            this.tweens.add({ targets: icon, y: icon.y - 34, alpha: 0, duration: reducedMotion ? 300 : 720, onComplete: () => icon.destroy() })
+          }
+          if (raceEvent.type === 'PICKUP_SKIPPED_SLOT_FULL') {
+            const full = this.add.text(view.root.x, view.root.y - 48, '🎒 FULL', { color: '#ffffff', backgroundColor: '#a02f50dd', fontFamily: 'sans-serif', fontStyle: 'bold', fontSize: '14px', padding: { x: 7, y: 4 } }).setOrigin(0.5).setDepth(980)
+            this.tweens.add({ targets: full, y: full.y - 24, alpha: 0, duration: 650, onComplete: () => full.destroy() })
+          }
           if (raceEvent.type === 'DUCK_FINISHED' && focusId) {
             const player = scenePlayers.find((candidate) => candidate.playerId === focusId)
             const finishId = player?.appearance?.finishId
@@ -269,11 +374,11 @@ export function PhaserRaceCanvas({
               this.tweens.add({ targets: finish, scale: reducedMotion ? 1.15 : 1.8, alpha: 0, duration: reducedMotion ? 250 : 800, onComplete: () => finish.destroy() })
             }
           }
-          if (!reducedMotion && ['ROCKET_HIT', 'ROCKET_BLOCKED', 'BANANA_HIT', 'BUBBLE_POPPED'].includes(raceEvent.type)) {
+          if (!reducedMotion && ['ROCKET_HIT', 'ROCKET_BLOCKED', 'BANANA_HIT', 'BUBBLE_POPPED', 'MINI_ROCKET_HIT', 'MINI_ROCKET_BLOCKED', 'WILD_BANANA_HIT', 'GOLDEN_BOX_COLLECTED'].includes(raceEvent.type)) {
             this.focusPlayerId = focusId ?? null
             this.focusUntil = this.time.now + 450
           }
-          if (raceEvent.type === 'ROCKET_FIRED' && raceEvent.sourcePlayerId && raceEvent.targetPlayerId) {
+          if ((raceEvent.type === 'ROCKET_FIRED' || raceEvent.type === 'MINI_ROCKET_FIRED') && raceEvent.sourcePlayerId && raceEvent.targetPlayerId) {
             const sourceView = this.duckViews.get(raceEvent.sourcePlayerId)
             const targetView = this.duckViews.get(raceEvent.targetPlayerId)
             if (sourceView && targetView) {
@@ -281,19 +386,19 @@ export function PhaserRaceCanvas({
               this.tweens.add({ targets: rocket, x: targetView.root.x, y: targetView.root.y, duration: reducedMotion ? 120 : 480, onComplete: () => { rocket.setVisible(false); this.textPool.push(rocket) } })
             }
           }
-          if (raceEvent.type === 'BANANA_DROPPED') {
+          if (raceEvent.type === 'BANANA_DROPPED' || raceEvent.type === 'WILD_BANANA_DROPPED') {
             const banana = (this.textPool.pop() ?? this.add.text(0, 0, '', { fontSize: '26px' })).setText('🍌').setPosition(view.root.x, view.root.y + 16).setAlpha(1).setVisible(true).setDepth(80)
             this.tweens.add({ targets: banana, alpha: 0, duration: reducedMotion ? 700 : 4500, onComplete: () => { banana.setVisible(false); this.textPool.push(banana) } })
           }
-          if (raceEvent.type === 'NITRO_STARTED') {
+          if (raceEvent.type === 'NITRO_STARTED' || (raceEvent.type === 'INSTANT_PICKUP_TRIGGERED' && raceEvent.metadata.itemId === 'MINI_NITRO')) {
             const wake = (this.ellipsePool.pop() ?? this.add.ellipse(0, 0, 90, 28, 0x9ff5ff, 0.7)).setPosition(view.root.x - 25, view.root.y + 10).setScale(1).setAlpha(0.7).setVisible(true).setDepth(85)
             this.tweens.add({ targets: wake, scaleX: 2.1, alpha: 0, duration: reducedMotion ? 250 : 850, onComplete: () => { wake.setVisible(false); this.ellipsePool.push(wake) } })
           }
-          if (raceEvent.type === 'BUBBLE_POPPED' || raceEvent.type === 'HORN_USED') {
+          if (raceEvent.type === 'BUBBLE_POPPED' || raceEvent.type === 'HORN_USED' || raceEvent.type === 'MINI_BUBBLE_BLOCKED' || raceEvent.type === 'MINI_BUBBLE_ACTIVATED' || raceEvent.type === 'WILD_HORN_USED') {
             const ring = (this.ringPool.pop() ?? this.add.circle(0, 0, 28, 0x7de8ff, 0.12)).setPosition(view.root.x, view.root.y).setScale(1).setAlpha(1).setVisible(true).setStrokeStyle(5, 0xb8f4ff, 0.9).setDepth(900)
             this.tweens.add({ targets: ring, scale: reducedMotion ? 1.5 : 3, alpha: 0, duration: reducedMotion ? 200 : 500, onComplete: () => { ring.setVisible(false); this.ringPool.push(ring) } })
           }
-          if (!reducedMotion && (raceEvent.type === 'ROCKET_HIT' || raceEvent.type === 'BANANA_HIT')) {
+          if (!reducedMotion && ['ROCKET_HIT', 'BANANA_HIT', 'MINI_ROCKET_HIT', 'WILD_BANANA_HIT', 'HAZARD_HIT'].includes(raceEvent.type)) {
             this.tweens.add({ targets: view.root, angle: { from: -8, to: 8 }, yoyo: true, repeat: 2, duration: 90, onComplete: () => view.root.setAngle(0) })
           }
         }
@@ -330,7 +435,7 @@ export function PhaserRaceCanvas({
       })
 
       if (replayConfig) {
-        const simulation = createSimulation(replayConfig)
+        const simulation = createSimulation(replayConfig, { manualInputs: JSON.parse(serializedManualInputs) as RecordedWildItemInput[] })
         let previous = performance.now()
         let accumulator = 0
         let replayEventCount = 0
@@ -348,9 +453,10 @@ export function PhaserRaceCanvas({
             stepSimulation(simulation)
             accumulator -= tickMs
           }
-          const ducks = snapshotSimulation(simulation)
+          const world = snapshotRaceWorld(simulation)
+          const ducks = world.ducks
           const newEvents = simulation.events.slice(replayEventCount)
-          scene.applySnapshot(ducks)
+          scene.applyWorld(world)
           for (const raceEvent of newEvents) scene.applyEvent(raceEvent)
           replayEventCount = simulation.events.length
           inspectRef.current?.({ tick: simulation.tick, finished: simulation.finished, ducks, newEvents })
@@ -360,9 +466,8 @@ export function PhaserRaceCanvas({
       } else {
         source = new EventSource(`/api/races/${raceId}/live`)
         source.addEventListener('snapshot', (event) => {
-          const payload = JSON.parse((event as MessageEvent<string>).data) as { ducks?: unknown }
-          const ducks = duckSnapshotSchema.array().safeParse(payload.ducks)
-          if (ducks.success) void sceneReady.then(() => scene.applySnapshot(ducks.data))
+          const payload = stateSnapshotMessageSchema.safeParse(JSON.parse((event as MessageEvent<string>).data))
+          if (payload.success) void sceneReady.then(() => scene.applyWorld(payload.data))
         })
         source.addEventListener('engine-event', (event) => {
           const raceEvent = raceEventSchema.safeParse(JSON.parse((event as MessageEvent<string>).data))
@@ -378,7 +483,7 @@ export function PhaserRaceCanvas({
       game?.destroy(true)
       audio.close()
     }
-  }, [chaosType, parentId, raceId, replayConfig, serializedPlayers])
+  }, [chaosType, debugPickups, parentId, raceId, replayConfig, serializedManualInputs, serializedPlayers])
 
   return <div className="overflow-hidden rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[#112b3b] shadow-[0_8px_0_var(--color-ggd-outline)]">
     <div id={parentId} className="aspect-square min-h-[320px] w-full sm:aspect-[2/1]" aria-label="Đua Dzịt race canvas" />

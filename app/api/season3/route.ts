@@ -57,6 +57,11 @@ export async function GET(request: Request) {
     const skippedPlayerIds = parseSkippedPlayerIds(currentWeek?.skippedPlayerIdsJson)
     const latestResolvedWeek = [...season.weeksPlan].reverse().find((week: { status: string }) => week.status === 'resolved') ?? null
     const viewerLoadout = viewer && currentWeek ? currentWeek.loadouts.find((loadout: { seasonPlayerId: number }) => loadout.seasonPlayerId === viewer.id) : null
+    const liveRace = viewer ? await prisma.race.findFirst({
+      where: { status: { in: ['pending', 'running'] }, engineVersion: { not: null }, participants: { some: { userId: viewer.userId } } },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, status: true, isTest: true },
+    }) : null
     const revealPredictions = (resolvedWeek: typeof latestResolvedWeek) => resolvedWeek
       ? resolvedWeek.predictions.map((prediction: { predictor: { name: string }; target: { name: string }; pointsAwarded: number }) => ({
           predictorName: prediction.predictor.name,
@@ -89,6 +94,7 @@ export async function GET(request: Request) {
         cosmeticPresets: viewer.cosmeticPresets,
       } : null,
       personalLink: viewer ? `/season-3?token=${encodeURIComponent(viewer.accessToken)}` : null,
+      liveRace,
       raceItems: RACE_ITEM_CATALOG,
       cosmeticCatalog: COSMETIC_CATALOG,
       players: season.players.map((player: { user: { id: number; name: string; avatarUrl: string | null }; userId: number; predictionPoints: number; scars: number; shields: number; isKing: boolean; kingStreak: number }) => ({

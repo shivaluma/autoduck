@@ -1,4 +1,4 @@
-import type { DuckSnapshot, RaceConfig, RaceEvent, RaceResult } from '../../race-protocol/src'
+import type { DuckSnapshot, RaceConfig, RaceEvent, RaceResult, RecordedWildItemInput } from '../../race-protocol/src'
 import { CORE_BALANCE } from './config'
 import { createRaceRng, type DeterministicRng } from './rng'
 import { createRiverTrack, currentAt, type RaceTrack } from './track'
@@ -9,6 +9,15 @@ import {
   tickItemSystem,
   type ItemRaceState,
 } from './items/engine'
+import {
+  announcePickupWorld,
+  applyRecordedWildInputs,
+  createPickupRaceState,
+  snapshotPickupWorld,
+  tickPickupSystem,
+  type PickupRaceState,
+} from './pickups/engine'
+import { PICKUP_BALANCE } from './pickups/config'
 
 const clamp = (value: number, minimum: number, maximum: number) => Math.max(minimum, Math.min(maximum, value))
 
@@ -41,12 +50,15 @@ export interface RaceSimulationState {
   onEvent?: (raceEvent: RaceEvent) => void
   rngByPlayer: Map<string, DeterministicRng>
   itemState: ItemRaceState
+  pickupState: PickupRaceState
+  manualInputs: RecordedWildItemInput[]
   lastCollisionEventTick: Map<string, number>
 }
 
 export interface SimulationOptions {
   recordEvents?: boolean
   onEvent?: (raceEvent: RaceEvent) => void
+  manualInputs?: RecordedWildItemInput[]
 }
 
 function event(state: RaceSimulationState, value: Omit<RaceEvent, 'raceId' | 'tick' | 'timestampWithinRaceMs'>): RaceEvent {
@@ -104,9 +116,10 @@ export function createSimulation(config: RaceConfig, options: SimulationOptions 
     }
   })
 
+  const track = createRiverTrack(config.trackVersion)
   const state: RaceSimulationState = {
     config,
-    track: createRiverTrack(config.trackVersion),
+    track,
     tick: 0,
     ducks,
     events: [],
@@ -115,10 +128,21 @@ export function createSimulation(config: RaceConfig, options: SimulationOptions 
     onEvent: options.onEvent,
     rngByPlayer,
     itemState: createItemRaceState(config),
+    pickupState: createPickupRaceState(config, track),
+    manualInputs: [...(options.manualInputs ?? [])],
     lastCollisionEventTick: new Map(),
   }
   emitEvent(state, { type: 'RACE_STARTED', metadata: { playerCount: ducks.length } })
+  announcePickupWorld(state.pickupState, (type, sourcePlayerId, targetPlayerId, metadata = {}) => {
+    emitEvent(state, { type, sourcePlayerId, targetPlayerId, metadata })
+  })
   return state
+}
+
+export function queueWildItemInput(state: RaceSimulationState, input: Omit<RecordedWildItemInput, 'authoritativeTick'>, authoritativeTick = state.tick + 1) {
+  const recorded = { ...input, authoritativeTick: Math.max(state.tick + 1, authoritativeTick) }
+  state.manualInputs.push(recorded)
+  return recorded
 }
 
 function updateIntent(state: RaceSimulationState, duck: DuckPhysicsState) {
@@ -189,6 +213,10 @@ export function stepSimulation(state: RaceSimulationState) {
   const deltaSeconds = 1 / state.config.tickRate
   const tickStartMs = (state.tick - 1) * (1000 / state.config.tickRate)
 
+  applyRecordedWildInputs(state.itemState, state.ducks, state.manualInputs, state.tick, state.config.tickRate, (type, sourcePlayerId, targetPlayerId, metadata = {}) => {
+    emitEvent(state, { type, sourcePlayerId, targetPlayerId, metadata })
+  })
+
   tickItemSystem(state.itemState, state.ducks, state.tick, state.config.tickRate, (type, sourcePlayerId, targetPlayerId, metadata = {}) => {
     emitEvent(state, { type, sourcePlayerId, targetPlayerId, metadata })
   })
@@ -204,7 +232,13 @@ export function stepSimulation(state: RaceSimulationState) {
     duck.activeEffects = itemActiveEffects(itemRuntime, state.tick)
     const targetSpeed = duck.desiredSpeed + duck.acceleration
     duck.speed += (targetSpeed - duck.speed) * CORE_BALANCE.speedResponse * deltaSeconds
-    const desiredLateralVelocity = (duck.desiredLateralOffset - duck.lateralOffset) * CORE_BALANCE.lateralResponse + currentLateralForce
+    if (state.tick < itemRuntime.magnetUntilTick) {
+      const target = state.ducks.filter((candidate) => !candidate.finished && candidate.progress > duck.progress && candidate.progress - duck.progress <= PICKUP_BALANCE.magnet.maximumTargetDistance)
+        .sort((left, right) => left.progress - right.progress || left.playerId.localeCompare(right.playerId))[0]
+      if (target) duck.desiredLateralOffset = target.lateralOffset
+    }
+    const stability = state.tick < itemRuntime.tailwindUntilTick ? PICKUP_BALANCE.tailwind.lateralStability : 1
+    const desiredLateralVelocity = ((duck.desiredLateralOffset - duck.lateralOffset) * CORE_BALANCE.lateralResponse + currentLateralForce) * stability
     duck.lateralVelocity += (desiredLateralVelocity - duck.lateralVelocity) * 2.8 * deltaSeconds
     duck.lateralVelocity = clamp(duck.lateralVelocity, -CORE_BALANCE.maximumLateralVelocity, CORE_BALANCE.maximumLateralVelocity)
     duck.lateralOffset = clamp(duck.lateralOffset + duck.lateralVelocity * deltaSeconds, -0.95, 0.95)
@@ -224,6 +258,10 @@ export function stepSimulation(state: RaceSimulationState) {
     }
   }
 
+  tickPickupSystem(state.config, state.track, state.pickupState, state.itemState, state.ducks, state.tick, state.config.tickRate, (type, sourcePlayerId, targetPlayerId, metadata = {}) => {
+    emitEvent(state, { type, sourcePlayerId, targetPlayerId, metadata })
+  })
+
   resolveCollisions(state)
   updateRanks(state)
   state.finished = state.ducks.every((duck) => duck.finished)
@@ -241,7 +279,13 @@ export function snapshotSimulation(state: RaceSimulationState): DuckSnapshot[] {
       speed: duck.speed,
       rank: duck.currentRank,
       activeEffects: [...duck.activeEffects],
+      wildItem: state.itemState.byPlayer.get(duck.playerId)!.wildItem ? { ...state.itemState.byPlayer.get(duck.playerId)!.wildItem! } : null,
+      regularPickupCount: state.itemState.byPlayer.get(duck.playerId)!.regularPickupCount,
     }))
+}
+
+export function snapshotRaceWorld(state: RaceSimulationState) {
+  return { ducks: snapshotSimulation(state), ...snapshotPickupWorld(state.pickupState) }
 }
 
 export function resultFromSimulation(state: RaceSimulationState): RaceResult {

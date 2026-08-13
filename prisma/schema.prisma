@@ -59,18 +59,20 @@ model Race {
   resultDigest     String?
   liveSnapshotJson String?
 
-  participants     RaceParticipant[]
-  commentaries     CommentaryLog[]
-  commentaryJobs   CommentaryJob[]
-  dragonWeeks      DragonWeek[]
-  dragonOrbs       DragonOrb[]         @relation("DragonOrbOriginalRace")
-  dragonItems      DragonItem[]        @relation("DragonItemEquippedRace")
-  dragonOrbEvents  DragonOrbEvent[]
-  dragonItemEvents DragonItemEvent[]
-  seasonWeek       SeasonWeek?         @relation("SeasonWeekRace")
-  engineEvents     RaceEngineEvent[]
-  itemTelemetry    RaceItemTelemetry[]
+  participants         RaceParticipant[]
+  commentaries         CommentaryLog[]
+  commentaryJobs       CommentaryJob[]
+  dragonWeeks          DragonWeek[]
+  dragonOrbs           DragonOrb[]           @relation("DragonOrbOriginalRace")
+  dragonItems          DragonItem[]          @relation("DragonItemEquippedRace")
+  dragonOrbEvents      DragonOrbEvent[]
+  dragonItemEvents     DragonItemEvent[]
+  seasonWeek           SeasonWeek?           @relation("SeasonWeekRace")
+  engineEvents         RaceEngineEvent[]
+  itemTelemetry        RaceItemTelemetry[]
+  pickupTelemetry      RacePickupTelemetry[]
   currencyTransactions CurrencyTransaction[]
+  wildActions          RaceWildAction[]
 
   @@index([createdAt])
   @@index([isTest, createdAt])
@@ -115,6 +117,29 @@ model RaceItemTelemetry {
   @@unique([raceId, playerId, itemId])
   @@index([itemId, createdAt])
   @@index([loadoutKey, createdAt])
+}
+
+model RacePickupTelemetry {
+  id             String  @id @default(cuid())
+  raceId         Int
+  playerId       String
+  instanceId     String
+  itemId         String
+  collectionRank Int
+  finalRank      Int
+  baselineRank   Int
+  rankDelta      Int
+  activated      Boolean
+  succeeded      Boolean
+  manualUsed     Boolean
+  autoUsed       Boolean
+  hitCount       Int     @default(0)
+
+  race Race @relation(fields: [raceId], references: [id], onDelete: Cascade)
+
+  @@unique([raceId, instanceId])
+  @@index([itemId, raceId])
+  @@index([playerId, raceId])
 }
 
 model RaceParticipant {
@@ -420,11 +445,11 @@ model Season {
   createdAt      DateTime  @default(now())
   endedAt        DateTime?
 
-  champion    User?              @relation("SeasonChampion", fields: [championUserId], references: [id], onDelete: SetNull)
-  players     SeasonPlayer[]
-  weeksPlan   SeasonWeek[]
-  rewards     SeasonReward[]
-  redemptions SeasonRedemption[]
+  champion      User?              @relation("SeasonChampion", fields: [championUserId], references: [id], onDelete: SetNull)
+  players       SeasonPlayer[]
+  weeksPlan     SeasonWeek[]
+  rewards       SeasonReward[]
+  redemptions   SeasonRedemption[]
   shopRotations ShopRotation[]
 
   @@index([status, createdAt])
@@ -452,18 +477,19 @@ model SeasonPlayer {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
-  season        Season               @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  user          User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  predictions   SeasonPrediction[]   @relation("PredictionAuthorPlayer")
-  shieldChoices SeasonShieldChoice[]
-  redemptions   SeasonRedemption[]
-  loadouts      SeasonLoadout[]
+  season               Season                @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  user                 User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  predictions          SeasonPrediction[]    @relation("PredictionAuthorPlayer")
+  shieldChoices        SeasonShieldChoice[]
+  redemptions          SeasonRedemption[]
+  loadouts             SeasonLoadout[]
   currencyTransactions CurrencyTransaction[]
-  cosmetics     PlayerCosmetic[]
-  appearance    PlayerAppearance?
-  cosmeticPresets CosmeticPreset[]
-  gachaPulls    GachaPull[]
-  shopPurchases ShopPurchase[]
+  cosmetics            PlayerCosmetic[]
+  appearance           PlayerAppearance?
+  cosmeticPresets      CosmeticPreset[]
+  gachaPulls           GachaPull[]
+  shopPurchases        ShopPurchase[]
+  wildActions          RaceWildAction[]
 
   @@unique([seasonId, userId])
   @@index([seasonId, predictionPoints])
@@ -485,13 +511,13 @@ model CosmeticAdminEvent {
 }
 
 model CosmeticConfig {
-  cosmeticId     String   @id
-  enabled        Boolean  @default(true)
-  shopEligible   Boolean?
-  gachaEligible  Boolean?
-  priceOverride  Int?
-  limitedLabel   String?
-  updatedAt      DateTime @updatedAt
+  cosmeticId    String   @id
+  enabled       Boolean  @default(true)
+  shopEligible  Boolean?
+  gachaEligible Boolean?
+  priceOverride Int?
+  limitedLabel  String?
+  updatedAt     DateTime @updatedAt
 }
 
 model ShopRotation {
@@ -503,7 +529,7 @@ model ShopRotation {
   itemsJson String
   createdAt DateTime @default(now())
 
-  season   Season        @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  season    Season         @relation(fields: [seasonId], references: [id], onDelete: Cascade)
   purchases ShopPurchase[]
 
   @@unique([seasonId, weekKey])
@@ -544,6 +570,28 @@ model CurrencyTransaction {
   @@index([seasonPlayerId, createdAt])
   @@index([raceId, reason])
   @@index([gachaPullId])
+}
+
+model RaceWildAction {
+  id                 String    @id @default(cuid())
+  raceId             Int
+  seasonPlayerId     Int
+  playerId           String
+  wildItemInstanceId String
+  clientActionId     String
+  action             String    @default("USE")
+  status             String    @default("PENDING") // PENDING, QUEUED, APPLIED, REJECTED
+  authoritativeTick  Int?
+  resultJson         String?
+  requestedAt        DateTime  @default(now())
+  resolvedAt         DateTime?
+
+  race         Race         @relation(fields: [raceId], references: [id], onDelete: Cascade)
+  seasonPlayer SeasonPlayer @relation(fields: [seasonPlayerId], references: [id], onDelete: Cascade)
+
+  @@unique([raceId, playerId, clientActionId])
+  @@index([raceId, status, requestedAt])
+  @@index([seasonPlayerId, requestedAt])
 }
 
 model PlayerCosmetic {
@@ -599,21 +647,21 @@ model CosmeticPreset {
 }
 
 model GachaPull {
-  id                    String   @id @default(cuid())
-  seasonPlayerId        Int
-  cost                  Int
-  rolledRarity          String
-  finalCosmeticId       String?
-  wasDuplicate          Boolean
-  wasRerolled           Boolean
-  refundAmount          Int
-  rarePityBefore        Int
-  rarePityAfter         Int
-  epicPityBefore        Int
-  epicPityAfter         Int
-  legendaryPityBefore   Int
-  legendaryPityAfter    Int
-  createdAt             DateTime @default(now())
+  id                  String   @id @default(cuid())
+  seasonPlayerId      Int
+  cost                Int
+  rolledRarity        String
+  finalCosmeticId     String?
+  wasDuplicate        Boolean
+  wasRerolled         Boolean
+  refundAmount        Int
+  rarePityBefore      Int
+  rarePityAfter       Int
+  epicPityBefore      Int
+  epicPityAfter       Int
+  legendaryPityBefore Int
+  legendaryPityAfter  Int
+  createdAt           DateTime @default(now())
 
   seasonPlayer SeasonPlayer @relation(fields: [seasonPlayerId], references: [id], onDelete: Cascade)
 

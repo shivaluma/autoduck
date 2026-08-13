@@ -27,6 +27,14 @@ function defense(items: RaceItemId[]): DuckItemRuntime {
     slowUntilTick: 0,
     boostMultiplier: 1,
     boostUntilTick: 0,
+    wildItem: null,
+    regularPickupCount: 0,
+    wildBubbleAvailable: false,
+    wildBubbleUntilTick: 0,
+    wildFeatherAvailable: false,
+    wildFeatherUntilTick: 0,
+    tailwindUntilTick: 0,
+    magnetUntilTick: 0,
   }
 }
 
@@ -65,6 +73,21 @@ test('Feather dodges Banana but never blocks Rocket', () => {
   assert.equal(resolveIncomingRaceEffect(target, 'BANANA', 1, 60), 'DODGED_FEATHER')
   assert.equal(target.featherAvailable, false)
   assert.equal(resolveIncomingRaceEffect(target, 'ROCKET', 2, 60), 'HIT')
+})
+
+test('Wild Feather dodges both Banana variants and minor hazards, but not Rocket', () => {
+  for (const incoming of ['BANANA', 'WILD_BANANA', 'MINOR_HAZARD'] as const) {
+    const target = defense([])
+    target.wildFeatherAvailable = true
+    target.wildFeatherUntilTick = 300
+    assert.equal(resolveIncomingRaceEffect(target, incoming, 60, 60), 'DODGED_WILD_FEATHER')
+    assert.equal(target.wildFeatherAvailable, false)
+  }
+  const rocketTarget = defense([])
+  rocketTarget.wildFeatherAvailable = true
+  rocketTarget.wildFeatherUntilTick = 300
+  assert.equal(resolveIncomingRaceEffect(rocketTarget, 'MINI_ROCKET', 60, 60), 'HIT')
+  assert.equal(rocketTarget.wildFeatherAvailable, true)
 })
 
 test('post-hit immunity prevents chain hits and Rocket target protection lasts two seconds', () => {

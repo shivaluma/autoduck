@@ -65,6 +65,9 @@ export async function GET(request: Request) {
   const telemetry = raceIds.length > 0
     ? await prisma.raceItemTelemetry.findMany({ where: { raceId: { in: raceIds } } })
     : []
+  const pickupTelemetry = raceIds.length > 0
+    ? await prisma.racePickupTelemetry.findMany({ where: { raceId: { in: raceIds } } })
+    : []
   const summarizeTelemetry = (key: 'itemId' | 'loadoutKey') => {
     const groups = new Map<string, typeof telemetry>()
     for (const row of telemetry) groups.set(row[key], [...(groups.get(row[key]) ?? []), row])
@@ -123,6 +126,19 @@ export async function GET(request: Request) {
     balance: {
       items: summarizeTelemetry('itemId'),
       loadouts: summarizeTelemetry('loadoutKey'),
+      pickups: [...new Set(pickupTelemetry.map((row: { itemId: string }) => row.itemId))].map((itemId) => {
+        const rows = pickupTelemetry.filter((row: { itemId: string }) => row.itemId === itemId)
+        const activations = rows.filter((row: { activated: boolean }) => row.activated).length
+        return {
+          name: itemId,
+          picks: rows.length,
+          activationRate: activations / Math.max(1, rows.length),
+          hitRate: rows.reduce((sum: number, row: { hitCount: number }) => sum + row.hitCount, 0) / Math.max(1, activations),
+          manualRate: rows.filter((row: { manualUsed: boolean }) => row.manualUsed).length / Math.max(1, activations),
+          autoRate: rows.filter((row: { autoUsed: boolean }) => row.autoUsed).length / Math.max(1, activations),
+          averageRankDelta: rows.reduce((sum: number, row: { rankDelta: number }) => sum + row.rankDelta, 0) / Math.max(1, rows.length),
+        }
+      }).sort((left, right) => right.picks - left.picks),
     },
   })
 }

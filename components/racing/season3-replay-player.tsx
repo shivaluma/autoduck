@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useRef, useState } from 'react'
-import type { RaceConfig, RaceItemId } from '@/packages/race-protocol/src'
+import type { RaceConfig, RaceEvent, RaceItemId, RecordedWildItemInput } from '@/packages/race-protocol/src'
 import { PhaserRaceCanvas, type ReplayInspection } from './phaser-race-canvas'
 
 type ReplayPlayer = {
@@ -11,7 +11,16 @@ type ReplayPlayer = {
   itemIds?: RaceItemId[]
 }
 
-export function Season3ReplayPlayer({ raceId, players, config }: { raceId: number; players: ReplayPlayer[]; config: RaceConfig }) {
+function manualInputs(events: RaceEvent[]): RecordedWildItemInput[] {
+  return events.filter((event) => event.type === 'WILD_ITEM_MANUAL_INPUT').flatMap((event) => {
+    const instanceId = event.metadata.instanceId
+    const clientActionId = event.metadata.clientActionId
+    if (!event.sourcePlayerId || typeof instanceId !== 'string' || typeof clientActionId !== 'string') return []
+    return [{ raceId: event.raceId, playerId: event.sourcePlayerId, wildItemInstanceId: instanceId, action: 'USE' as const, clientActionId, authoritativeTick: event.tick }]
+  })
+}
+
+export function Season3ReplayPlayer({ raceId, players, config, events = [] }: { raceId: number; players: ReplayPlayer[]; config: RaceConfig; events?: RaceEvent[] }) {
   const [runId, setRunId] = useState(0)
   const [started, setStarted] = useState(false)
   const [paused, setPaused] = useState(true)
@@ -53,7 +62,7 @@ export function Season3ReplayPlayer({ raceId, players, config }: { raceId: numbe
       </div>
     </div>
     <div className="relative">
-      <PhaserRaceCanvas key={runId} raceId={raceId} players={players} replayConfig={config} replaySpeed={speed} replayPaused={!started || paused} onReplayInspect={inspect} />
+      <PhaserRaceCanvas key={runId} raceId={raceId} players={players} replayConfig={config} replayManualInputs={manualInputs(events)} replaySpeed={speed} replayPaused={!started || paused} onReplayInspect={inspect} />
       {!started && <button onClick={play} className="absolute inset-0 z-10 m-auto h-20 w-52 rounded-2xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-gold)] font-display text-2xl text-[var(--color-ggd-outline)] shadow-[0_7px_0_var(--color-ggd-outline)]">▶ PLAY REPLAY</button>}
     </div>
   </section>

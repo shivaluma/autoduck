@@ -803,6 +803,55 @@ async function createCosmeticAdminTools(prisma: PrismaClient) {
   `)
 }
 
+async function createRaceWildActions(prisma: PrismaClient) {
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "RaceWildAction" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "raceId" INTEGER NOT NULL,
+      "seasonPlayerId" INTEGER NOT NULL,
+      "playerId" TEXT NOT NULL,
+      "wildItemInstanceId" TEXT NOT NULL,
+      "clientActionId" TEXT NOT NULL,
+      "action" TEXT NOT NULL DEFAULT 'USE',
+      "status" TEXT NOT NULL DEFAULT 'PENDING',
+      "authoritativeTick" INTEGER,
+      "resultJson" TEXT,
+      "requestedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "resolvedAt" DATETIME,
+      CONSTRAINT "RaceWildAction_raceId_fkey" FOREIGN KEY ("raceId") REFERENCES "Race"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT "RaceWildAction_seasonPlayerId_fkey" FOREIGN KEY ("seasonPlayerId") REFERENCES "SeasonPlayer"("id") ON DELETE CASCADE ON UPDATE CASCADE
+    )
+  `)
+  await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "RaceWildAction_raceId_playerId_clientActionId_key" ON "RaceWildAction"("raceId", "playerId", "clientActionId")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "RaceWildAction_raceId_status_requestedAt_idx" ON "RaceWildAction"("raceId", "status", "requestedAt")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "RaceWildAction_seasonPlayerId_requestedAt_idx" ON "RaceWildAction"("seasonPlayerId", "requestedAt")`)
+}
+
+async function createRacePickupTelemetry(prisma: PrismaClient) {
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "RacePickupTelemetry" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "raceId" INTEGER NOT NULL,
+      "playerId" TEXT NOT NULL,
+      "instanceId" TEXT NOT NULL,
+      "itemId" TEXT NOT NULL,
+      "collectionRank" INTEGER NOT NULL,
+      "finalRank" INTEGER NOT NULL,
+      "baselineRank" INTEGER NOT NULL,
+      "rankDelta" INTEGER NOT NULL,
+      "activated" BOOLEAN NOT NULL,
+      "succeeded" BOOLEAN NOT NULL,
+      "manualUsed" BOOLEAN NOT NULL,
+      "autoUsed" BOOLEAN NOT NULL,
+      "hitCount" INTEGER NOT NULL DEFAULT 0,
+      CONSTRAINT "RacePickupTelemetry_raceId_fkey" FOREIGN KEY ("raceId") REFERENCES "Race"("id") ON DELETE CASCADE ON UPDATE CASCADE
+    )
+  `)
+  await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "RacePickupTelemetry_raceId_instanceId_key" ON "RacePickupTelemetry"("raceId", "instanceId")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "RacePickupTelemetry_itemId_raceId_idx" ON "RacePickupTelemetry"("itemId", "raceId")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "RacePickupTelemetry_playerId_raceId_idx" ON "RacePickupTelemetry"("playerId", "raceId")`)
+}
+
 const migrations: Migration[] = [
   {
     id: '2026-04-23-001-shield-charges-v1',
@@ -863,6 +912,16 @@ const migrations: Migration[] = [
     id: '2026-08-13-003-cosmetic-admin-tools',
     name: 'Create audited cosmetic configuration and admin event tables',
     run: createCosmeticAdminTools,
+  },
+  {
+    id: '2026-08-13-004-race-wild-actions',
+    name: 'Create idempotent server-authoritative Wild Item input queue',
+    run: createRaceWildActions,
+  },
+  {
+    id: '2026-08-13-005-race-pickup-telemetry',
+    name: 'Create per-instance Wild Item balance telemetry',
+    run: createRacePickupTelemetry,
   },
 ]
 

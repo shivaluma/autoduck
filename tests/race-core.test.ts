@@ -63,6 +63,13 @@ test('replay verifies the persisted result digest', () => {
   assert.throws(() => replayRace({ ...raceConfig, engineVersion: '0.9.0' }), /Unsupported replay version/)
 })
 
+test('legacy S3.2 replay stays pickup-free and supported', () => {
+  const legacy = raceConfigSchema.parse({ ...config('ed'.repeat(32)), engineVersion: '1.1.0', balanceVersion: 'S3.2', trackVersion: 'river-01-v1', pickupConfig: undefined })
+  const result = simulateRace(legacy)
+  assert.equal(result.events.some((event) => event.type.startsWith('PICKUP_') || event.type.startsWith('HAZARD_') || event.type.startsWith('GOLDEN_')), false)
+  assert.doesNotThrow(() => replayRace(legacy, createResultDigest(result)))
+})
+
 test('fixed-step simulation stays finite, bounded and produces unique ranks', () => {
   const state = createSimulation(config('cd'.repeat(32), 16))
   while (!state.finished) {

@@ -3,16 +3,22 @@
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PhaserRaceCanvas, type ReplayInspection } from '@/components/racing/phaser-race-canvas'
+import { Switch } from '@/components/ui/switch'
+import { WILD_ITEM_CATALOG } from '@/packages/race-core/src'
 import {
   DEFAULT_TRACK_VERSION,
+  HAZARD_BALANCE_VERSION,
+  PICKUP_SPAWN_VERSION,
   RACE_BALANCE_VERSION,
   RACE_ENGINE_VERSION,
   RACE_PROTOCOL_VERSION,
   RACE_TICK_RATE,
+  WILD_ITEM_BALANCE_VERSION,
   raceConfigSchema,
   type RaceConfig,
   type RaceEvent,
   type RaceItemId,
+  type WildItemId,
 } from '@/packages/race-protocol/src'
 
 const CHAOS_TYPES = ['NORMAL', 'REVERSE', 'DUO', 'TRIPLE_ELIMINATION', 'CUT_LINE', 'CONSTRUCTORS', 'BOUNTY_HUNT'] as const
@@ -55,6 +61,14 @@ export default function RaceLabPage() {
   const [nitro, setNitro] = useState(1.18)
   const [rocketSlow, setRocketSlow] = useState(0.8)
   const [bananaSlow, setBananaSlow] = useState(0.86)
+  const [boxesEnabled, setBoxesEnabled] = useState(true)
+  const [goldenEnabled, setGoldenEnabled] = useState(true)
+  const [forceGolden, setForceGolden] = useState(false)
+  const [hazardsEnabled, setHazardsEnabled] = useState(true)
+  const [positionAware, setPositionAware] = useState(true)
+  const [autoItems, setAutoItems] = useState(true)
+  const [spawnMultiplier, setSpawnMultiplier] = useState(1)
+  const [forceItem, setForceItem] = useState<WildItemId | ''>('')
   const [activeConfig, setActiveConfig] = useState<RaceConfig | null>(null)
   const [runKey, setRunKey] = useState(0)
   const [paused, setPaused] = useState(false)
@@ -110,6 +124,9 @@ export default function RaceLabPage() {
         engineVersion: RACE_ENGINE_VERSION,
         balanceVersion: `${RACE_BALANCE_VERSION}-LAB`,
         trackVersion: DEFAULT_TRACK_VERSION,
+        pickupSpawnVersion: PICKUP_SPAWN_VERSION,
+        wildItemBalanceVersion: WILD_ITEM_BALANCE_VERSION,
+        hazardBalanceVersion: HAZARD_BALANCE_VERSION,
         tickRate: RACE_TICK_RATE,
         players,
         loadouts: players.map((player) => {
@@ -118,6 +135,22 @@ export default function RaceLabPage() {
         }),
         chaosConfig: chaosConfig(chaos, playerIds),
         itemTuning: { nitroSpeedMultiplier: nitro, rocketSlowMultiplier: rocketSlow, bananaSlowMultiplier: bananaSlow },
+        pickupConfig: {
+          enabled: boxesEnabled,
+          goldenBoxEnabled: goldenEnabled,
+          goldenBoxProbability: 0.12,
+          hazardsEnabled,
+          positionAwareLoot: positionAware,
+          spawnMultiplier,
+          regularPickupCap: spawnMultiplier >= 2 ? 3 : 2,
+          manualItemsEnabled: true,
+          autoItemsEnabled: autoItems,
+          chaosBoxEnabled: false,
+          forceItem: forceItem || undefined,
+          forceGoldenBox: forceGolden,
+          disabledItems: [],
+          idealManualPlayerIds: [],
+        },
       })
       setActiveConfig(config)
       setSnapshot(null)
@@ -128,7 +161,7 @@ export default function RaceLabPage() {
     } catch {
       setAuthMessage('Seed phải là 64 ký tự hex và tuning phải nằm trong giới hạn.')
     }
-  }, [bananaSlow, chaos, nitro, players, rocketSlow, runKey, seed, selectedChoices])
+  }, [autoItems, bananaSlow, boxesEnabled, chaos, forceGolden, forceItem, goldenEnabled, hazardsEnabled, nitro, players, positionAware, rocketSlow, runKey, seed, selectedChoices, spawnMultiplier])
 
   const inspect = useCallback((inspection: ReplayInspection) => {
     if (inspection.newEvents.length > 0) setEvents((current) => [...current, ...inspection.newEvents].slice(-100))
@@ -159,6 +192,12 @@ export default function RaceLabPage() {
       <button onClick={start} className="rounded-xl bg-[var(--color-ggd-neon-green)] px-5 py-3 font-black text-[var(--color-ggd-outline)]">RUN RACE</button>
     </section>
 
+    <section className="grid gap-4 rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-surface-2)] p-5 sm:grid-cols-2 lg:grid-cols-4">
+      {[['Quack Boxes', boxesEnabled, setBoxesEnabled], ['Golden Box', goldenEnabled, setGoldenEnabled], ['Force Gold', forceGolden, setForceGolden], ['Hazards', hazardsEnabled, setHazardsEnabled], ['Position loot', positionAware, setPositionAware], ['Auto-use', autoItems, setAutoItems]].map(([label, checked, setter]) => <label key={String(label)} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 p-3 text-sm font-black"><span>{String(label)}</span><Switch checked={Boolean(checked)} onCheckedChange={setter as (value: boolean) => void} /></label>)}
+      <label className="text-sm font-black">SPAWN {spawnMultiplier.toFixed(1)}×<input type="range" min="0" max="3" step="0.5" value={spawnMultiplier} onChange={(event) => setSpawnMultiplier(Number(event.target.value))} className="mt-3 w-full" /></label>
+      <label className="text-sm font-black">FORCE WILD ITEM<select value={forceItem} onChange={(event) => setForceItem(event.target.value as WildItemId | '')} className="mt-2 w-full rounded-xl bg-black/30 px-3 py-2"><option value="">Position-aware RNG</option>{WILD_ITEM_CATALOG.map((item) => <option key={item.id} value={item.id}>{item.icon} {item.displayName}</option>)}</select></label>
+    </section>
+
     <section className="overflow-x-auto rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-surface-2)] p-4"><div className="grid min-w-[720px] grid-cols-2 gap-2 md:grid-cols-4">{players.map((player, index) => {
       const choice = selectedChoices.get(player.playerId)!
       return <div key={player.playerId} className="rounded-xl bg-black/25 p-3"><div className="mb-2 font-black">{player.name}</div><select value={choice.major} onChange={(event) => setChoices((current) => ({ ...current, [player.playerId]: { ...choice, major: event.target.value as RaceItemId } }))} className="mb-2 w-full rounded-lg bg-black/40 p-2 text-sm">{MAJORS.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select><select value={choice.minor} onChange={(event) => setChoices((current) => ({ ...current, [player.playerId]: { ...choice, minor: event.target.value as RaceItemId } }))} className="w-full rounded-lg bg-black/40 p-2 text-sm">{MINORS.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select><div className="mt-2 text-xs text-white/45">Slot {index + 1} · 3/3 credits</div></div>
@@ -166,8 +205,8 @@ export default function RaceLabPage() {
 
     {activeConfig && <>
       <div className="flex flex-wrap items-center gap-2"><button onClick={() => setPaused((value) => !value)} className="rounded-xl border-2 border-white/20 px-4 py-2 font-black">{paused ? '▶ RESUME' : '⏸ PAUSE'}</button>{([1, 2, 4] as const).map((value) => <button key={value} onClick={() => setSpeed(value)} className={`rounded-xl px-4 py-2 font-black ${speed === value ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' : 'border-2 border-white/20'}`}>{value}×</button>)}<button onClick={start} className="rounded-xl border-2 border-[var(--color-ggd-neon-green)] px-4 py-2 font-black text-[var(--color-ggd-neon-green)]">↻ REPLAY</button><span className="ml-auto text-sm text-white/60">Tick {snapshot?.tick ?? 0} · {snapshot?.finished ? 'FINISHED' : paused ? 'PAUSED' : 'RUNNING'}</span></div>
-      <PhaserRaceCanvas key={runKey} raceId={-runKey} players={canvasPlayers} replayConfig={activeConfig} replaySpeed={speed} replayPaused={paused} onReplayInspect={inspect} />
-      <section className="grid gap-4 lg:grid-cols-2"><div className="rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-4"><h2 className="font-display text-2xl">State inspector</h2><div className="mt-3 space-y-2">{snapshot?.ducks.map((duck) => <div key={duck.playerId} className="flex items-center gap-3 rounded-xl bg-black/20 px-3 py-2 text-sm"><b className="w-6">#{duck.rank}</b><span className="flex-1">{players.find((player) => player.playerId === duck.playerId)?.name}</span><span>{(duck.progress * 100).toFixed(1)}%</span><span className="text-white/50">{duck.activeEffects.join(', ') || '—'}</span></div>)}</div></div><div className="max-h-[420px] overflow-auto rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-4"><h2 className="font-display text-2xl">Event log · {events.length}</h2><div className="mt-3 space-y-1 font-mono text-xs">{[...events].reverse().map((event, index) => <div key={`${event.tick}-${event.type}-${index}`} className="rounded-lg bg-black/20 px-3 py-2"><span className="text-white/45">{event.tick}</span> · {event.type} · {event.sourcePlayerId ?? '—'}{event.targetPlayerId ? ` → ${event.targetPlayerId}` : ''}</div>)}</div></div></section>
+      <PhaserRaceCanvas key={runKey} raceId={-runKey} players={canvasPlayers} replayConfig={activeConfig} replaySpeed={speed} replayPaused={paused} onReplayInspect={inspect} debugPickups />
+      <section className="grid gap-4 lg:grid-cols-2"><div className="rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-4"><h2 className="font-display text-2xl">State inspector</h2><div className="mt-3 space-y-2">{snapshot?.ducks.map((duck) => <div key={duck.playerId} className="flex items-center gap-3 rounded-xl bg-black/20 px-3 py-2 text-sm"><b className="w-6">#{duck.rank}</b><span className="flex-1">{players.find((player) => player.playerId === duck.playerId)?.name}</span><span>{(duck.progress * 100).toFixed(1)}%</span><span className="text-white/50">{duck.wildItem ? `🎒 ${WILD_ITEM_CATALOG.find((item) => item.id === duck.wildItem?.itemId)?.icon}` : duck.activeEffects.join(', ') || '—'} · 📦 {duck.regularPickupCount}</span></div>)}</div></div><div className="max-h-[420px] overflow-auto rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-4"><h2 className="font-display text-2xl">Event log · {events.length}</h2><div className="mt-3 space-y-1 font-mono text-xs">{[...events].reverse().map((event, index) => <div key={`${event.tick}-${event.type}-${index}`} className="rounded-lg bg-black/20 px-3 py-2"><span className="text-white/45">{event.tick}</span> · {event.type} · {event.sourcePlayerId ?? '—'}{event.targetPlayerId ? ` → ${event.targetPlayerId}` : ''}</div>)}</div></div></section>
     </>}
   </main>
 }

@@ -4,19 +4,25 @@ import { assertSeason3RaceDay } from '@/lib/season3-schedule'
 import { canStartSeason3TestRace, getSeason3RaceMode } from '@/lib/season3-test-mode'
 import { createRaceCommit, createRaceSeed } from '@/lib/racing/audit'
 import { parseRaceConfig, persistRaceEvents, persistedRaceResult, serializeRaceConfig } from '@/lib/racing/persistence'
+import { buildGoldenTrackReward } from '@/lib/racing/golden-reward'
 import { parseItemIds, selectAutoLoadout, serializeItemIds } from '@/lib/racing/loadout'
 import { runAuthoritativeRace } from '@/lib/racing/runtime'
 import { buildRaceItemTelemetry, persistRaceItemTelemetry } from '@/lib/racing/telemetry'
+import { buildRacePickupTelemetry, persistRacePickupTelemetry } from '@/lib/racing/pickup-telemetry'
 import { assertRaceStateTransition, transitionPersistedRaceState } from '@/lib/racing/state-machine'
 import {
   DEFAULT_TRACK_VERSION,
+  HAZARD_BALANCE_VERSION,
+  PICKUP_SPAWN_VERSION,
   RACE_BALANCE_VERSION,
   RACE_ENGINE_VERSION,
   RACE_PROTOCOL_VERSION,
   RACE_TICK_RATE,
+  WILD_ITEM_BALANCE_VERSION,
   raceConfigSchema,
   type RaceItemId,
 } from '@/packages/race-protocol/src'
+import { queueWildItemInput } from '@/packages/race-core/src'
 import {
   applyScarEconomy,
   generateDuckNews,
@@ -159,6 +165,9 @@ export async function startSeason3Race(weekId: number, options: { allowOffSchedu
       engineVersion: RACE_ENGINE_VERSION,
       balanceVersion: RACE_BALANCE_VERSION,
       trackVersion: DEFAULT_TRACK_VERSION,
+      pickupSpawnVersion: PICKUP_SPAWN_VERSION,
+      wildItemBalanceVersion: WILD_ITEM_BALANCE_VERSION,
+      hazardBalanceVersion: HAZARD_BALANCE_VERSION,
       tickRate: RACE_TICK_RATE,
       players: activePlayers.map((player) => ({
         playerId: String(player.userId),
@@ -170,6 +179,21 @@ export async function startSeason3Race(weekId: number, options: { allowOffSchedu
         type: week.chaosType,
         targetPlayerId: week.chaosTargetUserId === null ? null : String(week.chaosTargetUserId),
         groups: parseChaosGroups(week.chaosPayload)?.map((group) => group.map(String)),
+      },
+      pickupConfig: {
+        enabled: true,
+        goldenBoxEnabled: true,
+        goldenBoxProbability: 0.12,
+        hazardsEnabled: true,
+        positionAwareLoot: true,
+        spawnMultiplier: 1,
+        regularPickupCap: 2,
+        manualItemsEnabled: true,
+        autoItemsEnabled: true,
+        chaosBoxEnabled: false,
+        forceGoldenBox: false,
+        disabledItems: [],
+        idealManualPlayerIds: [],
       },
     })
     const race = await tx.race.update({
@@ -224,13 +248,59 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
       ...player,
       shieldConfirmed: shieldConfirmedIds.has(player.id),
     }))
+    let lastControlPollTick = -Infinity
     const result = await runAuthoritativeRace(config, {
       persistenceRate: 2,
       onSnapshot: (snapshot) => prisma.race.update({ where: { id: raceId }, data: { liveSnapshotJson: JSON.stringify(snapshot) } }),
-      onEvents: (events) => persistRaceEvents(prisma, raceId, events),
+      beforeTick: async (state) => {
+        if (state.tick - lastControlPollTick < Math.max(1, Math.round(config.tickRate / 10))) return
+        lastControlPollTick = state.tick
+        const pending = await prisma.raceWildAction.findMany({ where: { raceId, status: 'PENDING' }, orderBy: { requestedAt: 'asc' }, take: 20 })
+        for (const action of pending) {
+          const authoritativeTick = state.tick + 1
+          const claimed = await prisma.raceWildAction.updateMany({
+            where: { id: action.id, status: 'PENDING' },
+            data: { status: 'QUEUED', authoritativeTick },
+          })
+          if (claimed.count !== 1) continue
+          queueWildItemInput(state, {
+            raceId: String(raceId),
+            playerId: action.playerId,
+            wildItemInstanceId: action.wildItemInstanceId,
+            action: 'USE',
+            clientActionId: action.clientActionId,
+          }, authoritativeTick)
+        }
+      },
+      onEvents: async (events) => {
+        await persistRaceEvents(prisma, raceId, events)
+        for (const raceEvent of events.filter((entry) => entry.type === 'WILD_ITEM_MANUAL_INPUT')) {
+          const clientActionId = typeof raceEvent.metadata.clientActionId === 'string' ? raceEvent.metadata.clientActionId : null
+          if (!clientActionId || !raceEvent.sourcePlayerId) continue
+          const applied = raceEvent.metadata.applied === true
+          await prisma.raceWildAction.updateMany({
+            where: { raceId, playerId: raceEvent.sourcePlayerId, clientActionId, status: 'QUEUED' },
+            data: {
+              status: applied ? 'APPLIED' : 'REJECTED',
+              authoritativeTick: raceEvent.tick,
+              resultJson: JSON.stringify({ applied, reason: raceEvent.metadata.reason ?? null, targetPlayerId: raceEvent.targetPlayerId ?? null }),
+              resolvedAt: new Date(),
+            },
+          })
+        }
+      },
+    })
+    await prisma.raceWildAction.updateMany({
+      where: { raceId, status: { in: ['PENDING', 'QUEUED'] } },
+      data: { status: 'REJECTED', resultJson: JSON.stringify({ applied: false, reason: 'RACE_FINISHED' }), resolvedAt: new Date() },
     })
     await transitionPersistedRaceState(prisma, raceId, 'RACING', 'FINISHED')
-    if (!race.isTest) await persistRaceItemTelemetry(prisma, buildRaceItemTelemetry(raceId, config, result))
+    if (!race.isTest) {
+      await Promise.all([
+        persistRaceItemTelemetry(prisma, buildRaceItemTelemetry(raceId, config, result)),
+        persistRacePickupTelemetry(prisma, buildRacePickupTelemetry(raceId, config, result)),
+      ])
+    }
 
     const ranking = mapSeason3RaceRanking(result.standings.map((entry) => ({ rank: entry.rank, name: entry.name })), players)
 
@@ -259,6 +329,9 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
       finalLoserUserIds: resolved.scarOutcomes.map((outcome) => outcome.userId),
       predictions: activePredictions,
     })
+    const goldenCollection = result.events.find((raceEvent) => raceEvent.type === 'GOLDEN_BOX_COLLECTED' && raceEvent.sourcePlayerId)
+    const goldenPlayer = goldenCollection ? players.find((player) => String(player.userId) === goldenCollection.sourcePlayerId) : null
+    const goldenPickupId = typeof goldenCollection?.metadata.pickupId === 'string' ? goldenCollection.metadata.pickupId : null
     const playerName = (userId: number | null) => players.find((player) => player.userId === userId)?.user.name ?? null
     const predictionWinners = predictionOutcomes
       .filter((outcome) => outcome.correct)
@@ -276,6 +349,7 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
       const label = reward.reason === 'RACE_WIN' ? '🏆 Race Winner' : reward.reason === 'PREDICTION_WIN' ? '🔮 Correct Prediction' : '🎰 PERFECT WEEK'
       return `${label} — ${playerName(reward.playerId) ?? `User ${reward.playerId}`} +${reward.amount} QP`
     })
+    if (goldenPlayer) qpLines.push(`🪙 Golden Quack Box — ${goldenPlayer.user.name}${race.isTest ? ' (test)' : ' +1 QP'}`)
     const recap = `${duckNews}\n\n${qpLines.join('\n')}`
 
     assertRaceStateTransition('FINISHED', 'RESOLVED')
@@ -334,6 +408,29 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
             raceId,
             idempotencyKey: `race:${raceId}:player:${seasonPlayer.id}:${reward.reason}`,
             metadata: { weekId: week.id, weekNumber: week.weekNumber },
+          })
+        }
+        if (goldenPlayer && goldenPickupId) {
+          const goldenReward = buildGoldenTrackReward({
+            official: !race.isTest,
+            raceId,
+            pickupId: goldenPickupId,
+            seasonPlayerId: goldenPlayer.id,
+            weekId: week.id,
+            weekNumber: week.weekNumber,
+          })
+          if (!goldenReward) throw new Error('Golden reward cannot be granted for an unofficial race')
+          await applyQuackTransaction(tx, goldenReward)
+          await tx.raceEngineEvent.create({
+            data: {
+              raceId,
+              type: 'QP_TRACK_REWARD_GRANTED',
+              tick: goldenCollection!.tick,
+              timestampWithinRaceMs: goldenCollection!.timestampWithinRaceMs,
+              sourcePlayerId: String(goldenPlayer.userId),
+              targetPlayerId: null,
+              metadataJson: JSON.stringify({ pickupId: goldenPickupId, amount: 1, reason: 'TRACK_GOLDEN_BOX' }),
+            },
           })
         }
       }
