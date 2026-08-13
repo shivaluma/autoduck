@@ -70,9 +70,10 @@ export async function GET(
         'WILD_BANANA_DROPPED', 'WILD_BANANA_HIT', 'WILD_BANANA_BLOCKED', 'MINI_BUBBLE_ACTIVATED', 'MINI_BUBBLE_BLOCKED',
         'WILD_HORN_USED', 'WILD_FEATHER_USED', 'WILD_FEATHER_DODGED', 'HAZARD_HIT', 'HAZARD_DODGED', 'GOLDEN_BOX_COLLECTED', 'DUCK_FINISHED',
       ])
+      const syncEngineEvents = new Set(['WILD_ITEM_MANUAL_INPUT'])
       const onEngineEvent = (payload: { raceId: string; tick: number; type?: string; sourcePlayerId?: string; targetPlayerId?: string; metadata?: unknown }) => {
         if (Number(payload.raceId) !== raceId) return
-        if (!payload.type || !visualEngineEvents.has(payload.type)) return
+        if (!payload.type || (!visualEngineEvents.has(payload.type) && !syncEngineEvents.has(payload.type))) return
         const key = eventKey(payload)
         if (seenEventKeys.has(key)) return
         seenEventKeys.add(key)

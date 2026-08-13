@@ -119,6 +119,8 @@ export interface RaceStatus {
     resultDigest: string | null
     events: import('@/packages/race-protocol/src').RaceEvent[]
     loadouts: import('@/packages/race-protocol/src').RaceLoadout[]
+    liveTick?: number | null
+    liveManualInputs?: import('@/packages/race-protocol/src').RecordedWildItemInput[]
   } | null
   consumedChests?: {
     id: number

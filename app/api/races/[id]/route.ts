@@ -6,6 +6,7 @@ import { MYSTERY_CHESTS_ENABLED } from '@/lib/feature-flags'
 import { getDragonInventory } from '@/lib/dragon/getDragonState'
 import { getDragonOrbName } from '@/lib/dragon/naming'
 import { publicRaceEngineVisibility } from '@/lib/racing/public-engine'
+import { getLiveRaceSession, liveManualInputsFromSession } from '@/lib/racing/live-race-session'
 import {
   DRAGON_ORB_BONUS_RACE_SOURCE,
   DRAGON_ORB_FEATURED_RACE_SOURCE,
@@ -150,6 +151,8 @@ export async function GET(
         players: engineVisibility.players,
         chaosConfig: engineConfig?.chaosConfig ?? null,
         loadouts: engineConfig?.loadouts ?? [],
+        liveTick: race.status === 'running' ? (getLiveRaceSession(race.id)?.latestSnapshot?.tick ?? null) : null,
+        liveManualInputs: race.status === 'running' ? liveManualInputsFromSession(race.id) : [],
         resultDigest: race.resultDigest,
         events: race.engineEvents.map((event: {
           type: string

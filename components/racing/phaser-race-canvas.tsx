@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef } from 'react'
 import type PhaserType from 'phaser'
-import { createSimulation, snapshotRaceWorld, stepSimulation } from '@/packages/race-core/src'
+import { createSimulation, queueWildItemInput, snapshotRaceWorld, stepSimulation } from '@/packages/race-core/src'
 import { createRiverTrack } from '@/packages/race-core/src/track'
 import { raceConfigSchema, type DuckSnapshot, type RaceConfig, type RaceEvent, type RaceItemId, type RecordedWildItemInput, type StateSnapshotMessage, type WildItemId } from '@/packages/race-protocol/src'
 import { RaceAudioSystem } from './race-audio'
@@ -48,6 +48,9 @@ export function PhaserRaceCanvas({
   raceId,
   players,
   replayConfig,
+  liveConfig,
+  liveSyncTick,
+  liveManualInputs = [],
   replaySpeed = 1,
   replayPaused = false,
   replayManualInputs = [],
@@ -58,6 +61,9 @@ export function PhaserRaceCanvas({
   raceId: number
   players: PlayerLabel[]
   replayConfig?: RaceConfig | null
+  liveConfig?: RaceConfig | null
+  liveSyncTick?: number
+  liveManualInputs?: RecordedWildItemInput[]
   replaySpeed?: 1 | 2 | 4
   replayPaused?: boolean
   replayManualInputs?: RecordedWildItemInput[]
@@ -68,6 +74,11 @@ export function PhaserRaceCanvas({
   const parentId = `duck-race-${useId().replace(/:/g, '')}`
   const serializedPlayers = JSON.stringify(players)
   const serializedManualInputs = JSON.stringify(replayManualInputs)
+  const serializedLiveConfig = JSON.stringify(liveConfig ?? null)
+  const initialLiveRef = useRef<{ syncTick: number; manualInputs: RecordedWildItemInput[] } | null>(null)
+  if (!initialLiveRef.current && liveConfig) {
+    initialLiveRef.current = { syncTick: liveSyncTick ?? 0, manualInputs: liveManualInputs }
+  }
   const playbackRef = useRef({ speed: replaySpeed, paused: replayPaused })
   const inspectRef = useRef(onReplayInspect)
 
@@ -89,7 +100,9 @@ export function PhaserRaceCanvas({
     void import('phaser').then((module) => {
       if (!active) return
       const Phaser = module.default
-      const track = createRiverTrack(replayConfig?.trackVersion)
+      const parsedLiveConfig = liveConfig ?? (serializedLiveConfig !== 'null' ? JSON.parse(serializedLiveConfig) as RaceConfig : null)
+      const clientSimConfig = replayConfig ?? parsedLiveConfig
+      const track = createRiverTrack(clientSimConfig?.trackVersion ?? replayConfig?.trackVersion)
       const scenePlayers = JSON.parse(serializedPlayers) as PlayerLabel[]
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
       const mobileViewport = window.innerWidth < 640
@@ -141,8 +154,8 @@ export function PhaserRaceCanvas({
           this.drawRiver()
           if (debugPickups) this.drawPickupDebug()
           scenePlayers.forEach((player, index) => this.createDuck(player, index))
-          const chaosLabel = chaosType ?? replayConfig?.chaosConfig?.type
-          this.add.text(18, 16, `${replayConfig ? '↻ REPLAY' : '● LIVE'}${chaosLabel ? ` · 🎴 ${chaosLabel.replaceAll('_', ' ')}` : ''}`, {
+          const chaosLabel = chaosType ?? clientSimConfig?.chaosConfig?.type
+          this.add.text(18, 16, `${replayConfig ? '↻ REPLAY' : clientSimConfig ? '● LIVE' : '● LIVE'}${chaosLabel ? ` · 🎴 ${chaosLabel.replaceAll('_', ' ')}` : ''}`, {
             color: replayConfig ? '#ffcc00' : '#3dff8f', fontFamily: 'sans-serif', fontSize: '18px', fontStyle: 'bold',
             backgroundColor: '#100b20cc', padding: { x: 12, y: 8 },
           }).setScrollFactor(0).setDepth(1000)
@@ -156,7 +169,7 @@ export function PhaserRaceCanvas({
           }).setOrigin(0, 1).setScrollFactor(0).setDepth(1000)
           const soundHint = this.add.text(this.scale.width / 2, 18, '🔈 TAP FOR SOUND', { color: '#ffffff', fontFamily: 'sans-serif', fontSize: '13px', fontStyle: 'bold', backgroundColor: '#100b20cc', padding: { x: 10, y: 7 } }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(1000)
           this.input.once('pointerdown', () => { void audio.unlock(); soundHint.destroy() })
-          if (!replayConfig) this.showCountdown()
+          if (!clientSimConfig) this.showCountdown()
           markSceneReady()
         }
 
@@ -470,38 +483,83 @@ export function PhaserRaceCanvas({
         type: Phaser.AUTO, parent: parentId, backgroundColor: '#112b3b', width: mobileViewport ? 720 : 1280, height: mobileViewport ? 720 : 640, scene,
         render: { antialias: true, roundPixels: false },
         scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
-        fps: { target: replayConfig ? 60 : 30 },
+        fps: { target: clientSimConfig ? 60 : 30 },
       })
 
-      if (replayConfig) {
-        const simulation = createSimulation(replayConfig, { manualInputs: JSON.parse(serializedManualInputs) as RecordedWildItemInput[] })
+      const runClientSimulation = (config: RaceConfig, options: { replayMode?: boolean; manualInputs?: RecordedWildItemInput[]; catchUpTick?: number }) => {
+        const simulation = createSimulation(config, { manualInputs: options.manualInputs ?? [] })
+        const catchUpTick = Math.max(0, options.catchUpTick ?? 0)
+        while (simulation.tick < catchUpTick && !simulation.finished) stepSimulation(simulation)
+
         let previous = performance.now()
         let accumulator = 0
-        let replayEventCount = 0
-        const tickMs = 1000 / replayConfig.tickRate
-        const replay = (now: number) => {
+        let eventCount = simulation.events.length
+        const tickMs = 1000 / config.tickRate
+
+        const loop = (now: number) => {
           if (!active || simulation.finished) return
-          if (playbackRef.current.paused) {
+          const paused = options.replayMode ? playbackRef.current.paused : false
+          const speed = options.replayMode ? playbackRef.current.speed : 1
+          if (!paused) {
+            accumulator += Math.min(100, now - previous) * speed
             previous = now
-            replayFrame = requestAnimationFrame(replay)
-            return
-          }
-          accumulator += Math.min(100, now - previous) * playbackRef.current.speed
-          previous = now
-          while (accumulator >= tickMs && !simulation.finished) {
-            stepSimulation(simulation)
-            accumulator -= tickMs
+            while (accumulator >= tickMs && !simulation.finished) {
+              stepSimulation(simulation)
+              accumulator -= tickMs
+            }
+          } else {
+            previous = now
           }
           const world = snapshotRaceWorld(simulation)
-          const ducks = world.ducks
-          const newEvents = simulation.events.slice(replayEventCount)
+          const newEvents = simulation.events.slice(eventCount)
           scene.applyWorld(world)
           for (const raceEvent of newEvents) scene.applyEvent(raceEvent)
-          replayEventCount = simulation.events.length
-          inspectRef.current?.({ tick: simulation.tick, finished: simulation.finished, ducks, newEvents })
-          if (!simulation.finished) replayFrame = requestAnimationFrame(replay)
+          eventCount = simulation.events.length
+          inspectRef.current?.({ tick: simulation.tick, finished: simulation.finished, ducks: world.ducks, newEvents })
+          if (!simulation.finished) replayFrame = requestAnimationFrame(loop)
         }
-        void sceneReady.then(() => { replayFrame = requestAnimationFrame(replay) })
+
+        return {
+          simulation,
+          start: () => { void sceneReady.then(() => { replayFrame = requestAnimationFrame(loop) }) },
+          applySyncEvent: (event: RaceEvent) => {
+            if (event.type !== 'WILD_ITEM_MANUAL_INPUT' || event.metadata.applied !== true) return
+            const instanceId = event.metadata.instanceId
+            const clientActionId = event.metadata.clientActionId
+            if (!event.sourcePlayerId || typeof instanceId !== 'string' || typeof clientActionId !== 'string') return
+            queueWildItemInput(simulation, {
+              raceId: config.raceId,
+              playerId: event.sourcePlayerId,
+              wildItemInstanceId: instanceId,
+              action: 'USE',
+              clientActionId,
+            }, event.tick)
+          },
+        }
+      }
+
+      if (replayConfig) {
+        const runner = runClientSimulation(replayConfig, {
+          replayMode: true,
+          manualInputs: JSON.parse(serializedManualInputs) as RecordedWildItemInput[],
+        })
+        void sceneReady.then(() => runner.start())
+      } else if (parsedLiveConfig) {
+        const initialLive = initialLiveRef.current
+        const runner = runClientSimulation(parsedLiveConfig, {
+          catchUpTick: initialLive?.syncTick ?? 0,
+          manualInputs: initialLive?.manualInputs ?? [],
+        })
+        source = new EventSource(`/api/races/${raceId}/live`)
+        source.addEventListener('engine-event', (event) => {
+          try {
+            const payload = JSON.parse((event as MessageEvent<string>).data) as RaceEvent
+            if (payload.type === 'WILD_ITEM_MANUAL_INPUT') runner.applySyncEvent(payload)
+          } catch {
+            // Ignore malformed sync events.
+          }
+        })
+        void sceneReady.then(() => runner.start())
       } else {
         const visualEventTypes = new Set<RaceEvent['type']>([
           'ROCKET_FIRED', 'ROCKET_HIT', 'ROCKET_BLOCKED', 'BANANA_DROPPED', 'BANANA_HIT', 'BANANA_BLOCKED',
@@ -541,7 +599,7 @@ export function PhaserRaceCanvas({
       game?.destroy(true)
       audio.close()
     }
-  }, [chaosType, debugPickups, parentId, raceId, replayConfig, serializedManualInputs, serializedPlayers])
+  }, [chaosType, debugPickups, parentId, raceId, replayConfig, serializedLiveConfig, serializedManualInputs, serializedPlayers])
 
   return <div className="overflow-hidden rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[#112b3b] shadow-[0_8px_0_var(--color-ggd-outline)]">
     <div id={parentId} className="aspect-square min-h-[320px] w-full sm:aspect-[2/1]" aria-label="Đua Dzịt race canvas" />

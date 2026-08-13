@@ -153,6 +153,21 @@ export function toWildActionApi(record: WildActionRecord) {
   }
 }
 
+export function liveManualInputsFromSession(raceId: number) {
+  const session = getLiveRaceSession(raceId)
+  if (!session) return []
+  return session.getAllWildActions()
+    .filter((record) => record.status === 'APPLIED' && record.authoritativeTick != null)
+    .map((record) => ({
+      raceId: record.raceId,
+      playerId: record.playerId,
+      wildItemInstanceId: record.wildItemInstanceId,
+      action: 'USE' as const,
+      clientActionId: record.clientActionId,
+      authoritativeTick: record.authoritativeTick!,
+    }))
+}
+
 export async function persistLiveRaceWildActions(
   prisma: { raceWildAction: { createMany(args: unknown): Promise<unknown> } },
   raceId: number,

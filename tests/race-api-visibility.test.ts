@@ -12,12 +12,13 @@ const config = raceConfigSchema.parse({
   ],
 })
 
-test('live race exposes cosmetic players without revealing seed or gameplay config', () => {
-  const visible = publicRaceEngineVisibility('running', config.seed, config)
-
-  assert.equal(visible.seed, null)
-  assert.equal(visible.config, null)
-  assert.deepEqual(visible.players, config.players)
+test('pending and running races expose replay config for client-side live simulation', () => {
+  for (const status of ['pending', 'running'] as const) {
+    const visible = publicRaceEngineVisibility(status, config.seed, config)
+    assert.equal(visible.seed, config.seed)
+    assert.equal(visible.config, config)
+    assert.deepEqual(visible.players, config.players)
+  }
 })
 
 test('finished race reveals the immutable replay config', () => {
