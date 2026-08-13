@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/db'
 import { runRaceWorker } from '@/lib/race-worker'
 import { mapSeason3RaceRanking } from '@/lib/season3-race-mapping'
+import { assertSeason3RaceDay } from '@/lib/season3-schedule'
 import {
   applyScarEconomy,
   generateDuckNews,
@@ -45,7 +46,9 @@ function chaosFromWeek(week: {
   }
 }
 
-export async function startSeason3Race(weekId: number) {
+export async function startSeason3Race(weekId: number, options: { allowOffSchedule?: boolean } = {}) {
+  if (!options.allowOffSchedule) assertSeason3RaceDay()
+
   const week = await prisma.seasonWeek.findUnique({
     where: { id: weekId },
     include: {

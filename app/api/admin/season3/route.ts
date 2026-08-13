@@ -7,6 +7,7 @@ import {
   selectChaosCard,
 } from '@/lib/season3'
 import { startSeason3Race } from '@/lib/season3-race'
+import { Season3ScheduleError } from '@/lib/season3-schedule'
 
 function authorized(request: Request, body?: { secret?: string }) {
   const urlSecret = new URL(request.url).searchParams.get('secret')
@@ -93,6 +94,7 @@ export async function POST(request: Request) {
     userIds?: number[]
     weekId?: number
     championUserId?: number
+    test?: boolean
   }
 
   try {
@@ -140,8 +142,14 @@ export async function POST(request: Request) {
 
     if (body.action === 'start-race') {
       if (!body.weekId) return fail('weekId là bắt buộc')
-      const race = await startSeason3Race(body.weekId)
-      return NextResponse.json({ ok: true, raceId: race.id, status: race.status })
+      try {
+        const testMode = body.test === true && Boolean(process.env.RACE_SECRET_KEY) && body.secret === process.env.RACE_SECRET_KEY
+        const race = await startSeason3Race(body.weekId, { allowOffSchedule: testMode })
+        return NextResponse.json({ ok: true, raceId: race.id, status: race.status })
+      } catch (error) {
+        if (error instanceof Season3ScheduleError) return fail(error.message, 403)
+        throw error
+      }
     }
 
     if (body.action === 'open-week') {
