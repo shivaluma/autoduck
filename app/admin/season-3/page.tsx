@@ -105,6 +105,7 @@ export default function AdminSeason3Page() {
         <input value={secret} onChange={(event) => setSecret(event.target.value)} placeholder="RACE_SECRET_KEY" type="password" className="rounded-xl border-2 border-white/20 bg-black/30 px-4 py-3" />
         <button onClick={() => void refresh()} className="rounded-xl bg-[var(--color-ggd-neon-green)] px-5 py-3 font-black text-[var(--color-ggd-outline)]">LOAD</button>
         <Link href="/dev/race-lab" className="rounded-xl border-2 border-white/20 px-5 py-3 font-black">🧪 RACE LAB</Link>
+        <Link href="/admin/cosmetics" className="rounded-xl border-2 border-white/20 px-5 py-3 font-black">🪙 COSMETICS</Link>
       </div>
       {message && <p className="mt-3 text-sm text-[var(--color-ggd-gold)]">{message}</p>}
     </header>

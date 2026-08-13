@@ -25,6 +25,7 @@ import {
   type ChaosCard,
   type ChaosType,
 } from '@/lib/season3'
+import { applyQuackTransaction, calculateOfficialRaceQuackRewards } from '@/lib/cosmetics/economy'
 
 type Season3RacePlayer = {
   id: number
@@ -35,6 +36,7 @@ type Season3RacePlayer = {
   isKing: boolean
   kingStreak: number
   user: { name: string; avatarUrl?: string | null }
+  appearance?: Record<string, string | null> | null
 }
 
 function parseChaosGroups(payload: string | null | undefined) {
@@ -80,7 +82,7 @@ export async function startSeason3Race(weekId: number, options: { allowOffSchedu
     include: {
       race: true,
       loadouts: true,
-      season: { include: { players: { include: { user: true } } } },
+      season: { include: { players: { include: { user: true, appearance: true } } } },
     },
   })
 
@@ -161,7 +163,7 @@ export async function startSeason3Race(weekId: number, options: { allowOffSchedu
       players: activePlayers.map((player) => ({
         playerId: String(player.userId),
         name: player.user.name,
-        cosmeticKey: player.user.avatarUrl ?? undefined,
+        cosmeticKey: player.appearance ? JSON.stringify(player.appearance) : undefined,
       })),
       loadouts: immutableLoadouts.map((loadout) => ({ playerId: String(loadout.player.userId), itemIds: loadout.itemIds, source: loadout.source })),
       chaosConfig: {
@@ -199,7 +201,7 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
       include: {
       predictions: true,
         shieldChoices: true,
-        season: { include: { players: { include: { user: true } } } },
+        season: { include: { players: { include: { user: true, appearance: true } } } },
       },
     })
     const race = await prisma.race.findUnique({ where: { id: raceId } })
@@ -252,11 +254,16 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
     const activeUserIds = new Set(players.map((player) => player.userId))
     const activePredictions = week.predictions.filter((prediction: { predictorUserId: number; targetUserId: number }) => activeUserIds.has(prediction.predictorUserId) && activeUserIds.has(prediction.targetUserId))
     const predictionOutcomes = resolvePredictions(activePredictions, resolved.bottomTwo)
+    const quackRewards = calculateOfficialRaceQuackRewards({
+      winnerUserId: resolved.ranking[0]!.userId,
+      finalLoserUserIds: resolved.scarOutcomes.map((outcome) => outcome.userId),
+      predictions: activePredictions,
+    })
     const playerName = (userId: number | null) => players.find((player) => player.userId === userId)?.user.name ?? null
     const predictionWinners = predictionOutcomes
       .filter((outcome) => outcome.correct)
       .map((outcome) => ({ name: playerName(outcome.predictorUserId) ?? `User ${outcome.predictorUserId}` }))
-    const recap = generateDuckNews({
+    const duckNews = generateDuckNews({
       weekNumber: week.weekNumber,
       scarVictims: resolved.scarVictims,
       protectedPlayers: resolved.protectedPlayers,
@@ -265,6 +272,11 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
       kingName: playerName(resolved.kingUserId),
       predictionWinners,
     })
+    const qpLines = quackRewards.map((reward) => {
+      const label = reward.reason === 'RACE_WIN' ? '🏆 Race Winner' : reward.reason === 'PREDICTION_WIN' ? '🔮 Correct Prediction' : '🎰 PERFECT WEEK'
+      return `${label} — ${playerName(reward.playerId) ?? `User ${reward.playerId}`} +${reward.amount} QP`
+    })
+    const recap = `${duckNews}\n\n${qpLines.join('\n')}`
 
     assertRaceStateTransition('FINISHED', 'RESOLVED')
     await prisma.$transaction(async (tx: typeof prisma) => {
@@ -312,6 +324,18 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
           const prediction = week.predictions.find((candidate: { predictorUserId: number }) => candidate.predictorUserId === outcome.predictorUserId)
           if (prediction) await tx.seasonPrediction.update({ where: { id: prediction.id }, data: { pointsAwarded: outcome.pointsAwarded } })
         }
+        for (const reward of quackRewards) {
+          const seasonPlayer = players.find((player) => player.userId === reward.playerId)
+          if (!seasonPlayer) continue
+          await applyQuackTransaction(tx, {
+            seasonPlayerId: seasonPlayer.id,
+            amount: reward.amount,
+            reason: reward.reason,
+            raceId,
+            idempotencyKey: `race:${raceId}:player:${seasonPlayer.id}:${reward.reason}`,
+            metadata: { weekId: week.id, weekNumber: week.weekNumber },
+          })
+        }
       }
 
       const transitionedRace = await tx.race.updateMany({
@@ -336,7 +360,7 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
     })
     if (race.isTest) await transitionPersistedRaceState(prisma, raceId, 'RESOLVED', 'ARCHIVED')
 
-    return { raceId, recap, resolution: resolved, predictions: predictionOutcomes }
+    return { raceId, recap, resolution: resolved, predictions: predictionOutcomes, quackRewards: race.isTest ? [] : quackRewards }
   } catch (error) {
     await prisma.race.update({ where: { id: raceId }, data: { status: 'failed' } }).catch(() => undefined)
     if (!testRace) await prisma.seasonWeek.update({ where: { id: weekId }, data: { status: 'locked', raceId: null } }).catch(() => undefined)

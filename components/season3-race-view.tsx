@@ -8,6 +8,12 @@ import { Season3Avatar } from '@/components/season3-avatar'
 import { PhaserRaceCanvas } from '@/components/racing/phaser-race-canvas'
 import { Season3ReplayPlayer } from '@/components/racing/season3-replay-player'
 import type { RaceStatus } from '@/lib/types'
+import type { DuckAppearance } from '@/lib/cosmetics/types'
+
+function parseAppearance(value?: string) {
+  if (!value?.startsWith('{')) return null
+  try { return JSON.parse(value) as DuckAppearance } catch { return null }
+}
 
 export function Season3RaceView({ raceId }: { raceId: number }) {
   const [race, setRace] = useState<RaceStatus | null>(null)
@@ -35,10 +41,12 @@ export function Season3RaceView({ raceId }: { raceId: number }) {
   const ranking = useMemo(() => [...(race?.participants ?? [])].sort((left, right) => (left.initialRank ?? 99) - (right.initialRank ?? 99)), [race])
   const racePlayers = useMemo(() => {
     const loadouts = new Map((race?.engine?.loadouts ?? []).map((loadout) => [loadout.playerId, loadout.itemIds]))
+    const cosmetics = new Map((race?.engine?.config?.players ?? []).map((player) => [player.playerId, parseAppearance(player.cosmeticKey)]))
     return (race?.participants ?? []).filter((player) => !player.isClone).map((player) => ({
       playerId: String(player.userId),
       name: player.displayName ?? player.name,
       avatarUrl: player.avatarUrl,
+      appearance: cosmetics.get(String(player.userId)) ?? null,
       itemIds: loadouts.get(String(player.userId)) ?? [],
     }))
   }, [race])

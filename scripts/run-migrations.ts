@@ -2,6 +2,7 @@ import path from 'path'
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 import { PrismaClient } from '../prisma/generated/prisma/client'
 import { getIsoWeekKey, normalizeLegacyShieldState } from '../lib/shield-decay'
+import { DEFAULT_APPEARANCE, STARTER_COSMETIC_IDS } from '../lib/cosmetics/catalog'
 
 type Migration = {
   id: string
@@ -615,6 +616,193 @@ async function addSeason3ShieldChoices(prisma: PrismaClient) {
   await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "SeasonShieldChoice_weekId_userId_idx" ON "SeasonShieldChoice"("weekId", "userId")`)
 }
 
+async function createCosmeticEconomy(prisma: PrismaClient) {
+  const playerColumns: Array<[string, string]> = [
+    ['quackPoints', 'INTEGER NOT NULL DEFAULT 0'],
+    ['rarePity', 'INTEGER NOT NULL DEFAULT 0'],
+    ['epicPity', 'INTEGER NOT NULL DEFAULT 0'],
+    ['legendaryPity', 'INTEGER NOT NULL DEFAULT 0'],
+    ['cosmeticsOnboarded', 'BOOLEAN NOT NULL DEFAULT false'],
+  ]
+  for (const [column, declaration] of playerColumns) {
+    if (!(await hasColumn(prisma, 'SeasonPlayer', column))) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE "SeasonPlayer" ADD COLUMN "${column}" ${declaration}`)
+    }
+  }
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "SeasonPlayer_seasonId_quackPoints_idx" ON "SeasonPlayer"("seasonId", "quackPoints")`)
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "CurrencyTransaction" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "seasonPlayerId" INTEGER NOT NULL,
+      "amount" INTEGER NOT NULL,
+      "reason" TEXT NOT NULL,
+      "raceId" INTEGER,
+      "cosmeticId" TEXT,
+      "gachaPullId" TEXT,
+      "idempotencyKey" TEXT NOT NULL,
+      "balanceAfter" INTEGER NOT NULL,
+      "metadataJson" TEXT,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "CurrencyTransaction_seasonPlayerId_fkey" FOREIGN KEY ("seasonPlayerId") REFERENCES "SeasonPlayer"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT "CurrencyTransaction_raceId_fkey" FOREIGN KEY ("raceId") REFERENCES "Race"("id") ON DELETE SET NULL ON UPDATE CASCADE
+    )
+  `)
+  await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "CurrencyTransaction_idempotencyKey_key" ON "CurrencyTransaction"("idempotencyKey")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "CurrencyTransaction_seasonPlayerId_createdAt_idx" ON "CurrencyTransaction"("seasonPlayerId", "createdAt")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "CurrencyTransaction_raceId_reason_idx" ON "CurrencyTransaction"("raceId", "reason")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "CurrencyTransaction_gachaPullId_idx" ON "CurrencyTransaction"("gachaPullId")`)
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "PlayerCosmetic" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "seasonPlayerId" INTEGER NOT NULL,
+      "cosmeticId" TEXT NOT NULL,
+      "source" TEXT NOT NULL,
+      "sourceReferenceId" TEXT,
+      "isNew" BOOLEAN NOT NULL DEFAULT true,
+      "obtainedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "PlayerCosmetic_seasonPlayerId_fkey" FOREIGN KEY ("seasonPlayerId") REFERENCES "SeasonPlayer"("id") ON DELETE CASCADE ON UPDATE CASCADE
+    )
+  `)
+  await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "PlayerCosmetic_seasonPlayerId_cosmeticId_key" ON "PlayerCosmetic"("seasonPlayerId", "cosmeticId")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "PlayerCosmetic_seasonPlayerId_obtainedAt_idx" ON "PlayerCosmetic"("seasonPlayerId", "obtainedAt")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "PlayerCosmetic_cosmeticId_idx" ON "PlayerCosmetic"("cosmeticId")`)
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "PlayerAppearance" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "seasonPlayerId" INTEGER NOT NULL,
+      "bodyColorId" TEXT NOT NULL,
+      "bodySkinId" TEXT,
+      "faceId" TEXT,
+      "headId" TEXT,
+      "neckId" TEXT,
+      "outfitId" TEXT,
+      "backId" TEXT,
+      "petId" TEXT,
+      "auraId" TEXT,
+      "trailId" TEXT,
+      "finishId" TEXT,
+      "nameplateId" TEXT,
+      "favoriteId" TEXT,
+      "updatedAt" DATETIME NOT NULL,
+      CONSTRAINT "PlayerAppearance_seasonPlayerId_fkey" FOREIGN KEY ("seasonPlayerId") REFERENCES "SeasonPlayer"("id") ON DELETE CASCADE ON UPDATE CASCADE
+    )
+  `)
+  await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "PlayerAppearance_seasonPlayerId_key" ON "PlayerAppearance"("seasonPlayerId")`)
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "CosmeticPreset" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "seasonPlayerId" INTEGER NOT NULL,
+      "slotIndex" INTEGER NOT NULL,
+      "name" TEXT NOT NULL,
+      "appearanceJson" TEXT NOT NULL,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" DATETIME NOT NULL,
+      CONSTRAINT "CosmeticPreset_seasonPlayerId_fkey" FOREIGN KEY ("seasonPlayerId") REFERENCES "SeasonPlayer"("id") ON DELETE CASCADE ON UPDATE CASCADE
+    )
+  `)
+  await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "CosmeticPreset_seasonPlayerId_slotIndex_key" ON "CosmeticPreset"("seasonPlayerId", "slotIndex")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "CosmeticPreset_seasonPlayerId_updatedAt_idx" ON "CosmeticPreset"("seasonPlayerId", "updatedAt")`)
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "GachaPull" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "seasonPlayerId" INTEGER NOT NULL,
+      "cost" INTEGER NOT NULL,
+      "rolledRarity" TEXT NOT NULL,
+      "finalCosmeticId" TEXT,
+      "wasDuplicate" BOOLEAN NOT NULL,
+      "wasRerolled" BOOLEAN NOT NULL,
+      "refundAmount" INTEGER NOT NULL,
+      "rarePityBefore" INTEGER NOT NULL,
+      "rarePityAfter" INTEGER NOT NULL,
+      "epicPityBefore" INTEGER NOT NULL,
+      "epicPityAfter" INTEGER NOT NULL,
+      "legendaryPityBefore" INTEGER NOT NULL,
+      "legendaryPityAfter" INTEGER NOT NULL,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "GachaPull_seasonPlayerId_fkey" FOREIGN KEY ("seasonPlayerId") REFERENCES "SeasonPlayer"("id") ON DELETE CASCADE ON UPDATE CASCADE
+    )
+  `)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "GachaPull_seasonPlayerId_createdAt_idx" ON "GachaPull"("seasonPlayerId", "createdAt")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "GachaPull_rolledRarity_createdAt_idx" ON "GachaPull"("rolledRarity", "createdAt")`)
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "ShopRotation" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "seasonId" INTEGER NOT NULL,
+      "weekKey" TEXT NOT NULL,
+      "startsAt" DATETIME NOT NULL,
+      "endsAt" DATETIME NOT NULL,
+      "itemsJson" TEXT NOT NULL,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "ShopRotation_seasonId_fkey" FOREIGN KEY ("seasonId") REFERENCES "Season"("id") ON DELETE CASCADE ON UPDATE CASCADE
+    )
+  `)
+  await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "ShopRotation_seasonId_weekKey_key" ON "ShopRotation"("seasonId", "weekKey")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "ShopRotation_startsAt_endsAt_idx" ON "ShopRotation"("startsAt", "endsAt")`)
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "ShopPurchase" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "seasonPlayerId" INTEGER NOT NULL,
+      "rotationId" TEXT NOT NULL,
+      "cosmeticId" TEXT NOT NULL,
+      "price" INTEGER NOT NULL,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "ShopPurchase_seasonPlayerId_fkey" FOREIGN KEY ("seasonPlayerId") REFERENCES "SeasonPlayer"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT "ShopPurchase_rotationId_fkey" FOREIGN KEY ("rotationId") REFERENCES "ShopRotation"("id") ON DELETE CASCADE ON UPDATE CASCADE
+    )
+  `)
+  await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "ShopPurchase_seasonPlayerId_cosmeticId_key" ON "ShopPurchase"("seasonPlayerId", "cosmeticId")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "ShopPurchase_rotationId_createdAt_idx" ON "ShopPurchase"("rotationId", "createdAt")`)
+
+  const players = await prisma.seasonPlayer.findMany({ select: { id: true } })
+  for (const player of players) {
+    for (const cosmeticId of STARTER_COSMETIC_IDS) {
+      await prisma.playerCosmetic.upsert({
+        where: { seasonPlayerId_cosmeticId: { seasonPlayerId: player.id, cosmeticId } },
+        create: { seasonPlayerId: player.id, cosmeticId, source: 'DEFAULT', isNew: false },
+        update: {},
+      })
+    }
+    await prisma.playerAppearance.upsert({
+      where: { seasonPlayerId: player.id },
+      create: { seasonPlayerId: player.id, ...DEFAULT_APPEARANCE },
+      update: {},
+    })
+  }
+}
+
+async function createCosmeticAdminTools(prisma: PrismaClient) {
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "CosmeticAdminEvent" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "action" TEXT NOT NULL,
+      "actor" TEXT NOT NULL,
+      "playerId" INTEGER,
+      "cosmeticId" TEXT,
+      "metadataJson" TEXT,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "CosmeticAdminEvent_createdAt_idx" ON "CosmeticAdminEvent"("createdAt")`)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "CosmeticAdminEvent_playerId_createdAt_idx" ON "CosmeticAdminEvent"("playerId", "createdAt")`)
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "CosmeticConfig" (
+      "cosmeticId" TEXT NOT NULL PRIMARY KEY,
+      "enabled" BOOLEAN NOT NULL DEFAULT true,
+      "shopEligible" BOOLEAN,
+      "gachaEligible" BOOLEAN,
+      "priceOverride" INTEGER,
+      "limitedLabel" TEXT,
+      "updatedAt" DATETIME NOT NULL
+    )
+  `)
+}
+
 const migrations: Migration[] = [
   {
     id: '2026-04-23-001-shield-charges-v1',
@@ -665,6 +853,16 @@ const migrations: Migration[] = [
     id: '2026-08-13-001-season-3-shield-choices',
     name: 'Create Season 3 per-week Shield confirmations',
     run: addSeason3ShieldChoices,
+  },
+  {
+    id: '2026-08-13-002-cosmetic-economy-foundation',
+    name: 'Create QP ledger, cosmetic inventory, appearance, presets, and gacha audit foundation',
+    run: createCosmeticEconomy,
+  },
+  {
+    id: '2026-08-13-003-cosmetic-admin-tools',
+    name: 'Create audited cosmetic configuration and admin event tables',
+    run: createCosmeticAdminTools,
   },
 ]
 

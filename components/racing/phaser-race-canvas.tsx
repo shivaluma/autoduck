@@ -6,8 +6,10 @@ import { createSimulation, snapshotSimulation, stepSimulation } from '@/packages
 import { createRiverTrack } from '@/packages/race-core/src/track'
 import { duckSnapshotSchema, raceEventSchema, type DuckSnapshot, type RaceConfig, type RaceEvent, type RaceItemId } from '@/packages/race-protocol/src'
 import { RaceAudioSystem } from './race-audio'
+import { COSMETIC_BY_ID } from '@/lib/cosmetics/catalog'
+import { COSMETIC_LAYER_ORDER, type DuckAppearance } from '@/lib/cosmetics/types'
 
-type PlayerLabel = { playerId: string; name: string; avatarUrl?: string | null; itemIds?: RaceItemId[] }
+type PlayerLabel = { playerId: string; name: string; avatarUrl?: string | null; appearance?: DuckAppearance | null; itemIds?: RaceItemId[] }
 
 const ITEM_ICONS: Record<RaceItemId, string> = {
   BUBBLE_SHIELD: '🫧', HOMING_ROCKET: '🚀', NITRO: '⚡', BANANA: '🍌', FEATHER: '🪶', QUACK_HORN: '🔊',
@@ -85,6 +87,13 @@ export function PhaserRaceCanvas({
         preload() {
           for (const player of scenePlayers) {
             if (player.avatarUrl) this.load.image(`avatar-${player.playerId}`, player.avatarUrl)
+            if (player.appearance) {
+              for (const slot of COSMETIC_LAYER_ORDER) {
+                const cosmeticId = player.appearance[`${slot}Id` as keyof DuckAppearance]
+                const item = cosmeticId ? COSMETIC_BY_ID.get(cosmeticId) : undefined
+                if (item && !this.textures.exists(`cosmetic-${item.id}`)) this.load.image(`cosmetic-${item.id}`, item.asset)
+              }
+            }
           }
         }
 
@@ -156,11 +165,25 @@ export function PhaserRaceCanvas({
             color: '#ffffff', fontFamily: 'sans-serif', fontSize: '19px', stroke: '#100b20', strokeThickness: 5,
           }).setOrigin(0.5)
           const status = this.add.text(0, 60, '', { color: '#ffffff', fontFamily: 'sans-serif', fontSize: '16px', stroke: '#100b20', strokeThickness: 4 }).setOrigin(0.5)
-          const cosmetic = player.avatarUrl && this.textures.exists(`avatar-${player.playerId}`)
+          const cosmeticLayers = player.appearance ? COSMETIC_LAYER_ORDER.flatMap((slot) => {
+            if ((mobileViewport || scenePlayers.length > 12) && ['aura', 'finish'].includes(slot)) return []
+            const cosmeticId = player.appearance?.[`${slot}Id` as keyof DuckAppearance]
+            const item = cosmeticId ? COSMETIC_BY_ID.get(cosmeticId) : undefined
+            return item && this.textures.exists(`cosmetic-${item.id}`)
+              ? [this.add.image(0, -1, `cosmetic-${item.id}`).setDisplaySize(94, 94).setData('cosmetic-slot', slot)]
+              : []
+          }) : []
+          for (const layer of cosmeticLayers) {
+            const slot = layer.getData('cosmetic-slot')
+            if (!reducedMotion && slot === 'pet') this.tweens.add({ targets: layer, y: { from: -3, to: 3 }, duration: 650, yoyo: true, repeat: -1, ease: 'Sine.InOut' })
+            if (!reducedMotion && slot === 'aura') this.tweens.add({ targets: layer, alpha: { from: 0.55, to: 1 }, duration: 900, yoyo: true, repeat: -1 })
+          }
+          if (cosmeticLayers.length > 0) body.setVisible(false)
+          const legacyCosmetic = cosmeticLayers.length === 0 && player.avatarUrl && this.textures.exists(`avatar-${player.playerId}`)
             ? this.add.image(-3, -25, `avatar-${player.playerId}`).setDisplaySize(24, 24)
-            : this.add.text(-3, -29, ['🧢', '🎩', '👒', '👑'][index % 4], { fontSize: '19px' }).setOrigin(0.5)
+            : cosmeticLayers.length === 0 ? this.add.text(-3, -29, ['🧢', '🎩', '👒', '👑'][index % 4], { fontSize: '19px' }).setOrigin(0.5) : null
           const start = track.sample(0, -0.7 + (index / Math.max(1, scenePlayers.length - 1)) * 1.4)
-          const root = this.add.container(start.x, start.y, [body, cosmetic, name, rank, loadout, status]).setDepth(100 + index)
+          const root = this.add.container(start.x, start.y, [body, ...cosmeticLayers, ...(legacyCosmetic ? [legacyCosmetic] : []), name, rank, loadout, status]).setDepth(100 + index)
           root.setData('rank-label', rank)
           this.duckViews.set(player.playerId, { root, targetX: start.x, targetY: start.y, status })
         }
@@ -169,6 +192,22 @@ export function PhaserRaceCanvas({
           const countdown = this.add.text(this.scale.width / 2, this.scale.height / 2, '3', {
             color: '#ffcc00', fontFamily: 'sans-serif', fontSize: '110px', fontStyle: 'bold', stroke: '#100b20', strokeThickness: 12,
           }).setOrigin(0.5).setScrollFactor(0).setDepth(1500)
+          const showcase = this.add.text(this.scale.width / 2, this.scale.height / 2 + 105, '', {
+            color: '#ffffff', fontFamily: 'sans-serif', fontSize: mobileViewport ? '13px' : '17px', fontStyle: 'bold', align: 'center',
+            backgroundColor: '#100b20dd', padding: { x: 14, y: 9 }, stroke: '#100b20', strokeThickness: 2,
+          }).setOrigin(0.5).setScrollFactor(0).setDepth(1500)
+          let showcaseIndex = 0
+          const showPlayer = () => {
+            const player = scenePlayers[showcaseIndex % scenePlayers.length]!
+            const names = player.appearance ? ['head', 'outfit', 'pet', 'aura'].flatMap((slot) => {
+              const id = player.appearance?.[`${slot}Id` as keyof DuckAppearance]
+              return id ? [COSMETIC_BY_ID.get(id)?.name].filter(Boolean) : []
+            }) : []
+            showcase.setText(`${player.name}${names.length ? `\n${names.slice(0, 3).join(' · ')}` : ''}`)
+            showcaseIndex += 1
+          }
+          showPlayer()
+          this.time.addEvent({ delay: Math.max(250, 2800 / scenePlayers.length), repeat: scenePlayers.length - 2, callback: showPlayer })
           let value = 3
           this.time.addEvent({ delay: 750, repeat: 3, callback: () => {
             value -= 1
@@ -176,7 +215,7 @@ export function PhaserRaceCanvas({
             audio.countdown(value <= 0)
             countdown.setScale(1.4).setAlpha(1)
             this.tweens.add({ targets: countdown, scale: 1, duration: 250 })
-            if (value < 0) countdown.destroy()
+            if (value < 0) { countdown.destroy(); showcase.destroy() }
           } })
         }
 
@@ -222,6 +261,14 @@ export function PhaserRaceCanvas({
           const focusId = raceEvent.targetPlayerId ?? raceEvent.sourcePlayerId
           const view = focusId ? this.duckViews.get(focusId) : null
           if (!view) return
+          if (raceEvent.type === 'DUCK_FINISHED' && focusId) {
+            const player = scenePlayers.find((candidate) => candidate.playerId === focusId)
+            const finishId = player?.appearance?.finishId
+            if (finishId && this.textures.exists(`cosmetic-${finishId}`)) {
+              const finish = this.add.image(view.root.x, view.root.y, `cosmetic-${finishId}`).setDisplaySize(130, 130).setDepth(920).setAlpha(1)
+              this.tweens.add({ targets: finish, scale: reducedMotion ? 1.15 : 1.8, alpha: 0, duration: reducedMotion ? 250 : 800, onComplete: () => finish.destroy() })
+            }
+          }
           if (!reducedMotion && ['ROCKET_HIT', 'ROCKET_BLOCKED', 'BANANA_HIT', 'BUBBLE_POPPED'].includes(raceEvent.type)) {
             this.focusPlayerId = focusId ?? null
             this.focusUntil = this.time.now + 450

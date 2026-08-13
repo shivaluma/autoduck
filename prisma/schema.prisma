@@ -70,6 +70,7 @@ model Race {
   seasonWeek       SeasonWeek?         @relation("SeasonWeekRace")
   engineEvents     RaceEngineEvent[]
   itemTelemetry    RaceItemTelemetry[]
+  currencyTransactions CurrencyTransaction[]
 
   @@index([createdAt])
   @@index([isTest, createdAt])
@@ -424,6 +425,7 @@ model Season {
   weeksPlan   SeasonWeek[]
   rewards     SeasonReward[]
   redemptions SeasonRedemption[]
+  shopRotations ShopRotation[]
 
   @@index([status, createdAt])
 }
@@ -442,6 +444,11 @@ model SeasonPlayer {
   raceWins           Int      @default(0)
   raceCount          Int      @default(0)
   championshipPoints Int      @default(0)
+  quackPoints        Int      @default(0)
+  rarePity           Int      @default(0)
+  epicPity           Int      @default(0)
+  legendaryPity      Int      @default(0)
+  cosmeticsOnboarded Boolean  @default(false)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
@@ -451,10 +458,167 @@ model SeasonPlayer {
   shieldChoices SeasonShieldChoice[]
   redemptions   SeasonRedemption[]
   loadouts      SeasonLoadout[]
+  currencyTransactions CurrencyTransaction[]
+  cosmetics     PlayerCosmetic[]
+  appearance    PlayerAppearance?
+  cosmeticPresets CosmeticPreset[]
+  gachaPulls    GachaPull[]
+  shopPurchases ShopPurchase[]
 
   @@unique([seasonId, userId])
   @@index([seasonId, predictionPoints])
   @@index([seasonId, isKing])
+  @@index([seasonId, quackPoints])
+}
+
+model CosmeticAdminEvent {
+  id           String   @id @default(cuid())
+  action       String
+  actor        String
+  playerId     Int?
+  cosmeticId   String?
+  metadataJson String?
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([playerId, createdAt])
+}
+
+model CosmeticConfig {
+  cosmeticId     String   @id
+  enabled        Boolean  @default(true)
+  shopEligible   Boolean?
+  gachaEligible  Boolean?
+  priceOverride  Int?
+  limitedLabel   String?
+  updatedAt      DateTime @updatedAt
+}
+
+model ShopRotation {
+  id        String   @id @default(cuid())
+  seasonId  Int
+  weekKey   String
+  startsAt  DateTime
+  endsAt    DateTime
+  itemsJson String
+  createdAt DateTime @default(now())
+
+  season   Season        @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  purchases ShopPurchase[]
+
+  @@unique([seasonId, weekKey])
+  @@index([startsAt, endsAt])
+}
+
+model ShopPurchase {
+  id             String   @id @default(cuid())
+  seasonPlayerId Int
+  rotationId     String
+  cosmeticId     String
+  price          Int
+  createdAt      DateTime @default(now())
+
+  seasonPlayer SeasonPlayer @relation(fields: [seasonPlayerId], references: [id], onDelete: Cascade)
+  rotation     ShopRotation @relation(fields: [rotationId], references: [id], onDelete: Cascade)
+
+  @@unique([seasonPlayerId, cosmeticId])
+  @@index([rotationId, createdAt])
+}
+
+model CurrencyTransaction {
+  id             String   @id @default(cuid())
+  seasonPlayerId Int
+  amount         Int
+  reason         String
+  raceId         Int?
+  cosmeticId     String?
+  gachaPullId    String?
+  idempotencyKey String   @unique
+  balanceAfter   Int
+  metadataJson   String?
+  createdAt      DateTime @default(now())
+
+  seasonPlayer SeasonPlayer @relation(fields: [seasonPlayerId], references: [id], onDelete: Cascade)
+  race         Race?        @relation(fields: [raceId], references: [id], onDelete: SetNull)
+
+  @@index([seasonPlayerId, createdAt])
+  @@index([raceId, reason])
+  @@index([gachaPullId])
+}
+
+model PlayerCosmetic {
+  id                String   @id @default(cuid())
+  seasonPlayerId    Int
+  cosmeticId        String
+  source            String
+  sourceReferenceId String?
+  isNew             Boolean  @default(true)
+  obtainedAt        DateTime @default(now())
+
+  seasonPlayer SeasonPlayer @relation(fields: [seasonPlayerId], references: [id], onDelete: Cascade)
+
+  @@unique([seasonPlayerId, cosmeticId])
+  @@index([seasonPlayerId, obtainedAt])
+  @@index([cosmeticId])
+}
+
+model PlayerAppearance {
+  id             String   @id @default(cuid())
+  seasonPlayerId Int      @unique
+  bodyColorId    String
+  bodySkinId     String?
+  faceId         String?
+  headId         String?
+  neckId         String?
+  outfitId       String?
+  backId         String?
+  petId          String?
+  auraId         String?
+  trailId        String?
+  finishId       String?
+  nameplateId    String?
+  favoriteId     String?
+  updatedAt      DateTime @updatedAt
+
+  seasonPlayer SeasonPlayer @relation(fields: [seasonPlayerId], references: [id], onDelete: Cascade)
+}
+
+model CosmeticPreset {
+  id             String   @id @default(cuid())
+  seasonPlayerId Int
+  slotIndex      Int
+  name           String
+  appearanceJson String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  seasonPlayer SeasonPlayer @relation(fields: [seasonPlayerId], references: [id], onDelete: Cascade)
+
+  @@unique([seasonPlayerId, slotIndex])
+  @@index([seasonPlayerId, updatedAt])
+}
+
+model GachaPull {
+  id                    String   @id @default(cuid())
+  seasonPlayerId        Int
+  cost                  Int
+  rolledRarity          String
+  finalCosmeticId       String?
+  wasDuplicate          Boolean
+  wasRerolled           Boolean
+  refundAmount          Int
+  rarePityBefore        Int
+  rarePityAfter         Int
+  epicPityBefore        Int
+  epicPityAfter         Int
+  legendaryPityBefore   Int
+  legendaryPityAfter    Int
+  createdAt             DateTime @default(now())
+
+  seasonPlayer SeasonPlayer @relation(fields: [seasonPlayerId], references: [id], onDelete: Cascade)
+
+  @@index([seasonPlayerId, createdAt])
+  @@index([rolledRarity, createdAt])
 }
 
 model SeasonWeek {

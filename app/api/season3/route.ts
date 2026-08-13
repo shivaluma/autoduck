@@ -3,6 +3,8 @@ import { prisma } from '@/lib/db'
 import { RACE_ITEM_CATALOG, validateLoadout } from '@/packages/race-core/src'
 import { raceItemIdSchema } from '@/packages/race-protocol/src'
 import { parseItemIds, serializeItemIds } from '@/lib/racing/loadout'
+import { COSMETIC_CATALOG } from '@/lib/cosmetics/catalog'
+import { grantStarterCosmetics, saveAppearance } from '@/lib/cosmetics/inventory'
 
 function parseChaosGroups(payload: string | null | undefined) {
   if (!payload) return undefined
@@ -33,7 +35,7 @@ async function getActiveSeason() {
     where: { status: 'active' },
     orderBy: { createdAt: 'desc' },
     include: {
-      players: { include: { user: { select: { id: true, name: true, avatarUrl: true } } }, orderBy: { user: { name: 'asc' } } },
+      players: { include: { user: { select: { id: true, name: true, avatarUrl: true } }, cosmetics: true, appearance: true, cosmeticPresets: true }, orderBy: { user: { name: 'asc' } } },
       weeksPlan: { orderBy: { weekNumber: 'asc' }, include: { predictions: { include: { predictor: true, target: true } }, shieldChoices: true, loadouts: true, race: { select: { id: true, status: true } } } },
       rewards: { where: { active: true }, orderBy: { cost: 'asc' } },
     },
@@ -47,6 +49,10 @@ export async function GET(request: Request) {
 
     const token = new URL(request.url).searchParams.get('token')
     const viewer = token ? season.players.find((player: { accessToken: string }) => player.accessToken === token) : null
+    if (viewer && (!viewer.appearance || viewer.cosmetics.length === 0)) {
+      await prisma.$transaction((tx: typeof prisma) => grantStarterCosmetics(tx, viewer.id))
+      return GET(request)
+    }
     const currentWeek = season.weeksPlan.find((week: { status: string }) => week.status !== 'resolved') ?? null
     const skippedPlayerIds = parseSkippedPlayerIds(currentWeek?.skippedPlayerIdsJson)
     const latestResolvedWeek = [...season.weeksPlan].reverse().find((week: { status: string }) => week.status === 'resolved') ?? null
@@ -72,13 +78,19 @@ export async function GET(request: Request) {
         name: viewer.user.name,
         avatarUrl: viewer.user.avatarUrl,
         predictionPoints: viewer.predictionPoints,
+        quackPoints: viewer.quackPoints,
         scars: viewer.scars,
         shields: viewer.shields,
         isKing: viewer.isKing,
         kingStreak: viewer.kingStreak,
+        cosmeticsOnboarded: viewer.cosmeticsOnboarded,
+        appearance: viewer.appearance,
+        inventory: viewer.cosmetics,
+        cosmeticPresets: viewer.cosmeticPresets,
       } : null,
       personalLink: viewer ? `/season-3?token=${encodeURIComponent(viewer.accessToken)}` : null,
       raceItems: RACE_ITEM_CATALOG,
+      cosmeticCatalog: COSMETIC_CATALOG,
       players: season.players.map((player: { user: { id: number; name: string; avatarUrl: string | null }; userId: number; predictionPoints: number; scars: number; shields: number; isKing: boolean; kingStreak: number }) => ({
         id: player.user.id,
         name: player.user.name,
@@ -133,13 +145,52 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json() as { token?: string; targetUserId?: number; action?: string; useShield?: boolean; itemIds?: unknown[]; ready?: boolean }
+    const body = await request.json() as { token?: string; targetUserId?: number; action?: string; useShield?: boolean; itemIds?: unknown[]; ready?: boolean; appearance?: Record<string, unknown>; cosmeticId?: string | null; presetIndex?: number; presetName?: string }
     if (!body.token) return jsonError('Token là bắt buộc')
 
     const season = await getActiveSeason()
     if (!season) return jsonError('Chưa có Season 3 active', 404)
     const player = season.players.find((candidate: { accessToken: string }) => candidate.accessToken === body.token)
     if (!player) return jsonError('Personal link không hợp lệ', 401)
+    if (body.action === 'appearance') {
+      if (!body.appearance) return jsonError('Thiếu appearance')
+      const appearance = await prisma.$transaction(async (tx: typeof prisma) => {
+        await grantStarterCosmetics(tx, player.id)
+        const saved = await saveAppearance(tx, player.id, body.appearance!)
+        await tx.seasonPlayer.update({ where: { id: player.id }, data: { cosmeticsOnboarded: true } })
+        return saved
+      })
+      return NextResponse.json({ ok: true, appearance })
+    }
+    if (body.action === 'favorite') {
+      if (body.cosmeticId) {
+        const owned = await prisma.playerCosmetic.findUnique({ where: { seasonPlayerId_cosmeticId: { seasonPlayerId: player.id, cosmeticId: body.cosmeticId } } })
+        if (!owned) return jsonError('Bạn chưa sở hữu cosmetic này', 409)
+      }
+      const appearance = await prisma.playerAppearance.update({ where: { seasonPlayerId: player.id }, data: { favoriteId: body.cosmeticId ?? null } })
+      return NextResponse.json({ ok: true, appearance })
+    }
+    if (body.action === 'save-preset') {
+      if (!Number.isInteger(body.presetIndex) || body.presetIndex! < 1 || body.presetIndex! > 3 || !body.appearance) return jsonError('Preset không hợp lệ')
+      const validated = await saveAppearance(prisma, player.id, body.appearance)
+      const preset = await prisma.cosmeticPreset.upsert({
+        where: { seasonPlayerId_slotIndex: { seasonPlayerId: player.id, slotIndex: body.presetIndex! } },
+        create: { seasonPlayerId: player.id, slotIndex: body.presetIndex!, name: body.presetName?.trim().slice(0, 30) || `Preset ${body.presetIndex}`, appearanceJson: JSON.stringify(validated) },
+        update: { name: body.presetName?.trim().slice(0, 30) || `Preset ${body.presetIndex}`, appearanceJson: JSON.stringify(validated) },
+      })
+      return NextResponse.json({ ok: true, preset })
+    }
+    if (body.action === 'load-preset') {
+      if (!Number.isInteger(body.presetIndex)) return jsonError('Preset không hợp lệ')
+      const preset = await prisma.cosmeticPreset.findUnique({ where: { seasonPlayerId_slotIndex: { seasonPlayerId: player.id, slotIndex: body.presetIndex! } } })
+      if (!preset) return jsonError('Preset chưa được lưu', 404)
+      const appearance = await saveAppearance(prisma, player.id, JSON.parse(preset.appearanceJson))
+      return NextResponse.json({ ok: true, appearance })
+    }
+    if (body.action === 'seen-cosmetics') {
+      await prisma.playerCosmetic.updateMany({ where: { seasonPlayerId: player.id, isNew: true }, data: { isNew: false } })
+      return NextResponse.json({ ok: true })
+    }
     const week = season.weeksPlan.find((candidate: { status: string }) => candidate.status === 'open')
     if (!week) return jsonError('Tuần đã đóng hoặc đã resolve', 409)
     const skippedPlayerIds = parseSkippedPlayerIds(week.skippedPlayerIdsJson)

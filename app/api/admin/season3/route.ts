@@ -13,6 +13,7 @@ import { Season3ScheduleError } from '@/lib/season3-schedule'
 import { createRaceSeed } from '@/lib/racing/audit'
 import { selectAutoLoadout, serializeItemIds } from '@/lib/racing/loadout'
 import { createRaceRng } from '@/packages/race-core/src'
+import { grantStarterCosmetics } from '@/lib/cosmetics/inventory'
 
 function authorized(request: Request, body?: { secret?: string }) {
   const urlSecret = new URL(request.url).searchParams.get('secret')
@@ -160,26 +161,30 @@ export async function POST(request: Request) {
       const chaosSeed = createRaceSeed()
       const chaosRng = createRaceRng(chaosSeed, 'chaos:week:1')
       const chaos = selectChaosCard(users.map((user: { id: number; name: string }) => ({ userId: user.id, name: user.name })), () => chaosRng.next())
-      const season = await prisma.season.create({
-        data: {
-          key: body.key ?? 'S3',
-          name: body.name ?? 'ĐUA DZỊT — SEASON 3',
-          year: body.year ?? new Date().getFullYear(),
-          weeks: Math.max(1, body.weeks ?? 12),
-          players: { create: users.map((user: { id: number }) => ({ userId: user.id, accessToken: randomUUID() })) },
-          rewards: { create: DEFAULT_SEASON3_REWARDS.map((reward) => ({ ...reward })) },
-          weeksPlan: {
-            create: {
-              weekNumber: 1,
-              chaosType: chaos.type,
-              chaosTargetUserId: chaos.targetUserId,
-              chaosTargetUserId2: chaos.targetUserId2,
-              chaosPayload: chaosPayload(chaos.groups),
-              chaosSeed,
+      const season = await prisma.$transaction(async (tx: typeof prisma) => {
+        const created = await tx.season.create({
+          data: {
+            key: body.key ?? 'S3',
+            name: body.name ?? 'ĐUA DZỊT — SEASON 3',
+            year: body.year ?? new Date().getFullYear(),
+            weeks: Math.max(1, body.weeks ?? 12),
+            players: { create: users.map((user: { id: number }) => ({ userId: user.id, accessToken: randomUUID() })) },
+            rewards: { create: DEFAULT_SEASON3_REWARDS.map((reward) => ({ ...reward })) },
+            weeksPlan: {
+              create: {
+                weekNumber: 1,
+                chaosType: chaos.type,
+                chaosTargetUserId: chaos.targetUserId,
+                chaosTargetUserId2: chaos.targetUserId2,
+                chaosPayload: chaosPayload(chaos.groups),
+                chaosSeed,
+              },
             },
           },
-        },
-        include: { players: { include: { user: true } }, weeksPlan: true },
+          include: { players: { include: { user: true } }, weeksPlan: true },
+        })
+        for (const player of created.players) await grantStarterCosmetics(tx, player.id)
+        return created
       })
       return NextResponse.json({ ok: true, seasonId: season.id, weekId: season.weeksPlan[0]?.id, players: season.players.map((player: { user: { name: string }; accessToken: string }) => ({ name: player.user.name, token: player.accessToken })) }, { status: 201 })
     }

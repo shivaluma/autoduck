@@ -42,14 +42,14 @@ function RuleVisual({ type, targetName, groups }: { type: string; targetName?: s
 
 export function Season3ChaosCard({ type, weekNumber, targetName, groups, predictionCount, playerCount, compact = false }: ChaosCardProps) {
   const spec = specs[type] ?? specs.NORMAL
-  return <section className={cn('relative overflow-hidden rounded-[2rem] border-4 border-[var(--color-ggd-outline)] bg-gradient-to-br p-5 shadow-[0_8px_0_var(--color-ggd-outline)]', spec.tone, compact ? 'p-4' : 'p-6')}>
+  return <section className={cn('relative overflow-hidden rounded-[2rem] border-4 border-[var(--color-ggd-outline)] bg-gradient-to-br p-4 shadow-[0_8px_0_var(--color-ggd-outline)] sm:p-6', spec.tone, compact ? 'sm:p-4' : '')}>
     <div className="pointer-events-none absolute -right-8 -top-12 text-[9rem] opacity-10 grayscale">{spec.icon}</div>
     <div className="relative z-[1] flex flex-wrap items-start justify-between gap-4">
-      <div className="flex items-start gap-4">
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border-2 border-white/20 bg-black/25 text-4xl shadow-inner">{spec.icon}</div>
-        <div>
+      <div className="flex min-w-0 flex-1 items-start gap-3 sm:gap-4">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-white/20 bg-black/25 text-3xl shadow-inner sm:h-16 sm:w-16 sm:text-4xl">{spec.icon}</div>
+        <div className="min-w-0 flex-1">
           <div className={cn('text-xs font-black tracking-[0.25em]', spec.accent)}>TUẦN {weekNumber} • CHAOS</div>
-          <h2 className="mt-1 font-display text-4xl leading-none text-white">{spec.label}</h2>
+          <h2 className="mt-1 break-words font-display text-2xl leading-none text-white min-[430px]:text-3xl sm:text-4xl">{spec.label}</h2>
           <p className="mt-2 max-w-xl text-base font-bold text-white/85">{spec.rule}</p>
         </div>
       </div>
