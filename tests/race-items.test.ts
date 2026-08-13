@@ -156,3 +156,25 @@ test('full item race finishes in target window with readable bounded event volum
   assert.ok(types.has('HORN_USED'))
   assert.ok(result.events.length < 500, `event count ${result.events.length}`)
 })
+
+test('headless telemetry observes item events without retaining the official event stream', () => {
+  const raceConfig = raceConfigSchema.parse({
+    raceId: 'telemetry-items',
+    seed: 'bc'.repeat(32),
+    players: Array.from({ length: 8 }, (_, index) => ({ playerId: String(index + 1), name: `Duck ${index + 1}` })),
+    loadouts: Array.from({ length: 8 }, (_, index) => ({
+      playerId: String(index + 1),
+      itemIds: index % 2 === 0 ? ['NITRO', 'BANANA'] : ['HOMING_ROCKET', 'FEATHER'],
+      source: 'PLAYER',
+    })),
+    itemTuning: { nitroSpeedMultiplier: 1.1, rocketSlowMultiplier: 0.9, bananaSlowMultiplier: 0.92 },
+  })
+  const observed: RaceEventType[] = []
+  const result = simulateRace(raceConfig, { recordEvents: false, onEvent: (event) => observed.push(event.type) })
+
+  assert.deepEqual(result.events, [])
+  assert.ok(observed.includes('NITRO_STARTED'))
+  assert.ok(observed.includes('ROCKET_FIRED'))
+  assert.ok(observed.includes('RACE_FINISHED'))
+  assert.equal(createItemRaceState(raceConfig).tuning.nitroSpeedMultiplier, 1.1)
+})

@@ -57,17 +57,19 @@ model Race {
   raceSeed         String?
   engineConfigJson String?
   resultDigest     String?
+  liveSnapshotJson String?
 
   participants     RaceParticipant[]
   commentaries     CommentaryLog[]
   commentaryJobs   CommentaryJob[]
   dragonWeeks      DragonWeek[]
-  dragonOrbs       DragonOrb[]       @relation("DragonOrbOriginalRace")
-  dragonItems      DragonItem[]      @relation("DragonItemEquippedRace")
+  dragonOrbs       DragonOrb[]         @relation("DragonOrbOriginalRace")
+  dragonItems      DragonItem[]        @relation("DragonItemEquippedRace")
   dragonOrbEvents  DragonOrbEvent[]
   dragonItemEvents DragonItemEvent[]
-  seasonWeek       SeasonWeek?       @relation("SeasonWeekRace")
+  seasonWeek       SeasonWeek?         @relation("SeasonWeekRace")
   engineEvents     RaceEngineEvent[]
+  itemTelemetry    RaceItemTelemetry[]
 
   @@index([createdAt])
   @@index([isTest, createdAt])
@@ -89,6 +91,29 @@ model RaceEngineEvent {
 
   @@index([raceId, tick, id])
   @@index([raceId, type])
+}
+
+model RaceItemTelemetry {
+  id           Int      @id @default(autoincrement())
+  raceId       Int
+  playerId     String
+  itemId       String
+  loadoutKey   String
+  finalRank    Int
+  baselineRank Int
+  rankDelta    Int
+  won          Boolean
+  topThree     Boolean
+  bottomTwo    Boolean
+  activated    Boolean
+  succeeded    Boolean
+  createdAt    DateTime @default(now())
+
+  race Race @relation(fields: [raceId], references: [id], onDelete: Cascade)
+
+  @@unique([raceId, playerId, itemId])
+  @@index([itemId, createdAt])
+  @@index([loadoutKey, createdAt])
 }
 
 model RaceParticipant {
@@ -433,23 +458,24 @@ model SeasonPlayer {
 }
 
 model SeasonWeek {
-  id                  Int       @id @default(autoincrement())
-  seasonId            Int
-  weekNumber          Int
-  status              String    @default("open") // open, locked, racing, resolved
-  chaosType           String
-  chaosTargetUserId   Int?
-  chaosTargetUserId2  Int?
-  chaosPayload        String?
-  chaosRevealedAt     DateTime  @default(now())
-  predictionsLockedAt DateTime?
-  raceId              Int?      @unique
-  recap               String?
-  resolvedAt          DateTime?
-  raceSeed            String?
-  chaosSeed           String?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  id                   Int       @id @default(autoincrement())
+  seasonId             Int
+  weekNumber           Int
+  status               String    @default("open") // open, locked, racing, resolved
+  chaosType            String
+  chaosTargetUserId    Int?
+  chaosTargetUserId2   Int?
+  chaosPayload         String?
+  chaosRevealedAt      DateTime  @default(now())
+  predictionsLockedAt  DateTime?
+  raceId               Int?      @unique
+  recap                String?
+  resolvedAt           DateTime?
+  raceSeed             String?
+  chaosSeed            String?
+  skippedPlayerIdsJson String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   season        Season               @relation(fields: [seasonId], references: [id], onDelete: Cascade)
   race          Race?                @relation("SeasonWeekRace", fields: [raceId], references: [id], onDelete: SetNull)

@@ -114,6 +114,7 @@ export interface RaceStatus {
     seedCommit: string | null
     seed: string | null
     config: import('@/packages/race-protocol/src').RaceConfig | null
+    chaosConfig: import('@/packages/race-protocol/src').RaceChaosConfig | null
     resultDigest: string | null
     events: import('@/packages/race-protocol/src').RaceEvent[]
     loadouts: import('@/packages/race-protocol/src').RaceLoadout[]

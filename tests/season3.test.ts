@@ -5,6 +5,7 @@ import {
   generateDuckNews,
   resolvePredictions,
   resolveSeason3Race,
+  prepareChaosCard,
   selectChaosCard,
   selectChampion,
 } from '../lib/season3'
@@ -135,6 +136,15 @@ test('Chaos selection returns exactly one card and persists random groups', () =
   const card = selectChaosCard(ranking.slice(0, 3), () => 0.3)
   assert.ok(['NORMAL', 'REVERSE', 'DUO', 'TRIPLE_ELIMINATION', 'CUT_LINE', 'CONSTRUCTORS', 'BOUNTY_HUNT'].includes(card.type))
   if (card.type === 'DUO' || card.type === 'CONSTRUCTORS') assert.ok(card.groups && card.groups.flat().length === 3)
+})
+
+test('re-preparing a persisted Chaos card keeps the seeded stream aligned after roster changes', () => {
+  const sequence = [0.34, 0.91, 0.14, 0.72, 0.31, 0.55]
+  let selectedCursor = 0
+  const selected = selectChaosCard(ranking, () => sequence[selectedCursor++ % sequence.length])
+  let preparedCursor = 1
+  const prepared = prepareChaosCard(selected.type, ranking, () => sequence[preparedCursor++ % sequence.length])
+  assert.deepEqual(prepared, selected)
 })
 
 test('championship selection never uses prediction points', () => {

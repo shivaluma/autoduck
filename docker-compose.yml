@@ -8,6 +8,7 @@ services:
       - Z_AI_API_KEY=${Z_AI_API_KEY}
       - SIMULATE_RACE=false
       - NODE_ENV=production
+      - RACE_SECRET_KEY=${RACE_SECRET_KEY}
       - R2_ACCOUNT_ID=${R2_ACCOUNT_ID}
       - R2_BUCKET_NAME=${R2_BUCKET_NAME}
       - R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID}

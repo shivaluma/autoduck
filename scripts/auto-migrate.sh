@@ -3,7 +3,11 @@ set -euo pipefail
 
 started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 echo "🧭 Auto migration started at ${started_at}"
-echo "   DATABASE_URL=${DATABASE_URL:-<default sqlite>}"
+if [[ -n "${DATABASE_URL:-}" ]]; then
+  echo "   DATABASE_URL=<configured>"
+else
+  echo "   DATABASE_URL=<default sqlite>"
+fi
 
 echo "🗄️  Syncing Prisma schema..."
 prisma db push

@@ -3,8 +3,10 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import {
   DEFAULT_SEASON3_REWARDS,
+  prepareChaosCard,
   selectChampion,
   selectChaosCard,
+  type ChaosType,
 } from '@/lib/season3'
 import { startSeason3Race } from '@/lib/season3-race'
 import { Season3ScheduleError } from '@/lib/season3-schedule'
@@ -36,6 +38,16 @@ function parseChaosGroups(payload: string | null | undefined) {
   }
 }
 
+function parseSkippedPlayerIds(payload: string | null | undefined) {
+  if (!payload) return []
+  try {
+    const parsed = JSON.parse(payload)
+    return Array.isArray(parsed) ? parsed.filter((value): value is number => Number.isInteger(value)) : []
+  } catch {
+    return []
+  }
+}
+
 export async function GET(request: Request) {
   if (!authorized(request)) return fail('Unauthorized', 401)
   const season = await prisma.season.findFirst({
@@ -48,6 +60,28 @@ export async function GET(request: Request) {
     },
   })
   if (!season) return NextResponse.json({ season: null })
+  const raceIds = season.weeksPlan.flatMap((week: { race: { id: number } | null }) => week.race ? [week.race.id] : [])
+  const telemetry = raceIds.length > 0
+    ? await prisma.raceItemTelemetry.findMany({ where: { raceId: { in: raceIds } } })
+    : []
+  const summarizeTelemetry = (key: 'itemId' | 'loadoutKey') => {
+    const groups = new Map<string, typeof telemetry>()
+    for (const row of telemetry) groups.set(row[key], [...(groups.get(row[key]) ?? []), row])
+    return [...groups].map(([name, rows]) => {
+      const playerPicks = key === 'itemId' ? rows.length : rows.length / 2
+      const normalize = key === 'itemId' ? 1 : 2
+      return {
+        name,
+        picks: playerPicks,
+        winRate: rows.filter((row: { won: boolean }) => row.won).length / normalize / playerPicks,
+        bottom2Rate: rows.filter((row: { bottomTwo: boolean }) => row.bottomTwo).length / normalize / playerPicks,
+        averageFinish: rows.reduce((sum: number, row: { finalRank: number }) => sum + row.finalRank, 0) / normalize / playerPicks,
+        averageRankDelta: rows.reduce((sum: number, row: { rankDelta: number }) => sum + row.rankDelta, 0) / normalize / playerPicks,
+        activationRate: rows.filter((row: { activated: boolean }) => row.activated).length / rows.length,
+        successRate: rows.filter((row: { succeeded: boolean }) => row.succeeded).length / Math.max(1, rows.filter((row: { activated: boolean }) => row.activated).length),
+      }
+    }).sort((left, right) => right.winRate - left.winRate)
+  }
   return NextResponse.json({
     season: {
       id: season.id,
@@ -68,7 +102,7 @@ export async function GET(request: Request) {
       isKing: player.isKing,
       kingStreak: player.kingStreak,
     })),
-    weeks: season.weeksPlan.map((week: { id: number; weekNumber: number; status: string; chaosType: string; chaosTargetUserId: number | null; chaosTargetUserId2: number | null; chaosPayload: string | null; predictions: unknown[]; loadouts: Array<{ status: string }>; shieldChoices: Array<{ seasonPlayer: { user: { name: string } } }>; recap: string | null; race: { id: number; status: string } | null }) => ({
+    weeks: season.weeksPlan.map((week: { id: number; weekNumber: number; status: string; chaosType: string; chaosTargetUserId: number | null; chaosTargetUserId2: number | null; chaosPayload: string | null; skippedPlayerIdsJson: string | null; predictions: unknown[]; loadouts: Array<{ status: string; userId: number }>; shieldChoices: Array<{ userId: number; seasonPlayer: { user: { name: string } } }>; recap: string | null; race: { id: number; status: string } | null }) => ({
       id: week.id,
       weekNumber: week.weekNumber,
       status: week.status,
@@ -76,14 +110,19 @@ export async function GET(request: Request) {
       chaosTargetUserId: week.chaosTargetUserId,
       chaosTargetUserId2: week.chaosTargetUserId2,
       chaosGroups: parseChaosGroups(week.chaosPayload),
+      skippedPlayerIds: parseSkippedPlayerIds(week.skippedPlayerIdsJson),
       predictionCount: week.predictions.length,
-      loadoutReadyCount: week.loadouts.filter((loadout) => loadout.status === 'ready' || loadout.status === 'auto').length,
-      shieldConfirmations: week.shieldChoices.map((choice) => choice.seasonPlayer.user.name),
+      loadoutReadyCount: week.loadouts.filter((loadout) => !parseSkippedPlayerIds(week.skippedPlayerIdsJson).includes(loadout.userId) && (loadout.status === 'ready' || loadout.status === 'auto')).length,
+      shieldConfirmations: week.shieldChoices.filter((choice) => !parseSkippedPlayerIds(week.skippedPlayerIdsJson).includes(choice.userId)).map((choice) => choice.seasonPlayer.user.name),
       recap: week.recap,
       raceId: week.race?.id ?? null,
       raceStatus: week.race?.status ?? null,
     })),
     rewards: season.rewards,
+    balance: {
+      items: summarizeTelemetry('itemId'),
+      loadouts: summarizeTelemetry('loadoutKey'),
+    },
   })
 }
 
@@ -98,6 +137,7 @@ export async function POST(request: Request) {
     userIds?: number[]
     weekId?: number
     championUserId?: number
+    userId?: number
     test?: boolean
   }
 
@@ -171,14 +211,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, week })
     }
 
+    if (body.action === 'toggle-skip') {
+      if (!body.weekId || !body.userId) return fail('weekId và userId là bắt buộc')
+      const week = await prisma.seasonWeek.findUnique({ where: { id: body.weekId } })
+      if (!week || week.status !== 'open') return fail('Chỉ đổi roster khi prep đang mở', 409)
+      if (!season.players.some((player: { userId: number }) => player.userId === body.userId)) return fail('Dzịt không thuộc Season')
+      const skipped = new Set(parseSkippedPlayerIds(week.skippedPlayerIdsJson))
+      if (skipped.has(body.userId)) skipped.delete(body.userId)
+      else skipped.add(body.userId)
+      const activePlayers = season.players.filter((player: { userId: number }) => !skipped.has(player.userId))
+      if (activePlayers.length < 2 || activePlayers.length > 16) return fail('Race cần 2–16 dzịt active')
+      const chaosSeed = week.chaosSeed ?? createRaceSeed()
+      const rng = createRaceRng(chaosSeed, `chaos:week:${week.weekNumber}`)
+      rng.next() // Keep the preparation stream aligned after the persisted card draw.
+      const chaos = prepareChaosCard(week.chaosType as ChaosType, activePlayers.map((player: { userId: number; user: { name: string } }) => ({ userId: player.userId, name: player.user.name })), () => rng.next())
+      await prisma.$transaction([
+        prisma.seasonWeek.update({ where: { id: week.id }, data: { skippedPlayerIdsJson: JSON.stringify([...skipped].sort((left, right) => left - right)), chaosSeed, chaosTargetUserId: chaos.targetUserId, chaosTargetUserId2: chaos.targetUserId2, chaosPayload: chaosPayload(chaos.groups) } }),
+        prisma.seasonPrediction.deleteMany({ where: { weekId: week.id, OR: [{ predictorUserId: { in: [...skipped] } }, { targetUserId: { in: [...skipped] } }] } }),
+        prisma.seasonLoadout.deleteMany({ where: { weekId: week.id, userId: { in: [...skipped] } } }),
+        prisma.seasonShieldChoice.deleteMany({ where: { weekId: week.id, userId: { in: [...skipped] } } }),
+      ])
+      return NextResponse.json({ ok: true, skippedPlayerIds: [...skipped], chaos })
+    }
+
     if (body.action === 'lock') {
       const week = body.weekId ? await prisma.seasonWeek.findUnique({ where: { id: body.weekId } }) : season.weeksPlan.find((candidate: { status: string }) => candidate.status === 'open')
       if (!week || week.status !== 'open') return fail('Tuần không ở trạng thái open', 409)
       const seed = week.raceSeed ?? createRaceSeed()
+      const skippedPlayerIds = new Set(parseSkippedPlayerIds(week.skippedPlayerIdsJson))
+      const activePlayers = season.players.filter((player: { userId: number }) => !skippedPlayerIds.has(player.userId))
       const existing = await prisma.seasonLoadout.findMany({ where: { weekId: week.id } })
       const existingByPlayer = new Map<number, { seasonPlayerId: number; status: string }>(existing.map((loadout: { seasonPlayerId: number; status: string }) => [loadout.seasonPlayerId, loadout] as const))
       const updated = await prisma.$transaction(async (tx: typeof prisma) => {
-        for (const player of season.players) {
+        for (const player of activePlayers) {
           const loadout = existingByPlayer.get(player.id)
           if (loadout?.status === 'ready') continue
           const itemIds = selectAutoLoadout(seed, String(player.userId))
@@ -190,6 +255,13 @@ export async function POST(request: Request) {
         }
         return tx.seasonWeek.update({ where: { id: week.id }, data: { status: 'locked', predictionsLockedAt: new Date(), raceSeed: seed } })
       })
+      return NextResponse.json({ ok: true, week: updated })
+    }
+
+    if (body.action === 'unlock') {
+      const week = body.weekId ? await prisma.seasonWeek.findUnique({ where: { id: body.weekId } }) : season.weeksPlan.find((candidate: { status: string }) => candidate.status === 'locked')
+      if (!week || week.status !== 'locked' || week.raceId) return fail('Chỉ có thể mở lại trước khi race bắt đầu', 409)
+      const updated = await prisma.seasonWeek.update({ where: { id: week.id }, data: { status: 'open', predictionsLockedAt: null } })
       return NextResponse.json({ ok: true, week: updated })
     }
 

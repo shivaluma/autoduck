@@ -145,6 +145,7 @@ export async function GET(
         seedCommit: race.seedCommit,
         seed: race.status === 'finished' ? race.raceSeed : null,
         config: race.status === 'finished' ? engineConfig : null,
+        chaosConfig: engineConfig?.chaosConfig ?? null,
         loadouts: engineConfig?.loadouts ?? [],
         resultDigest: race.resultDigest,
         events: race.engineEvents.map((event: {

@@ -75,6 +75,12 @@ test('Chaos preparation is deterministic and persists every player exactly once'
   assert.deepEqual([...prepare('CONSTRUCTORS').groups!.flat()].sort(), players.map((player) => player.playerId).sort())
 })
 
+test('Duo uses one trio for an odd lobby instead of giving one duck a free singleton group', () => {
+  const players = raw.slice(0, 7).map(({ playerId }) => ({ playerId }))
+  const prepared = prepareChaosRule('DUO', players, () => 0.4)
+  assert.deepEqual(prepared.groups!.map((group) => group.length).sort(), [2, 2, 3])
+})
+
 test('Chaos rejects incomplete persisted group data', () => {
   assert.throws(() => losers('DUO'), /persisted pairs/)
   assert.throws(() => losers('CONSTRUCTORS', { groups: [['p1']] }), /two persisted teams/)

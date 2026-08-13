@@ -60,6 +60,7 @@ test('replay verifies the persisted result digest', () => {
   const expectedDigest = createResultDigest(official)
   assert.deepEqual(replayRace(raceConfig, expectedDigest).result, official)
   assert.throws(() => replayRace(raceConfig, '0'.repeat(64)), /Replay mismatch/)
+  assert.throws(() => replayRace({ ...raceConfig, engineVersion: '0.9.0' }), /Unsupported replay version/)
 })
 
 test('fixed-step simulation stays finite, bounded and produces unique ranks', () => {

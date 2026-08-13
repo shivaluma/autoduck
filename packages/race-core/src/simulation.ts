@@ -38,6 +38,7 @@ export interface RaceSimulationState {
   events: RaceEvent[]
   finished: boolean
   recordEvents: boolean
+  onEvent?: (raceEvent: RaceEvent) => void
   rngByPlayer: Map<string, DeterministicRng>
   itemState: ItemRaceState
   lastCollisionEventTick: Map<string, number>
@@ -45,6 +46,7 @@ export interface RaceSimulationState {
 
 export interface SimulationOptions {
   recordEvents?: boolean
+  onEvent?: (raceEvent: RaceEvent) => void
 }
 
 function event(state: RaceSimulationState, value: Omit<RaceEvent, 'raceId' | 'tick' | 'timestampWithinRaceMs'>): RaceEvent {
@@ -54,6 +56,13 @@ function event(state: RaceSimulationState, value: Omit<RaceEvent, 'raceId' | 'ti
     timestampWithinRaceMs: state.tick * (1000 / state.config.tickRate),
     ...value,
   }
+}
+
+function emitEvent(state: RaceSimulationState, value: Omit<RaceEvent, 'raceId' | 'tick' | 'timestampWithinRaceMs'>) {
+  if (!state.recordEvents && !state.onEvent) return
+  const raceEvent = event(state, value)
+  if (state.recordEvents) state.events.push(raceEvent)
+  state.onEvent?.(raceEvent)
 }
 
 function scheduleImpulse(rng: DeterministicRng, currentTick: number, tickRate: number) {
@@ -103,11 +112,12 @@ export function createSimulation(config: RaceConfig, options: SimulationOptions 
     events: [],
     finished: false,
     recordEvents: options.recordEvents !== false,
+    onEvent: options.onEvent,
     rngByPlayer,
     itemState: createItemRaceState(config),
     lastCollisionEventTick: new Map(),
   }
-  if (state.recordEvents) state.events.push(event(state, { type: 'RACE_STARTED', metadata: { playerCount: ducks.length } }))
+  emitEvent(state, { type: 'RACE_STARTED', metadata: { playerCount: ducks.length } })
   return state
 }
 
@@ -146,12 +156,12 @@ function resolveCollisions(state: RaceSimulationState) {
       const pairKey = `${left.playerId}:${right.playerId}`
       const lastEventTick = state.lastCollisionEventTick.get(pairKey) ?? -Infinity
       if (state.recordEvents && state.tick - lastEventTick >= Math.round(state.config.tickRate * 0.5)) {
-        state.events.push(event(state, {
+        emitEvent(state, {
           type: 'DUCK_COLLISION',
           sourcePlayerId: left.playerId,
           targetPlayerId: right.playerId,
           metadata: {},
-        }))
+        })
         state.lastCollisionEventTick.set(pairKey, state.tick)
       }
     }
@@ -180,7 +190,7 @@ export function stepSimulation(state: RaceSimulationState) {
   const tickStartMs = (state.tick - 1) * (1000 / state.config.tickRate)
 
   tickItemSystem(state.itemState, state.ducks, state.tick, state.config.tickRate, (type, sourcePlayerId, targetPlayerId, metadata = {}) => {
-    if (state.recordEvents) state.events.push(event(state, { type, sourcePlayerId, targetPlayerId, metadata }))
+    emitEvent(state, { type, sourcePlayerId, targetPlayerId, metadata })
   })
 
   for (const duck of state.ducks) {
@@ -206,20 +216,18 @@ export function stepSimulation(state: RaceSimulationState) {
       duck.finished = true
       duck.progress = 1
       duck.finishTimeMs = tickStartMs + fraction * (1000 / state.config.tickRate)
-      if (state.recordEvents) {
-        state.events.push(event(state, {
-          type: 'DUCK_FINISHED',
-          sourcePlayerId: duck.playerId,
-          metadata: { finishTimeMs: duck.finishTimeMs },
-        }))
-      }
+      emitEvent(state, {
+        type: 'DUCK_FINISHED',
+        sourcePlayerId: duck.playerId,
+        metadata: { finishTimeMs: duck.finishTimeMs },
+      })
     }
   }
 
   resolveCollisions(state)
   updateRanks(state)
   state.finished = state.ducks.every((duck) => duck.finished)
-  if (state.finished && state.recordEvents) state.events.push(event(state, { type: 'RACE_FINISHED', metadata: {} }))
+  if (state.finished) emitEvent(state, { type: 'RACE_FINISHED', metadata: {} })
   return state
 }
 

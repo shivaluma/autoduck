@@ -2,17 +2,30 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## ĐUA DZỊT — Season 3
 
-Season 3 is isolated from the v2 chest/boss/dragon modifiers. The Duck Duck Race ranking is entered as the vanilla result; the Season 3 rules engine resolves one Chaos card, Bottom penalties, Shields, King status, secret predictions, Duck News, and prediction-point rewards afterward.
+Season 3 is isolated from the v2 chest/boss/dragon modifiers. Its deterministic server engine runs the automated race, then resolves one Chaos card, Season Shields, King status, secret predictions, Duck News, and prediction-point rewards.
 
 Chaos cards: Normal, Reverse, Duo, Triple Elimination, Cut Line, Constructors, and Bounty Hunt. Duo pairs and Constructors teams are randomized once before the race and persisted for the resolve.
 
 - Player view: `/season-3?token=<personal-token>`
-- Host control: `/admin/season-3` with `RACE_SECRET_KEY`. Lock prediction, then start the vanilla Duck Duck Race from the same desk; the real race result is captured automatically and Season 3 resolves without manual ranking entry.
+- Host control: `/admin/season-3` with `RACE_SECRET_KEY`. Host can skip inactive ducks, lock/unlock preparation, run a no-side-effect test race, then start the authoritative Monday race; ranking and Season 3 resolution are automatic.
+- Race Lab: `/dev/race-lab` with `RACE_SECRET_KEY` for seed, Chaos, loadout, tuning, speed, state, and event inspection.
 - Season 3 API: `/api/season3`, `/api/admin/season3`, `/api/season3/redeem`
-- Database auto-bootstrap runs before `pnpm dev`, `pnpm start`, and Docker startup: it performs `prisma db push`, then applies idempotent app migrations. Each applied migration is recorded in `AppMigration.runAt`.
+- Database auto-bootstrap runs before `pnpm dev`, `pnpm start`, and Docker startup: it performs `prisma db push`, then applies idempotent app migrations. Each applied migration is recorded in `AppMigration.runAt`. pnpm native build permissions live in `pnpm-workspace.yaml` so the SQLite adapter is available on first boot.
 - Run it manually with `pnpm db:bootstrap`; use `pnpm db:migrate:app` only when you want to run the app migration step without Prisma schema sync.
 
 The Season 3 champion is calculated from `championshipPoints` and race wins only; prediction points never affect championship ranking.
+
+### Racing engine commands
+
+```bash
+pnpm test
+pnpm test:race
+pnpm race:simulate --races 100000
+pnpm race:replay <raceId>
+pnpm race:profile
+```
+
+Official races store the immutable config, seed commitment, engine/balance/track versions, raw event stream, result digest, live fallback snapshots, and same-seed item telemetry. Replay refuses unsupported engine or balance versions instead of silently using current tuning.
 
 ## Getting Started
 

@@ -1,5 +1,5 @@
 import type { RaceConfig, RaceEvent, RaceResult } from '@/packages/race-protocol/src'
-import { raceConfigSchema } from '@/packages/race-protocol/src'
+import { raceConfigSchema, raceEventSchema } from '@/packages/race-protocol/src'
 import { createResultDigest } from './audit'
 
 export function serializeRaceConfig(config: RaceConfig) {
@@ -16,8 +16,9 @@ export async function persistRaceEvents(
   events: RaceEvent[],
 ) {
   if (events.length === 0) return
+  const validatedEvents = raceEventSchema.array().parse(events)
   await prisma.raceEngineEvent.createMany({
-    data: events.map((raceEvent) => ({
+    data: validatedEvents.map((raceEvent) => ({
       raceId,
       type: raceEvent.type,
       tick: raceEvent.tick,

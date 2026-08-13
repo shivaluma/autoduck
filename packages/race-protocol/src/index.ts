@@ -25,10 +25,17 @@ export const raceChaosConfigSchema = z.object({
 })
 export type RaceChaosConfig = z.infer<typeof raceChaosConfigSchema>
 
+export const raceItemTuningSchema = z.object({
+  nitroSpeedMultiplier: z.number().min(1).max(1.2).optional(),
+  rocketSlowMultiplier: z.number().min(0.75).max(1).optional(),
+  bananaSlowMultiplier: z.number().min(0.75).max(1).optional(),
+})
+export type RaceItemTuning = z.infer<typeof raceItemTuningSchema>
+
 export const racePlayerConfigSchema = z.object({
   playerId: playerIdSchema,
   name: z.string().min(1).max(80),
-  cosmeticKey: z.string().max(80).optional(),
+  cosmeticKey: z.string().max(2048).optional(),
 })
 
 export const raceConfigSchema = z.object({
@@ -42,6 +49,7 @@ export const raceConfigSchema = z.object({
   players: z.array(racePlayerConfigSchema).min(2).max(16),
   loadouts: z.array(raceLoadoutSchema).default([]),
   chaosConfig: raceChaosConfigSchema.optional(),
+  itemTuning: raceItemTuningSchema.optional(),
 })
 
 export type RacePlayerConfig = z.infer<typeof racePlayerConfigSchema>
@@ -61,42 +69,32 @@ export const raceLifecycleStateSchema = z.enum([
 
 export type RaceLifecycleState = z.infer<typeof raceLifecycleStateSchema>
 
-export interface DuckSnapshot {
-  playerId: string
-  progress: number
-  lateralOffset: number
-  speed: number
-  rank: number
-  activeEffects: string[]
-}
+export const duckSnapshotSchema = z.object({
+  playerId: playerIdSchema,
+  progress: z.number().min(0).max(1),
+  lateralOffset: z.number().min(-1).max(1),
+  speed: z.number().positive(),
+  rank: z.number().int().positive(),
+  activeEffects: z.array(z.string()),
+})
+export type DuckSnapshot = z.infer<typeof duckSnapshotSchema>
 
-export interface StateSnapshotMessage {
-  type: 'STATE_SNAPSHOT'
-  protocolVersion: string
-  raceId: string
-  tick: number
-  ducks: DuckSnapshot[]
-}
+export const stateSnapshotMessageSchema = z.object({
+  type: z.literal('STATE_SNAPSHOT'),
+  protocolVersion: z.string().min(1),
+  raceId: z.string().min(1),
+  tick: z.number().int().nonnegative(),
+  ducks: z.array(duckSnapshotSchema).min(2).max(16),
+})
+export type StateSnapshotMessage = z.infer<typeof stateSnapshotMessageSchema>
 
-export type RaceEventType =
-  | 'RACE_STARTED'
-  | 'DUCK_COLLISION'
-  | 'ITEM_ACTIVATED'
-  | 'ROCKET_FIRED'
-  | 'ROCKET_HIT'
-  | 'ROCKET_BLOCKED'
-  | 'ROCKET_EXPIRED'
-  | 'BANANA_DROPPED'
-  | 'BANANA_HIT'
-  | 'BANANA_BLOCKED'
-  | 'BANANA_EXPIRED'
-  | 'NITRO_STARTED'
-  | 'NITRO_ENDED'
-  | 'HORN_USED'
-  | 'FEATHER_DODGED'
-  | 'BUBBLE_POPPED'
-  | 'DUCK_FINISHED'
-  | 'RACE_FINISHED'
+export const raceEventTypeSchema = z.enum([
+  'RACE_STARTED', 'DUCK_COLLISION', 'ITEM_ACTIVATED', 'ROCKET_FIRED', 'ROCKET_HIT', 'ROCKET_BLOCKED',
+  'ROCKET_EXPIRED', 'BANANA_DROPPED', 'BANANA_HIT', 'BANANA_BLOCKED', 'BANANA_EXPIRED', 'NITRO_STARTED',
+  'NITRO_ENDED', 'HORN_USED', 'FEATHER_DODGED', 'BUBBLE_POPPED', 'DUCK_FINISHED', 'RACE_FINISHED',
+  'CHAOS_RESOLVED',
+])
+export type RaceEventType = z.infer<typeof raceEventTypeSchema>
 
 export interface RaceEvent {
   raceId: string
@@ -107,6 +105,16 @@ export interface RaceEvent {
   targetPlayerId?: string
   metadata: Record<string, unknown>
 }
+
+export const raceEventSchema = z.object({
+  raceId: z.string().min(1),
+  type: raceEventTypeSchema,
+  tick: z.number().int().nonnegative(),
+  timestampWithinRaceMs: z.number().nonnegative(),
+  sourcePlayerId: playerIdSchema.optional(),
+  targetPlayerId: playerIdSchema.optional(),
+  metadata: z.record(z.string(), z.unknown()),
+})
 
 export interface RaceFinishEntry {
   playerId: string

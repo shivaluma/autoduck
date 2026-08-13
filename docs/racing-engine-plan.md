@@ -5,7 +5,7 @@
 - `Season`, `SeasonWeek`, `SeasonPlayer`: Season 3 lifecycle and standings.
 - `SeasonPrediction`: private prediction and reward points.
 - `SeasonShieldChoice`: Season Shield confirmation after Chaos resolution.
-- `lib/season3.ts`: current Chaos and Season meta resolver while plugins are introduced.
+- `lib/season3.ts`: Season meta adapter over the standalone Chaos plugins.
 - personal `accessToken`: magic-link authorization.
 - Next.js pages and admin authentication via `RACE_SECRET_KEY`.
 
@@ -28,9 +28,11 @@
 7. Move Chaos to plugins while preserving existing Season Scar/Shield outcomes.
 8. Add 100k balance tooling, race lab, telemetry, VFX/SFX and production hardening.
 
+All eight slices are implemented. Acceptance remains tied to automated tests, production build, the 100k simulation run, replay verification, and browser QA.
+
 ## Persistence additions
 
-Race stores engine/balance/track/protocol versions, seed commitment, revealed seed, immutable config, result digest and lifecycle state. Race events are append-only. Weekly loadouts are owned by `SeasonPlayer` and become immutable when preparation locks.
+Race stores engine/balance/track/protocol versions, seed commitment, revealed seed, immutable config, result digest, lifecycle state, and a durable live snapshot. Race events are append-only during the race. Weekly loadouts are owned by `SeasonPlayer` and become immutable when preparation locks. Official item telemetry stores same-seed no-item rank deltas; test races are excluded.
 
 ## Hard boundaries
 

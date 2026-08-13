@@ -14,6 +14,16 @@ function parseChaosGroups(payload: string | null | undefined) {
   }
 }
 
+function parseSkippedPlayerIds(payload: string | null | undefined) {
+  if (!payload) return []
+  try {
+    const parsed = JSON.parse(payload)
+    return Array.isArray(parsed) ? parsed.filter((value): value is number => Number.isInteger(value)) : []
+  } catch {
+    return []
+  }
+}
+
 function jsonError(error: string, status = 400) {
   return NextResponse.json({ error }, { status })
 }
@@ -38,6 +48,7 @@ export async function GET(request: Request) {
     const token = new URL(request.url).searchParams.get('token')
     const viewer = token ? season.players.find((player: { accessToken: string }) => player.accessToken === token) : null
     const currentWeek = season.weeksPlan.find((week: { status: string }) => week.status !== 'resolved') ?? null
+    const skippedPlayerIds = parseSkippedPlayerIds(currentWeek?.skippedPlayerIdsJson)
     const latestResolvedWeek = [...season.weeksPlan].reverse().find((week: { status: string }) => week.status === 'resolved') ?? null
     const viewerLoadout = viewer && currentWeek ? currentWeek.loadouts.find((loadout: { seasonPlayerId: number }) => loadout.seasonPlayerId === viewer.id) : null
     const revealPredictions = (resolvedWeek: typeof latestResolvedWeek) => resolvedWeek
@@ -86,6 +97,8 @@ export async function GET(request: Request) {
         chaosTargetUserId: currentWeek.chaosTargetUserId,
         chaosTargetUserId2: currentWeek.chaosTargetUserId2,
         chaosGroups: parseChaosGroups(currentWeek.chaosPayload),
+        skippedPlayerIds,
+        viewerSkipped: Boolean(viewer && skippedPlayerIds.includes(viewer.userId)),
         chaosTargetName: currentWeek.chaosTargetUserId === null ? null : season.players.find((player: { userId: number }) => player.userId === currentWeek.chaosTargetUserId)?.user.name ?? null,
         chaosTargetName2: currentWeek.chaosTargetUserId2 === null ? null : season.players.find((player: { userId: number }) => player.userId === currentWeek.chaosTargetUserId2)?.user.name ?? null,
         predictionsLockedAt: currentWeek.predictionsLockedAt,
@@ -129,6 +142,8 @@ export async function POST(request: Request) {
     if (!player) return jsonError('Personal link không hợp lệ', 401)
     const week = season.weeksPlan.find((candidate: { status: string }) => candidate.status === 'open')
     if (!week) return jsonError('Tuần đã đóng hoặc đã resolve', 409)
+    const skippedPlayerIds = parseSkippedPlayerIds(week.skippedPlayerIdsJson)
+    if (skippedPlayerIds.includes(player.userId)) return jsonError('Host đã cho bạn nghỉ race tuần này', 409)
 
     if (body.action === 'shield') {
       if (player.shields < 1) return jsonError('Bạn không có Shield để xác nhận')
@@ -159,7 +174,7 @@ export async function POST(request: Request) {
 
     if (typeof body.targetUserId !== 'number') return jsonError('targetUserId là bắt buộc')
     if (player.userId === body.targetUserId) return jsonError('Không được pick bản thân')
-    if (!season.players.some((candidate: { userId: number }) => candidate.userId === body.targetUserId)) return jsonError('Target không thuộc Season 3')
+    if (!season.players.some((candidate: { userId: number }) => candidate.userId === body.targetUserId) || skippedPlayerIds.includes(body.targetUserId)) return jsonError('Target không đua tuần này')
 
     await prisma.seasonPrediction.upsert({
       where: { weekId_predictorPlayerId: { weekId: week.id, predictorPlayerId: player.id } },

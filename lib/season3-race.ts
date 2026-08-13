@@ -5,6 +5,8 @@ import { createRaceCommit, createRaceSeed } from '@/lib/racing/audit'
 import { parseRaceConfig, persistRaceEvents, persistedRaceResult, serializeRaceConfig } from '@/lib/racing/persistence'
 import { parseItemIds, selectAutoLoadout, serializeItemIds } from '@/lib/racing/loadout'
 import { runAuthoritativeRace } from '@/lib/racing/runtime'
+import { buildRaceItemTelemetry, persistRaceItemTelemetry } from '@/lib/racing/telemetry'
+import { assertRaceStateTransition, transitionPersistedRaceState } from '@/lib/racing/state-machine'
 import {
   DEFAULT_TRACK_VERSION,
   RACE_BALANCE_VERSION,
@@ -31,7 +33,7 @@ type Season3RacePlayer = {
   shieldConfirmed?: boolean
   isKing: boolean
   kingStreak: number
-  user: { name: string }
+  user: { name: string; avatarUrl?: string | null }
 }
 
 function parseChaosGroups(payload: string | null | undefined) {
@@ -41,6 +43,16 @@ function parseChaosGroups(payload: string | null | undefined) {
     return Array.isArray(parsed) ? parsed as number[][] : undefined
   } catch {
     return undefined
+  }
+}
+
+function parseSkippedPlayerIds(payload: string | null | undefined) {
+  if (!payload) return new Set<number>()
+  try {
+    const parsed = JSON.parse(payload)
+    return new Set(Array.isArray(parsed) ? parsed.filter((value): value is number => Number.isInteger(value)) : [])
+  } catch {
+    return new Set<number>()
   }
 }
 
@@ -76,8 +88,11 @@ export async function startSeason3Race(weekId: number, options: { allowOffSchedu
 
   const claimedRaceId = week.race?.id ?? null
   const raceSeed = week.raceSeed ?? createRaceSeed()
+  const skippedPlayerIds = parseSkippedPlayerIds(week.skippedPlayerIdsJson)
+  const activePlayers = (week.season.players as Season3RacePlayer[]).filter((player) => !skippedPlayerIds.has(player.userId))
+  if (activePlayers.length < 2 || activePlayers.length > 16) throw new Error('Race cần 2–16 dzịt active')
   const loadoutByPlayer = new Map<number, { seasonPlayerId: number; itemIdsJson: string; status: string }>(week.loadouts.map((loadout: { seasonPlayerId: number; itemIdsJson: string; status: string }) => [loadout.seasonPlayerId, loadout] as const))
-  const immutableLoadouts: Array<{ player: Season3RacePlayer; itemIds: RaceItemId[]; source: 'PLAYER' | 'AUTO' }> = week.season.players.map((player: Season3RacePlayer) => {
+  const immutableLoadouts: Array<{ player: Season3RacePlayer; itemIds: RaceItemId[]; source: 'PLAYER' | 'AUTO' }> = activePlayers.map((player) => {
     const selected = loadoutByPlayer.get(player.id)
     return {
       player,
@@ -103,7 +118,7 @@ export async function startSeason3Race(weekId: number, options: { allowOffSchedu
         trackVersion: DEFAULT_TRACK_VERSION,
         raceSeed,
         participants: {
-          create: week.season.players.map((player: Season3RacePlayer) => ({
+          create: activePlayers.map((player) => ({
             userId: player.userId,
             displayName: player.user.name,
             initialRank: null,
@@ -134,9 +149,10 @@ export async function startSeason3Race(weekId: number, options: { allowOffSchedu
       balanceVersion: RACE_BALANCE_VERSION,
       trackVersion: DEFAULT_TRACK_VERSION,
       tickRate: RACE_TICK_RATE,
-      players: week.season.players.map((player: Season3RacePlayer) => ({
+      players: activePlayers.map((player) => ({
         playerId: String(player.userId),
         name: player.user.name,
+        cosmeticKey: player.user.avatarUrl ?? undefined,
       })),
       loadouts: immutableLoadouts.map((loadout) => ({ playerId: String(loadout.player.userId), itemIds: loadout.itemIds, source: loadout.source })),
       chaosConfig: {
@@ -185,15 +201,22 @@ export async function executeSeason3Race(raceId: number, weekId: number) {
     if (!race.engineConfigJson) throw new Error('Race thiếu immutable engine config')
     const config = parseRaceConfig(race.engineConfigJson)
     await new Promise((resolve) => setTimeout(resolve, 3000))
-    await prisma.race.update({ where: { id: raceId }, data: { status: 'running', engineState: 'RACING' } })
+    await transitionPersistedRaceState(prisma, raceId, 'COUNTDOWN', 'RACING')
+    await prisma.race.update({ where: { id: raceId }, data: { status: 'running' } })
 
     const shieldConfirmedIds = new Set(week.shieldChoices.map((choice: { seasonPlayerId: number }) => choice.seasonPlayerId))
-    const players = (week.season.players as Season3RacePlayer[]).map((player) => ({
+    const skippedPlayerIds = parseSkippedPlayerIds(week.skippedPlayerIdsJson)
+    const players = (week.season.players as Season3RacePlayer[]).filter((player) => !skippedPlayerIds.has(player.userId)).map((player) => ({
       ...player,
       shieldConfirmed: shieldConfirmedIds.has(player.id),
     }))
-    const result = await runAuthoritativeRace(config)
-    await persistRaceEvents(prisma, raceId, result.events)
+    const result = await runAuthoritativeRace(config, {
+      persistenceRate: 2,
+      onSnapshot: (snapshot) => prisma.race.update({ where: { id: raceId }, data: { liveSnapshotJson: JSON.stringify(snapshot) } }),
+      onEvents: (events) => persistRaceEvents(prisma, raceId, events),
+    })
+    await transitionPersistedRaceState(prisma, raceId, 'RACING', 'FINISHED')
+    if (!race.isTest) await persistRaceItemTelemetry(prisma, buildRaceItemTelemetry(raceId, config, result))
 
     const ranking = mapSeason3RaceRanking(result.standings.map((entry) => ({ rank: entry.rank, name: entry.name })), players)
 
@@ -204,7 +227,19 @@ export async function executeSeason3Race(raceId: number, weekId: number) {
       chaos,
       previousKing ? { userId: previousKing.userId, streak: previousKing.kingStreak } : null,
     )
-    const predictionOutcomes = resolvePredictions(week.predictions, resolved.bottomTwo)
+    await persistRaceEvents(prisma, raceId, [{
+      raceId: String(raceId),
+      type: 'CHAOS_RESOLVED',
+      tick: Math.ceil(result.durationMs / (1000 / config.tickRate)),
+      timestampWithinRaceMs: result.durationMs,
+      metadata: {
+        chaosType: chaos.type,
+        loserPlayerIds: resolved.scarOutcomes.map((outcome) => String(outcome.userId)),
+      },
+    }])
+    const activeUserIds = new Set(players.map((player) => player.userId))
+    const activePredictions = week.predictions.filter((prediction: { predictorUserId: number; targetUserId: number }) => activeUserIds.has(prediction.predictorUserId) && activeUserIds.has(prediction.targetUserId))
+    const predictionOutcomes = resolvePredictions(activePredictions, resolved.bottomTwo)
     const playerName = (userId: number | null) => players.find((player) => player.userId === userId)?.user.name ?? null
     const predictionWinners = predictionOutcomes
       .filter((outcome) => outcome.correct)
@@ -219,6 +254,7 @@ export async function executeSeason3Race(raceId: number, weekId: number) {
       predictionWinners,
     })
 
+    assertRaceStateTransition('FINISHED', 'RESOLVED')
     await prisma.$transaction(async (tx: typeof prisma) => {
       for (const entry of resolved.ranking) {
         const player = players.find((candidate) => candidate.userId === entry.userId)
@@ -234,6 +270,7 @@ export async function executeSeason3Race(raceId: number, weekId: number) {
       }
 
       if (!race.isTest) {
+        await tx.seasonPlayer.updateMany({ where: { seasonId: week.seasonId, isKing: true }, data: { isKing: false, kingStreak: 0 } })
         for (const player of players) {
           const outcome = resolved.scarOutcomes.find((candidate) => candidate.userId === player.userId)
           const entry = resolved.ranking.find((candidate) => candidate.userId === player.userId)!
@@ -265,17 +302,19 @@ export async function executeSeason3Race(raceId: number, weekId: number) {
         }
       }
 
-      await tx.race.update({
-        where: { id: raceId },
+      const transitionedRace = await tx.race.updateMany({
+        where: { id: raceId, engineState: 'FINISHED' },
         data: {
           status: 'finished',
-          engineState: race.isTest ? 'ARCHIVED' : 'RESOLVED',
+          engineState: 'RESOLVED',
           videoUrl: null,
+          liveSnapshotJson: null,
           ...persistedRaceResult(result),
           finalVerdict: resolved.scarVictims.map((entry) => `${entry.name} bị làm dzịt`).join(' & ') || 'Khiên đã cứu hết người bị phạt.',
           finishedAt: new Date(),
         },
       })
+      if (transitionedRace.count !== 1) throw new Error(`Race ${raceId} is no longer in FINISHED`)
       await tx.seasonWeek.update({
         where: { id: week.id },
         data: race.isTest
@@ -283,6 +322,7 @@ export async function executeSeason3Race(raceId: number, weekId: number) {
           : { status: 'resolved', recap, resolvedAt: new Date() },
       })
     })
+    if (race.isTest) await transitionPersistedRaceState(prisma, raceId, 'RESOLVED', 'ARCHIVED')
 
     return { raceId, recap, resolution: resolved, predictions: predictionOutcomes }
   } catch (error) {

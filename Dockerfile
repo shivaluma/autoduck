@@ -7,7 +7,7 @@
 # --- Stage 1: Dependencies (same Node/runtime as Playwright runner) ---
 FROM mcr.microsoft.com/playwright:v1.59.1-noble AS deps
 
-RUN corepack enable && corepack prepare pnpm@10.20.0 --activate
+RUN corepack enable && corepack prepare pnpm@11.19.0 --activate
 
 # Install build tools for native modules (better-sqlite3).
 RUN apt-get update && apt-get install -y \
@@ -47,6 +47,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/node_modules/.pnpm/@prisma+adapter-better-sqlite3@7.7.0 ./node_modules/.pnpm/@prisma+adapter-better-sqlite3@7.7.0
 COPY --from=builder /app/node_modules/.pnpm/@prisma+driver-adapter-utils@7.7.0 ./node_modules/.pnpm/@prisma+driver-adapter-utils@7.7.0
 COPY --from=builder /app/node_modules/.pnpm/@prisma+debug@7.7.0 ./node_modules/.pnpm/@prisma+debug@7.7.0
+COPY --from=builder /app/node_modules/.pnpm/better-sqlite3@12.9.0 ./node_modules/.pnpm/better-sqlite3@12.9.0
 
 # Prisma config is evaluated at startup and imports packages not traced by Next.
 RUN mkdir -p ./node_modules/@prisma && \

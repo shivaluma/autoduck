@@ -84,12 +84,10 @@ export function chaosLabel(type: ChaosType) {
   }[type]
 }
 
-export function selectChaosCard(players: Season3Player[], random: () => number): ChaosCard {
+export function prepareChaosCard(type: ChaosType, players: Season3Player[], random: () => number): ChaosCard {
   if (players.length === 0) {
     throw new Error('Cannot select a chaos card without players')
   }
-
-  const type = CHAOS_CARDS[Math.min(CHAOS_CARDS.length - 1, Math.floor(random() * CHAOS_CARDS.length))]
   const prepared = prepareChaosRule(
     type as ChaosRuleId,
     players.map((player) => ({ playerId: String(player.userId) })),
@@ -102,6 +100,11 @@ export function selectChaosCard(players: Season3Player[], random: () => number):
     targetUserId2: null,
     groups: prepared.groups?.map((group) => group.map(Number)),
   }
+}
+
+export function selectChaosCard(players: Season3Player[], random: () => number): ChaosCard {
+  const type = CHAOS_CARDS[Math.min(CHAOS_CARDS.length - 1, Math.floor(random() * CHAOS_CARDS.length))]
+  return prepareChaosCard(type, players, random)
 }
 
 function assertRanking(ranking: Season3RankingEntry[]) {
@@ -217,7 +220,7 @@ export function generateDuckNews(args: {
 }) {
   const victims = args.scarVictims.length > 0 ? args.scarVictims.map((entry) => entry.name).join(' & ') : 'Nobody'
   const protectedText = args.protectedPlayers.length > 0
-    ? ` ${args.protectedPlayers.map((entry) => `${entry.name} mất Shield để thoát Sẹo.`).join(' ')}`
+    ? ` ${args.protectedPlayers.map((entry) => `${entry.name} mất Shield để không bị làm dzịt.`).join(' ')}`
     : ''
   const predictionText = args.predictionWinners.length > 0
     ? ` ${args.predictionWinners.map((entry) => entry.name).join(' & ')} prediction chính xác!`

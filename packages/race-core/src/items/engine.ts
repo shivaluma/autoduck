@@ -1,4 +1,4 @@
-import type { RaceConfig, RaceEventType, RaceItemId } from '../../../race-protocol/src'
+import type { RaceConfig, RaceEventType, RaceItemId, RaceItemTuning } from '../../../race-protocol/src'
 import { ITEM_BALANCE } from './config'
 import { resolveIncomingRaceEffect, type ItemDefenseState } from './interactions'
 
@@ -41,6 +41,7 @@ export interface ItemRaceState {
   rockets: RocketRuntime[]
   bananas: BananaRuntime[]
   nextObjectId: number
+  tuning: Required<RaceItemTuning>
 }
 
 type EmitItemEvent = (type: RaceEventType, sourcePlayerId?: string, targetPlayerId?: string, metadata?: Record<string, unknown>) => void
@@ -66,6 +67,11 @@ export function createItemRaceState(config: RaceConfig): ItemRaceState {
     rockets: [],
     bananas: [],
     nextObjectId: 1,
+    tuning: {
+      nitroSpeedMultiplier: config.itemTuning?.nitroSpeedMultiplier ?? ITEM_BALANCE.nitro.speedMultiplier,
+      rocketSlowMultiplier: config.itemTuning?.rocketSlowMultiplier ?? ITEM_BALANCE.rocket.slowMultiplier,
+      bananaSlowMultiplier: config.itemTuning?.bananaSlowMultiplier ?? ITEM_BALANCE.banana.slowMultiplier,
+    },
   }
 }
 
@@ -77,7 +83,7 @@ function orderedActive(ducks: ItemDuckState[]) {
   return ducks.filter((duck) => !duck.finished).sort((left, right) => right.progress - left.progress || left.playerId.localeCompare(right.playerId))
 }
 
-function activateNitro(runtime: DuckItemRuntime, duck: ItemDuckState, ducks: ItemDuckState[], tick: number, tickRate: number, emit: EmitItemEvent) {
+function activateNitro(itemState: ItemRaceState, runtime: DuckItemRuntime, duck: ItemDuckState, ducks: ItemDuckState[], tick: number, tickRate: number, emit: EmitItemEvent) {
   if (!hasUnused(runtime, 'NITRO') || duck.progress < ITEM_BALANCE.nitro.armProgress) return
   const ahead = orderedActive(ducks).find((candidate) => candidate.progress > duck.progress)
   const shouldTrigger = duck.currentRank >= ITEM_BALANCE.nitro.triggerRank
@@ -85,7 +91,7 @@ function activateNitro(runtime: DuckItemRuntime, duck: ItemDuckState, ducks: Ite
     || duck.progress >= ITEM_BALANCE.nitro.fallbackProgress
   if (!shouldTrigger) return
   runtime.usedItems.add('NITRO')
-  runtime.boostMultiplier = ITEM_BALANCE.nitro.speedMultiplier
+  runtime.boostMultiplier = itemState.tuning.nitroSpeedMultiplier
   runtime.boostUntilTick = tick + Math.round(ITEM_BALANCE.nitro.durationSeconds * tickRate)
   emit('NITRO_STARTED', duck.playerId, undefined, { untilTick: runtime.boostUntilTick })
 }
@@ -161,7 +167,7 @@ function updateRockets(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
     const defense = itemState.byPlayer.get(target.playerId)!
     const outcome = resolveIncomingRaceEffect(defense, 'ROCKET', tick, tickRate)
     if (outcome === 'HIT') {
-      applyItemSlow(defense, ITEM_BALANCE.rocket.slowMultiplier, ITEM_BALANCE.rocket.slowDurationSeconds, tick, tickRate)
+      applyItemSlow(defense, itemState.tuning.rocketSlowMultiplier, ITEM_BALANCE.rocket.slowDurationSeconds, tick, tickRate)
       emit('ROCKET_HIT', rocket.sourcePlayerId, target.playerId, {})
     } else if (outcome === 'BLOCKED_BUBBLE') {
       emit('BUBBLE_POPPED', target.playerId, rocket.sourcePlayerId, { blocked: 'ROCKET' })
@@ -191,7 +197,7 @@ function updateBananas(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
     const defense = itemState.byPlayer.get(target.playerId)!
     const outcome = resolveIncomingRaceEffect(defense, 'BANANA', tick, tickRate)
     if (outcome === 'HIT') {
-      applyItemSlow(defense, ITEM_BALANCE.banana.slowMultiplier, ITEM_BALANCE.banana.slowDurationSeconds, tick, tickRate)
+      applyItemSlow(defense, itemState.tuning.bananaSlowMultiplier, ITEM_BALANCE.banana.slowDurationSeconds, tick, tickRate)
       const direction = target.lateralOffset >= banana.lateralOffset ? 1 : -1
       target.lateralVelocity += direction * ITEM_BALANCE.banana.lateralSlip
       emit('BANANA_HIT', banana.sourcePlayerId, target.playerId, {})
@@ -224,7 +230,7 @@ export function tickItemSystem(
       emit('NITRO_ENDED', duck.playerId, undefined, {})
     }
     if (runtime.slowMultiplier < 1 && tick >= runtime.slowUntilTick) runtime.slowMultiplier = 1
-    activateNitro(runtime, duck, ducks, tick, tickRate, emit)
+    activateNitro(itemState, runtime, duck, ducks, tick, tickRate, emit)
     activateRocket(itemState, runtime, duck, ducks, tick, tickRate, emit)
     activateBanana(itemState, runtime, duck, ducks, tick, tickRate, emit)
     activateHorn(runtime, duck, ducks, emit)

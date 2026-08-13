@@ -10,19 +10,13 @@
     "test": "node --import tsx --test tests/**/*.test.ts",
     "test:race": "node --import tsx --test tests/race-core.test.ts",
     "race:simulate": "tsx scripts/race-simulate.ts",
+    "race:replay": "tsx scripts/race-replay.ts",
+    "race:profile": "tsx scripts/race-profile.ts",
     "db:push": "prisma db push",
     "db:bootstrap": "bash scripts/auto-migrate.sh",
     "db:seed": "tsx prisma/seed.ts",
     "db:migrate:app": "tsx scripts/run-migrations.ts",
     "db:studio": "prisma studio"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "better-sqlite3",
-      "esbuild",
-      "@prisma/engines",
-      "prisma"
-    ]
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^2.0.41",

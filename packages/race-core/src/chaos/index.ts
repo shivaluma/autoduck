@@ -71,7 +71,9 @@ const duo: ChaosRule = {
   id: 'DUO',
   prepare(players, random) {
     const shuffled = shuffle(players.map((player) => player.playerId), random)
-    return { groups: Array.from({ length: Math.ceil(shuffled.length / 2) }, (_, index) => shuffled.slice(index * 2, index * 2 + 2)) }
+    const groups = Array.from({ length: Math.ceil(shuffled.length / 2) }, (_, index) => shuffled.slice(index * 2, index * 2 + 2))
+    if (groups.length > 1 && groups.at(-1)?.length === 1) groups[groups.length - 2].push(...groups.pop()!)
+    return { groups }
   },
   resolve(raw, prepared) {
     const ranking = ordered(raw)
