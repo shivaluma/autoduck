@@ -46,7 +46,7 @@ function chaosFromWeek(week: {
   }
 }
 
-export async function startSeason3Race(weekId: number, options: { allowOffSchedule?: boolean } = {}) {
+export async function startSeason3Race(weekId: number, options: { allowOffSchedule?: boolean; testMode?: boolean } = {}) {
   if (!options.allowOffSchedule) assertSeason3RaceDay()
 
   const week = await prisma.seasonWeek.findUnique({
@@ -66,6 +66,7 @@ export async function startSeason3Race(weekId: number, options: { allowOffSchedu
     const created = await tx.race.create({
       data: {
         status: 'pending',
+        isTest: options.testMode === true,
         participants: {
           create: week.season.players.map((player: Season3RacePlayer) => ({
             userId: player.userId,
@@ -168,34 +169,36 @@ export async function executeSeason3Race(raceId: number, weekId: number) {
         })
       }
 
-      for (const player of players) {
-        const outcome = resolved.scarOutcomes.find((candidate) => candidate.userId === player.userId)
-        const entry = resolved.ranking.find((candidate) => candidate.userId === player.userId)!
-        const shieldWasUsed = player.shieldConfirmed === true && player.shields > 0
-        const economy = applyScarEconomy(player.scars, player.shields, outcome?.scarPoints ?? 0, shieldWasUsed)
-        const predictionPoints = predictionOutcomes
-          .filter((prediction) => prediction.predictorUserId === player.userId && prediction.correct)
-          .length
+      if (!race.isTest) {
+        for (const player of players) {
+          const outcome = resolved.scarOutcomes.find((candidate) => candidate.userId === player.userId)
+          const entry = resolved.ranking.find((candidate) => candidate.userId === player.userId)!
+          const shieldWasUsed = player.shieldConfirmed === true && player.shields > 0
+          const economy = applyScarEconomy(player.scars, player.shields, outcome?.scarPoints ?? 0, shieldWasUsed)
+          const predictionPoints = predictionOutcomes
+            .filter((prediction) => prediction.predictorUserId === player.userId && prediction.correct)
+            .length
 
-        await tx.seasonPlayer.update({
-          where: { id: player.id },
-          data: {
-            scars: economy.scars,
-            shields: economy.shields,
-            shieldsUsed: shieldWasUsed ? { increment: 1 } : undefined,
-            predictionPoints: predictionPoints ? { increment: predictionPoints } : undefined,
-            raceCount: { increment: 1 },
-            raceWins: entry.rank === 1 ? { increment: 1 } : undefined,
-            championshipPoints: { increment: resolved.ranking.length - entry.rank + 1 },
-            isKing: player.userId === resolved.kingUserId,
-            kingStreak: player.userId === resolved.kingUserId ? resolved.kingStreak : 0,
-          },
-        })
-      }
+          await tx.seasonPlayer.update({
+            where: { id: player.id },
+            data: {
+              scars: economy.scars,
+              shields: economy.shields,
+              shieldsUsed: shieldWasUsed ? { increment: 1 } : undefined,
+              predictionPoints: predictionPoints ? { increment: predictionPoints } : undefined,
+              raceCount: { increment: 1 },
+              raceWins: entry.rank === 1 ? { increment: 1 } : undefined,
+              championshipPoints: { increment: resolved.ranking.length - entry.rank + 1 },
+              isKing: player.userId === resolved.kingUserId,
+              kingStreak: player.userId === resolved.kingUserId ? resolved.kingStreak : 0,
+            },
+          })
+        }
 
-      for (const outcome of predictionOutcomes) {
-        const prediction = week.predictions.find((candidate: { predictorUserId: number }) => candidate.predictorUserId === outcome.predictorUserId)
-        if (prediction) await tx.seasonPrediction.update({ where: { id: prediction.id }, data: { pointsAwarded: outcome.pointsAwarded } })
+        for (const outcome of predictionOutcomes) {
+          const prediction = week.predictions.find((candidate: { predictorUserId: number }) => candidate.predictorUserId === outcome.predictorUserId)
+          if (prediction) await tx.seasonPrediction.update({ where: { id: prediction.id }, data: { pointsAwarded: outcome.pointsAwarded } })
+        }
       }
 
       await tx.race.update({
@@ -207,7 +210,12 @@ export async function executeSeason3Race(raceId: number, weekId: number) {
           finishedAt: new Date(),
         },
       })
-      await tx.seasonWeek.update({ where: { id: week.id }, data: { status: 'resolved', recap, resolvedAt: new Date() } })
+      await tx.seasonWeek.update({
+        where: { id: week.id },
+        data: race.isTest
+          ? { status: 'locked', raceId: null }
+          : { status: 'resolved', recap, resolvedAt: new Date() },
+      })
     })
 
     return { raceId, recap, resolution: resolved, predictions: predictionOutcomes }
