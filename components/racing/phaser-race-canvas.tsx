@@ -595,7 +595,7 @@ export function PhaserRaceCanvas({
             this.floatEmoji(source.root.x, source.root.y - 10, hazardEmoji, '26px', 460)
             this.burstRing(source.root.x, source.root.y, 0x9bd4ff, 0x4a90a4, 0.16, 2.6)
             this.wobbleDuck(raceEvent.sourcePlayerId)
-            this.focusCamera(raceEvent.sourcePlayerId, 460)
+            if (raceEvent.sourcePlayerId) this.focusCamera(raceEvent.sourcePlayerId, 460)
             return
           }
 
@@ -616,7 +616,7 @@ export function PhaserRaceCanvas({
                 this.time.delayedCall(index * 70, () => this.floatEmoji(source.root.x + (index - 2) * 14, source.root.y - 8, '✨', '16px', 400))
               }
             }
-            this.focusCamera(raceEvent.sourcePlayerId!, 620)
+            if (raceEvent.sourcePlayerId) this.focusCamera(raceEvent.sourcePlayerId, 620)
             return
           }
 
