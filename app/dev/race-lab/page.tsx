@@ -60,7 +60,7 @@ export default function RaceLabPage() {
   const [choices, setChoices] = useState<Record<string, Choice>>({})
   const [nitro, setNitro] = useState(1.18)
   const [rocketSlow, setRocketSlow] = useState(0.8)
-  const [bananaSlow, setBananaSlow] = useState(0.86)
+  const [bananaKnockback, setBananaKnockback] = useState(1)
   const [boxesEnabled, setBoxesEnabled] = useState(true)
   const [goldenEnabled, setGoldenEnabled] = useState(true)
   const [forceGolden, setForceGolden] = useState(false)
@@ -134,7 +134,7 @@ export default function RaceLabPage() {
           return { playerId: player.playerId, itemIds: [choice.major, choice.minor], source: 'PLAYER' }
         }),
         chaosConfig: chaosConfig(chaos, playerIds),
-        itemTuning: { nitroSpeedMultiplier: nitro, rocketSlowMultiplier: rocketSlow, bananaSlowMultiplier: bananaSlow },
+        itemTuning: { nitroSpeedMultiplier: nitro, rocketSlowMultiplier: rocketSlow, bananaKnockbackMultiplier: bananaKnockback },
         pickupConfig: {
           enabled: boxesEnabled,
           goldenBoxEnabled: goldenEnabled,
@@ -161,7 +161,7 @@ export default function RaceLabPage() {
     } catch {
       setAuthMessage('Seed phải là 64 ký tự hex và tuning phải nằm trong giới hạn.')
     }
-  }, [autoItems, bananaSlow, boxesEnabled, chaos, forceGolden, forceItem, goldenEnabled, hazardsEnabled, nitro, players, positionAware, rocketSlow, runKey, seed, selectedChoices, spawnMultiplier])
+  }, [autoItems, bananaKnockback, boxesEnabled, chaos, forceGolden, forceItem, goldenEnabled, hazardsEnabled, nitro, players, positionAware, rocketSlow, runKey, seed, selectedChoices, spawnMultiplier])
 
   const inspect = useCallback((inspection: ReplayInspection) => {
     if (inspection.newEvents.length > 0) setEvents((current) => [...current, ...inspection.newEvents].slice(-100))
@@ -188,7 +188,7 @@ export default function RaceLabPage() {
       <label className="text-sm font-black lg:col-span-2">SEED<div className="mt-2 flex gap-2"><input value={seed} onChange={(event) => setSeed(event.target.value.trim())} className="min-w-0 flex-1 rounded-xl bg-black/30 px-3 py-2 font-mono text-xs" /><button onClick={() => setSeed(randomSeed())} className="rounded-xl border-2 border-white/20 px-3">RANDOM</button></div></label>
       <label className="text-sm font-black">⚡ NITRO {nitro.toFixed(2)}×<input type="range" min="1" max="1.2" step="0.01" value={nitro} onChange={(event) => setNitro(Number(event.target.value))} className="mt-3 w-full" /></label>
       <label className="text-sm font-black">🚀 ROCKET {rocketSlow.toFixed(2)}×<input type="range" min="0.75" max="1" step="0.01" value={rocketSlow} onChange={(event) => setRocketSlow(Number(event.target.value))} className="mt-3 w-full" /></label>
-      <label className="text-sm font-black">🍌 BANANA {bananaSlow.toFixed(2)}×<input type="range" min="0.75" max="1" step="0.01" value={bananaSlow} onChange={(event) => setBananaSlow(Number(event.target.value))} className="mt-3 w-full" /></label>
+      <label className="text-sm font-black">🍌 BANANA {bananaKnockback.toFixed(2)}×<input type="range" min="0.5" max="2" step="0.05" value={bananaKnockback} onChange={(event) => setBananaKnockback(Number(event.target.value))} className="mt-3 w-full" /></label>
       <button onClick={start} className="rounded-xl bg-[var(--color-ggd-neon-green)] px-5 py-3 font-black text-[var(--color-ggd-outline)]">RUN RACE</button>
     </section>
 

@@ -59,8 +59,7 @@ export interface BananaRuntime {
   kind: 'PREP' | 'WILD'
   hitProgressRadius: number
   hitLateralRadius: number
-  slowMultiplier: number
-  slowDurationSeconds: number
+  progressKnockback: number
   lateralSlip: number
 }
 
@@ -112,7 +111,7 @@ export function createItemRaceState(config: RaceConfig): ItemRaceState {
     tuning: {
       nitroSpeedMultiplier: config.itemTuning?.nitroSpeedMultiplier ?? ITEM_BALANCE.nitro.speedMultiplier,
       rocketSlowMultiplier: config.itemTuning?.rocketSlowMultiplier ?? ITEM_BALANCE.rocket.slowMultiplier,
-      bananaSlowMultiplier: config.itemTuning?.bananaSlowMultiplier ?? ITEM_BALANCE.banana.slowMultiplier,
+      bananaKnockbackMultiplier: config.itemTuning?.bananaKnockbackMultiplier ?? 1,
     },
   }
 }
@@ -196,10 +195,12 @@ function updateBananas(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
     const hitType = banana.kind === 'WILD' ? 'WILD_BANANA_HIT' : 'BANANA_HIT'
     const blockedType = banana.kind === 'WILD' ? 'WILD_BANANA_BLOCKED' : 'BANANA_BLOCKED'
     if (outcome === 'HIT') {
-      applyItemSlow(defense, banana.slowMultiplier, banana.slowDurationSeconds, tick, tickRate)
+      const knockback = banana.progressKnockback
+      target.progress = Math.max(0, target.progress - knockback)
+      target.previousProgress = Math.min(target.previousProgress, target.progress)
       const direction = target.lateralOffset >= banana.lateralOffset ? 1 : -1
       target.lateralVelocity += direction * banana.lateralSlip
-      emit(hitType, banana.sourcePlayerId, target.playerId, {})
+      emit(hitType, banana.sourcePlayerId, target.playerId, { knockback })
     } else if (outcome === 'BLOCKED_MINI_BUBBLE') {
       emit('MINI_BUBBLE_BLOCKED', target.playerId, banana.sourcePlayerId, { blocked: incoming })
       emit(blockedType, banana.sourcePlayerId, target.playerId, { blocked: true, defense: 'MINI_BUBBLE' })

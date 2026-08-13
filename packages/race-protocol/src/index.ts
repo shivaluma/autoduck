@@ -60,8 +60,9 @@ export const raceChaosConfigSchema = z.object({
 export type RaceChaosConfig = z.infer<typeof raceChaosConfigSchema>
 
 export const raceItemTuningSchema = z.object({
-  nitroSpeedMultiplier: z.number().min(1).max(1.2).optional(),
-  rocketSlowMultiplier: z.number().min(0.75).max(1).optional(),
+  nitroSpeedMultiplier: z.number().min(1).max(1.35).optional(),
+  rocketSlowMultiplier: z.number().min(0.1).max(1).optional(),
+  bananaKnockbackMultiplier: z.number().min(0.5).max(2).optional(),
   bananaSlowMultiplier: z.number().min(0.75).max(1).optional(),
 })
 export type RaceItemTuning = z.infer<typeof raceItemTuningSchema>

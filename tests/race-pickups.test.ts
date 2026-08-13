@@ -307,7 +307,7 @@ test('fuzzed pickup races finish with finite state, no duplicate collection, and
         assert.ok(Number.isFinite(duck.progress) && Number.isFinite(duck.speed) && Number.isFinite(duck.lateralOffset))
         const runtime = state.itemState.byPlayer.get(duck.playerId)!
         assert.ok(runtime.regularPickupCount <= 3)
-        assert.ok(runtime.boostMultiplier <= 1.35 && runtime.slowMultiplier >= 0.4)
+        assert.ok(runtime.boostMultiplier <= 1.35 && runtime.slowMultiplier >= 0.1)
       }
     }
     const collected = state.pickupState.pickups.filter((pickup) => pickup.state === 'COLLECTED')

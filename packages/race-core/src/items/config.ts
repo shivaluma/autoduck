@@ -2,7 +2,7 @@ export const ITEM_BALANCE = {
   hitImmunitySeconds: 1,
   rocketTargetProtectionSeconds: 2,
   bubblePopImmunitySeconds: 0.5,
-  minimumSpeedMultiplier: 0.4,
+  minimumSpeedMultiplier: 0.1,
   maximumSpeedMultiplier: 1.35,
   rocket: {
     armProgress: 0.3,
@@ -12,7 +12,7 @@ export const ITEM_BALANCE = {
     projectileSpeed: 0.12,
     lifetimeSeconds: 3,
     hitRadius: 0.008,
-    slowMultiplier: 0.5,
+    slowMultiplier: 0.1,
     slowDurationSeconds: 4.4,
   },
   nitro: {
@@ -32,8 +32,7 @@ export const ITEM_BALANCE = {
     hitProgressRadius: 0.006,
     hitLateralRadius: 0.14,
     minimumTrapSpacing: 0.015,
-    slowMultiplier: 0.45,
-    slowDurationSeconds: 4,
+    progressKnockback: 0.034,
     lateralSlip: 0.4,
   },
   horn: {

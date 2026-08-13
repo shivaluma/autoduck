@@ -279,7 +279,7 @@ test('headless telemetry observes item events without retaining the official eve
       itemIds: index % 2 === 0 ? ['NITRO', 'BANANA'] : ['HOMING_ROCKET', 'FEATHER'],
       source: 'PLAYER',
     })),
-    itemTuning: { nitroSpeedMultiplier: 1.1, rocketSlowMultiplier: 0.9, bananaSlowMultiplier: 0.92 },
+    itemTuning: { nitroSpeedMultiplier: 1.1, rocketSlowMultiplier: 0.9, bananaKnockbackMultiplier: 1.1 },
   })
   const observed: RaceEventType[] = []
   const result = simulateRace(raceConfig, { recordEvents: false, onEvent: (event) => observed.push(event.type) })
