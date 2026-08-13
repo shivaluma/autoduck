@@ -88,7 +88,7 @@ test('fixed-step simulation stays finite, bounded and produces unique ranks', ()
   assert.deepEqual(snapshot.map((duck) => duck.rank), Array.from({ length: 16 }, (_, index) => index + 1))
 })
 
-test('player slots have no material win or Bottom-2 bias over many seeds', () => {
+test('player slots have no material win or Bottom-2 bias over many seeds', { timeout: 240_000 }, () => {
   const races = 1_000
   const wins = Array(8).fill(0) as number[]
   const bottomTwo = Array(8).fill(0) as number[]

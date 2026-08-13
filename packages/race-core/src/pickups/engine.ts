@@ -398,7 +398,12 @@ const HELD_HANDLERS: Record<Exclude<WildItemId, 'MINI_NITRO' | 'TAILWIND' | 'SLI
     return { ok: true }
   },
   MINI_ROCKET: ({ itemState, duck, ducks, tick, tickRate, emit }) => {
-    const target = nearestAhead(duck, ducks, PICKUP_BALANCE.miniRocket.maximumTargetDistance, itemState, tick)
+    const maximumDistance = duck.progress >= PICKUP_BALANCE.autoUse.forceBurnProgress
+      ? PICKUP_BALANCE.miniRocket.maximumTargetDistance * PICKUP_BALANCE.miniRocket.forceBurnTargetDistanceMultiplier
+      : duck.progress >= PICKUP_BALANCE.autoUse.endGameBurnProgress
+        ? PICKUP_BALANCE.miniRocket.maximumTargetDistance * PICKUP_BALANCE.miniRocket.endGameTargetDistanceMultiplier
+        : PICKUP_BALANCE.miniRocket.maximumTargetDistance
+    const target = nearestAhead(duck, ducks, maximumDistance, itemState, tick)
     if (!target) return { ok: false, reason: 'NO_TARGET' }
     itemState.rockets.push(createWildRocket(itemState, duck, target, tick, tickRate))
     emit('MINI_ROCKET_FIRED', duck.playerId, target.playerId, {})
@@ -412,9 +417,14 @@ const HELD_HANDLERS: Record<Exclude<WildItemId, 'MINI_NITRO' | 'TAILWIND' | 'SLI
     return { ok: true }
   },
   QUACK_HORN: ({ duck, ducks, emit }) => {
+    const endGame = duck.progress >= PICKUP_BALANCE.autoUse.endGameBurnProgress
+    const forceBurn = duck.progress >= PICKUP_BALANCE.autoUse.forceBurnProgress
+    const radiusScale = forceBurn ? PICKUP_BALANCE.horn.endGameProgressRadiusMultiplier : endGame ? 1.25 : 1
+    const progressRadius = PICKUP_BALANCE.horn.progressRadius * radiusScale
+    const lateralRadius = PICKUP_BALANCE.horn.lateralRadius * radiusScale
     const nearby = ducks.filter((candidate) => candidate.playerId !== duck.playerId && !candidate.finished
-      && Math.abs(candidate.progress - duck.progress) <= PICKUP_BALANCE.horn.progressRadius
-      && Math.abs(candidate.lateralOffset - duck.lateralOffset) <= PICKUP_BALANCE.horn.lateralRadius)
+      && Math.abs(candidate.progress - duck.progress) <= progressRadius
+      && Math.abs(candidate.lateralOffset - duck.lateralOffset) <= lateralRadius)
       .sort((left, right) => left.playerId.localeCompare(right.playerId))
     if (nearby.length === 0) return { ok: false, reason: 'NO_TARGET' }
     for (const target of nearby) {
@@ -448,27 +458,6 @@ export function activateWildItem(itemState: ItemRaceState, ducks: ItemDuckState[
   return result
 }
 
-function shouldAutoUse(runtime: DuckItemRuntime, duck: ItemDuckState, ducks: ItemDuckState[], itemState: ItemRaceState, pickupState: PickupRaceState, tick: number) {
-  const itemId = runtime.wildItem?.itemId
-  if (!itemId) return false
-  const ideal = pickupState.config.idealManualPlayerIds.includes(duck.playerId)
-  const ahead = nearestAhead(duck, ducks, PICKUP_BALANCE.miniRocket.maximumTargetDistance, itemState, tick)
-  const closeBehind = ducks.some((candidate) => !candidate.finished && candidate.progress < duck.progress && duck.progress - candidate.progress <= PICKUP_BALANCE.banana.closeBehindDistance)
-  const nearby = ducks.filter((candidate) => candidate.playerId !== duck.playerId && !candidate.finished
-    && Math.abs(candidate.progress - duck.progress) <= PICKUP_BALANCE.horn.progressRadius
-    && Math.abs(candidate.lateralOffset - duck.lateralOffset) <= PICKUP_BALANCE.horn.lateralRadius).length
-  const incoming = itemState.rockets.some((rocket) => rocket.targetPlayerId === duck.playerId)
-  const dangerAhead = itemState.bananas.some((banana) => banana.progress > duck.progress && banana.progress - duck.progress < 0.035)
-    || pickupState.hazards.some((hazard) => hazard.type !== 'WHIRLPOOL' && hazard.progress > duck.progress && hazard.progress - duck.progress < 0.035 && !hazard.hitPlayerIds.has(duck.playerId))
-  if (itemId === 'MINI_ROCKET') return duck.progress >= PICKUP_BALANCE.miniRocket.autoArmProgress && Boolean(ahead)
-    && (!ideal || ahead!.progress - duck.progress <= PICKUP_BALANCE.miniRocket.maximumTargetDistance * 0.72 || duck.progress >= PICKUP_BALANCE.miniRocket.autoFallbackProgress)
-  if (itemId === 'BANANA') return closeBehind || duck.progress >= (ideal ? 0.82 : PICKUP_BALANCE.banana.autoFallbackProgress)
-  if (itemId === 'MINI_BUBBLE') return incoming || duck.progress >= (ideal ? 0.82 : 0.75)
-  if (itemId === 'QUACK_HORN') return nearby >= (ideal ? 2 : 1) || (ideal && nearby >= 1 && duck.progress >= 0.86)
-  if (itemId === 'FEATHER') return dangerAhead || duck.progress >= (ideal ? 0.86 : PICKUP_BALANCE.feather.autoFallbackProgress)
-  return false
-}
-
 function expireWildEffects(itemState: ItemRaceState, tick: number, emit: EmitPickupEvent) {
   for (const [playerId, runtime] of [...itemState.byPlayer].sort(([left], [right]) => left.localeCompare(right))) {
     if (runtime.wildBubbleAvailable && tick >= runtime.wildBubbleUntilTick) {
@@ -495,15 +484,8 @@ export function applyRecordedWildInputs(itemState: ItemRaceState, ducks: ItemDuc
 }
 
 export function tickPickupSystem(config: RaceConfig, track: RaceTrack, pickupState: PickupRaceState, itemState: ItemRaceState, ducks: Array<ItemDuckState & { previousProgress?: number }>, tick: number, tickRate: number, emit: EmitPickupEvent) {
-  if (!pickupState.config.enabled && pickupState.pickups.length === 0 && pickupState.hazards.length === 0) return
   expireWildEffects(itemState, tick, emit)
-  for (const duck of pickupState.config.autoItemsEnabled ? [...ducks].sort((left, right) => left.playerId.localeCompare(right.playerId)) : []) {
-    if (duck.finished) continue
-    const runtime = itemState.byPlayer.get(duck.playerId)!
-    if (runtime.wildItem && shouldAutoUse(runtime, duck, ducks, itemState, pickupState, tick)) {
-      activateWildItem(itemState, ducks, { playerId: duck.playerId, wildItemInstanceId: runtime.wildItem.instanceId }, tick, tickRate, 'AUTO', emit)
-    }
-  }
+  if (!pickupState.config.enabled && pickupState.pickups.length === 0 && pickupState.hazards.length === 0) return
   activateZones(track, pickupState, ducks, emit)
   collectPickups(config, pickupState, itemState, ducks, tick, tickRate, emit)
   resolveHazards(pickupState, itemState, ducks, tick, tickRate, emit)

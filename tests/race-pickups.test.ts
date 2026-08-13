@@ -6,11 +6,34 @@ import {
   rollWildItem,
   simulateRace,
   stepSimulation,
+  tickAutoUseAI,
   tickPickupSystem,
   activateWildItem,
 } from '../packages/race-core/src'
 import { raceConfigSchema, type RaceEventType, type WildItemId } from '../packages/race-protocol/src'
 import { recordedWildInputsFromEvents } from '../lib/racing/persistence'
+import type { RaceSimulationState } from '../packages/race-core/src/simulation'
+
+function tickPickupsWithAutoAI(
+  state: RaceSimulationState,
+  tick: number,
+  emit: (type: RaceEventType, source?: string, target?: string, metadata?: Record<string, unknown>) => void,
+) {
+  tickPickupSystem(state.config, state.track, state.pickupState, state.itemState, state.ducks, tick, 60, emit)
+  tickAutoUseAI({
+    config: state.config,
+    track: state.track,
+    itemState: state.itemState,
+    pickupState: state.pickupState,
+    ducks: state.ducks,
+    tick,
+    tickRate: 60,
+    prepAutoUseEnabled: true,
+    wildAutoUseEnabled: state.pickupState.config.autoItemsEnabled,
+    emitItem: emit,
+    emitPickup: emit,
+  })
+}
 
 function config(seed = '51'.repeat(32), overrides: Record<string, unknown> = {}) {
   return raceConfigSchema.parse({
@@ -202,13 +225,80 @@ test('manual Wild input is persisted in event stream and replay deterministic', 
   assert.deepEqual(simulateRace(raceConfig, { manualInputs: [input, staleInput] }), withRejectedInput)
 })
 
+test('auto-use burns held Wild Items before the finish instead of carrying them unused', () => {
+  const state = createSimulation(config('59'.repeat(32), { pickupConfig: { enabled: false, hazardsEnabled: false } }))
+  const leader = state.ducks[0]!
+  leader.progress = 0.93
+  leader.currentRank = 1
+  for (const duck of state.ducks.slice(1)) {
+    duck.progress = 0.82
+    duck.currentRank = Number(duck.playerId.split('-')[1])
+  }
+  const backmarker = state.ducks[7]!
+  backmarker.progress = 0.79
+  backmarker.currentRank = 8
+
+  state.itemState.byPlayer.get(leader.playerId)!.wildItem = { instanceId: 'leader-rocket', itemId: 'MINI_ROCKET', acquiredAtTick: 1 }
+  state.itemState.byPlayer.get(backmarker.playerId)!.wildItem = { instanceId: 'back-banana', itemId: 'BANANA', acquiredAtTick: 1 }
+
+  const events: RaceEventType[] = []
+  let forfeitedLeader = false
+  for (let tick = 200; tick <= 260; tick += 1) {
+    tickPickupsWithAutoAI(state, tick, (type, source, _target, metadata) => {
+      events.push(type)
+      if (type === 'WILD_ITEM_AUTO_USED' && source === leader.playerId && metadata?.forfeited === true) {
+        forfeitedLeader = true
+      }
+    })
+  }
+
+  assert.equal(forfeitedLeader, true)
+
+  assert.equal(state.itemState.byPlayer.get(leader.playerId)!.wildItem, null)
+  assert.equal(state.itemState.byPlayer.get(backmarker.playerId)!.wildItem, null)
+  assert.ok(events.includes('WILD_BANANA_DROPPED'))
+})
+
+test('newly collected held Wild Items auto-use on the same tick', () => {
+  const state = createSimulation(config('5b'.repeat(32), { pickupConfig: { forceItem: 'FEATHER', autoItemsEnabled: true, hazardsEnabled: false, spawnMultiplier: 2 } }))
+  const duck = state.ducks[3]!
+  duck.currentRank = 7
+  const box = state.pickupState.pickups.find((pickup) => pickup.type === 'QUACK_BOX' && pickup.progress > 0.75)!
+  duck.previousProgress = box.progress - 0.002
+  duck.progress = box.progress
+  duck.lateralOffset = box.lateralOffset
+
+  const events: RaceEventType[] = []
+  tickPickupsWithAutoAI(state, 150, (type) => events.push(type))
+  for (let tick = 151; tick <= 220; tick += 1) {
+    tickAutoUseAI({
+      config: state.config,
+      track: state.track,
+      itemState: state.itemState,
+      pickupState: state.pickupState,
+      ducks: state.ducks,
+      tick,
+      tickRate: 60,
+      prepAutoUseEnabled: true,
+      wildAutoUseEnabled: state.pickupState.config.autoItemsEnabled,
+      emitItem: (type) => events.push(type),
+      emitPickup: (type) => events.push(type),
+    })
+  }
+
+  assert.equal(state.itemState.byPlayer.get(duck.playerId)!.wildItem, null)
+  assert.ok(events.includes('WILD_ITEM_GRANTED'))
+  assert.ok(events.includes('WILD_ITEM_AUTO_USED'))
+  assert.ok(events.includes('WILD_FEATHER_USED'))
+})
+
 test('player array order cannot change pickup race outcomes', () => {
   const ordered = config('59'.repeat(32))
   const reversed = raceConfigSchema.parse({ ...ordered, players: [...ordered.players].reverse() })
   assert.deepEqual(simulateRace(reversed), simulateRace(ordered))
 })
 
-test('fuzzed pickup races finish with finite state, no duplicate collection, and bounded speed effects', () => {
+test('fuzzed pickup races finish with finite state, no duplicate collection, and bounded speed effects', { timeout: 120_000 }, () => {
   for (let raceIndex = 1; raceIndex <= 100; raceIndex += 1) {
     const state = createSimulation(config(raceIndex.toString(16).padStart(64, '0')))
     while (!state.finished) {

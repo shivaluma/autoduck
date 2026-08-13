@@ -9,6 +9,7 @@ import {
   tickItemSystem,
   type ItemRaceState,
 } from './items/engine'
+import { tickAutoUseAI } from './auto-use/arbiter'
 import {
   announcePickupWorld,
   applyRecordedWildInputs,
@@ -217,6 +218,25 @@ export function stepSimulation(state: RaceSimulationState) {
     emitEvent(state, { type, sourcePlayerId, targetPlayerId, metadata })
   })
 
+  const autoUseInput = {
+    config: state.config,
+    track: state.track,
+    itemState: state.itemState,
+    pickupState: state.pickupState,
+    ducks: state.ducks,
+    tick: state.tick,
+    tickRate: state.config.tickRate,
+    prepAutoUseEnabled: true,
+    wildAutoUseEnabled: state.pickupState.config.enabled && state.pickupState.config.autoItemsEnabled,
+    emitItem: (type: Parameters<typeof emitEvent>[1]['type'], sourcePlayerId?: string, targetPlayerId?: string, metadata: Record<string, unknown> = {}) => {
+      emitEvent(state, { type, sourcePlayerId, targetPlayerId, metadata })
+    },
+    emitPickup: (type: Parameters<typeof emitEvent>[1]['type'], sourcePlayerId?: string, targetPlayerId?: string, metadata: Record<string, unknown> = {}) => {
+      emitEvent(state, { type, sourcePlayerId, targetPlayerId, metadata })
+    },
+  }
+  tickAutoUseAI(autoUseInput)
+
   tickItemSystem(state.itemState, state.ducks, state.tick, state.config.tickRate, (type, sourcePlayerId, targetPlayerId, metadata = {}) => {
     emitEvent(state, { type, sourcePlayerId, targetPlayerId, metadata })
   })
@@ -261,6 +281,8 @@ export function stepSimulation(state: RaceSimulationState) {
   tickPickupSystem(state.config, state.track, state.pickupState, state.itemState, state.ducks, state.tick, state.config.tickRate, (type, sourcePlayerId, targetPlayerId, metadata = {}) => {
     emitEvent(state, { type, sourcePlayerId, targetPlayerId, metadata })
   })
+
+  tickAutoUseAI(autoUseInput)
 
   resolveCollisions(state)
   updateRanks(state)

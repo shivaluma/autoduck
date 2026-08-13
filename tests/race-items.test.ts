@@ -9,11 +9,15 @@ import {
   itemSpeedMultiplier,
   resolveIncomingRaceEffect,
   simulateRace,
+  tickAutoUseAI,
   tickItemSystem,
   type DuckItemRuntime,
   type ItemDuckState,
+  type ItemRaceState,
 } from '../packages/race-core/src'
-import { raceConfigSchema, type RaceEventType, type RaceItemId } from '../packages/race-protocol/src'
+import { raceConfigSchema, type RaceConfig, type RaceEventType, type RaceItemId } from '../packages/race-protocol/src'
+import { createRiverTrack } from '../packages/race-core/src/track'
+import { createPickupRaceState } from '../packages/race-core/src/pickups/engine'
 
 function defense(items: RaceItemId[]): DuckItemRuntime {
   return {
@@ -35,7 +39,39 @@ function defense(items: RaceItemId[]): DuckItemRuntime {
     wildFeatherUntilTick: 0,
     tailwindUntilTick: 0,
     magnetUntilTick: 0,
+    lastItemUseTick: 0,
+    nextAutoDecisionTick: 0,
+    nextAutoActionTick: 0,
+    pendingAutoAction: null,
+    pendingAutoActionExecuteTick: 0,
+    lastOffensiveUseTick: 0,
   }
+}
+
+function tickItemsWithAutoAI(
+  raceConfig: RaceConfig,
+  itemState: ItemRaceState,
+  ducks: ItemDuckState[],
+  tick: number,
+  tickRate: number,
+  emit: (type: RaceEventType, source?: string, target?: string, metadata?: Record<string, unknown>) => void,
+) {
+  const track = createRiverTrack(raceConfig.trackVersion)
+  const pickupState = createPickupRaceState(raceConfig, track)
+  tickAutoUseAI({
+    config: raceConfig,
+    track,
+    itemState,
+    pickupState,
+    ducks,
+    tick,
+    tickRate,
+    prepAutoUseEnabled: true,
+    wildAutoUseEnabled: pickupState.config.autoItemsEnabled,
+    emitItem: emit,
+    emitPickup: emit,
+  })
+  tickItemSystem(itemState, ducks, tick, tickRate, emit)
 }
 
 function config(loadouts: Array<{ playerId: string; itemIds: RaceItemId[] }>) {
@@ -113,48 +149,101 @@ test('slow effects use the strongest active value without weaker duration extens
 })
 
 test('Nitro activates deterministically and ends after exactly 2 seconds', () => {
-  const state = createItemRaceState(config([{ playerId: '2', itemIds: ['NITRO', 'BANANA'] }]))
-  const ducks = [duck('1', 0.62, 1), duck('2', 0.55, 4)]
+  const raceConfig = config([{ playerId: '2', itemIds: ['NITRO', 'BANANA'] }])
+  const state = createItemRaceState(raceConfig)
+  const ducks = [duck('1', 0.95, 1), duck('2', 0.93, 2)]
   const events: RaceEventType[] = []
-  tickItemSystem(state, ducks, 10, 60, (type) => events.push(type))
+  let nitroTick = 0
+  for (let tick = 1; tick <= 200 && nitroTick === 0; tick += 1) {
+    tickItemsWithAutoAI(raceConfig, state, ducks, tick, 60, (type) => {
+      events.push(type)
+      if (type === 'NITRO_STARTED') nitroTick = tick
+    })
+  }
   const runtime = state.byPlayer.get('2')!
-  assert.equal(runtime.boostUntilTick, 130)
-  assert.equal(itemSpeedMultiplier(runtime, 129), 1.22)
-  tickItemSystem(state, ducks, 130, 60, (type) => events.push(type))
-  assert.equal(itemSpeedMultiplier(runtime, 130), 1)
+  assert.ok(nitroTick > 0)
+  assert.equal(runtime.boostUntilTick, nitroTick + 120)
+  assert.equal(runtime.boostMultiplier, 1.22)
+  assert.equal(itemSpeedMultiplier(runtime, nitroTick), 1.22)
+  assert.equal(itemSpeedMultiplier(runtime, nitroTick + 119), 1.22)
+
+  tickItemsWithAutoAI(raceConfig, state, ducks, nitroTick + 120, 60, (type) => events.push(type))
+  assert.equal(itemSpeedMultiplier(runtime, nitroTick + 120), 1)
   assert.deepEqual(events.filter((type) => type.startsWith('NITRO')), ['NITRO_STARTED', 'NITRO_ENDED'])
 })
 
-test('Rocket targets nearest eligible duck ahead and expires when it cannot hit', () => {
-  const state = createItemRaceState(config([{ playerId: '2', itemIds: ['HOMING_ROCKET', 'FEATHER'] }]))
+test('Rocket targets valuable eligible duck ahead and expires when it cannot hit', () => {
+  const raceConfig = config([{ playerId: '2', itemIds: ['HOMING_ROCKET', 'FEATHER'] }])
+  const state = createItemRaceState(raceConfig)
   const ducks = [duck('1', 0.44, 1), duck('2', 0.4, 2)]
   const events: Array<{ type: RaceEventType; target?: string }> = []
-  tickItemSystem(state, ducks, 1, 60, (type, _source, target) => events.push({ type, target }))
-  assert.deepEqual(events[0], { type: 'ROCKET_FIRED', target: '1' })
-  ducks[0].finished = true
-  tickItemSystem(state, ducks, 2, 60, (type, _source, target) => events.push({ type, target }))
+  let rocketTick = 0
+  for (let tick = 1; tick <= 60; tick += 1) {
+    tickItemsWithAutoAI(raceConfig, state, ducks, tick, 60, (type, _source, target) => {
+      events.push({ type, target })
+      if (type === 'ROCKET_FIRED' && rocketTick === 0) {
+        rocketTick = tick
+        ducks[0].finished = true
+      }
+    })
+    if (rocketTick > 0) break
+  }
+  const fired = events.find((entry) => entry.type === 'ROCKET_FIRED')
+  assert.ok(fired)
+  assert.equal(fired?.target, '1')
+  for (let tick = rocketTick + 1; tick <= rocketTick + 3; tick += 1) {
+    tickItemsWithAutoAI(raceConfig, state, ducks, tick, 60, (type, _source, target) => events.push({ type, target }))
+  }
   assert.ok(events.some((entry) => entry.type === 'ROCKET_EXPIRED'))
 })
 
 test('Banana expires, Horn pushes only laterally, and neither hard-stuns', () => {
-  const state = createItemRaceState(config([
+  const raceConfig = config([
+    { playerId: '1', itemIds: ['NITRO', 'BANANA'] },
+    { playerId: '3', itemIds: ['NITRO', 'FEATHER'] },
+  ])
+  const bananaState = createItemRaceState(raceConfig)
+  const bananaDucks = [duck('1', 0.78, 1, 0), duck('3', 0.775, 2, 0.145)]
+  const bananaEvents: RaceEventType[] = []
+  for (let tick = 1; tick <= 80; tick += 1) {
+    tickItemsWithAutoAI(raceConfig, bananaState, bananaDucks, tick, 60, (type) => bananaEvents.push(type))
+  }
+  assert.ok(bananaEvents.includes('BANANA_DROPPED'))
+  const banana = bananaState.bananas[0]
+  assert.ok(banana)
+  bananaDucks[0].progress = 0.9
+  bananaDucks[1].progress = 0.91
+  tickItemsWithAutoAI(raceConfig, bananaState, bananaDucks, banana.expiresAtTick, 60, (type) => bananaEvents.push(type))
+  assert.ok(bananaEvents.includes('BANANA_EXPIRED'))
+
+  const hornConfig = config([
     { playerId: '1', itemIds: ['NITRO', 'BANANA'] },
     { playerId: '2', itemIds: ['BUBBLE_SHIELD', 'QUACK_HORN'] },
-  ]))
-  const ducks = [duck('1', 0.7, 1, 0), duck('2', 0.695, 2, 0.2)]
-  const events: RaceEventType[] = []
-  tickItemSystem(state, ducks, 1, 60, (type) => events.push(type))
-  assert.ok(events.includes('BANANA_DROPPED'))
-  assert.ok(events.includes('HORN_USED'))
-  assert.notEqual(ducks[0].lateralVelocity, 0)
-  const banana = state.bananas[0]
-  if (banana) {
-    ducks[0].progress = 0.9
-    ducks[1].progress = 0.91
-    tickItemSystem(state, ducks, banana.expiresAtTick, 60, (type) => events.push(type))
-    assert.ok(events.includes('BANANA_EXPIRED'))
+    { playerId: '3', itemIds: ['NITRO', 'FEATHER'] },
+  ])
+  const hornState = createItemRaceState(hornConfig)
+  const hornDucks = [duck('1', 0.7, 1, 0), duck('2', 0.695, 2, 0.3), duck('3', 0.698, 3, -0.05)]
+  const hornEvents: RaceEventType[] = []
+  for (let tick = 1; tick <= 80; tick += 1) {
+    tickItemsWithAutoAI(hornConfig, hornState, hornDucks, tick, 60, (type) => hornEvents.push(type))
   }
-  assert.equal(itemActiveEffects(state.byPlayer.get('2')!, 1).includes('BUBBLE_SHIELD'), true)
+  assert.ok(hornEvents.includes('HORN_USED'))
+  assert.notEqual(hornDucks[0].lateralVelocity, 0)
+  assert.equal(itemActiveEffects(hornState.byPlayer.get('2')!, 1).includes('BUBBLE_SHIELD'), true)
+})
+
+test('prep items auto-burn near the finish line instead of staying unused', () => {
+  const raceConfig = config([{ playerId: '2', itemIds: ['NITRO', 'BANANA'] }])
+  const state = createItemRaceState(raceConfig)
+  const ducks = [duck('1', 0.95, 1), duck('2', 0.93, 2)]
+  const events: RaceEventType[] = []
+  for (let tick = 1; tick <= 80; tick += 1) {
+    tickItemsWithAutoAI(raceConfig, state, ducks, tick, 60, (type) => events.push(type))
+  }
+  assert.ok(events.includes('NITRO_STARTED'))
+  assert.ok(events.includes('BANANA_DROPPED'))
+  assert.equal(state.byPlayer.get('2')!.usedItems.has('NITRO'), true)
+  assert.equal(state.byPlayer.get('2')!.usedItems.has('BANANA'), true)
 })
 
 test('full item race finishes in target window with readable bounded event volume', () => {

@@ -11,6 +11,8 @@ export interface ItemDuckState {
   finished: boolean
 }
 
+import type { AutoUseCandidate } from '../auto-use/types'
+
 export interface DuckItemRuntime extends ItemDefenseState {
   itemIds: RaceItemId[]
   usedItems: Set<RaceItemId>
@@ -26,6 +28,12 @@ export interface DuckItemRuntime extends ItemDefenseState {
   wildFeatherUntilTick: number
   tailwindUntilTick: number
   magnetUntilTick: number
+  lastItemUseTick: number
+  nextAutoDecisionTick: number
+  nextAutoActionTick: number
+  pendingAutoAction: AutoUseCandidate | null
+  pendingAutoActionExecuteTick: number
+  lastOffensiveUseTick: number
 }
 
 export interface RocketRuntime {
@@ -90,6 +98,12 @@ export function createItemRaceState(config: RaceConfig): ItemRaceState {
         wildFeatherUntilTick: 0,
         tailwindUntilTick: 0,
         magnetUntilTick: 0,
+        lastItemUseTick: 0,
+        nextAutoDecisionTick: 0,
+        nextAutoActionTick: 0,
+        pendingAutoAction: null,
+        pendingAutoActionExecuteTick: 0,
+        lastOffensiveUseTick: 0,
       }]
     })),
     rockets: [],
@@ -101,81 +115,6 @@ export function createItemRaceState(config: RaceConfig): ItemRaceState {
       bananaSlowMultiplier: config.itemTuning?.bananaSlowMultiplier ?? ITEM_BALANCE.banana.slowMultiplier,
     },
   }
-}
-
-function hasUnused(runtime: DuckItemRuntime, item: RaceItemId) {
-  return runtime.itemIds.includes(item) && !runtime.usedItems.has(item)
-}
-
-function orderedActive(ducks: ItemDuckState[]) {
-  return ducks.filter((duck) => !duck.finished).sort((left, right) => right.progress - left.progress || left.playerId.localeCompare(right.playerId))
-}
-
-function activateNitro(itemState: ItemRaceState, runtime: DuckItemRuntime, duck: ItemDuckState, ducks: ItemDuckState[], tick: number, tickRate: number, emit: EmitItemEvent) {
-  if (!hasUnused(runtime, 'NITRO') || duck.progress < ITEM_BALANCE.nitro.armProgress) return
-  const ahead = orderedActive(ducks).find((candidate) => candidate.progress > duck.progress)
-  const shouldTrigger = duck.currentRank >= ITEM_BALANCE.nitro.triggerRank
-    || Boolean(ahead && ahead.progress - duck.progress > ITEM_BALANCE.nitro.gapThreshold)
-    || duck.progress >= ITEM_BALANCE.nitro.fallbackProgress
-  if (!shouldTrigger) return
-  runtime.usedItems.add('NITRO')
-  runtime.boostMultiplier = itemState.tuning.nitroSpeedMultiplier
-  runtime.boostUntilTick = tick + Math.round(ITEM_BALANCE.nitro.durationSeconds * tickRate)
-  emit('NITRO_STARTED', duck.playerId, undefined, { untilTick: runtime.boostUntilTick })
-}
-
-function activateRocket(itemState: ItemRaceState, runtime: DuckItemRuntime, duck: ItemDuckState, ducks: ItemDuckState[], tick: number, tickRate: number, emit: EmitItemEvent) {
-  if (!hasUnused(runtime, 'HOMING_ROCKET') || duck.progress < ITEM_BALANCE.rocket.armProgress || duck.progress > ITEM_BALANCE.rocket.disableProgress) return
-  const target = orderedActive(ducks)
-    .filter((candidate) => candidate.progress > duck.progress)
-    .sort((left, right) => left.progress - right.progress || left.playerId.localeCompare(right.playerId))
-    .find((candidate) => {
-      const targetRuntime = itemState.byPlayer.get(candidate.playerId)!
-      return candidate.progress - duck.progress <= ITEM_BALANCE.rocket.maximumTargetDistance && tick >= targetRuntime.rocketProtectionUntilTick
-    })
-  if (!target) return
-  runtime.usedItems.add('HOMING_ROCKET')
-  itemState.rockets.push({
-    id: itemState.nextObjectId++, sourcePlayerId: duck.playerId, targetPlayerId: target.playerId,
-    progress: duck.progress, expiresAtTick: tick + Math.round(ITEM_BALANCE.rocket.lifetimeSeconds * tickRate),
-    kind: 'PREP', speedPerSecond: ITEM_BALANCE.rocket.projectileSpeed, hitRadius: ITEM_BALANCE.rocket.hitRadius,
-    slowMultiplier: itemState.tuning.rocketSlowMultiplier, slowDurationSeconds: ITEM_BALANCE.rocket.slowDurationSeconds,
-    retargeted: false,
-  })
-  emit('ROCKET_FIRED', duck.playerId, target.playerId, {})
-}
-
-function activateBanana(itemState: ItemRaceState, runtime: DuckItemRuntime, duck: ItemDuckState, ducks: ItemDuckState[], tick: number, tickRate: number, emit: EmitItemEvent) {
-  if (!hasUnused(runtime, 'BANANA') || duck.progress < ITEM_BALANCE.banana.armProgress) return
-  const closeBehind = ducks.some((candidate) => !candidate.finished && candidate.progress < duck.progress && duck.progress - candidate.progress <= ITEM_BALANCE.banana.closeBehindDistance)
-  if (!closeBehind && duck.progress < ITEM_BALANCE.banana.fallbackProgress) return
-  const progress = Math.max(0, duck.progress - 0.003)
-  if (itemState.bananas.some((banana) => Math.abs(banana.progress - progress) < ITEM_BALANCE.banana.minimumTrapSpacing)) return
-  runtime.usedItems.add('BANANA')
-  itemState.bananas.push({
-    id: itemState.nextObjectId++, sourcePlayerId: duck.playerId, progress, lateralOffset: duck.lateralOffset,
-    expiresAtTick: tick + Math.round(ITEM_BALANCE.banana.lifetimeSeconds * tickRate),
-    kind: 'PREP', hitProgressRadius: ITEM_BALANCE.banana.hitProgressRadius, hitLateralRadius: ITEM_BALANCE.banana.hitLateralRadius,
-    slowMultiplier: itemState.tuning.bananaSlowMultiplier, slowDurationSeconds: ITEM_BALANCE.banana.slowDurationSeconds,
-    lateralSlip: ITEM_BALANCE.banana.lateralSlip,
-  })
-  emit('BANANA_DROPPED', duck.playerId, undefined, { progress, lateralOffset: duck.lateralOffset })
-}
-
-function activateHorn(runtime: DuckItemRuntime, duck: ItemDuckState, ducks: ItemDuckState[], emit: EmitItemEvent) {
-  if (!hasUnused(runtime, 'QUACK_HORN') || duck.progress < ITEM_BALANCE.horn.armProgress) return
-  const nearby = ducks.filter((candidate) => candidate.playerId !== duck.playerId && !candidate.finished
-    && Math.abs(candidate.progress - duck.progress) <= ITEM_BALANCE.horn.progressRadius
-    && Math.abs(candidate.lateralOffset - duck.lateralOffset) <= ITEM_BALANCE.horn.lateralRadius)
-  if (nearby.length === 0) return
-  runtime.usedItems.add('QUACK_HORN')
-  for (const target of nearby.sort((left, right) => left.playerId.localeCompare(right.playerId))) {
-    const direction = target.lateralOffset === duck.lateralOffset
-      ? (target.playerId.localeCompare(duck.playerId) < 0 ? -1 : 1)
-      : Math.sign(target.lateralOffset - duck.lateralOffset)
-    target.lateralVelocity += direction * ITEM_BALANCE.horn.lateralPush
-  }
-  emit('HORN_USED', duck.playerId, undefined, { targets: nearby.map((target) => target.playerId) })
 }
 
 export function applyItemSlow(runtime: DuckItemRuntime, multiplier: number, durationSeconds: number, tick: number, tickRate: number) {
@@ -296,10 +235,6 @@ export function tickItemSystem(
       emit('NITRO_ENDED', duck.playerId, undefined, {})
     }
     if (runtime.slowMultiplier < 1 && tick >= runtime.slowUntilTick) runtime.slowMultiplier = 1
-    activateNitro(itemState, runtime, duck, ducks, tick, tickRate, emit)
-    activateRocket(itemState, runtime, duck, ducks, tick, tickRate, emit)
-    activateBanana(itemState, runtime, duck, ducks, tick, tickRate, emit)
-    activateHorn(runtime, duck, ducks, emit)
   }
   updateRockets(itemState, ducks, tick, tickRate, emit)
   updateBananas(itemState, ducks, tick, tickRate, emit)

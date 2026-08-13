@@ -6,8 +6,9 @@ export const ITEM_BALANCE = {
   maximumSpeedMultiplier: 1.25,
   rocket: {
     armProgress: 0.3,
-    disableProgress: 0.92,
+    disableProgress: 0.96,
     maximumTargetDistance: 0.15,
+    endGameTargetDistanceMultiplier: 1.6,
     projectileSpeed: 0.12,
     lifetimeSeconds: 3,
     hitRadius: 0.008,
@@ -24,7 +25,8 @@ export const ITEM_BALANCE = {
   },
   banana: {
     armProgress: 0.25,
-    fallbackProgress: 0.62,
+    fallbackProgress: 0.58,
+    endGameDropProgress: 0.74,
     closeBehindDistance: 0.07,
     lifetimeSeconds: 7,
     hitProgressRadius: 0.006,
@@ -39,5 +41,10 @@ export const ITEM_BALANCE = {
     progressRadius: 0.015,
     lateralRadius: 0.26,
     lateralPush: 0.28,
+    fallbackProgress: 0.8,
+  },
+  autoUse: {
+    endGameBurnProgress: 0.78,
+    forceBurnProgress: 0.92,
   },
 } as const

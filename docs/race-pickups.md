@@ -1,4 +1,4 @@
-# Race Pickups — S3.6
+# Race Pickups — S3.7
 
 Quack Boxes add readable, temporary race chaos without changing persistent power. The race core owns every spawn, collision, loot roll, target, effect, and Golden QP award. Phaser only renders authoritative snapshots and events.
 
@@ -65,7 +65,7 @@ The personal Season 3 page enters Live Race mode and polls the authoritative per
 
 `POST /api/races/:id/wild-item` validates the personal token, race ownership/state, item instance, and five-actions-per-second limit. It writes an idempotent `RaceWildAction`; the race worker claims it and executes it on the next simulation tick. The client never supplies a target. Invalid uses do not consume the item.
 
-Auto-use is always on in official races. Rocket checks range, Banana checks a nearby duck behind, Bubble checks incoming attacks, Horn checks pack density, and Feather checks approaching traps/hazards. Fallback thresholds prevent unused inventory near the finish. Disconnecting the personal page does not affect auto-use.
+Auto-use is always on in official races. Rocket checks range (widening in the final stretch), Banana checks a nearby duck behind or drops before the finish, Bubble checks incoming attacks or activates for leaders in the end game, Horn checks pack density with expanded radius near the finish, and Feather checks approaching traps/hazards or burns before the line. Ideal-manual players get a short extra window, then the same burn rules apply. A second auto-use pass runs immediately after pickup collection so late boxes are not carried to the finish. Disconnecting the personal page does not affect auto-use.
 
 Applied manual commands emit `WILD_ITEM_MANUAL_INPUT` with their authoritative tick. Replays extract those events and inject the same command at the same tick.
 
