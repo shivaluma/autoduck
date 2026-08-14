@@ -49,13 +49,13 @@ export default function Season3Page() {
   const [submittedGuestName, setSubmittedGuestName] = useState('')
   const [loading, setLoading] = useState(true)
 
-  async function load() {
-    setLoading(true)
+  async function refresh(silent = false, syncLoadout = false) {
+    if (!silent) setLoading(true)
     const response = await fetch(`/api/season3${token ? `?token=${encodeURIComponent(token)}` : ''}`, { cache: 'no-store' })
     const next = await response.json() as SeasonData
     setData(next)
-    setSelectedItems(next.currentWeek?.loadout.itemIds ?? [])
-    setLoading(false)
+    if (syncLoadout || !silent) setSelectedItems(next.currentWeek?.loadout.itemIds ?? [])
+    if (!silent) setLoading(false)
   }
 
   useEffect(() => {
@@ -71,7 +71,7 @@ export default function Season3Page() {
     const response = await fetch('/api/season3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, targetUserId: selectedTarget }) })
     const result = await response.json() as { error?: string; message?: string }
     setMessage(result.message ?? result.error ?? '')
-    if (response.ok) await load()
+    if (response.ok) await refresh(true)
   }
 
   async function confirmShield(useShield: boolean) {
@@ -79,7 +79,7 @@ export default function Season3Page() {
     const response = await fetch('/api/season3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, action: 'shield', useShield }) })
     const result = await response.json() as { error?: string; message?: string }
     setMessage(result.message ?? result.error ?? '')
-    if (response.ok) await load()
+    if (response.ok) await refresh(true)
   }
 
   async function saveLoadout() {
@@ -87,7 +87,7 @@ export default function Season3Page() {
     const response = await fetch('/api/season3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, action: 'loadout', itemIds: selectedItems, ready: true }) })
     const result = await response.json() as { error?: string; message?: string }
     setMessage(result.message ?? result.error ?? '')
-    if (response.ok) await load()
+    if (response.ok) await refresh(true, true)
   }
 
   if (loading) return <main className="mx-auto max-w-6xl p-6 text-white"><div className="animate-pulse rounded-3xl bg-white/10 p-8 font-display text-3xl">Đang gọi bầy vịt...</div></main>
@@ -134,11 +134,11 @@ export default function Season3Page() {
 
     <section className="rounded-[2rem] border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-surface-2)] p-5"><div className="flex items-end justify-between gap-3"><div><div className="text-xs font-black tracking-[0.2em] text-white/45">LIVE POND BOARD</div><h2 className="font-display text-3xl">🏅 Current standings</h2></div><span className="rounded-full bg-black/25 px-3 py-1 text-xs font-black text-white/55">{data.players.length} DUCKS</span></div><div className="mt-4 space-y-2">{data.players.map((player, index) => <Link href={`/season-3/duck/${player.id}`} key={player.id} className={`flex items-center gap-3 rounded-2xl border-2 p-3 ${player.isKing ? 'border-[var(--color-ggd-gold)]/60 bg-[var(--color-ggd-gold)]/10' : 'border-white/10 bg-black/15'}`}><span className="w-6 text-center font-display text-2xl text-white/40">{index + 1}</span><Season3Avatar name={player.name} avatarUrl={player.avatarUrl} size={36} /><span className="min-w-0 flex-1 truncate font-black">{player.name}{player.isKing && <span className="ml-2 rounded-full bg-[var(--color-ggd-gold)] px-2 py-0.5 text-[9px] text-[var(--color-ggd-outline)]">KING x{player.kingStreak}</span>}</span><span className="text-xs font-bold text-white/55">🔮 {player.predictionPoints} · 🩹 {player.scars} · 🛡️ {player.shields}</span></Link>)}</div></section>
 
-    {data.viewer?.appearance && <DuckCloset token={token} name={data.viewer.name} quackPoints={data.viewer.quackPoints} onboarded={data.viewer.cosmeticsOnboarded} catalog={data.cosmeticCatalog} ownedIds={data.viewer.inventory.map((item) => item.cosmeticId)} initialAppearance={data.viewer.appearance} onSaved={load} />}
+    {data.viewer?.appearance && <DuckCloset token={token} name={data.viewer.name} quackPoints={data.viewer.quackPoints} onboarded={data.viewer.cosmeticsOnboarded} catalog={data.cosmeticCatalog} ownedIds={data.viewer.inventory.map((item) => item.cosmeticId)} initialAppearance={data.viewer.appearance} onSaved={() => refresh(true)} />}
 
-    {data.viewer?.appearance && <QuackEconomy token={token} catalog={data.cosmeticCatalog} appearance={data.viewer.appearance} onChanged={load} />}
+    {data.viewer?.appearance && <QuackEconomy token={token} catalog={data.cosmeticCatalog} appearance={data.viewer.appearance} onChanged={() => refresh(true)} />}
 
-    {data.viewer?.appearance && <Duckdex token={token} catalog={data.cosmeticCatalog} inventory={data.viewer.inventory} favoriteId={data.viewer.appearance.favoriteId} onChanged={load} />}
+    {data.viewer?.appearance && <Duckdex token={token} catalog={data.cosmeticCatalog} inventory={data.viewer.inventory} favoriteId={data.viewer.appearance.favoriteId} onChanged={() => refresh(true)} />}
 
     <section className="rounded-[2rem] border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-5"><div className="flex flex-wrap items-end justify-between gap-3"><div><div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-hot-pink)]">THE RECEIPTS</div><h2 className="font-display text-3xl">📰 Duck News</h2></div><span className="text-xs font-bold text-white/45">History never forgets</span></div><div className="mt-4 grid gap-3 lg:grid-cols-2">{data.history.length === 0 ? <div className="rounded-2xl border border-dashed border-white/15 p-5 text-sm text-white/50">Chưa có tuần nào resolve.</div> : data.history.map((item) => <article key={item.id} className="rounded-2xl border border-white/10 bg-black/20 p-4"><div className="flex items-center justify-between gap-3"><span className="rounded-full bg-[var(--color-ggd-orange)]/15 px-2 py-1 text-[10px] font-black text-[var(--color-ggd-orange)]">WEEK {item.weekNumber}</span><span className="text-[10px] font-black tracking-widest text-white/35">{chaosNames[item.chaosType] ?? item.chaosType}</span></div><p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-white/80">{item.recap}</p></article>)}</div></section>
 
