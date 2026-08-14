@@ -177,10 +177,11 @@ export const RACE_PHYSICS_NOTES = [
 
 export const AUTO_USE_NOTES = [
   'Mọi item loadout và Wild Item đều auto-use trong race chính thức.',
-  'Rocket: bắn vịt phía trước trong tầm (tầm rộng hơn gần vạch đích).',
-  'Banana: thả bẫy nếu có vịt sát phía sau, hoặc thả trước vạch đích cuối race.',
+  'Nitro: +35% tốc độ tối đa trong 5.5 giây — AI dùng sớm hơn khi đang bám đuổi (rank 2–4, gap nhỏ).',
+  'Rocket: twin volley — 2 rocket vào 2 dzịt phía trước (khác nhau nếu đủ tầm), cách 0.7s, mỗi viên slow 20% / 3.5s. Tầm bắn rộng hơn bản cũ.',
+  'Banana: knockback mạnh hơn; AI ưu tiên thả khi còn Rocket/Nitro để giữ chân kẻ đuổi.',
   'Bubble: chặn đòn wild sắp tới hoặc leader đốt sớm gần đích.',
-  'Horn: đẩy ngang khi đông vịt; bán kính lớn hơn gần finish.',
+  'Horn: bán kính rộng hơn, đẩy mạnh hơn; AI ưu tiên khi còn major tấn công.',
   'Feather: né banana/hazard nhỏ sắp tới hoặc đốt trước vạch đích.',
   'Người chơi thủ công có cửa sổ ngắn trước khi AI tự đốt item; gần đích AI ép dùng để không mang item về nhà.',
   'Sau khi nhặt box muộn, AI chạy thêm một pass để không ôm item tới finish.',

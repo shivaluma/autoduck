@@ -39,7 +39,12 @@ function duckById(ducks: ItemDuckState[], playerId: string) {
 }
 
 function hasUnusedPrep(runtime: ItemRaceState['byPlayer'] extends Map<string, infer R> ? R : never, item: RaceItemId) {
-  return runtime.itemIds.includes(item) && !runtime.usedItems.has(item)
+  return runtime.itemIds.includes(item) && !runtime.usedItems.has(item) && !runtime.pendingRocketVolley
+}
+
+function hasUnusedOffensiveMajor(runtime: ItemRaceState['byPlayer'] extends Map<string, infer R> ? R : never) {
+  return (runtime.itemIds.includes('HOMING_ROCKET') && !runtime.usedItems.has('HOMING_ROCKET') && !runtime.pendingRocketVolley)
+    || (runtime.itemIds.includes('NITRO') && !runtime.usedItems.has('NITRO'))
 }
 
 function baseSpeed() {
@@ -114,7 +119,7 @@ function rocketTargets(ctx: EvaluationContext, kind: 'PREP' | 'WILD') {
       if (gap > 0.02 && gap < maxDistance * 0.75) score += 12
       if (ctx.objective.isCurrentlyLosing(source.playerId, source.currentRank) && target.currentRank === source.currentRank - 1) score += 35
       if (source.progress >= AUTO_USE_CONFIG.progressLate) score += 15
-      if (targetRuntime.bubbleAvailable || targetRuntime.wildBubbleAvailable) score -= 25
+      if (targetRuntime.bubbleAvailable || targetRuntime.wildBubbleAvailable) score -= ITEM_BALANCE.rocket.volleyShots > 1 ? 8 : 25
       if (targetRuntime.featherAvailable) score -= 5
       score -= penalty
       return { target, score }
@@ -182,7 +187,8 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
     if (duck.progress >= AUTO_USE_CONFIG.progressLate) score += 15
     score += endGameBurnScore(duck.progress, 'PREP')
     if (ctx.objective.mode === 'REVERSE') score -= 80
-    if (duck.currentRank <= 2 && duck.progress < 0.7) score -= 30
+    if (duck.currentRank >= 2 && duck.currentRank <= 4 && gap < 0.08) score += 22
+    if (duck.currentRank <= 2 && duck.progress < 0.7) score -= 12
     if (ctx.tick < runtime.boostUntilTick) score -= 100
     if (gap > expectedGain * 2) score -= 20
     score += pressure * 0.15
@@ -190,7 +196,8 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
   }
 
   if (hasUnusedPrep(runtime, 'HOMING_ROCKET') && duck.progress >= ITEM_BALANCE.rocket.armProgress && duck.progress <= ITEM_BALANCE.rocket.disableProgress) {
-    const best = rocketTargets(ctx, 'PREP')[0]
+    const targets = rocketTargets(ctx, 'PREP')
+    const best = targets[0]
     if (best) {
       candidates.push({
         itemKey: 'prep:HOMING_ROCKET',
@@ -199,6 +206,7 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
         action: 'USE',
         score: best.score + danger * 0.15 + pressure * 0.1,
         targetPlayerId: best.target.playerId,
+        volleyTargetPlayerIds: targets.slice(0, ITEM_BALANCE.rocket.volleyShots).map((entry) => entry.target.playerId),
         reason: 'OBJECTIVE',
       })
     }
@@ -218,7 +226,14 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
     if (duck.progress >= AUTO_USE_CONFIG.progressLate) score += 15
     score += endGameBurnScore(duck.progress, 'PREP')
     score += pressure * 0.1
-    if (bestIntersection > 20 || score >= 28) {
+    const chaser = activeDucks(ctx.ducks)
+      .filter((target) => target.playerId !== duck.playerId && target.progress < duck.progress)
+      .sort((left, right) => right.progress - left.progress)[0]
+    if (chaser && duck.progress - chaser.progress <= ITEM_BALANCE.banana.closeBehindDistance) score += 24
+    if (hasUnusedOffensiveMajor(runtime) && bestIntersection > 12) score += 22
+    if (hasUnusedOffensiveMajor(runtime) && chaser) score += 28
+    if (hasUnusedOffensiveMajor(runtime) && duck.currentRank >= 4 && chaser) score += 20
+    if (bestIntersection > 20 || score >= 24) {
       candidates.push({ itemKey: 'prep:BANANA', itemId: 'BANANA', source: 'PREP', action: 'USE', score, reason: 'OPPORTUNITY' })
     }
   }
@@ -231,10 +246,12 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
       if (Math.abs(target.lateralOffset - duck.lateralOffset) > ITEM_BALANCE.horn.lateralRadius * 1.5) continue
       const impact = ITEM_BALANCE.horn.lateralPush
       if (ctx.objective.isTeammate(duck.playerId, target.playerId)) netValue -= impact * 40
-      else if (target.currentRank < duck.currentRank) netValue += impact * 25
-      else netValue += impact * 12
+      else if (target.currentRank < duck.currentRank) netValue += impact * 30
+      else netValue += impact * 16
     }
-    if (netValue >= (duck.progress >= ITEM_BALANCE.autoUse.endGameBurnProgress ? 8 : 10)) {
+    if (hasUnusedOffensiveMajor(runtime) && netValue > 0) netValue += 10
+    if (duck.currentRank >= 3 && netValue > 0) netValue += 4
+    if (netValue >= (duck.progress >= ITEM_BALANCE.autoUse.endGameBurnProgress ? 5 : 7)) {
       candidates.push({
         itemKey: 'prep:QUACK_HORN',
         itemId: 'QUACK_HORN',

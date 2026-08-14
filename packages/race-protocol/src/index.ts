@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 export const RACE_PROTOCOL_VERSION = '1.0.0'
 export const RACE_ENGINE_VERSION = '1.2.0'
-export const RACE_BALANCE_VERSION = 'S3.9'
+export const RACE_BALANCE_VERSION = 'S3.10'
 export const DEFAULT_TRACK_VERSION = 'river-01-v2'
 export const PICKUP_SPAWN_VERSION = 'pickups-v1'
 export const WILD_ITEM_BALANCE_VERSION = 'wild-items-v4'

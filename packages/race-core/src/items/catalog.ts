@@ -11,11 +11,11 @@ export interface RaceItemDefinition {
 
 export const RACE_ITEM_CATALOG: readonly RaceItemDefinition[] = [
   { id: 'BUBBLE_SHIELD', name: 'Bubble Shield', icon: '🫧', cost: 2, category: 'major', description: 'Chặn Rocket hoặc Banana đầu tiên.' },
-  { id: 'HOMING_ROCKET', name: 'Homing Rocket', icon: '🚀', cost: 2, category: 'major', description: 'Bắn dzịt phía trước: chậm còn 10% tốc độ trong 4.4 giây.' },
-  { id: 'NITRO', name: 'Nitro', icon: '⚡', cost: 2, category: 'major', description: 'Tự tăng tốc khi đang tụt lại.' },
-  { id: 'BANANA', name: 'Banana', icon: '🍌', cost: 1, category: 'minor', description: 'Thả bẫy ngay lane phía sau: trượt lùi trên track.' },
+  { id: 'HOMING_ROCKET', name: 'Homing Rocket', icon: '🚀', cost: 2, category: 'major', description: 'Twin volley: 2 rocket vào 2 dzịt phía trước, cách 0.7s — chậm 20% / 3.5s mỗi viên.' },
+  { id: 'NITRO', name: 'Nitro', icon: '⚡', cost: 2, category: 'major', description: 'Tăng tốc +35% (max) trong 5.5 giây khi cần bứt phá.' },
+  { id: 'BANANA', name: 'Banana', icon: '🍌', cost: 1, category: 'minor', description: 'Bẫy lane phía sau: knockback mạnh hơn, giữ chân kẻ đuổi.' },
   { id: 'FEATHER', name: 'Feather', icon: '🪶', cost: 1, category: 'minor', description: 'Né Banana đầu tiên.' },
-  { id: 'QUACK_HORN', name: 'Quack Horn', icon: '🔊', cost: 1, category: 'minor', description: 'Đẩy mạnh ngang các dzịt đang bơi sát.' },
+  { id: 'QUACK_HORN', name: 'Quack Horn', icon: '🔊', cost: 1, category: 'minor', description: 'Đẩy rộng hơn — mở lane cho Rocket/Nitro.' },
 ] as const
 
 export const AUTO_LOADOUT_PRESETS: readonly RaceItemId[][] = [

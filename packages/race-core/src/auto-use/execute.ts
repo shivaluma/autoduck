@@ -2,6 +2,7 @@ import type { RaceEventType } from '../../../race-protocol/src'
 import { ITEM_BALANCE } from '../items/config'
 import type { AutoUseCandidate } from './types'
 import type { ItemDuckState, ItemRaceState } from '../items/engine'
+import { beginPrepRocketVolley } from '../items/engine'
 import { activateWildItem } from '../pickups/engine'
 
 type EmitItemEvent = (type: RaceEventType, sourcePlayerId?: string, targetPlayerId?: string, metadata?: Record<string, unknown>) => void
@@ -35,26 +36,16 @@ export function executePrepAction(
       return true
     }
     case 'HOMING_ROCKET': {
-      if (!hasUnused(runtime, 'HOMING_ROCKET') || !candidate.targetPlayerId) return false
-      const target = ducks.find((entry) => entry.playerId === candidate.targetPlayerId)
+      if (!hasUnused(runtime, 'HOMING_ROCKET') || runtime.pendingRocketVolley) return false
+      const volleyTargets = candidate.volleyTargetPlayerIds?.length
+        ? candidate.volleyTargetPlayerIds
+        : candidate.targetPlayerId
+          ? [candidate.targetPlayerId]
+          : []
+      if (!volleyTargets.length) return false
+      const target = ducks.find((entry) => entry.playerId === volleyTargets[0])
       if (!target || target.finished) return false
-      runtime.usedItems.add('HOMING_ROCKET')
-      itemState.rockets.push({
-        id: itemState.nextObjectId++,
-        sourcePlayerId: duck.playerId,
-        targetPlayerId: target.playerId,
-        progress: duck.progress,
-        spawnedAtTick: tick,
-        expiresAtTick: tick + Math.round(ITEM_BALANCE.rocket.lifetimeSeconds * tickRate),
-        kind: 'PREP',
-        speedPerSecond: ITEM_BALANCE.rocket.projectileSpeed,
-        hitRadius: ITEM_BALANCE.rocket.hitRadius,
-        slowMultiplier: itemState.tuning.rocketSlowMultiplier,
-        slowDurationSeconds: ITEM_BALANCE.rocket.slowDurationSeconds,
-        retargeted: false,
-      })
-      emit('ROCKET_FIRED', duck.playerId, target.playerId, { autoReason: candidate.reason })
-      return true
+      return beginPrepRocketVolley(itemState, duck, volleyTargets, tick, tickRate, emit, candidate.reason)
     }
     case 'BANANA': {
       if (!hasUnused(runtime, 'BANANA')) return false
@@ -90,6 +81,9 @@ export function executePrepAction(
           : Math.sign(target.lateralOffset - duck.lateralOffset)
         target.lateralVelocity += direction * ITEM_BALANCE.horn.lateralPush
         target.lateralOffset = Math.max(-0.95, Math.min(0.95, target.lateralOffset + direction * ITEM_BALANCE.horn.lateralShove))
+        if (target.progress >= duck.progress - ITEM_BALANCE.horn.progressRadius) {
+          target.progress = Math.max(duck.progress - ITEM_BALANCE.horn.progressRadius, target.progress - ITEM_BALANCE.horn.progressKnockback)
+        }
       }
       emit('HORN_USED', duck.playerId, undefined, { targets: nearby.map((target) => target.playerId), autoReason: candidate.reason })
       return true

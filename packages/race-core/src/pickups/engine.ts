@@ -362,6 +362,7 @@ function createWildRocket(itemState: ItemRaceState, duck: ItemDuckState, target:
   return {
     id: itemState.nextObjectId++, sourcePlayerId: duck.playerId, targetPlayerId: target.playerId, progress: duck.progress,
     spawnedAtTick: tick,
+    launchAtTick: tick,
     expiresAtTick: tick + Math.round(PICKUP_BALANCE.miniRocket.lifetimeSeconds * tickRate), kind: 'WILD',
     speedPerSecond: PICKUP_BALANCE.miniRocket.projectileSpeed, hitRadius: PICKUP_BALANCE.miniRocket.hitRadius,
     slowMultiplier: PICKUP_BALANCE.miniRocket.slowMultiplier, slowDurationSeconds: PICKUP_BALANCE.miniRocket.slowDurationSeconds,

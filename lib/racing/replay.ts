@@ -5,6 +5,7 @@ import { createResultDigest } from './audit'
 export function replayRace(config: RaceConfig, expectedDigest?: string, manualInputs: RecordedWildItemInput[] = []) {
   const supported = (config.engineVersion === RACE_ENGINE_VERSION && config.balanceVersion === RACE_BALANCE_VERSION)
     || (config.engineVersion === '1.1.0' && config.balanceVersion === 'S3.2')
+    || (config.engineVersion === '1.2.0' && config.balanceVersion === 'S3.9')
   if (!supported) {
     throw new Error(`Unsupported replay version: engine ${config.engineVersion}, balance ${config.balanceVersion}`)
   }

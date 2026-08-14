@@ -45,6 +45,7 @@ function defense(items: RaceItemId[]): DuckItemRuntime {
     pendingAutoAction: null,
     pendingAutoActionExecuteTick: 0,
     lastOffensiveUseTick: 0,
+    pendingRocketVolley: null,
   }
 }
 
@@ -162,13 +163,13 @@ test('Nitro activates deterministically and ends after exactly 2 seconds', () =>
   }
   const runtime = state.byPlayer.get('2')!
   assert.ok(nitroTick > 0)
-  assert.equal(runtime.boostUntilTick, nitroTick + 240)
-  assert.equal(runtime.boostMultiplier, 1.25)
-  assert.equal(itemSpeedMultiplier(runtime, nitroTick), 1.25)
-  assert.equal(itemSpeedMultiplier(runtime, nitroTick + 239), 1.25)
+  assert.equal(runtime.boostUntilTick, nitroTick + 330)
+  assert.equal(runtime.boostMultiplier, 1.35)
+  assert.equal(itemSpeedMultiplier(runtime, nitroTick), 1.35)
+  assert.equal(itemSpeedMultiplier(runtime, nitroTick + 329), 1.35)
 
-  tickItemsWithAutoAI(raceConfig, state, ducks, nitroTick + 240, 60, (type) => events.push(type))
-  assert.equal(itemSpeedMultiplier(runtime, nitroTick + 240), 1)
+  tickItemsWithAutoAI(raceConfig, state, ducks, nitroTick + 330, 60, (type) => events.push(type))
+  assert.equal(itemSpeedMultiplier(runtime, nitroTick + 330), 1)
   assert.deepEqual(events.filter((type) => type.startsWith('NITRO')), ['NITRO_STARTED', 'NITRO_ENDED'])
 })
 
@@ -256,6 +257,26 @@ test('Rocket hits the duck ahead and applies the configured slow', () => {
   assert.equal(target.slowMultiplier, ITEM_BALANCE.rocket.slowMultiplier)
   assert.ok(target.slowUntilTick > firedAt)
   assert.equal(itemSpeedMultiplier(target, firedAt + 3), ITEM_BALANCE.rocket.slowMultiplier)
+})
+
+test('Twin rocket volley fires at two different ducks when both are in range', () => {
+  const raceConfig = config([
+    { playerId: '1', itemIds: ['BUBBLE_SHIELD', 'FEATHER'] },
+    { playerId: '3', itemIds: ['NITRO', 'FEATHER'] },
+    { playerId: '2', itemIds: ['HOMING_ROCKET', 'FEATHER'] },
+  ])
+  const state = createItemRaceState(raceConfig)
+  const ducks = [duck('1', 0.5, 1), duck('3', 0.47, 2), duck('2', 0.4, 3)]
+  const events: Array<{ type: RaceEventType; target?: string }> = []
+  for (let tick = 1; tick <= 260; tick += 1) {
+    tickItemsWithAutoAI(raceConfig, state, ducks, tick, 60, (type, _source, target) => events.push({ type, target }))
+    for (const entry of ducks) entry.progress += 0.00025
+    if (events.filter((entry) => entry.type === 'ROCKET_FIRED').length >= 2) break
+  }
+  const fired = events.filter((entry) => entry.type === 'ROCKET_FIRED')
+  assert.equal(fired.length, 2)
+  assert.notEqual(fired[0]?.target, fired[1]?.target)
+  assert.equal(state.byPlayer.get('2')!.usedItems.has('HOMING_ROCKET'), true)
 })
 
 test('Banana stays in-lane and knocks the chasing duck backward', () => {

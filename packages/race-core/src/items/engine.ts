@@ -35,6 +35,11 @@ export interface DuckItemRuntime extends ItemDefenseState {
   pendingAutoAction: AutoUseCandidate | null
   pendingAutoActionExecuteTick: number
   lastOffensiveUseTick: number
+  pendingRocketVolley: {
+    shotsLeft: number
+    targetPlayerIds: string[]
+    nextShotTick: number
+  } | null
 }
 
 export interface RocketRuntime {
@@ -50,6 +55,7 @@ export interface RocketRuntime {
   slowMultiplier: number
   slowDurationSeconds: number
   retargeted: boolean
+  launchAtTick: number
 }
 
 export interface BananaRuntime {
@@ -106,6 +112,7 @@ export function createItemRaceState(config: RaceConfig): ItemRaceState {
         pendingAutoAction: null,
         pendingAutoActionExecuteTick: 0,
         lastOffensiveUseTick: 0,
+        pendingRocketVolley: null,
       }]
     })),
     rockets: [],
@@ -142,6 +149,96 @@ function bananaTouches(duck: ItemDuckState, banana: BananaRuntime) {
   return Math.abs(duck.lateralOffset - banana.lateralOffset) <= banana.hitLateralRadius
 }
 
+function firePrepRocket(
+  itemState: ItemRaceState,
+  source: ItemDuckState,
+  targetPlayerId: string,
+  tick: number,
+  tickRate: number,
+  launchAtTick = tick,
+) {
+  if (!itemState.byPlayer.has(targetPlayerId)) return false
+  itemState.rockets.push({
+    id: itemState.nextObjectId++,
+    sourcePlayerId: source.playerId,
+    targetPlayerId,
+    progress: source.progress,
+    spawnedAtTick: tick,
+    launchAtTick,
+    expiresAtTick: launchAtTick + Math.round(ITEM_BALANCE.rocket.lifetimeSeconds * tickRate),
+    kind: 'PREP',
+    speedPerSecond: ITEM_BALANCE.rocket.projectileSpeed,
+    hitRadius: ITEM_BALANCE.rocket.hitRadius,
+    slowMultiplier: itemState.tuning.rocketSlowMultiplier,
+    slowDurationSeconds: ITEM_BALANCE.rocket.slowDurationSeconds,
+    retargeted: false,
+  })
+  return true
+}
+
+export function beginPrepRocketVolley(
+  itemState: ItemRaceState,
+  source: ItemDuckState,
+  targetPlayerIds: string[],
+  tick: number,
+  tickRate: number,
+  emit: EmitItemEvent,
+  autoReason?: string,
+) {
+  const runtime = itemState.byPlayer.get(source.playerId)!
+  if (runtime.pendingRocketVolley) return false
+  const primaryTarget = targetPlayerIds[0]
+  if (!primaryTarget || !firePrepRocket(itemState, source, primaryTarget, tick, tickRate)) return false
+
+  emit('ROCKET_FIRED', source.playerId, primaryTarget, { autoReason, volleyShot: 1 })
+
+  const volleyShots = ITEM_BALANCE.rocket.volleyShots
+  const secondaryTarget = targetPlayerIds.find((id) => id !== primaryTarget)
+  if (volleyShots <= 1 || !secondaryTarget) {
+    runtime.usedItems.add('HOMING_ROCKET')
+    return true
+  }
+
+  runtime.pendingRocketVolley = {
+    shotsLeft: 1,
+    targetPlayerIds: [secondaryTarget],
+    nextShotTick: tick + Math.round(ITEM_BALANCE.rocket.volleyDelaySeconds * tickRate),
+  }
+  return true
+}
+
+function processPendingRocketVolleys(
+  itemState: ItemRaceState,
+  ducks: ItemDuckState[],
+  tick: number,
+  tickRate: number,
+  emit: EmitItemEvent,
+) {
+  for (const duck of ducks) {
+    if (duck.finished) continue
+    const runtime = itemState.byPlayer.get(duck.playerId)!
+    const pending = runtime.pendingRocketVolley
+    if (!pending || tick < pending.nextShotTick) continue
+
+    const targetPlayerId = pending.targetPlayerIds[0]
+    if (targetPlayerId && firePrepRocket(itemState, duck, targetPlayerId, tick, tickRate)) {
+      emit('ROCKET_FIRED', duck.playerId, targetPlayerId, {
+        volleyShot: ITEM_BALANCE.rocket.volleyShots - pending.shotsLeft + 1,
+      })
+    }
+
+    pending.shotsLeft -= 1
+    pending.targetPlayerIds = pending.targetPlayerIds.slice(1)
+    if (pending.shotsLeft <= 0) {
+      runtime.pendingRocketVolley = null
+      runtime.usedItems.add('HOMING_ROCKET')
+      continue
+    }
+
+    pending.nextShotTick = tick + Math.round(ITEM_BALANCE.rocket.volleyDelaySeconds * tickRate)
+  }
+}
+
 function updateRockets(itemState: ItemRaceState, ducks: ItemDuckState[], tick: number, tickRate: number, emit: EmitItemEvent) {
   const keep: RocketRuntime[] = []
   for (const rocket of itemState.rockets.sort((left, right) => left.id - right.id)) {
@@ -160,9 +257,18 @@ function updateRockets(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
       emit(expiredType, rocket.sourcePlayerId, rocket.targetPlayerId, {})
       continue
     }
+    const launchAtTick = rocket.launchAtTick
+    if (tick < launchAtTick) {
+      keep.push(rocket)
+      continue
+    }
+    if (tick === launchAtTick && launchAtTick > rocket.spawnedAtTick) {
+      const source = ducks.find((duck) => duck.playerId === rocket.sourcePlayerId)
+      if (source) rocket.progress = source.progress
+    }
     rocket.progress += rocket.speedPerSecond / tickRate
     const armingTicks = ITEM_BALANCE.rocket.armingTicks
-    if (tick < rocket.spawnedAtTick + armingTicks || rocket.progress + rocket.hitRadius < target.progress) {
+    if (tick < launchAtTick + armingTicks || rocket.progress + rocket.hitRadius < target.progress) {
       keep.push(rocket)
       continue
     }
@@ -272,6 +378,7 @@ export function tickItemSystem(
     }
     if (runtime.slowMultiplier < 1 && tick >= runtime.slowUntilTick) runtime.slowMultiplier = 1
   }
+  processPendingRocketVolleys(itemState, ducks, tick, tickRate, emit)
   updateRockets(itemState, ducks, tick, tickRate, emit)
   updateBananas(itemState, ducks, tick, tickRate, emit)
 }
