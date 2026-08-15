@@ -10,7 +10,7 @@ else
 fi
 
 echo "🗄️  Syncing Prisma schema..."
-prisma db push
+prisma db push --accept-data-loss
 
 echo "📦 Applying idempotent app migrations..."
 tsx scripts/run-migrations.ts

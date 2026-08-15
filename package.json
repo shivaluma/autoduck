@@ -21,7 +21,7 @@
     "cosmetics:validate": "tsx scripts/validate-cosmetics.ts",
     "gacha:simulate": "tsx scripts/gacha-simulate.ts",
     "economy:simulate": "tsx scripts/economy-simulate.ts",
-    "db:push": "prisma db push",
+    "db:push": "prisma db push --accept-data-loss",
     "db:bootstrap": "bash scripts/auto-migrate.sh",
     "db:seed": "tsx prisma/seed.ts",
     "db:migrate:app": "tsx scripts/run-migrations.ts",
