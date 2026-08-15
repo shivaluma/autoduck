@@ -1,23 +1,50 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="aura-astral-dragon">
       <defs>
-        <filter id="flame-glow-all" x="-40%" y="-40%" width="180%" height="180%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b1"/>
-          <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="b2"/>
-          <feMerge><feMergeNode in="b1"/><feMergeNode in="b2"/><feMergeNode in="SourceGraphic"/></feMerge>
+        <filter id="dragon-glow-512" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
         <style>
-          @keyframes flame-rise-main {
-            0%, 100% { transform: translateY(0) scale(1); opacity: 0.85; }
-            50% { transform: translateY(-8px) scale(1.06); opacity: 1; }
-          }
+          @keyframes dragon-coil-512 { 0%, 100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-14px) rotate(3deg); } }
+          @keyframes dragon-flame-512 { 0%, 100% { transform: scale(1) translateY(0); opacity: 0.8; } 50% { transform: scale(1.1) translateY(-10px); opacity: 1; } }
+          @keyframes ember-rise-512 { 0% { transform: translateY(0) scale(0.6); opacity: 0; } 50% { opacity: 1; } 100% { transform: translateY(-120px) scale(1.2); opacity: 0; } }
         </style>
       </defs>
-      <g filter="url(#flame-glow-all)" style="animation: flame-rise-main 2s ease-in-out infinite" transform-origin="128 137">
-        <path d="M50 160 C30 110, 60 70, 85 85 C95 50, 140 40, 155 70 C180 45, 220 70, 215 110 C235 140, 215 190, 185 200 C155 220, 85 220, 50 160 Z" fill="#FF5B00" opacity="0.35"/>
-        <path d="M70 155 C55 120, 80 90, 100 100 C110 70, 145 65, 155 90 C175 75, 205 95, 200 125 C215 150, 195 185, 170 190 C145 205, 95 205, 70 155 Z" fill="#FFD84D" opacity="0.5"/>
+      <g filter="url(#dragon-glow-512)">
+        <g style="animation: dragon-flame-512 2s ease-in-out infinite" transform-origin="256 274">
+          <path d="M110 370 C50 260, 100 130, 160 160 C180 80, 300 60, 330 130 C380 70, 470 120, 450 230 C490 310, 440 410, 370 420 C290 450, 160 450, 110 370 Z" fill="#DC2626" opacity="0.35"/>
+          <path d="M140 350 C90 270, 140 180, 190 200 C210 120, 300 110, 330 170 C370 120, 430 160, 420 250 C440 320, 400 390, 340 400 C280 420, 180 420, 140 350 Z" fill="#F59E0B" opacity="0.5"/>
+          <path d="M180 340 C140 280, 180 220, 220 230 C240 170, 310 160, 330 210 C360 170, 400 200, 390 270 C400 320, 370 370, 320 380 C270 390, 200 390, 180 340 Z" fill="#FEF08A" opacity="0.6"/>
+        </g>
+        <g style="animation: dragon-coil-512 3.5s ease-in-out infinite" transform-origin="256 274">
+          <path d="M70 340 C40 210, 130 90, 260 70 C380 50, 470 130, 460 250 C450 340, 390 410, 300 420 C200 430, 120 370, 160 300 C190 240, 280 240, 310 290" fill="none" stroke="#EF4444" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M70 340 C40 210, 130 90, 260 70 C380 50, 470 130, 460 250 C450 340, 390 410, 300 420 C200 430, 120 370, 160 300 C190 240, 280 240, 310 290" fill="none" stroke="#FBBF24" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+          <polygon points="120,110 110,70 150,100" fill="#FBBF24" stroke="#1B132B" stroke-width="4"/>
+          <polygon points="200,75 200,35 230,70" fill="#FBBF24" stroke="#1B132B" stroke-width="4"/>
+          <polygon points="290,65 305,25 325,65" fill="#FBBF24" stroke="#1B132B" stroke-width="4"/>
+          <polygon points="380,85 410,50 405,95" fill="#FBBF24" stroke="#1B132B" stroke-width="4"/>
+          <polygon points="450,145 485,125 465,165" fill="#FBBF24" stroke="#1B132B" stroke-width="4"/>
+          <g transform="translate(60, 170) rotate(-20)">
+            <path d="M40 30 C30 0, 0 -20, -20 -30 C-10 -10, 10 5, 25 25" fill="#FBBF24" stroke="#1B132B" stroke-width="5"/>
+            <path d="M55 20 C60 -10, 50 -40, 35 -55 C40 -30, 50 -10, 50 15" fill="#FBBF24" stroke="#1B132B" stroke-width="5"/>
+            <path d="M20 40 C10 10, 60 10, 90 30 C100 35, 110 55, 95 65 C80 75, 40 70, 20 40 Z" fill="#EF4444" stroke="#1B132B" stroke-width="8"/>
+            <path d="M45 55 C65 50, 85 55, 95 65 L70 75 Z" fill="#FBBF24"/>
+            <path d="M85 40 C110 30, 140 45, 160 35" stroke="#FDE047" stroke-width="6" fill="none" stroke-linecap="round"/>
+            <path d="M75 60 C95 75, 120 70, 140 85" stroke="#FDE047" stroke-width="5" fill="none" stroke-linecap="round"/>
+            <circle cx="50" cy="35" r="7" fill="#FEF08A" stroke="#1B132B" stroke-width="3"/>
+            <circle cx="52" cy="35" r="3" fill="#1B132B"/>
+            <path d="M15 45 C-10 40, -25 60, -35 80 C-15 70, 5 70, 15 55" fill="#F97316" stroke="#1B132B" stroke-width="5"/>
+          </g>
+          <circle cx="440" cy="320" r="18" fill="#FEF08A" stroke="#F97316" stroke-width="6"/>
+          <circle cx="440" cy="320" r="10" fill="#FFFDF4"/>
+        </g>
+        <g fill="#FDE047">
+          <circle cx="100" cy="400" r="6" style="animation: ember-rise-512 2.2s infinite"/>
+          <circle cx="180" cy="420" r="4" style="animation: ember-rise-512 2.8s infinite 0.5s"/>
+          <circle cx="340" cy="410" r="5" style="animation: ember-rise-512 2.4s infinite 0.9s"/>
+          <circle cx="420" cy="380" r="7" style="animation: ember-rise-512 1.9s infinite 0.3s"/>
+        </g>
       </g>
-      <circle cx="65" cy="95" r="3.5" fill="#FFFDF4"/>
-      <circle cx="195" cy="80" r="3" fill="#FFFDF4"/>
-      <circle cx="210" cy="150" r="4" fill="#FFD84D"/>
-      <circle cx="55" cy="170" r="3" fill="#FFD84D"/>
-    </g></svg>
+    </g>
+</svg>

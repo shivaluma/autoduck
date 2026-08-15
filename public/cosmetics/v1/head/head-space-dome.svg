@@ -1,7 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
-      <ellipse cx="168" cy="60" rx="56" ry="50" fill="#61C9FF" fill-opacity="0.25" stroke="#38BDF8" stroke-width="5"/>
-      <path d="M138 32 C155 20, 188 20, 204 32" stroke="#FFFDF4" stroke-width="5" stroke-linecap="round" opacity="0.8"/>
-      <!-- Collar under chin -->
-      <path d="M108 120 C140 134, 185 134, 212 120" stroke="#94A3B8" stroke-width="10" stroke-linecap="round"/>
-      <path d="M108 120 C140 134, 185 134, 212 120" stroke="#241A38" stroke-width="4" fill="none"/>
-    </g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="head-space-dome">
+      <ellipse cx="336" cy="120" rx="112" ry="100" fill="#61C9FF" fill-opacity="0.22" stroke="#38BDF8" stroke-width="10"/>
+      <path d="M276 64 C310 40, 376 40, 408 64" stroke="#FFFDF4" stroke-width="10" stroke-linecap="round" opacity="0.85"/>
+      <path d="M216 240 C280 268, 370 268, 424 240" stroke="#94A3B8" stroke-width="20" stroke-linecap="round"/>
+      <path d="M216 240 C280 268, 370 268, 424 240" stroke="#1B132B" stroke-width="8" fill="none"/>
+      <circle cx="232" cy="244" r="7" fill="#38EF7D"/>
+      <circle cx="408" cy="244" r="7" fill="#38EF7D"/>
+    </g>
+</svg>

@@ -1,17 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="aura-cyber-matrix">
       <defs>
-        <filter id="neon-glow-all" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        <filter id="cyber-glow-512" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b1"/><feMerge><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
-        <style>@keyframes orbit-spin-all { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
+        <style>@keyframes hud-spin-cw { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
       </defs>
-      <g filter="url(#neon-glow-all)">
-        <ellipse cx="128" cy="137" rx="98" ry="78" stroke="#00F2FE" stroke-width="4" stroke-dasharray="16 10" fill="none" opacity="0.85"/>
-        <g style="animation: orbit-spin-all 6s linear infinite" transform-origin="128 137">
-          <rect x="220" y="132" width="10" height="10" fill="#FF007F"/>
-          <rect x="26" y="132" width="10" height="10" fill="#00F2FE"/>
-          <rect x="123" y="50" width="10" height="10" fill="#FF007F"/>
-          <rect x="123" y="214" width="10" height="10" fill="#00F2FE"/>
+      <g filter="url(#cyber-glow-512)">
+        <g style="animation: hud-spin-cw 16s linear infinite" transform-origin="256 274">
+          <circle cx="256" cy="274" r="195" stroke="#00F2FE" stroke-width="6" stroke-dasharray="40 18 10 18" fill="none" opacity="0.85"/>
+          <circle cx="256" cy="274" r="160" stroke="#FF007F" stroke-width="4" stroke-dasharray="24 24" fill="none" opacity="0.75"/>
+          <path d="M61 274 L81 254 M61 274 L81 294" stroke="#00F2FE" stroke-width="8" stroke-linecap="round"/>
+          <path d="M451 274 L431 254 M451 274 L431 294" stroke="#00F2FE" stroke-width="8" stroke-linecap="round"/>
         </g>
       </g>
-    </g></svg>
+    </g>
+</svg>

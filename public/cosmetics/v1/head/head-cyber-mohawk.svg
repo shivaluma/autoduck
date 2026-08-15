@@ -1,17 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="head-mohawk">
       <defs>
-        <filter id="mohawk-glow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        <filter id="mohawk-glow-512" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
       </defs>
-      <g fill="#FF007F" stroke="#241A38" stroke-width="5" stroke-linejoin="round" filter="url(#mohawk-glow)">
-        <polygon points="120,44 116,14 134,36"/>
-        <polygon points="132,36 132,4 152,28"/>
-        <polygon points="148,28 156,-6 168,22"/>
-        <polygon points="166,22 178,-4 186,22"/>
-        <polygon points="184,22 200,6 198,34"/>
+      <g fill="#FF007F" stroke="#1B132B" stroke-width="10" stroke-linejoin="round" filter="url(#mohawk-glow-512)">
+        <polygon points="240,88 232,28 268,72"/>
+        <polygon points="264,72 264,8 304,56"/>
+        <polygon points="296,56 312,-12 336,44"/>
+        <polygon points="332,44 356,-8 372,44"/>
+        <polygon points="368,44 400,12 396,68"/>
       </g>
-      <path d="M125 48 C148 38, 185 38, 205 48" stroke="#00F2FE" stroke-width="7" stroke-linecap="round"/>
-      <circle cx="132" cy="45" r="3" fill="#FFFDF4"/>
-      <circle cx="198" cy="45" r="3" fill="#FFFDF4"/>
-    </g></svg>
+      <path d="M250 96 C296 76, 370 76, 410 96" stroke="#00F2FE" stroke-width="14" stroke-linecap="round"/>
+      <circle cx="264" cy="90" r="6" fill="#FFFDF4"/>
+      <circle cx="396" cy="90" r="6" fill="#FFFDF4"/>
+    </g>
+</svg>

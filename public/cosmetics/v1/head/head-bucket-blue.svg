@@ -1,5 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
-      <path d="M128 46 C130 24, 158 18, 185 20 C198 22, 203 34, 202 46 Z" fill="#61C9FF" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
-      <path d="M125 43 C148 37, 182 38, 204 44 L204 38 C182 32, 148 31, 125 37 Z" fill="#1C7ED6"/>
-      <path d="M114 49 C144 38, 188 39, 218 50 C222 56, 196 60, 164 58 C132 56, 110 55, 114 49 Z" fill="#4DABF7" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
-    </g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="head-bucket">
+      <path d="M256 92 C260 48, 316 36, 370 40 C396 44, 406 68, 404 92 Z" fill="#61C9FF" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+      <path d="M250 86 C296 74, 364 76, 408 88 L408 76 C364 64, 296 62, 250 74 Z" fill="#1C7ED6"/>
+      <path d="M228 98 C288 76, 376 78, 436 100 C444 112, 392 120, 328 116 C264 112, 220 110, 228 98 Z" fill="#38BDF8" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+    </g>
+</svg>

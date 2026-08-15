@@ -1,10 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="trail-flow">
     <defs>
-      <style>@keyframes stream-flow-dyn { 0% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -32; } }</style>
+      <style>@keyframes stream-flow-dyn-512 { 0% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -64; } }</style>
     </defs>
-    <g stroke="#EA384D" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.8" style="animation: stream-flow-dyn 1.4s linear infinite">
-      <path d="M12 198 Q50 185 88 202" stroke-dasharray="16 10"/>
-      <path d="M6 212 Q55 200 98 216" stroke-dasharray="20 12"/>
-      <path d="M20 226 Q55 215 85 228" stroke-dasharray="14 8"/>
+    <g stroke="#61C9FF" stroke-width="14" stroke-linecap="round" fill="none" opacity="0.8" style="animation: stream-flow-dyn-512 1.4s linear infinite">
+      <path d="M24 396 Q100 370 176 404" stroke-dasharray="32 20"/>
+      <path d="M12 424 Q110 400 196 432" stroke-dasharray="40 24"/>
+      <path d="M40 452 Q110 430 170 456" stroke-dasharray="28 16"/>
     </g>
-  </g></svg>
+  </g>
+</svg>

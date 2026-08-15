@@ -1,14 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
-    <defs>
-      <filter id="aura-glow-dyn-2928712886" x="-30%" y="-30%" width="160%" height="160%">
-        <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-      </filter>
-      <style>@keyframes aura-spin-dyn-2928712886 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
-    </defs>
-    <g filter="url(#aura-glow-dyn-2928712886)">
-      <ellipse cx="128" cy="137" rx="96" ry="80" stroke="#FFBE3D" stroke-width="3.5" stroke-dasharray="10 8" fill="none" opacity="0.75"/>
-      <g style="animation: aura-spin-dyn-2928712886 8s linear infinite" transform-origin="128 137">
-        <circle cx="224.0" cy="137.0" r="5.5" fill="#FFBE3D" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="195.9" cy="193.6" r="5.5" fill="#9333EA" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="128.0" cy="217.0" r="5.5" fill="#FFBE3D" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="60.1" cy="193.6" r="5.5" fill="#9333EA" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="32.0" cy="137.0" r="5.5" fill="#FFBE3D" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="60.1" cy="80.4" r="5.5" fill="#9333EA" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="128.0" cy="57.0" r="5.5" fill="#FFBE3D" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="195.9" cy="80.4" r="5.5" fill="#9333EA" stroke="#FFFDF4" stroke-width="1.5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="aura-glacial-frost">
+      <defs>
+        <filter id="frost-glow-512" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b1"/><feMerge><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <style>
+          @keyframes ice-orbit-512 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+          @keyframes blizzard-spin-512 { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
+        </style>
+      </defs>
+      <g filter="url(#frost-glow-512)">
+        <g style="animation: blizzard-spin-512 20s linear infinite" transform-origin="256 240">
+          <circle cx="256" cy="240" r="160" stroke="#38BDF8" stroke-width="6" stroke-dasharray="16 16" fill="none" opacity="0.75"/>
+          <line x1="256" y1="240" x2="431.0" y2="240.0" stroke="#E0F2FE" stroke-width="8" stroke-linecap="round"/><line x1="256" y1="240" x2="343.5" y2="391.6" stroke="#E0F2FE" stroke-width="8" stroke-linecap="round"/><line x1="256" y1="240" x2="168.5" y2="391.6" stroke="#E0F2FE" stroke-width="8" stroke-linecap="round"/><line x1="256" y1="240" x2="81.0" y2="240.0" stroke="#E0F2FE" stroke-width="8" stroke-linecap="round"/><line x1="256" y1="240" x2="168.5" y2="88.4" stroke="#E0F2FE" stroke-width="8" stroke-linecap="round"/><line x1="256" y1="240" x2="343.5" y2="88.4" stroke="#E0F2FE" stroke-width="8" stroke-linecap="round"/>
+        </g>
+        <g style="animation: ice-orbit-512 12s linear infinite" transform-origin="256 274">
+          <polygon points="451,254 463,274 451,294 439,274" fill="#E0F2FE" stroke="#0284C7" stroke-width="4"/><polygon points="393.88582233137674,370.6726188957803 405.88582233137674,390.6726188957803 393.88582233137674,410.6726188957803 381.88582233137674,390.6726188957803" fill="#E0F2FE" stroke="#0284C7" stroke-width="4"/><polygon points="256,419 268,439 256,459 244,439" fill="#E0F2FE" stroke="#0284C7" stroke-width="4"/><polygon points="118.11417766862326,370.6726188957804 130.11417766862326,390.6726188957804 118.11417766862326,410.6726188957804 106.11417766862326,390.6726188957804" fill="#E0F2FE" stroke="#0284C7" stroke-width="4"/><polygon points="61,254 73,274 61,294 49,274" fill="#E0F2FE" stroke="#0284C7" stroke-width="4"/><polygon points="118.1141776686232,137.32738110421968 130.1141776686232,157.32738110421968 118.1141776686232,177.32738110421968 106.1141776686232,157.32738110421968" fill="#E0F2FE" stroke="#0284C7" stroke-width="4"/><polygon points="255.99999999999997,89 268,109 255.99999999999997,129 243.99999999999997,109" fill="#E0F2FE" stroke="#0284C7" stroke-width="4"/><polygon points="393.88582233137674,137.32738110421963 405.88582233137674,157.32738110421963 393.88582233137674,177.32738110421963 381.88582233137674,157.32738110421963" fill="#E0F2FE" stroke="#0284C7" stroke-width="4"/>
+        </g>
       </g>
     </g>
-  </g></svg>
+</svg>

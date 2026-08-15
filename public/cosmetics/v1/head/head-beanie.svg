@@ -1,5 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
-    <path d="M122 48 C124 10, 160 2, 190 4 C204 25, 208 36, 205 48 Z" fill="#58E6B0" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
-    <path d="M112 50 C144 40, 185 40, 218 50 C220 56, 196 60, 164 58 C132 56, 110 55, 112 50 Z" fill="#8EE3F5" stroke="#241A38" stroke-width="6" stroke-linejoin="round"/>
-    <circle cx="164" cy="29" r="6" fill="#FFFDF4" stroke="#241A38" stroke-width="3"/>
-  </g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="head-beanie">
+      <path d="M236 96 C240 36, 316 28, 374 38 C406 46, 416 70, 412 96 Z" fill="#3B82F6" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+      <path d="M228 98 C284 84, 364 84, 420 98 L418 84 C364 72, 284 72, 228 84 Z" fill="#1D4ED8" stroke="#1B132B" stroke-width="10"/>
+      <circle cx="316" cy="28" r="14" fill="#FFFDF4" stroke="#1B132B" stroke-width="6"/>
+      <line x1="260" y1="86" x2="260" y2="98" stroke="#1B132B" stroke-width="4"/>
+      <line x1="320" y1="84" x2="320" y2="98" stroke="#1B132B" stroke-width="4"/>
+      <line x1="380" y1="86" x2="380" y2="98" stroke="#1B132B" stroke-width="4"/>
+    </g>
+</svg>

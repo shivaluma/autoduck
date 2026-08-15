@@ -1,7 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
-      <ellipse cx="160" cy="84" rx="16" ry="6" fill="#7C3AED" opacity="0.45"/>
-      <ellipse cx="192" cy="86" rx="14" ry="5" fill="#7C3AED" opacity="0.45"/>
-      <path d="M145 68 Q160 78 175 68" stroke="#241A38" stroke-width="5" stroke-linecap="round" fill="none"/>
-      <path d="M180 72 Q192 80 204 72" stroke="#241A38" stroke-width="4.5" stroke-linecap="round" fill="none"/>
-      <path d="M138 60 C138 56, 144 56, 144 60 C144 64, 138 64, 138 60 Z" fill="#60A5FA"/>
-    </g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="face-burnout">
+      <ellipse cx="320" cy="168" rx="32" ry="12" fill="#7C3AED" opacity="0.45"/>
+      <ellipse cx="384" cy="172" rx="28" ry="10" fill="#7C3AED" opacity="0.45"/>
+      <path d="M290 136 Q320 156 350 136" stroke="#1B132B" stroke-width="10" stroke-linecap="round" fill="none"/>
+      <path d="M360 144 Q384 160 408 144" stroke="#1B132B" stroke-width="9" stroke-linecap="round" fill="none"/>
+      <path d="M276 120 C276 112, 288 112, 288 120 C288 128, 276 128, 276 120 Z" fill="#60A5FA"/>
+    </g>
+</svg>

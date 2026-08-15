@@ -1,14 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
-    <defs>
-      <filter id="aura-glow-dyn-4030299238" x="-30%" y="-30%" width="160%" height="160%">
-        <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-      </filter>
-      <style>@keyframes aura-spin-dyn-4030299238 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
-    </defs>
-    <g filter="url(#aura-glow-dyn-4030299238)">
-      <ellipse cx="128" cy="137" rx="96" ry="80" stroke="#FF5B67" stroke-width="3.5" stroke-dasharray="10 8" fill="none" opacity="0.75"/>
-      <g style="animation: aura-spin-dyn-4030299238 8s linear infinite" transform-origin="128 137">
-        <circle cx="224.0" cy="137.0" r="5.5" fill="#FF5B67" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="195.9" cy="193.6" r="5.5" fill="#FFD84D" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="128.0" cy="217.0" r="5.5" fill="#FF5B67" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="60.1" cy="193.6" r="5.5" fill="#FFD84D" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="32.0" cy="137.0" r="5.5" fill="#FF5B67" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="60.1" cy="80.4" r="5.5" fill="#FFD84D" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="128.0" cy="57.0" r="5.5" fill="#FF5B67" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="195.9" cy="80.4" r="5.5" fill="#FFD84D" stroke="#FFFDF4" stroke-width="1.5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="aura-phat-quang">
+      <defs>
+        <filter id="mandala-glow-512" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="b1"/>
+          <feMerge><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <style>
+          @keyframes mandala-spin-cw-512 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+          @keyframes mandala-spin-ccw-512 { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
+          @keyframes sacred-pulse-512 { 0%, 100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.08); opacity: 1; } }
+        </style>
+      </defs>
+      <g filter="url(#mandala-glow-512)">
+        <g style="animation: sacred-pulse-512 3s ease-in-out infinite" transform-origin="256 240">
+          <circle cx="256" cy="240" r="190" fill="#FEF08A" opacity="0.18"/>
+          <circle cx="256" cy="240" r="150" fill="#FBBF24" opacity="0.22"/>
+          <circle cx="256" cy="240" r="110" fill="#F59E0B" opacity="0.28"/>
+        </g>
+        <g style="animation: mandala-spin-cw-512 24s linear infinite" transform-origin="256 240">
+          <line x1="366.0" y1="240.0" x2="486.0" y2="240.0" stroke="#FDE047" stroke-width="10" stroke-linecap="round"/><line x1="362.3" y1="268.5" x2="434.7" y2="287.9" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/><line x1="351.3" y1="295.0" x2="455.2" y2="355.0" stroke="#FDE047" stroke-width="10" stroke-linecap="round"/><line x1="333.8" y1="317.8" x2="386.8" y2="370.8" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/><line x1="311.0" y1="335.3" x2="371.0" y2="439.2" stroke="#FDE047" stroke-width="10" stroke-linecap="round"/><line x1="284.5" y1="346.3" x2="303.9" y2="418.7" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/><line x1="256.0" y1="350.0" x2="256.0" y2="470.0" stroke="#FDE047" stroke-width="10" stroke-linecap="round"/><line x1="227.5" y1="346.3" x2="208.1" y2="418.7" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/><line x1="201.0" y1="335.3" x2="141.0" y2="439.2" stroke="#FDE047" stroke-width="10" stroke-linecap="round"/><line x1="178.2" y1="317.8" x2="125.2" y2="370.8" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/><line x1="160.7" y1="295.0" x2="56.8" y2="355.0" stroke="#FDE047" stroke-width="10" stroke-linecap="round"/><line x1="149.7" y1="268.5" x2="77.3" y2="287.9" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/><line x1="146.0" y1="240.0" x2="26.0" y2="240.0" stroke="#FDE047" stroke-width="10" stroke-linecap="round"/><line x1="149.7" y1="211.5" x2="77.3" y2="192.1" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/><line x1="160.7" y1="185.0" x2="56.8" y2="125.0" stroke="#FDE047" stroke-width="10" stroke-linecap="round"/><line x1="178.2" y1="162.2" x2="125.2" y2="109.2" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/><line x1="201.0" y1="144.7" x2="141.0" y2="40.8" stroke="#FDE047" stroke-width="10" stroke-linecap="round"/><line x1="227.5" y1="133.7" x2="208.1" y2="61.3" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/><line x1="256.0" y1="130.0" x2="256.0" y2="10.0" stroke="#FDE047" stroke-width="10" stroke-linecap="round"/><line x1="284.5" y1="133.7" x2="303.9" y2="61.3" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/><line x1="311.0" y1="144.7" x2="371.0" y2="40.8" stroke="#FDE047" stroke-width="10" stroke-linecap="round"/><line x1="333.8" y1="162.2" x2="386.8" y2="109.2" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/><line x1="351.3" y1="185.0" x2="455.2" y2="125.0" stroke="#FDE047" stroke-width="10" stroke-linecap="round"/><line x1="362.3" y1="211.5" x2="434.7" y2="192.1" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/>
+        </g>
+        <g style="animation: mandala-spin-ccw-512 18s linear infinite" transform-origin="256 240">
+          <circle cx="256" cy="240" r="170" stroke="#FBBF24" stroke-width="8" stroke-dasharray="24 16" fill="none" opacity="0.9"/>
+          <circle cx="411.0" cy="240.0" r="10" fill="#FDE047" stroke="#92400E" stroke-width="3"/><circle cx="411.0" cy="240.0" r="4" fill="#FFFDF4"/><circle cx="365.6" cy="349.6" r="10" fill="#FDE047" stroke="#92400E" stroke-width="3"/><circle cx="365.6" cy="349.6" r="4" fill="#FFFDF4"/><circle cx="256.0" cy="395.0" r="10" fill="#FDE047" stroke="#92400E" stroke-width="3"/><circle cx="256.0" cy="395.0" r="4" fill="#FFFDF4"/><circle cx="146.4" cy="349.6" r="10" fill="#FDE047" stroke="#92400E" stroke-width="3"/><circle cx="146.4" cy="349.6" r="4" fill="#FFFDF4"/><circle cx="101.0" cy="240.0" r="10" fill="#FDE047" stroke="#92400E" stroke-width="3"/><circle cx="101.0" cy="240.0" r="4" fill="#FFFDF4"/><circle cx="146.4" cy="130.4" r="10" fill="#FDE047" stroke="#92400E" stroke-width="3"/><circle cx="146.4" cy="130.4" r="4" fill="#FFFDF4"/><circle cx="256.0" cy="85.0" r="10" fill="#FDE047" stroke="#92400E" stroke-width="3"/><circle cx="256.0" cy="85.0" r="4" fill="#FFFDF4"/><circle cx="365.6" cy="130.4" r="10" fill="#FDE047" stroke="#92400E" stroke-width="3"/><circle cx="365.6" cy="130.4" r="4" fill="#FFFDF4"/>
+        </g>
       </g>
     </g>
-  </g></svg>
+</svg>

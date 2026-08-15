@@ -1,9 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
-      <!-- Multi-color panels -->
-      <path d="M120 46 C122 22, 142 16, 160 16 C160 30, 140 44, 120 46 Z" fill="#EF4444" stroke="#241A38" stroke-width="6" stroke-linejoin="round"/>
-      <path d="M160 16 C180 16, 202 24, 204 46 C184 44, 160 30, 160 16 Z" fill="#3B82F6" stroke="#241A38" stroke-width="6" stroke-linejoin="round"/>
-      <!-- Spinning Propeller -->
-      <ellipse cx="145" cy="10" rx="14" ry="4" fill="#EAB308" stroke="#241A38" stroke-width="3" transform="rotate(-15 145 10)"/>
-      <ellipse cx="175" cy="10" rx="14" ry="4" fill="#EAB308" stroke="#241A38" stroke-width="3" transform="rotate(15 175 10)"/>
-      <circle cx="160" cy="10" r="4" fill="#EF4444" stroke="#241A38" stroke-width="2"/>
-    </g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="head-rare-527907502">
+      <path d="M244 96 C248 38, 320 32, 380 36 C408 42, 416 68, 410 96 Z" fill="#11998E" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+      <path d="M224 100 C288 80, 370 80, 436 100 C440 112, 392 120, 328 116 C264 112, 220 110, 224 100 Z" fill="#F43F5E" stroke="#1B132B" stroke-width="12" stroke-linejoin="round"/>
+      <polygon points="328,26 336,42 320,42" fill="#FFD84D" stroke="#1B132B" stroke-width="4"/>
+    </g>
+</svg>

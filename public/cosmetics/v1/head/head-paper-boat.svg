@@ -1,5 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
-    <path d="M122 48 C124 19, 160 11, 190 13 C204 29.5, 208 36, 205 48 Z" fill="#61C9FF" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
-    <path d="M112 50 C144 40, 185 40, 218 50 C220 56, 196 60, 164 58 C132 56, 110 55, 112 50 Z" fill="#FF78A8" stroke="#241A38" stroke-width="6" stroke-linejoin="round"/>
-    <circle cx="164" cy="33.5" r="6" fill="#FFFDF4" stroke="#241A38" stroke-width="3"/>
-  </g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="head-paper-boat">
+      <polygon points="240,96 328,40 416,96 328,80" fill="#FFFDF4" stroke="#1B132B" stroke-width="12" stroke-linejoin="round"/>
+      <polygon points="280,88 328,40 376,88" fill="#E2E8F0"/>
+      <line x1="328" y1="40" x2="328" y2="80" stroke="#1B132B" stroke-width="6"/>
+    </g>
+</svg>

@@ -1,14 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="trail-fire">
       <defs>
-        <filter id="fire-glow-trail" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        <filter id="fire-glow-trail-512" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
       </defs>
-      <g filter="url(#fire-glow-trail)">
-        <path d="M12 205 Q55 190 92 208" stroke="#FF5B00" stroke-width="10" stroke-linecap="round" fill="none"/>
-        <path d="M22 215 Q60 205 85 218" stroke="#FFD84D" stroke-width="6" stroke-linecap="round" fill="none"/>
-        <circle cx="25" cy="192" r="3.5" fill="#FFFDF4"/>
-        <circle cx="45" cy="186" r="3" fill="#FFD84D"/>
-        <circle cx="15" cy="218" r="3" fill="#FF5B00"/>
+      <g filter="url(#fire-glow-trail-512)">
+        <path d="M24 410 Q110 380 184 416" stroke="#FF5B00" stroke-width="20" stroke-linecap="round" fill="none"/>
+        <path d="M44 430 Q120 410 170 436" stroke="#FFD84D" stroke-width="12" stroke-linecap="round" fill="none"/>
+        <circle cx="50" cy="384" r="7" fill="#FFFDF4"/>
+        <circle cx="90" cy="372" r="6" fill="#FFD84D"/>
+        <circle cx="30" cy="436" r="6" fill="#FF5B00"/>
       </g>
-    </g></svg>
+    </g>
+</svg>

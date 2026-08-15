@@ -121,11 +121,11 @@ async function render() {
       return [{ slot, id, svgContent }]
     })
 
-    return `<div style="position: relative; width: 260px; height: 260px; background: #18112c; border-radius: 20px; border: 2px solid #332658; overflow: visible; display: flex; align-items: center; justify-content: center;">
-      <svg viewBox="0 0 256 256" style="position: absolute; inset: 0; width: 100%; height: 100%;">
-        <ellipse cx="126" cy="218" rx="85" ry="15" fill="#100A20" opacity=".35" />
+    return `<div style="position: relative; width: 260px; height: 260px; background: #18112c; border-radius: 20px; border: 2px solid #332658; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+      <svg viewBox="0 0 512 512" style="position: absolute; inset: 0; width: 100%; height: 100%;">
+        <ellipse cx="252" cy="436" rx="170" ry="30" fill="#100A20" opacity=".28" />
       </svg>
-      ${layers.map((l) => `<div style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;">${l.svgContent}</div>`).join('\n')}
+      ${layers.map((l) => `<div style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; display: flex; align-items: center; justify-content: center;">${l.svgContent}</div>`).join('\n')}
     </div>`
   }
 

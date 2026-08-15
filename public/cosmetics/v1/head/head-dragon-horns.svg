@@ -1,6 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
-      <path d="M134 38 C115 25, 95 5, 100 -12 C115 0, 135 15, 144 26 Z" fill="#EF4444" stroke="#241A38" stroke-width="6" stroke-linejoin="round"/>
-      <path d="M178 26 C195 15, 218 0, 230 -12 C235 5, 215 25, 196 38 Z" fill="#EF4444" stroke="#241A38" stroke-width="6" stroke-linejoin="round"/>
-      <path d="M108 -4 L122 14" stroke="#FFD84D" stroke-width="3" stroke-linecap="round"/>
-      <path d="M222 -4 L208 14" stroke="#FFD84D" stroke-width="3" stroke-linecap="round"/>
-    </g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="head-dragon-horns">
+      <path d="M268 76 C230 50, 190 10, 200 -24 C230 0, 270 30, 288 52 Z" fill="#EF4444" stroke="#1B132B" stroke-width="12" stroke-linejoin="round"/>
+      <path d="M356 52 C390 30, 436 0, 460 -24 C470 10, 430 50, 392 76 Z" fill="#EF4444" stroke="#1B132B" stroke-width="12" stroke-linejoin="round"/>
+      <path d="M216 -8 L244 28" stroke="#FFD84D" stroke-width="6" stroke-linecap="round"/>
+      <path d="M444 -8 L416 28" stroke="#FFD84D" stroke-width="6" stroke-linecap="round"/>
+    </g>
+</svg>

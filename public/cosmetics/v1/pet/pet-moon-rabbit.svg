@@ -1,21 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="pet-companion">
     <defs>
       <style>
-        @keyframes pet-bob-main {
+        @keyframes pet-bob-512 {
           0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-5px); }
+          50% { transform: translateY(-10px); }
         }
       </style>
     </defs>
-    <g style="animation: pet-bob-main 2.2s ease-in-out infinite">
-      <!-- Moon Rabbit -->
-      <ellipse cx="216" cy="192" rx="17" ry="15" fill="#FFFDF4" stroke="#241A38" stroke-width="4"/>
-      <ellipse cx="208" cy="164" rx="5" ry="14" fill="#FFFDF4" stroke="#241A38" stroke-width="3.5" transform="rotate(-15 208 164)"/>
-      <ellipse cx="208" cy="164" rx="2.5" ry="9" fill="#FF78A8" transform="rotate(-15 208 164)"/>
-      <ellipse cx="222" cy="164" rx="5" ry="14" fill="#FFFDF4" stroke="#241A38" stroke-width="3.5" transform="rotate(15 222 164)"/>
-      <ellipse cx="222" cy="164" rx="2.5" ry="9" fill="#FF78A8" transform="rotate(15 222 164)"/>
-      <circle cx="210" cy="182" r="2" fill="#241A38"/>
-      <circle cx="220" cy="182" r="2" fill="#241A38"/>
-      <polygon points="215,185 213,184 217,184" fill="#FF78A8"/>
+    <g style="animation: pet-bob-512 2.2s ease-in-out infinite">
+      <!-- Cute Creature -->
+    <ellipse cx="432" cy="376" rx="38" ry="32" fill="#38EF7D" stroke="#1B132B" stroke-width="10"/>
+    <polygon points="408,336 400,308 424,328" fill="#06B6D4" stroke="#1B132B" stroke-width="7" stroke-linejoin="round"/>
+    <polygon points="440,328 456,308 452,336" fill="#06B6D4" stroke="#1B132B" stroke-width="7" stroke-linejoin="round"/>
+    <circle cx="416" cy="364" r="6" fill="#1B132B"/>
+    <circle cx="444" cy="364" r="6" fill="#1B132B"/>
+    <circle cx="418" cy="362" r="2" fill="#FFFDF4"/>
+    <circle cx="446" cy="362" r="2" fill="#FFFDF4"/>
+    <circle cx="408" cy="376" r="4" fill="#FF78A8" opacity="0.6"/>
+    <circle cx="452" cy="376" r="4" fill="#FF78A8" opacity="0.6"/>
     </g>
-  </g></svg>
+  </g>
+</svg>

@@ -1,4 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g stroke="#FFD84D" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
-      <path d="M136 45 L144 55 L138 60 L148 72"/>
-      <path d="M75 145 L92 152 L85 160 L108 170 L100 176 L118 190"/>
-    </g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="skin-organic" fill="#9333EA" stroke="#1B132B" stroke-width="4">
+    <circle cx="270" cy="116" r="8"/>
+    <circle cx="290" cy="100" r="7"/>
+    <circle cx="264" cy="144" r="7"/>
+    <circle cx="170" cy="296" r="12"/>
+    <circle cx="230" cy="284" r="10"/>
+    <circle cx="290" cy="304" r="12"/>
+  </g>
+</svg>

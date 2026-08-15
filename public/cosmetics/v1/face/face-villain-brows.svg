@@ -1,5 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
-    <ellipse cx="160" cy="70" rx="18" ry="14" fill="#58E6B0" fill-opacity="0.35" stroke="#241A38" stroke-width="4"/>
-    <ellipse cx="192" cy="73" rx="14" ry="12" fill="#58E6B0" fill-opacity="0.35" stroke="#241A38" stroke-width="4"/>
-    <line x1="178" y1="71" x2="182" y2="71" stroke="#241A38" stroke-width="5"/>
-  </g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="face-custom">
+    <ellipse cx="320" cy="140" rx="36" ry="28" fill="#11998E" fill-opacity="0.35" stroke="#1B132B" stroke-width="8"/>
+    <ellipse cx="384" cy="146" rx="28" ry="24" fill="#11998E" fill-opacity="0.35" stroke="#1B132B" stroke-width="8"/>
+    <line x1="356" y1="142" x2="364" y2="142" stroke="#1B132B" stroke-width="10"/>
+  </g>
+</svg>

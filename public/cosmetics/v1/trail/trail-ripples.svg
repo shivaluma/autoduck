@@ -1,12 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="trail-ripples">
       <defs>
-        <style>@keyframes ripple-flow-main { 0% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -36; } }</style>
+        <style>@keyframes ripple-flow-512 { 0% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -72; } }</style>
       </defs>
-      <g stroke="#61C9FF" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.85" style="animation: ripple-flow-main 1.5s linear infinite">
-        <path d="M15 200 C38 186, 75 188, 95 204" stroke-dasharray="16 10"/>
-        <path d="M8 214 C36 198, 85 202, 110 218" stroke-dasharray="20 12"/>
-        <path d="M22 228 C45 216, 78 218, 98 230" stroke-dasharray="14 8"/>
+      <g stroke="#61C9FF" stroke-width="14" stroke-linecap="round" fill="none" opacity="0.85" style="animation: ripple-flow-512 1.5s linear infinite">
+        <path d="M30 400 C76 372, 150 376, 190 408" stroke-dasharray="32 20"/>
+        <path d="M16 428 C72 396, 170 404, 220 436" stroke-dasharray="40 24"/>
+        <path d="M44 456 C90 432, 156 436, 196 460" stroke-dasharray="28 16"/>
       </g>
-      <circle cx="18" cy="192" r="3" fill="#BAE6FD"/>
-      <circle cx="35" cy="184" r="2.5" fill="#BAE6FD"/>
-    </g></svg>
+      <circle cx="36" cy="384" r="6" fill="#BAE6FD"/>
+      <circle cx="70" cy="368" r="5" fill="#BAE6FD"/>
+    </g>
+</svg>

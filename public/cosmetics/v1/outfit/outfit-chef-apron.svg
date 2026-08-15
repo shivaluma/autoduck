@@ -1,9 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
-    <path d="M42 163c0-27 22-46 57-52l12 15q19 17 43-1l17 3c19 8 30 19 34 33 7 33-26 50-83 48-53-1-80-18-80-46Z" fill="#9333EA" stroke="#241A38" stroke-width="8" stroke-linejoin="round"/>
-    <path d="M68 152 C82 142, 105 145, 120 162 C108 178, 80 182, 68 152 Z" fill="#58E6B0" stroke="#241A38" stroke-width="5" stroke-linejoin="round"/>
-    <path d="M110 126 Q138 140 165 126" stroke="#58E6B0" stroke-width="8" stroke-linecap="round" fill="none"/>
-    <path d="M110 126 Q138 140 165 126" stroke="#241A38" stroke-width="4" stroke-linecap="round" fill="none"/>
-    <line x1="144" y1="136" x2="144" y2="198" stroke="#58E6B0" stroke-width="6"/>
-    <circle cx="152" cy="152" r="3.5" fill="#FFFDF4" stroke="#241A38" stroke-width="2"/>
-    <circle cx="152" cy="172" r="3.5" fill="#FFFDF4" stroke="#241A38" stroke-width="2"/>
-  </g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="outfit-custom-3114606430">
+    <path d="M84 326 c0 -54 44 -92 114 -104 l24 30 q38 34 86 -2 l34 6 c38 16 60 38 68 66 c14 66 -52 100 -166 96 c-106 -2 -160 -36 -160 -92 Z" fill="#11998E" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+    <path d="M136 304 C164 284, 210 290, 240 324 C216 356, 160 364, 136 304 Z" fill="#F43F5E" stroke="#1B132B" stroke-width="10" stroke-linejoin="round"/>
+    <path d="M220 252 Q276 280 330 252" stroke="#F43F5E" stroke-width="16" stroke-linecap="round" fill="none"/>
+    <path d="M220 252 Q276 280 330 252" stroke="#1B132B" stroke-width="8" stroke-linecap="round" fill="none"/>
+    <line x1="288" y1="272" x2="288" y2="396" stroke="#F43F5E" stroke-width="12"/>
+    <circle cx="304" cy="304" r="7" fill="#FFFDF4" stroke="#1B132B" stroke-width="4"/>
+    <circle cx="304" cy="344" r="7" fill="#FFFDF4" stroke="#1B132B" stroke-width="4"/>
+  </g>
+</svg>

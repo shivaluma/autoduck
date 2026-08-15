@@ -1,14 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
-    <defs>
-      <filter id="aura-glow-dyn-1780749405" x="-30%" y="-30%" width="160%" height="160%">
-        <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-      </filter>
-      <style>@keyframes aura-spin-dyn-1780749405 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
-    </defs>
-    <g filter="url(#aura-glow-dyn-1780749405)">
-      <ellipse cx="128" cy="137" rx="96" ry="80" stroke="#61C9FF" stroke-width="3.5" stroke-dasharray="10 8" fill="none" opacity="0.75"/>
-      <g style="animation: aura-spin-dyn-1780749405 8s linear infinite" transform-origin="128 137">
-        <circle cx="224.0" cy="137.0" r="5.5" fill="#61C9FF" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="195.9" cy="193.6" r="5.5" fill="#FF78A8" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="128.0" cy="217.0" r="5.5" fill="#61C9FF" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="60.1" cy="193.6" r="5.5" fill="#FF78A8" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="32.0" cy="137.0" r="5.5" fill="#61C9FF" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="60.1" cy="80.4" r="5.5" fill="#FF78A8" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="128.0" cy="57.0" r="5.5" fill="#61C9FF" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="195.9" cy="80.4" r="5.5" fill="#FF78A8" stroke="#FFFDF4" stroke-width="1.5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="aura-spectral-ghosts">
+      <defs>
+        <filter id="ghost-glow-512" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b1"/><feMerge><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <style>@keyframes ghost-drift-1 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-18px); } }</style>
+      </defs>
+      <g filter="url(#ghost-glow-512)">
+        <ellipse cx="256" cy="274" rx="190" ry="160" fill="#064E3B" opacity="0.3"/>
+        <g style="animation: ghost-drift-1 2.8s ease-in-out infinite" transform-origin="120 160">
+          <path d="M120 130 C90 130, 80 160, 80 190 C80 230, 110 240, 100 260 C115 245, 135 245, 140 260 C145 235, 160 220, 160 190 C160 160, 150 130, 120 130 Z" fill="#6EE7B7" stroke="#065F46" stroke-width="6"/>
+          <circle cx="105" cy="175" r="5" fill="#064E3B"/><circle cx="135" cy="175" r="5" fill="#064E3B"/><ellipse cx="120" cy="195" rx="6" ry="9" fill="#064E3B"/>
+        </g>
+        <g style="animation: ghost-drift-1 3.2s ease-in-out infinite 0.4s" transform-origin="390 180">
+          <path d="M390 140 C360 140, 350 170, 350 200 C350 240, 380 250, 370 270 C385 255, 405 255, 410 270 C415 245, 430 230, 430 200 C430 170, 420 140, 390 140 Z" fill="#A7F3D0" stroke="#065F46" stroke-width="6"/>
+          <circle cx="375" cy="185" r="6" fill="#064E3B"/><circle cx="405" cy="185" r="6" fill="#064E3B"/><ellipse cx="390" cy="205" rx="7" ry="10" fill="#064E3B"/>
+        </g>
       </g>
     </g>
-  </g></svg>
+</svg>

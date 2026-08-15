@@ -1,20 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="pet-companion">
     <defs>
       <style>
-        @keyframes pet-bob-main {
+        @keyframes pet-bob-512 {
           0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-5px); }
+          50% { transform: translateY(-10px); }
         }
       </style>
     </defs>
-    <g style="animation: pet-bob-main 2.2s ease-in-out infinite">
-      <!-- Cyber Drone -->
-      <ellipse cx="216" cy="182" rx="18" ry="12" fill="#F8FAFC" stroke="#241A38" stroke-width="4"/>
-      <circle cx="216" cy="182" r="6" fill="#00F2FE" stroke="#241A38" stroke-width="2"/>
-      <line x1="194" y1="174" x2="204" y2="174" stroke="#64748B" stroke-width="3"/>
-      <ellipse cx="198" cy="172" rx="10" ry="2" fill="#94A3B8"/>
-      <line x1="228" y1="174" x2="238" y2="174" stroke="#64748B" stroke-width="3"/>
-      <ellipse cx="234" cy="172" rx="10" ry="2" fill="#94A3B8"/>
-      <path d="M206 194 L216 204 L226 194" stroke="#00F2FE" stroke-width="3" fill="none" opacity="0.6"/>
+    <g style="animation: pet-bob-512 2.2s ease-in-out infinite">
+      <!-- Cute Creature -->
+    <ellipse cx="432" cy="376" rx="38" ry="32" fill="#9333EA" stroke="#1B132B" stroke-width="10"/>
+    <polygon points="408,336 400,308 424,328" fill="#F59E0B" stroke="#1B132B" stroke-width="7" stroke-linejoin="round"/>
+    <polygon points="440,328 456,308 452,336" fill="#F59E0B" stroke="#1B132B" stroke-width="7" stroke-linejoin="round"/>
+    <circle cx="416" cy="364" r="6" fill="#1B132B"/>
+    <circle cx="444" cy="364" r="6" fill="#1B132B"/>
+    <circle cx="418" cy="362" r="2" fill="#FFFDF4"/>
+    <circle cx="446" cy="362" r="2" fill="#FFFDF4"/>
+    <circle cx="408" cy="376" r="4" fill="#FF78A8" opacity="0.6"/>
+    <circle cx="452" cy="376" r="4" fill="#FF78A8" opacity="0.6"/>
     </g>
-  </g></svg>
+  </g>
+</svg>

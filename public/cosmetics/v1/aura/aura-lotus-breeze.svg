@@ -1,14 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
-    <defs>
-      <filter id="aura-glow-dyn-1959083260" x="-30%" y="-30%" width="160%" height="160%">
-        <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-      </filter>
-      <style>@keyframes aura-spin-dyn-1959083260 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
-    </defs>
-    <g filter="url(#aura-glow-dyn-1959083260)">
-      <ellipse cx="128" cy="137" rx="96" ry="80" stroke="#FFBE3D" stroke-width="3.5" stroke-dasharray="10 8" fill="none" opacity="0.75"/>
-      <g style="animation: aura-spin-dyn-1959083260 8s linear infinite" transform-origin="128 137">
-        <circle cx="224.0" cy="137.0" r="5.5" fill="#FFBE3D" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="195.9" cy="193.6" r="5.5" fill="#9333EA" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="128.0" cy="217.0" r="5.5" fill="#FFBE3D" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="60.1" cy="193.6" r="5.5" fill="#9333EA" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="32.0" cy="137.0" r="5.5" fill="#FFBE3D" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="60.1" cy="80.4" r="5.5" fill="#9333EA" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="128.0" cy="57.0" r="5.5" fill="#FFBE3D" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="195.9" cy="80.4" r="5.5" fill="#9333EA" stroke="#FFFDF4" stroke-width="1.5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="aura-lotus-cyclone">
+      <defs>
+        <filter id="lotus-glow-512" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b1"/><feMerge><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <style>@keyframes petal-spiral-512 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
+      </defs>
+      <g filter="url(#lotus-glow-512)">
+        <ellipse cx="256" cy="274" rx="190" ry="160" fill="#F43F5E" opacity="0.2"/>
+        <g style="animation: petal-spiral-512 14s linear infinite" transform-origin="256 274">
+          <path d="M100 200 C150 120, 360 100, 410 220 C460 340, 260 440, 150 390 C60 350, 60 260, 100 200 Z" stroke="#FDA4AF" stroke-width="8" stroke-dasharray="80 40 20 40" fill="none" stroke-linecap="round"/>
+          <path d="M416 260 C424 268, 424 280, 416 288 C408 280, 408 268, 416 260 Z" fill="#F43F5E" stroke="#1B132B" stroke-width="3"/><path d="M369.1370849898476 355.4594154601839 C377.1370849898476 363.4594154601839, 377.1370849898476 375.4594154601839, 369.1370849898476 383.4594154601839 C361.1370849898476 375.4594154601839, 361.1370849898476 363.4594154601839, 369.1370849898476 355.4594154601839 Z" fill="#F43F5E" stroke="#1B132B" stroke-width="3"/><path d="M256 395 C264 403, 264 415, 256 423 C248 415, 248 403, 256 395 Z" fill="#F43F5E" stroke="#1B132B" stroke-width="3"/><path d="M142.8629150101524 355.4594154601839 C150.8629150101524 363.4594154601839, 150.8629150101524 375.4594154601839, 142.8629150101524 383.4594154601839 C134.8629150101524 375.4594154601839, 134.8629150101524 363.4594154601839, 142.8629150101524 355.4594154601839 Z" fill="#F43F5E" stroke="#1B132B" stroke-width="3"/><path d="M96 260 C104 268, 104 280, 96 288 C88 280, 88 268, 96 260 Z" fill="#F43F5E" stroke="#1B132B" stroke-width="3"/><path d="M142.86291501015236 164.5405845398161 C150.86291501015236 172.5405845398161, 150.86291501015236 184.5405845398161, 142.86291501015236 192.5405845398161 C134.86291501015236 184.5405845398161, 134.86291501015236 172.5405845398161, 142.86291501015236 164.5405845398161 Z" fill="#F43F5E" stroke="#1B132B" stroke-width="3"/><path d="M255.99999999999997 125 C264 133, 264 145, 255.99999999999997 153 C247.99999999999997 145, 247.99999999999997 133, 255.99999999999997 125 Z" fill="#F43F5E" stroke="#1B132B" stroke-width="3"/><path d="M369.1370849898476 164.54058453981605 C377.1370849898476 172.54058453981605, 377.1370849898476 184.54058453981605, 369.1370849898476 192.54058453981605 C361.1370849898476 184.54058453981605, 361.1370849898476 172.54058453981605, 369.1370849898476 164.54058453981605 Z" fill="#F43F5E" stroke="#1B132B" stroke-width="3"/>
+        </g>
       </g>
     </g>
-  </g></svg>
+</svg>

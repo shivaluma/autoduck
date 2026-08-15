@@ -1,28 +1,75 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g opacity="0.38"><!-- Duck Base -->
-  <path d="M47 161c-9-8-15-18-17-29 14 4 26 10 35 17" fill="#FFD84D" stroke="#241A38" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M40 164c0-36 35-57 82-55 46 1 78 22 83 51 7 34-26 51-83 49-54-1-82-17-82-45Z" fill="#FFD84D" stroke="#241A38" stroke-width="8" stroke-linejoin="round"/>
-  <path d="M106 108c-5-31 7-63 33-79 27-17 59-8 75 15 18 25 10 59-10 78-22 22-59 27-83 9-8-6-13-14-15-23Z" fill="#FFD84D" stroke="#241A38" stroke-width="8" stroke-linejoin="round"/>
-  <path d="M68 158c16-20 45-25 69-12-7 25-38 39-66 29" fill="#FFFDF4" opacity=".24"/>
-  <ellipse cx="191" cy="72" rx="16" ry="21" fill="#FFFDF4" stroke="#241A38" stroke-width="6"/>
-  <ellipse cx="160" cy="69" rx="21" ry="25" fill="#FFFDF4" stroke="#241A38" stroke-width="6"/>
-  <ellipse cx="165" cy="76" rx="5.5" ry="9" fill="#241A38"/>
-  <ellipse cx="195" cy="78" rx="4.5" ry="8" fill="#241A38"/>
-  <circle cx="163" cy="72" r="2.5" fill="#FFFDF4"/>
-  <circle cx="194" cy="75" r="2" fill="#FFFDF4"/>
-  <path d="M177 93c17-1 34 4 55 11 9 3 9 11 0 16-20 10-42 12-59 5-10-4-12-14-5-23 3-4 6-7 9-9Z" fill="#FF9B42" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
-  <path d="M171 115c19 5 39 3 60-5" stroke="#C95E24" stroke-width="4" stroke-linecap="round"/>
-  <path d="M89 201c1 9-4 15-15 20 12 3 24 0 32-9m30-8c1 9-4 15-15 20 12 2 23 0 31-8" fill="none" stroke="#FF9B42" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>
-<g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g opacity="0.32"><!-- Base Duck Body -->
+  <!-- Feet -->
+  <path d="M178 402 c2 18 -8 30 -30 40 c24 6 48 0 64 -18" fill="none" stroke="#FF9B42" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M178 402 c2 18 -8 30 -30 40 c24 6 48 0 64 -18" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.3"/>
+  <path d="M238 386 c2 18 -8 30 -30 40 c24 4 46 0 62 -16" fill="none" stroke="#FF9B42" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M238 386 c2 18 -8 30 -30 40 c24 4 46 0 62 -16" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.3"/>
+
+  <!-- Tail Feathers -->
+  <path d="M94 322 c-18 -16 -30 -36 -34 -58 c28 8 52 20 70 34" fill="#FFD84D" stroke="#1B132B" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Main Torso Body -->
+  <path d="M80 328 c0 -72 70 -114 164 -110 c92 2 156 44 166 102 c14 68 -52 102 -166 98 c-108 -2 -164 -34 -164 -90 Z" fill="#FFD84D" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+  
+  <!-- Torso Shadow Form -->
+  <path d="M84 340 c10 42 60 72 150 72 c74 0 134 -20 162 -54 c-22 56 -86 82 -168 80 c-94 -2 -144 -36 -144 -98 Z" fill="#E5A812" opacity="0.55"/>
+
+  <!-- Head & Neck -->
+  <path d="M212 216 c-10 -62 14 -126 66 -158 c54 -34 118 -16 150 30 c36 50 20 118 -20 156 c-44 44 -118 54 -166 18 c-16 -12 -26 -28 -30 -46 Z" fill="#FFD84D" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+
+  <!-- Head Highlight & Shadow Form -->
+  <path d="M296 74 c34 -20 72 -14 96 14 c16 18 18 42 8 66 c-4 -28 -24 -56 -62 -66 c-18 -4 -32 -2 -42 -14 Z" fill="#FFF1A8" opacity="0.75"/>
+  <path d="M216 220 c6 14 18 24 34 32 c-16 -8 -26 -18 -34 -32 Z" fill="#E5A812" opacity="0.6"/>
+
+  <!-- Wing Silhouette & Highlight -->
+  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="#FFF1A8" opacity="0.4"/>
+  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Cheeks / Blush -->
+  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.4"/>
+
+  <!-- Left Eye -->
+  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="12"/>
+  <ellipse cx="330" cy="152" rx="11" ry="18" fill="#1B132B"/>
+  <circle cx="326" cy="144" r="5" fill="#FFFDF4"/>
+
+  <!-- Right Eye -->
+  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="12"/>
+  <ellipse cx="390" cy="156" rx="9" ry="16" fill="#1B132B"/>
+  <circle cx="388" cy="150" r="4" fill="#FFFDF4"/>
+
+  <!-- Orange Beak -->
+  <path d="M354 186 c34 -2 68 8 110 22 c18 6 18 22 0 32 c-40 20 -84 24 -118 10 c-20 -8 -24 -28 -10 -46 c6 -8 12 -14 18 -18 Z" fill="#FF9B42" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+  <!-- Beak Top Highlight -->
+  <path d="M362 192 c28 0 54 8 84 18" stroke="#FFD099" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <!-- Beak Smile Crease & Shadow -->
+  <path d="M342 230 c38 10 78 6 120 -10" stroke="#C95E24" stroke-width="8" stroke-linecap="round" fill="none"/></g>
+<g id="aura-phat-quang">
       <defs>
-        <filter id="gold-rays-glow-all" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        <filter id="mandala-glow-512" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="b1"/>
+          <feMerge><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
         <style>
-          @keyframes rays-spin-main { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+          @keyframes mandala-spin-cw-512 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+          @keyframes mandala-spin-ccw-512 { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
+          @keyframes sacred-pulse-512 { 0%, 100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.08); opacity: 1; } }
         </style>
       </defs>
-      <g filter="url(#gold-rays-glow-all)" style="animation: rays-spin-main 16s linear infinite" transform-origin="128 137">
-        <line x1="128" y1="137" x2="238.0" y2="137.0" stroke="#FFD84D" stroke-width="4" stroke-linecap="round" opacity="0.6"/><line x1="128" y1="137" x2="223.3" y2="192.0" stroke="#FFD84D" stroke-width="4" stroke-linecap="round" opacity="0.6"/><line x1="128" y1="137" x2="183.0" y2="232.3" stroke="#FFD84D" stroke-width="4" stroke-linecap="round" opacity="0.6"/><line x1="128" y1="137" x2="128.0" y2="247.0" stroke="#FFD84D" stroke-width="4" stroke-linecap="round" opacity="0.6"/><line x1="128" y1="137" x2="73.0" y2="232.3" stroke="#FFD84D" stroke-width="4" stroke-linecap="round" opacity="0.6"/><line x1="128" y1="137" x2="32.7" y2="192.0" stroke="#FFD84D" stroke-width="4" stroke-linecap="round" opacity="0.6"/><line x1="128" y1="137" x2="18.0" y2="137.0" stroke="#FFD84D" stroke-width="4" stroke-linecap="round" opacity="0.6"/><line x1="128" y1="137" x2="32.7" y2="82.0" stroke="#FFD84D" stroke-width="4" stroke-linecap="round" opacity="0.6"/><line x1="128" y1="137" x2="73.0" y2="41.7" stroke="#FFD84D" stroke-width="4" stroke-linecap="round" opacity="0.6"/><line x1="128" y1="137" x2="128.0" y2="27.0" stroke="#FFD84D" stroke-width="4" stroke-linecap="round" opacity="0.6"/><line x1="128" y1="137" x2="183.0" y2="41.7" stroke="#FFD84D" stroke-width="4" stroke-linecap="round" opacity="0.6"/><line x1="128" y1="137" x2="223.3" y2="82.0" stroke="#FFD84D" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+      <g filter="url(#mandala-glow-512)">
+        <g style="animation: sacred-pulse-512 3s ease-in-out infinite" transform-origin="256 240">
+          <circle cx="256" cy="240" r="190" fill="#FEF08A" opacity="0.18"/>
+          <circle cx="256" cy="240" r="150" fill="#FBBF24" opacity="0.22"/>
+          <circle cx="256" cy="240" r="110" fill="#F59E0B" opacity="0.28"/>
+        </g>
+        <g style="animation: mandala-spin-cw-512 24s linear infinite" transform-origin="256 240">
+          <line x1="366.0" y1="240.0" x2="486.0" y2="240.0" stroke="#FDE047" stroke-width="10" stroke-linecap="round"/><line x1="362.3" y1="268.5" x2="434.7" y2="287.9" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/><line x1="351.3" y1="295.0" x2="455.2" y2="355.0" stroke="#FDE047" stroke-width="10" stroke-linecap="round"/><line x1="333.8" y1="317.8" x2="386.8" y2="370.8" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/><line x1="311.0" y1="335.3" x2="371.0" y2="439.2" stroke="#FDE047" stroke-width="10" stroke-linecap="round"/><line x1="284.5" y1="346.3" x2="303.9" y2="418.7" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/><line x1="256.0" y1="350.0" x2="256.0" y2="470.0" stroke="#FDE047" stroke-width="10" stroke-linecap="round"/><line x1="227.5" y1="346.3" x2="208.1" y2="418.7" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/><line x1="201.0" y1="335.3" x2="141.0" y2="439.2" stroke="#FDE047" stroke-width="10" stroke-linecap="round"/><line x1="178.2" y1="317.8" x2="125.2" y2="370.8" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/><line x1="160.7" y1="295.0" x2="56.8" y2="355.0" stroke="#FDE047" stroke-width="10" stroke-linecap="round"/><line x1="149.7" y1="268.5" x2="77.3" y2="287.9" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/><line x1="146.0" y1="240.0" x2="26.0" y2="240.0" stroke="#FDE047" stroke-width="10" stroke-linecap="round"/><line x1="149.7" y1="211.5" x2="77.3" y2="192.1" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/><line x1="160.7" y1="185.0" x2="56.8" y2="125.0" stroke="#FDE047" stroke-width="10" stroke-linecap="round"/><line x1="178.2" y1="162.2" x2="125.2" y2="109.2" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/><line x1="201.0" y1="144.7" x2="141.0" y2="40.8" stroke="#FDE047" stroke-width="10" stroke-linecap="round"/><line x1="227.5" y1="133.7" x2="208.1" y2="61.3" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/><line x1="256.0" y1="130.0" x2="256.0" y2="10.0" stroke="#FDE047" stroke-width="10" stroke-linecap="round"/><line x1="284.5" y1="133.7" x2="303.9" y2="61.3" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/><line x1="311.0" y1="144.7" x2="371.0" y2="40.8" stroke="#FDE047" stroke-width="10" stroke-linecap="round"/><line x1="333.8" y1="162.2" x2="386.8" y2="109.2" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/><line x1="351.3" y1="185.0" x2="455.2" y2="125.0" stroke="#FDE047" stroke-width="10" stroke-linecap="round"/><line x1="362.3" y1="211.5" x2="434.7" y2="192.1" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/>
+        </g>
+        <g style="animation: mandala-spin-ccw-512 18s linear infinite" transform-origin="256 240">
+          <circle cx="256" cy="240" r="170" stroke="#FBBF24" stroke-width="8" stroke-dasharray="24 16" fill="none" opacity="0.9"/>
+          <circle cx="411.0" cy="240.0" r="10" fill="#FDE047" stroke="#92400E" stroke-width="3"/><circle cx="411.0" cy="240.0" r="4" fill="#FFFDF4"/><circle cx="365.6" cy="349.6" r="10" fill="#FDE047" stroke="#92400E" stroke-width="3"/><circle cx="365.6" cy="349.6" r="4" fill="#FFFDF4"/><circle cx="256.0" cy="395.0" r="10" fill="#FDE047" stroke="#92400E" stroke-width="3"/><circle cx="256.0" cy="395.0" r="4" fill="#FFFDF4"/><circle cx="146.4" cy="349.6" r="10" fill="#FDE047" stroke="#92400E" stroke-width="3"/><circle cx="146.4" cy="349.6" r="4" fill="#FFFDF4"/><circle cx="101.0" cy="240.0" r="10" fill="#FDE047" stroke="#92400E" stroke-width="3"/><circle cx="101.0" cy="240.0" r="4" fill="#FFFDF4"/><circle cx="146.4" cy="130.4" r="10" fill="#FDE047" stroke="#92400E" stroke-width="3"/><circle cx="146.4" cy="130.4" r="4" fill="#FFFDF4"/><circle cx="256.0" cy="85.0" r="10" fill="#FDE047" stroke="#92400E" stroke-width="3"/><circle cx="256.0" cy="85.0" r="4" fill="#FFFDF4"/><circle cx="365.6" cy="130.4" r="10" fill="#FDE047" stroke="#92400E" stroke-width="3"/><circle cx="365.6" cy="130.4" r="4" fill="#FFFDF4"/>
+        </g>
       </g>
-      <circle cx="128" cy="137" r="95" stroke="#FFD84D" stroke-width="3" stroke-dasharray="8 6" fill="none" opacity="0.8"/>
-    </g></svg>
+    </g>
+</svg>

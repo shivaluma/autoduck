@@ -1,25 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="pet-companion">
     <defs>
       <style>
-        @keyframes pet-bob-main {
+        @keyframes pet-bob-512 {
           0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-5px); }
+          50% { transform: translateY(-10px); }
         }
       </style>
     </defs>
-    <g style="animation: pet-bob-main 2.2s ease-in-out infinite">
-      <!-- Corgi Pup -->
-      <ellipse cx="216" cy="192" rx="21" ry="16" fill="#D97706" stroke="#241A38" stroke-width="5"/>
-      <ellipse cx="212" cy="196" rx="12" ry="8" fill="#FFFDF4"/>
-      <circle cx="214" cy="174" r="16" fill="#D97706" stroke="#241A38" stroke-width="5"/>
-      <polygon points="214,160 211,178 217,178" fill="#FFFDF4"/>
-      <ellipse cx="198" cy="160" rx="7" ry="14" fill="#D97706" stroke="#241A38" stroke-width="4" transform="rotate(-25 198 160)"/>
-      <ellipse cx="198" cy="160" rx="4" ry="10" fill="#FF78A8" transform="rotate(-25 198 160)"/>
-      <ellipse cx="230" cy="160" rx="7" ry="14" fill="#D97706" stroke="#241A38" stroke-width="4" transform="rotate(25 230 160)"/>
-      <ellipse cx="230" cy="160" rx="4" ry="10" fill="#FF78A8" transform="rotate(25 230 160)"/>
-      <circle cx="208" cy="174" r="2.5" fill="#241A38"/>
-      <circle cx="220" cy="174" r="2.5" fill="#241A38"/>
-      <circle cx="214" cy="178" r="2.5" fill="#241A38"/>
-      <path d="M214 180 Q214 186 217 186 Q219 186 218 180 Z" fill="#FF78A8"/>
+    <g style="animation: pet-bob-512 2.2s ease-in-out infinite">
+      <!-- Corgi Pup Pet -->
+      <ellipse cx="432" cy="384" rx="42" ry="32" fill="#D97706" stroke="#1B132B" stroke-width="10"/>
+      <ellipse cx="424" cy="392" rx="24" ry="16" fill="#FFFDF4"/>
+      <circle cx="428" cy="348" r="32" fill="#D97706" stroke="#1B132B" stroke-width="10"/>
+      <polygon points="428,320 422,356 434,356" fill="#FFFDF4"/>
+      <ellipse cx="396" cy="320" rx="14" ry="28" fill="#D97706" stroke="#1B132B" stroke-width="8" transform="rotate(-25 396 320)"/>
+      <ellipse cx="396" cy="320" rx="8" ry="20" fill="#FF78A8" transform="rotate(-25 396 320)"/>
+      <ellipse cx="460" cy="320" rx="14" ry="28" fill="#D97706" stroke="#1B132B" stroke-width="8" transform="rotate(25 460 320)"/>
+      <ellipse cx="460" cy="320" rx="8" ry="20" fill="#FF78A8" transform="rotate(25 460 320)"/>
+      <circle cx="416" cy="348" r="5" fill="#1B132B"/>
+      <circle cx="440" cy="348" r="5" fill="#1B132B"/>
+      <circle cx="428" cy="356" r="5" fill="#1B132B"/>
+      <path d="M428 360 Q428 372 434 372 Q438 372 436 360 Z" fill="#FF78A8"/>
     </g>
-  </g></svg>
+  </g>
+</svg>

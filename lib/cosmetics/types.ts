@@ -10,6 +10,26 @@ export type CosmeticRarity = typeof COSMETIC_RARITIES[number]
 
 export type CosmeticAnchor = 'body' | 'face' | 'head' | 'neck' | 'back' | 'petLeft' | 'petRight' | 'auraCenter' | 'tail'
 
+export type AvatarRenderLayer =
+  | 'AURA_BACK'
+  | 'TRAIL_BACK'
+  | 'PET_BACK'
+  | 'BACK_ACCESSORY'
+  | 'HEADWEAR_BACK'
+  | 'BASE_DUCK'
+  | 'SKIN_OVERLAY'
+  | 'CLOTHING_BACK'
+  | 'CLOTHING_BODY'
+  | 'NECK_ACCESSORY'
+  | 'FACE_ACCESSORY'
+  | 'HEADWEAR'
+  | 'FRONT_WING'
+  | 'HAND_PROP'
+  | 'PET_FRONT'
+  | 'AURA_FRONT'
+  | 'FRONT_FX'
+  | 'NAMEPLATE'
+
 export interface CosmeticDefinition {
   id: string
   name: string
@@ -25,6 +45,8 @@ export interface CosmeticDefinition {
   version: number
   anchor: CosmeticAnchor
   color?: string
+  zLayer?: AvatarRenderLayer
+  hasBackLayer?: boolean
 }
 
 export type DuckAppearance = Partial<Record<`${CosmeticSlot}Id`, string>> & {

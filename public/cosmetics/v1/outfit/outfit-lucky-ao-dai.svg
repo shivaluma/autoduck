@@ -1,10 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
-      <path d="M42 163c0-27 22-46 57-52l12 15q19 17 43-1l17 3c19 8 30 19 34 33 7 33-26 50-83 48-53-1-80-18-80-46Z" fill="#047857" stroke="#241A38" stroke-width="8" stroke-linejoin="round"/>
-      <path d="M68 152 C82 142, 105 145, 120 162 C108 178, 80 182, 68 152 Z" fill="#065F46" stroke="#241A38" stroke-width="5" stroke-linejoin="round"/>
-      <path d="M114 124 C132 135, 150 126, 162 122" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/>
-      <circle cx="148" cy="126" r="3" fill="#FDE68A"/>
-      <circle cx="156" cy="135" r="3" fill="#FDE68A"/>
-      <circle cx="165" cy="145" r="3" fill="#FDE68A"/>
-      <path d="M140 170 C140 155, 153 150, 153 150 C153 150, 166 155, 166 170 C159 175, 147 175, 140 170 Z" fill="#FDE68A" stroke="#241A38" stroke-width="2.5"/>
-      <circle cx="153" cy="164" r="3" fill="#EF4444"/>
-    </g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="outfit-ao-dai">
+      <path d="M84 326 c0 -54 44 -92 114 -104 l24 30 q38 34 86 -2 l34 6 c38 16 60 38 68 66 c14 66 -52 100 -166 96 c-106 -2 -160 -36 -160 -92 Z" fill="#047857" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+      <path d="M136 304 C164 284, 210 290, 240 324 C216 356, 160 364, 136 304 Z" fill="#065F46" stroke="#1B132B" stroke-width="10" stroke-linejoin="round"/>
+      <path d="M228 248 C264 270, 300 252, 324 244" stroke="#F59E0B" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="296" cy="252" r="6" fill="#FDE68A"/>
+      <circle cx="312" cy="270" r="6" fill="#FDE68A"/>
+      <circle cx="330" cy="290" r="6" fill="#FDE68A"/>
+      <path d="M280 340 C280 310, 306 300, 306 300 C306 300, 332 310, 332 340 C318 350, 294 350, 280 340 Z" fill="#FDE68A" stroke="#1B132B" stroke-width="5"/>
+      <circle cx="306" cy="328" r="6" fill="#EF4444"/>
+    </g>
+</svg>

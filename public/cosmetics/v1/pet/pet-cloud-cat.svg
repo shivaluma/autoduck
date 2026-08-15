@@ -1,29 +1,31 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="pet-companion">
     <defs>
       <style>
-        @keyframes pet-bob-main {
+        @keyframes pet-bob-512 {
           0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-5px); }
+          50% { transform: translateY(-10px); }
         }
       </style>
     </defs>
-    <g style="animation: pet-bob-main 2.2s ease-in-out infinite">
+    <g style="animation: pet-bob-512 2.2s ease-in-out infinite">
       <!-- Cat Pet -->
-      <ellipse cx="216" cy="202" rx="24" ry="8" fill="#BAE6FD" opacity="0.8"/>
-      <ellipse cx="216" cy="190" rx="18" ry="16" fill="#FFFDF4" stroke="#241A38" stroke-width="5"/>
-      <path d="M232 188 C242 182, 246 170, 240 165 C236 168, 234 178, 230 186" fill="none" stroke="#241A38" stroke-width="4" stroke-linecap="round"/>
+      <ellipse cx="432" cy="404" rx="48" ry="16" fill="#BAE6FD" opacity="0.8"/>
+      <ellipse cx="432" cy="380" rx="36" ry="32" fill="#FFFDF4" stroke="#1B132B" stroke-width="10"/>
+      <path d="M464 376 C484 364, 492 340, 480 330 C472 336, 468 356, 460 372" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round"/>
       
-      <circle cx="214" cy="174" r="14" fill="#FFFDF4" stroke="#241A38" stroke-width="5"/>
-      <polygon points="202,168 200,152 212,162" fill="#FFFDF4" stroke="#241A38" stroke-width="4" stroke-linejoin="round"/>
-      <polygon points="204,166 202,156 210,163" fill="#FF78A8"/>
-      <polygon points="220,162 228,152 226,168" fill="#FFFDF4" stroke="#241A38" stroke-width="4" stroke-linejoin="round"/>
-      <polygon points="221,163 226,156 224,166" fill="#FF78A8"/>
-      <circle cx="208" cy="174" r="2.5" fill="#241A38"/>
-      <circle cx="220" cy="174" r="2.5" fill="#241A38"/>
-      <polygon points="214,178 212,176 216,176" fill="#FF78A8"/>
-      <line x1="198" y1="176" x2="204" y2="176" stroke="#241A38" stroke-width="2"/>
-      <line x1="224" y1="176" x2="230" y2="176" stroke="#241A38" stroke-width="2"/>
-      <path d="M206 186 Q214 189 222 186" stroke="#EF4444" stroke-width="3.5" stroke-linecap="round"/>
-      <circle cx="214" cy="188" r="3" fill="#FFD84D" stroke="#241A38" stroke-width="1.5"/>
+      <circle cx="428" cy="348" r="28" fill="#FFFDF4" stroke="#1B132B" stroke-width="10"/>
+      <polygon points="404,336 400,304 424,324" fill="#FFFDF4" stroke="#1B132B" stroke-width="8" stroke-linejoin="round"/>
+      <polygon points="408,332 404,312 420,326" fill="#FF78A8"/>
+      <polygon points="440,324 456,304 452,336" fill="#FFFDF4" stroke="#1B132B" stroke-width="8" stroke-linejoin="round"/>
+      <polygon points="442,326 452,312 448,332" fill="#FF78A8"/>
+      <circle cx="416" cy="348" r="5" fill="#1B132B"/>
+      <circle cx="440" cy="348" r="5" fill="#1B132B"/>
+      <polygon points="428,356 424,352 432,352" fill="#FF78A8"/>
+      <line x1="396" y1="352" x2="408" y2="352" stroke="#1B132B" stroke-width="4"/>
+      <line x1="448" y1="352" x2="460" y2="352" stroke="#1B132B" stroke-width="4"/>
+      <path d="M412 372 Q428 378 444 372" stroke="#EF4444" stroke-width="7" stroke-linecap="round"/>
+      <circle cx="428" cy="376" r="6" fill="#FFD84D" stroke="#1B132B" stroke-width="3"/>
     </g>
-  </g></svg>
+  </g>
+</svg>

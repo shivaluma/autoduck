@@ -1,14 +1,44 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="aura-fairy-fireflies">
     <defs>
-      <filter id="aura-glow-dyn-947726714" x="-30%" y="-30%" width="160%" height="160%">
-        <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      <filter id="fairy-glow-512" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b1"/><feMerge><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
-      <style>@keyframes aura-spin-dyn-947726714 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
+      <style>@keyframes firefly-bob-1 { 0%, 100% { transform: translate(0, 0); opacity: 0.4; } 50% { transform: translate(12px, -20px); opacity: 1; } }</style>
     </defs>
-    <g filter="url(#aura-glow-dyn-947726714)">
-      <ellipse cx="128" cy="137" rx="96" ry="80" stroke="#FFD84D" stroke-width="3.5" stroke-dasharray="10 8" fill="none" opacity="0.75"/>
-      <g style="animation: aura-spin-dyn-947726714 8s linear infinite" transform-origin="128 137">
-        <circle cx="224.0" cy="137.0" r="5.5" fill="#FFD84D" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="195.9" cy="193.6" r="5.5" fill="#FFBE3D" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="128.0" cy="217.0" r="5.5" fill="#FFD84D" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="60.1" cy="193.6" r="5.5" fill="#FFBE3D" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="32.0" cy="137.0" r="5.5" fill="#FFD84D" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="60.1" cy="80.4" r="5.5" fill="#FFBE3D" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="128.0" cy="57.0" r="5.5" fill="#FFD84D" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="195.9" cy="80.4" r="5.5" fill="#FFBE3D" stroke="#FFFDF4" stroke-width="1.5"/>
-      </g>
+    <g filter="url(#fairy-glow-512)">
+      <ellipse cx="256" cy="274" rx="190" ry="160" fill="#059669" opacity="0.25"/>
+      
+        <g transform="translate(90, 160)" style="animation: firefly-bob-1 2.2s ease-in-out infinite 0s">
+          <circle cx="0" cy="0" r="12" fill="#FDE047" stroke="#34D399" stroke-width="4"/>
+          <circle cx="0" cy="0" r="6" fill="#FFFDF4"/>
+        </g>
+      
+        <g transform="translate(140, 100)" style="animation: firefly-bob-1 2.2s ease-in-out infinite 0.3s">
+          <circle cx="0" cy="0" r="14" fill="#FDE047" stroke="#34D399" stroke-width="4"/>
+          <circle cx="0" cy="0" r="7" fill="#FFFDF4"/>
+        </g>
+      
+        <g transform="translate(256, 50)" style="animation: firefly-bob-1 2.2s ease-in-out infinite 0.6s">
+          <circle cx="0" cy="0" r="16" fill="#FDE047" stroke="#34D399" stroke-width="4"/>
+          <circle cx="0" cy="0" r="8" fill="#FFFDF4"/>
+        </g>
+      
+        <g transform="translate(370, 90)" style="animation: firefly-bob-1 2.2s ease-in-out infinite 0.8999999999999999s">
+          <circle cx="0" cy="0" r="13" fill="#FDE047" stroke="#34D399" stroke-width="4"/>
+          <circle cx="0" cy="0" r="6.5" fill="#FFFDF4"/>
+        </g>
+      
+        <g transform="translate(430, 170)" style="animation: firefly-bob-1 2.2s ease-in-out infinite 1.2s">
+          <circle cx="0" cy="0" r="15" fill="#FDE047" stroke="#34D399" stroke-width="4"/>
+          <circle cx="0" cy="0" r="7.5" fill="#FFFDF4"/>
+        </g>
+      
+        <g transform="translate(440, 310)" style="animation: firefly-bob-1 2.2s ease-in-out infinite 1.5s">
+          <circle cx="0" cy="0" r="14" fill="#FDE047" stroke="#34D399" stroke-width="4"/>
+          <circle cx="0" cy="0" r="7" fill="#FFFDF4"/>
+        </g>
+      
     </g>
-  </g></svg>
+  </g>
+</svg>

@@ -1,6 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
-      <path d="M135 42 C130 32, 152 30, 162 38 C166 48, 148 54, 138 50 Z" fill="#EF4444" opacity="0.9"/>
-      <path d="M125 68 C120 58, 138 56, 145 64 C148 72, 135 78, 128 74 Z" fill="#18181B" opacity="0.85"/>
-      <path d="M70 148 C65 135, 95 132, 110 142 C115 155, 90 165, 75 160 Z" fill="#EF4444" opacity="0.9"/>
-      <path d="M125 155 C120 142, 145 140, 160 148 C168 162, 145 172, 130 168 Z" fill="#18181B" opacity="0.85"/>
-    </g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="skin-organic" fill="#B99AFF" stroke="#1B132B" stroke-width="4">
+    <circle cx="270" cy="116" r="8"/>
+    <circle cx="290" cy="100" r="7"/>
+    <circle cx="264" cy="144" r="7"/>
+    <circle cx="170" cy="296" r="12"/>
+    <circle cx="230" cy="284" r="10"/>
+    <circle cx="290" cy="304" r="12"/>
+  </g>
+</svg>

@@ -1,8 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
-      <path d="M42 163c0-27 22-46 57-52l12 15q19 17 43-1l17 3c19 8 30 19 34 33 7 33-26 50-83 48-53-1-80-18-80-46Z" fill="#94A3B8" stroke="#241A38" stroke-width="8" stroke-linejoin="round"/>
-      <path d="M68 152 C82 142, 105 145, 120 162 C108 178, 80 182, 68 152 Z" fill="#64748B" stroke="#241A38" stroke-width="5" stroke-linejoin="round"/>
-      <path d="M110 126 Q138 140 162 125" stroke="#FFD84D" stroke-width="6" fill="none"/>
-      <polygon points="144,146 156,154 150,172 138,172 132,154" fill="#FFD84D" stroke="#241A38" stroke-width="3"/>
-      <circle cx="128" cy="155" r="2.5" fill="#FFFDF4"/>
-      <circle cx="162" cy="155" r="2.5" fill="#FFFDF4"/>
-    </g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="outfit-tee">
+      <path d="M84 326 c0 -54 44 -92 114 -104 l24 30 q38 34 86 -2 l34 6 c38 16 60 38 68 66 c14 66 -52 100 -166 96 c-106 -2 -160 -36 -160 -92 Z" fill="#F08A5D" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+      <path d="M222 252 C248 276, 284 276, 310 252" stroke="#CBD5E1" stroke-width="12" stroke-linecap="round" fill="none"/>
+      <path d="M222 252 C248 276, 284 276, 310 252" stroke="#1B132B" stroke-width="8" stroke-linecap="round" fill="none"/>
+      <path d="M136 304 C164 284, 210 290, 240 324 C216 356, 160 364, 136 304 Z" fill="#F08A5D" stroke="#1B132B" stroke-width="10" stroke-linejoin="round"/>
+      
+    </g>
+</svg>
