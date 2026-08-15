@@ -1,5 +1,5 @@
 import { itemActivationForEvent, itemSuccessForEvent, simulateRace } from '@/packages/race-core/src'
-import type { RaceConfig, RaceItemId, RaceResult } from '@/packages/race-protocol/src'
+import type { RaceConfig, RaceFinishEntry, RaceItemId, RaceResult } from '@/packages/race-protocol/src'
 
 export interface RaceItemTelemetryRow {
   raceId: number
@@ -17,9 +17,10 @@ export interface RaceItemTelemetryRow {
 }
 
 export function buildRaceItemTelemetry(raceId: number, config: RaceConfig, officialResult: RaceResult): RaceItemTelemetryRow[] {
+  const ghostPlayerIds = new Set(config.players.filter((player) => player.isGhost).map((player) => player.playerId))
   const baseline = simulateRace({ ...config, raceId: `${config.raceId}-counterfactual`, loadouts: [] }, { recordEvents: false })
-  const baselineRank = new Map(baseline.standings.map((entry) => [entry.playerId, entry.rank]))
-  const officialRank = new Map(officialResult.standings.map((entry) => [entry.playerId, entry.rank]))
+  const baselineRank = new Map<string, number>(baseline.standings.map((entry: RaceFinishEntry) => [entry.playerId, entry.rank]))
+  const officialRank = new Map<string, number>(officialResult.standings.map((entry: RaceFinishEntry) => [entry.playerId, entry.rank]))
   const activated = new Set<string>()
   const succeeded = new Set<string>()
   for (const event of officialResult.events) {
