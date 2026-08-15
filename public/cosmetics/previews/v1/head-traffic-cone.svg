@@ -13,8 +13,7 @@
   <path d="M171 115c19 5 39 3 60-5" stroke="#C95E24" stroke-width="4" stroke-linecap="round"/>
   <path d="M89 201c1 9-4 15-15 20 12 3 24 0 32-9m30-8c1 9-4 15-15 20 12 2 23 0 31-8" fill="none" stroke="#FF9B42" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g>
-      <path d="M130 48 L150 42 L200 46 L175 52 Z" fill="#FF6B00" stroke="#241A38" stroke-width="6" stroke-linejoin="round"/>
-      <path d="M142 46 L162 2 L172 2 L185 46 Z" fill="#FF6B00" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
-      <polygon points="152,26 156,16 177,16 174,26" fill="#FFFDF4" stroke="#241A38" stroke-width="4"/>
-      <polygon points="146,38 150,30 180,30 182,38" fill="#FFFDF4" stroke="#241A38" stroke-width="4"/>
-    </g></svg>
+    <path d="M122 48 C124 23, 160 15, 190 17 C204 31.5, 208 36, 205 48 Z" fill="#F08A5D" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
+    <path d="M112 50 C144 40, 185 40, 218 50 C220 56, 196 60, 164 58 C132 56, 110 55, 112 50 Z" fill="#EA384D" stroke="#241A38" stroke-width="6" stroke-linejoin="round"/>
+    <circle cx="164" cy="35.5" r="6" fill="#FFFDF4" stroke="#241A38" stroke-width="3"/>
+  </g></svg>

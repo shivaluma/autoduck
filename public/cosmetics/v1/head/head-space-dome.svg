@@ -1,10 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
-      <!-- Transparent Glass Dome -->
       <ellipse cx="168" cy="60" rx="56" ry="50" fill="#61C9FF" fill-opacity="0.25" stroke="#38BDF8" stroke-width="5"/>
       <path d="M138 32 C155 20, 188 20, 204 32" stroke="#FFFDF4" stroke-width="5" stroke-linecap="round" opacity="0.8"/>
-      <!-- Metal Collar Ring (around duck neckline) -->
-      <path d="M112 108 C140 122, 185 122, 212 108" stroke="#94A3B8" stroke-width="12" stroke-linecap="round"/>
-      <path d="M112 108 C140 122, 185 122, 212 108" stroke="#241A38" stroke-width="5" fill="none"/>
-      <circle cx="120" cy="110" r="3.5" fill="#38EF7D"/>
-      <circle cx="204" cy="110" r="3.5" fill="#38EF7D"/>
+      <!-- Collar under chin -->
+      <path d="M108 120 C140 134, 185 134, 212 120" stroke="#94A3B8" stroke-width="10" stroke-linecap="round"/>
+      <path d="M108 120 C140 134, 185 134, 212 120" stroke="#241A38" stroke-width="4" fill="none"/>
     </g></svg>

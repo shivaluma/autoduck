@@ -13,12 +13,9 @@
   <path d="M171 115c19 5 39 3 60-5" stroke="#C95E24" stroke-width="4" stroke-linecap="round"/>
   <path d="M89 201c1 9-4 15-15 20 12 3 24 0 32-9m30-8c1 9-4 15-15 20 12 2 23 0 31-8" fill="none" stroke="#FF9B42" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g>
-      <!-- Dark Purple Eye Circles -->
       <ellipse cx="160" cy="84" rx="16" ry="6" fill="#7C3AED" opacity="0.45"/>
       <ellipse cx="192" cy="86" rx="14" ry="5" fill="#7C3AED" opacity="0.45"/>
-      <!-- Drooping Tired Eyelids -->
       <path d="M145 68 Q160 78 175 68" stroke="#241A38" stroke-width="5" stroke-linecap="round" fill="none"/>
       <path d="M180 72 Q192 80 204 72" stroke="#241A38" stroke-width="4.5" stroke-linecap="round" fill="none"/>
-      <!-- Blue Stress Sweat Drop -->
       <path d="M138 60 C138 56, 144 56, 144 60 C144 64, 138 64, 138 60 Z" fill="#60A5FA"/>
     </g></svg>

@@ -13,9 +13,7 @@
   <path d="M171 115c19 5 39 3 60-5" stroke="#C95E24" stroke-width="4" stroke-linecap="round"/>
   <path d="M89 201c1 9-4 15-15 20 12 3 24 0 32-9m30-8c1 9-4 15-15 20 12 2 23 0 31-8" fill="none" stroke="#FF9B42" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g>
-      <!-- Left Lens -->
       <path d="M144 60 H178 C178 78, 172 86, 158 86 C146 86, 144 78, 144 60 Z" fill="#18181B" stroke="#00F2FE" stroke-width="4.5" stroke-linejoin="round"/>
-      <!-- Right Lens -->
       <path d="M182 62 H208 C208 78, 204 84, 196 84 C186 84, 182 78, 182 62 Z" fill="#18181B" stroke="#00F2FE" stroke-width="4.5" stroke-linejoin="round"/>
       <line x1="178" y1="64" x2="182" y2="64" stroke="#00F2FE" stroke-width="5"/>
       <line x1="148" y1="66" x2="160" y2="62" stroke="#FFFDF4" stroke-width="3.5" stroke-linecap="round"/>

@@ -13,7 +13,8 @@
   <path d="M171 115c19 5 39 3 60-5" stroke="#C95E24" stroke-width="4" stroke-linecap="round"/>
   <path d="M89 201c1 9-4 15-15 20 12 3 24 0 32-9m30-8c1 9-4 15-15 20 12 2 23 0 31-8" fill="none" stroke="#FF9B42" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g>
-    <path d="M122 48 C124 21, 160 13, 190 15 C204 30.5, 208 36, 205 48 Z" fill="#B99AFF" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
-    <path d="M112 50 C144 40, 185 40, 218 50 C220 56, 196 60, 164 58 C132 56, 110 55, 112 50 Z" fill="#F08A5D" stroke="#241A38" stroke-width="6" stroke-linejoin="round"/>
-    <circle cx="164" cy="34.5" r="6" fill="#FFFDF4" stroke="#241A38" stroke-width="3"/>
-  </g></svg>
+      <!-- Wide Creased Felt Hat -->
+      <path d="M132 44 C132 20, 150 16, 164 24 C178 16, 196 20, 196 44 Z" fill="#92400E" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
+      <path d="M104 48 C125 38, 205 38, 226 48 C232 58, 198 58, 164 56 C130 58, 98 58, 104 48 Z" fill="#78350F" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
+      <path d="M128 44 C150 38, 180 38, 200 44" stroke="#FFD84D" stroke-width="4" fill="none"/>
+    </g></svg>

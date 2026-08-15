@@ -26,7 +26,6 @@
         <path d="M195 130 Q210 95 195 65 Q185 35 200 15"/>
         <path d="M128 50 Q118 30 130 10"/>
       </g>
-      <!-- Floating Coffee Beans -->
       <ellipse cx="60" cy="80" rx="5" ry="3.5" fill="#78350F" transform="rotate(-20 60 80)"/>
       <ellipse cx="205" cy="75" rx="5" ry="3.5" fill="#78350F" transform="rotate(25 205 75)"/>
     </g></svg>

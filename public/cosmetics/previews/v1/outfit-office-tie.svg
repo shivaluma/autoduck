@@ -13,17 +13,12 @@
   <path d="M171 115c19 5 39 3 60-5" stroke="#C95E24" stroke-width="4" stroke-linecap="round"/>
   <path d="M89 201c1 9-4 15-15 20 12 3 24 0 32-9m30-8c1 9-4 15-15 20 12 2 23 0 31-8" fill="none" stroke="#FF9B42" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g>
-      <!-- Light Blue Dress Shirt -->
       <path d="M42 163c0-27 22-46 57-52l12 15q19 17 43-1l17 3c19 8 30 19 34 33 7 33-26 50-83 48-53-1-80-18-80-46Z" fill="#E0F2FE" stroke="#241A38" stroke-width="8" stroke-linejoin="round"/>
-      <!-- Wing Cuff -->
       <path d="M68 152 C82 142, 105 145, 120 162 C108 178, 80 182, 68 152 Z" fill="#BAE6FD" stroke="#241A38" stroke-width="5" stroke-linejoin="round"/>
-      <!-- Collar -->
       <polygon points="110,125 126,142 138,126 150,142 164,125" fill="#FFFDF4" stroke="#241A38" stroke-width="5" stroke-linejoin="round"/>
-      <!-- Red Silk Tie -->
       <polygon points="131,135 145,135 141,146 135,146" fill="#EF4444" stroke="#241A38" stroke-width="3"/>
       <polygon points="135,146 141,146 148,188 138,198 128,188" fill="#EF4444" stroke="#241A38" stroke-width="5" stroke-linejoin="round"/>
       <line x1="133" y1="162" x2="143" y2="162" stroke="#FFD84D" stroke-width="3.5" stroke-linecap="round"/>
-      <!-- Breast Pocket with Pen -->
       <rect x="148" y="150" width="16" height="18" rx="2" fill="#BAE6FD" stroke="#241A38" stroke-width="3"/>
       <line x1="153" y1="145" x2="153" y2="152" stroke="#1E293B" stroke-width="3" stroke-linecap="round"/>
     </g></svg>

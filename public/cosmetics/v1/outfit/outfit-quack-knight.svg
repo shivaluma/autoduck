@@ -1,12 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
-      <!-- Steel Plate Armor -->
       <path d="M42 163c0-27 22-46 57-52l12 15q19 17 43-1l17 3c19 8 30 19 34 33 7 33-26 50-83 48-53-1-80-18-80-46Z" fill="#94A3B8" stroke="#241A38" stroke-width="8" stroke-linejoin="round"/>
-      <!-- Wing Pauldron -->
       <path d="M68 152 C82 142, 105 145, 120 162 C108 178, 80 182, 68 152 Z" fill="#64748B" stroke="#241A38" stroke-width="5" stroke-linejoin="round"/>
-      <!-- Gold Trim & Royal Crest -->
       <path d="M110 126 Q138 140 162 125" stroke="#FFD84D" stroke-width="6" fill="none"/>
       <polygon points="144,146 156,154 150,172 138,172 132,154" fill="#FFD84D" stroke="#241A38" stroke-width="3"/>
-      <!-- Rivets -->
       <circle cx="128" cy="155" r="2.5" fill="#FFFDF4"/>
       <circle cx="162" cy="155" r="2.5" fill="#FFFDF4"/>
     </g></svg>

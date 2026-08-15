@@ -13,15 +13,11 @@
   <path d="M171 115c19 5 39 3 60-5" stroke="#C95E24" stroke-width="4" stroke-linecap="round"/>
   <path d="M89 201c1 9-4 15-15 20 12 3 24 0 32-9m30-8c1 9-4 15-15 20 12 2 23 0 31-8" fill="none" stroke="#FF9B42" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g>
-      <!-- Base Shirt Body -->
       <path d="M42 163c0-27 22-46 57-52l12 15q19 17 43-1l17 3c19 8 30 19 34 33 7 33-26 50-83 48-53-1-80-18-80-46Z" fill="#FFFDF4" stroke="#241A38" stroke-width="8" stroke-linejoin="round"/>
-      <!-- Ribbed Collar -->
       <path d="M111 126 C124 138, 142 138, 155 126" stroke="#CBD5E1" stroke-width="6" stroke-linecap="round" fill="none"/>
       <path d="M111 126 C124 138, 142 138, 155 126" stroke="#241A38" stroke-width="4" stroke-linecap="round" fill="none"/>
-      <!-- Wing Arm Hole & Fold Definition -->
       <path d="M68 152 C82 142, 105 145, 120 162 C108 178, 80 182, 68 152 Z" fill="#F8FAFC" stroke="#241A38" stroke-width="5" stroke-linejoin="round"/>
       <path d="M78 162 C90 156, 105 158, 112 168" stroke="#CBD5E1" stroke-width="3.5" stroke-linecap="round" fill="none"/>
-      <!-- Red Streetwear Box Logo -->
       <rect x="135" y="152" width="22" height="14" rx="3" fill="#EF4444" stroke="#241A38" stroke-width="2.5"/>
       <circle cx="146" cy="159" r="3" fill="#FFFDF4"/>
     </g></svg>

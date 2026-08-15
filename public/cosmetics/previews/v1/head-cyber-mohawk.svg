@@ -18,7 +18,6 @@
           <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
       </defs>
-      <!-- Cyber Spines -->
       <g fill="#FF007F" stroke="#241A38" stroke-width="5" stroke-linejoin="round" filter="url(#mohawk-glow)">
         <polygon points="120,44 116,14 134,36"/>
         <polygon points="132,36 132,4 152,28"/>
@@ -26,7 +25,6 @@
         <polygon points="166,22 178,-4 186,22"/>
         <polygon points="184,22 200,6 198,34"/>
       </g>
-      <!-- Cyber Temple Plating -->
       <path d="M125 48 C148 38, 185 38, 205 48" stroke="#00F2FE" stroke-width="7" stroke-linecap="round"/>
       <circle cx="132" cy="45" r="3" fill="#FFFDF4"/>
       <circle cx="198" cy="45" r="3" fill="#FFFDF4"/>

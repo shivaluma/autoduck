@@ -13,10 +13,8 @@
   <path d="M171 115c19 5 39 3 60-5" stroke="#C95E24" stroke-width="4" stroke-linecap="round"/>
   <path d="M89 201c1 9-4 15-15 20 12 3 24 0 32-9m30-8c1 9-4 15-15 20 12 2 23 0 31-8" fill="none" stroke="#FF9B42" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g>
-      <!-- Head Koi Markings -->
       <path d="M135 42 C130 32, 152 30, 162 38 C166 48, 148 54, 138 50 Z" fill="#EF4444" opacity="0.9"/>
       <path d="M125 68 C120 58, 138 56, 145 64 C148 72, 135 78, 128 74 Z" fill="#18181B" opacity="0.85"/>
-      <!-- Body Markings -->
       <path d="M70 148 C65 135, 95 132, 110 142 C115 155, 90 165, 75 160 Z" fill="#EF4444" opacity="0.9"/>
       <path d="M125 155 C120 142, 145 140, 160 148 C168 162, 145 172, 130 168 Z" fill="#18181B" opacity="0.85"/>
     </g></svg>

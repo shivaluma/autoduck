@@ -13,11 +13,8 @@
   <path d="M171 115c19 5 39 3 60-5" stroke="#C95E24" stroke-width="4" stroke-linecap="round"/>
   <path d="M89 201c1 9-4 15-15 20 12 3 24 0 32-9m30-8c1 9-4 15-15 20 12 2 23 0 31-8" fill="none" stroke="#FF9B42" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g>
-      <!-- Black Suit -->
       <path d="M42 163c0-27 22-46 57-52l12 15q19 17 43-1l17 3c19 8 30 19 34 33 7 33-26 50-83 48-53-1-80-18-80-46Z" fill="#18181B" stroke="#241A38" stroke-width="8" stroke-linejoin="round"/>
-      <!-- Wing Lapel -->
       <path d="M68 152 C82 142, 105 145, 120 162 C108 178, 80 182, 68 152 Z" fill="#27272A" stroke="#241A38" stroke-width="5" stroke-linejoin="round"/>
-      <!-- Gold Lapels & Bowtie -->
       <polygon points="120,126 138,156 130,178 116,145" fill="#FFD84D" stroke="#241A38" stroke-width="4"/>
       <polygon points="162,126 146,156 154,178 168,145" fill="#FFD84D" stroke="#241A38" stroke-width="4"/>
       <polygon points="132,128 150,128 141,146" fill="#FFFDF4"/>

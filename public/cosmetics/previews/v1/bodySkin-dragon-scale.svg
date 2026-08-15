@@ -13,7 +13,6 @@
   <path d="M171 115c19 5 39 3 60-5" stroke="#C95E24" stroke-width="4" stroke-linecap="round"/>
   <path d="M89 201c1 9-4 15-15 20 12 3 24 0 32-9m30-8c1 9-4 15-15 20 12 2 23 0 31-8" fill="none" stroke="#FF9B42" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g>
-      <!-- Head Dragon Crest -->
       <g stroke="#C95E24" stroke-width="3" fill="none">
         <path d="M138 38 C144 44, 152 44, 158 38 C164 44, 172 44, 178 38"/>
         <path d="M144 48 C150 54, 158 54, 164 48"/>
@@ -21,10 +20,9 @@
       <circle cx="148" cy="40" r="2.5" fill="#FFD84D"/>
       <circle cx="168" cy="40" r="2.5" fill="#FFD84D"/>
       <circle cx="154" cy="50" r="2.5" fill="#FFD84D"/>
-      <!-- Body Dragon Scales -->
       <g stroke="#C95E24" stroke-width="4" fill="none">
-        <path d="M75 145 C80 152, 90 152, 95 145 C100 152, 110 152, 115 145 C120 152, 130 152, 135 145"/>
-        <path d="M85 160 C90 167, 100 167, 105 160 C110 167, 120 167, 125 160 C130 167, 140 167, 145 160"/>
+        <path d="M75 145 C80 152, 90 152, 95 145 C100 152, 110 152, 115 145"/>
+        <path d="M85 160 C90 167, 100 167, 105 160 C110 167, 120 167, 125 160"/>
       </g>
       <circle cx="85" cy="148" r="2.5" fill="#FFD84D"/>
       <circle cx="105" cy="148" r="2.5" fill="#FFD84D"/>

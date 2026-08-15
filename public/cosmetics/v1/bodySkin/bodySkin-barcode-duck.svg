@@ -1,9 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g fill="#EA384D" stroke="#241A38" stroke-width="2">
-    <!-- Cheek Marks -->
     <circle cx="135" cy="58" r="4"/>
     <circle cx="145" cy="50" r="3.5"/>
     <circle cx="132" cy="72" r="3.5"/>
-    <!-- Body Marks -->
     <circle cx="85" cy="148" r="6"/>
     <circle cx="115" cy="142" r="5"/>
     <circle cx="145" cy="152" r="6"/>

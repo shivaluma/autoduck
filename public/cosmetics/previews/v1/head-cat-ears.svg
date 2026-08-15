@@ -14,10 +14,8 @@
   <path d="M89 201c1 9-4 15-15 20 12 3 24 0 32-9m30-8c1 9-4 15-15 20 12 2 23 0 31-8" fill="none" stroke="#FF9B42" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g>
       <path d="M125 44 C145 28, 185 30, 202 46" stroke="#241A38" stroke-width="6" fill="none"/>
-      <!-- Left Ear -->
       <path d="M126 38 L118 6 L145 22 Z" fill="#FFFDF4" stroke="#241A38" stroke-width="6" stroke-linejoin="round"/>
       <polygon points="126,30 122,12 140,22" fill="#FF78A8"/>
-      <!-- Right Ear -->
       <path d="M174 24 L196 6 L198 38 Z" fill="#FFFDF4" stroke="#241A38" stroke-width="6" stroke-linejoin="round"/>
       <polygon points="178,24 192,12 194,30" fill="#FF78A8"/>
     </g></svg>

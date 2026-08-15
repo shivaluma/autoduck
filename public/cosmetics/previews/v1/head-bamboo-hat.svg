@@ -13,10 +13,8 @@
   <path d="M171 115c19 5 39 3 60-5" stroke="#C95E24" stroke-width="4" stroke-linecap="round"/>
   <path d="M89 201c1 9-4 15-15 20 12 3 24 0 32-9m30-8c1 9-4 15-15 20 12 2 23 0 31-8" fill="none" stroke="#FF9B42" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g>
-      <!-- Non La Conical Hat -->
       <polygon points="98,50 164,10 230,50" fill="#F4E0A5" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
       <line x1="164" y1="10" x2="164" y2="50" stroke="#D4B668" stroke-width="3.5"/>
       <path d="M118 40 C145 32, 185 32, 212 40" stroke="#D4B668" stroke-width="3.5" fill="none"/>
-      <!-- Pink Silk Ribbon -->
       <path d="M128 50 C122 75, 126 92, 142 98" stroke="#FF5B67" stroke-width="4" fill="none" stroke-linecap="round"/>
     </g></svg>

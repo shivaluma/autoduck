@@ -13,8 +13,6 @@
   <path d="M171 115c19 5 39 3 60-5" stroke="#C95E24" stroke-width="4" stroke-linecap="round"/>
   <path d="M89 201c1 9-4 15-15 20 12 3 24 0 32-9m30-8c1 9-4 15-15 20 12 2 23 0 31-8" fill="none" stroke="#FF9B42" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g stroke="#FFD84D" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
-      <!-- Cheek Lightning Bolt -->
       <path d="M136 45 L144 55 L138 60 L148 72"/>
-      <!-- Body Lightning -->
       <path d="M75 145 L92 152 L85 160 L108 170 L100 176 L118 190"/>
     </g></svg>

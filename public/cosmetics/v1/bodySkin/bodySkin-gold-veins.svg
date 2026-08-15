@@ -1,7 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g stroke="#FFD84D" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
-      <!-- Head Kintsugi Crack -->
       <path d="M138 35 L146 45 L140 55 L152 65"/>
       <circle cx="146" cy="45" r="2" fill="#FFFDF4" stroke="none"/>
-      <!-- Body Crack -->
       <path d="M70 148 L95 155 L110 145 L135 160 L155 152"/>
     </g></svg>

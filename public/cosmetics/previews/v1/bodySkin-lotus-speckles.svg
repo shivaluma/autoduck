@@ -13,10 +13,8 @@
   <path d="M171 115c19 5 39 3 60-5" stroke="#C95E24" stroke-width="4" stroke-linecap="round"/>
   <path d="M89 201c1 9-4 15-15 20 12 3 24 0 32-9m30-8c1 9-4 15-15 20 12 2 23 0 31-8" fill="none" stroke="#FF9B42" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g fill="#FF78A8" stroke="#241A38" stroke-width="2">
-      <!-- Cheek Lotus Petals -->
       <path d="M134 65 C130 55, 142 55, 144 65 C142 75, 130 75, 134 65 Z"/>
       <path d="M148 48 C144 38, 156 38, 158 48 C156 58, 144 58, 148 48 Z"/>
-      <!-- Body Petals -->
       <path d="M85 145 C80 135, 95 135, 98 145 C95 155, 80 155, 85 145 Z"/>
       <path d="M125 140 C120 130, 135 130, 138 140 C135 150, 120 150, 125 140 Z"/>
     </g></svg>

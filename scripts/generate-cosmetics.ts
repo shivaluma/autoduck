@@ -39,25 +39,22 @@ function body(color = '#FFD84D') {
 // HATS (Head Items)
 // -------------------------------------------------------------
 function generateHead(id: string, primary: string, secondary: string, seed: number) {
-  if (id === 'head-cap-red') {
+  if (id === 'head-cap-red' || id === 'head-captain-cap') {
+    const isCapt = id === 'head-captain-cap'
+    const capColor = isCapt ? '#0F172A' : '#FF4D5A'
+    const visorColor = isCapt ? '#18181B' : '#D93444'
     return `<g>
-      <!-- Red Cap Dome -->
-      <path d="M118 48 C120 22, 155 14, 186 20 C202 24, 208 36, 206 48 Z" fill="#FF4D5A" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
-      <path d="M130 46 C135 28, 160 22, 185 24" stroke="#FFFDF4" stroke-width="4" stroke-linecap="round" fill="none"/>
-      <!-- Visor jutting forward over duck brow -->
-      <path d="M172 45 C192 41, 222 43, 234 50 C220 57, 188 56, 170 51 Z" fill="#D93444" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
-      <!-- Cap Button -->
+      <path d="M118 48 C120 22, 155 14, 186 20 C202 24, 208 36, 206 48 Z" fill="${capColor}" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
+      ${isCapt ? '<path d="M125 44 C150 38, 185 38, 205 44" stroke="#FFD84D" stroke-width="5" fill="none"/><circle cx="164" cy="30" r="4.5" fill="#FFD84D"/>' : '<path d="M130 46 C135 28, 160 22, 185 24" stroke="#FFFDF4" stroke-width="4" stroke-linecap="round" fill="none"/>'}
+      <path d="M172 45 C192 41, 222 43, 234 50 C220 57, 188 56, 170 51 Z" fill="${visorColor}" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
       <circle cx="160" cy="18" r="5" fill="#FFFDF4" stroke="#241A38" stroke-width="3"/>
     </g>`
   }
 
   if (id === 'head-bucket-blue') {
     return `<g>
-      <!-- Bucket Crown -->
       <path d="M128 46 C130 24, 158 18, 185 20 C198 22, 203 34, 202 46 Z" fill="#61C9FF" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
-      <!-- Ribbon Band -->
       <path d="M125 43 C148 37, 182 38, 204 44 L204 38 C182 32, 148 31, 125 37 Z" fill="#1C7ED6"/>
-      <!-- Bucket Brim -->
       <path d="M114 49 C144 38, 188 39, 218 50 C222 56, 196 60, 164 58 C132 56, 110 55, 114 49 Z" fill="#4DABF7" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
     </g>`
   }
@@ -68,7 +65,6 @@ function generateHead(id: string, primary: string, secondary: string, seed: numb
     const crownColor = isDiamond ? '#67E8F9' : isGalaxy ? '#C084FC' : '#FFD84D'
     const jewelColor = isDiamond ? '#FFFDF4' : isGalaxy ? '#38EF7D' : '#FF4D5A'
     return `<g transform="rotate(8 165 24)">
-      <!-- Crown -->
       <path d="M142 32 L146 6 L157 18 L168 2 L179 18 L190 6 L194 32 Z" fill="${crownColor}" stroke="#241A38" stroke-width="6" stroke-linejoin="round"/>
       <path d="M140 33 C156 28, 180 28, 196 33" stroke="#241A38" stroke-width="4" stroke-linecap="round"/>
       <circle cx="146" cy="7" r="3.5" fill="${jewelColor}"/>
@@ -85,7 +81,6 @@ function generateHead(id: string, primary: string, secondary: string, seed: numb
           <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
       </defs>
-      <!-- Cyber Spines -->
       <g fill="#FF007F" stroke="#241A38" stroke-width="5" stroke-linejoin="round" filter="url(#mohawk-glow)">
         <polygon points="120,44 116,14 134,36"/>
         <polygon points="132,36 132,4 152,28"/>
@@ -93,7 +88,6 @@ function generateHead(id: string, primary: string, secondary: string, seed: numb
         <polygon points="166,22 178,-4 186,22"/>
         <polygon points="184,22 200,6 198,34"/>
       </g>
-      <!-- Cyber Temple Plating -->
       <path d="M125 48 C148 38, 185 38, 205 48" stroke="#00F2FE" stroke-width="7" stroke-linecap="round"/>
       <circle cx="132" cy="45" r="3" fill="#FFFDF4"/>
       <circle cx="198" cy="45" r="3" fill="#FFFDF4"/>
@@ -102,15 +96,11 @@ function generateHead(id: string, primary: string, secondary: string, seed: numb
 
   if (id === 'head-office-headset') {
     return `<g>
-      <!-- Headset Arch -->
       <path d="M124 50 C128 14, 182 14, 198 50" stroke="#1E293B" stroke-width="8" stroke-linecap="round" fill="none"/>
       <path d="M124 50 C128 14, 182 14, 198 50" stroke="#64748B" stroke-width="4" stroke-linecap="round" fill="none"/>
-      <!-- Left & Right Ear Cushions -->
       <rect x="116" y="44" width="14" height="22" rx="6" fill="#0F172A" stroke="#241A38" stroke-width="4"/>
       <rect x="192" y="44" width="14" height="22" rx="6" fill="#0F172A" stroke="#241A38" stroke-width="4"/>
-      <!-- Flexible Mic Boom to Beak -->
       <path d="M198 55 C210 65, 212 85, 188 92" stroke="#475569" stroke-width="4" fill="none" stroke-linecap="round"/>
-      <!-- Mic Foam & Red LED -->
       <ellipse cx="186" cy="92" rx="6" ry="4" fill="#0F172A" stroke="#241A38" stroke-width="2"/>
       <circle cx="184" cy="91" r="1.5" fill="#EF4444"/>
     </g>`
@@ -118,24 +108,19 @@ function generateHead(id: string, primary: string, secondary: string, seed: numb
 
   if (id === 'head-space-dome') {
     return `<g>
-      <!-- Transparent Glass Dome -->
       <ellipse cx="168" cy="60" rx="56" ry="50" fill="#61C9FF" fill-opacity="0.25" stroke="#38BDF8" stroke-width="5"/>
       <path d="M138 32 C155 20, 188 20, 204 32" stroke="#FFFDF4" stroke-width="5" stroke-linecap="round" opacity="0.8"/>
-      <!-- Metal Collar Ring (around duck neckline) -->
-      <path d="M112 108 C140 122, 185 122, 212 108" stroke="#94A3B8" stroke-width="12" stroke-linecap="round"/>
-      <path d="M112 108 C140 122, 185 122, 212 108" stroke="#241A38" stroke-width="5" fill="none"/>
-      <circle cx="120" cy="110" r="3.5" fill="#38EF7D"/>
-      <circle cx="204" cy="110" r="3.5" fill="#38EF7D"/>
+      <!-- Collar under chin -->
+      <path d="M108 120 C140 134, 185 134, 212 120" stroke="#94A3B8" stroke-width="10" stroke-linecap="round"/>
+      <path d="M108 120 C140 134, 185 134, 212 120" stroke="#241A38" stroke-width="4" fill="none"/>
     </g>`
   }
 
   if (id === 'head-bamboo-hat') {
     return `<g>
-      <!-- Non La Conical Hat -->
       <polygon points="98,50 164,10 230,50" fill="#F4E0A5" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
       <line x1="164" y1="10" x2="164" y2="50" stroke="#D4B668" stroke-width="3.5"/>
       <path d="M118 40 C145 32, 185 32, 212 40" stroke="#D4B668" stroke-width="3.5" fill="none"/>
-      <!-- Pink Silk Ribbon -->
       <path d="M128 50 C122 75, 126 92, 142 98" stroke="#FF5B67" stroke-width="4" fill="none" stroke-linecap="round"/>
     </g>`
   }
@@ -143,10 +128,8 @@ function generateHead(id: string, primary: string, secondary: string, seed: numb
   if (id === 'head-cat-ears') {
     return `<g>
       <path d="M125 44 C145 28, 185 30, 202 46" stroke="#241A38" stroke-width="6" fill="none"/>
-      <!-- Left Ear -->
       <path d="M126 38 L118 6 L145 22 Z" fill="#FFFDF4" stroke="#241A38" stroke-width="6" stroke-linejoin="round"/>
       <polygon points="126,30 122,12 140,22" fill="#FF78A8"/>
-      <!-- Right Ear -->
       <path d="M174 24 L196 6 L198 38 Z" fill="#FFFDF4" stroke="#241A38" stroke-width="6" stroke-linejoin="round"/>
       <polygon points="178,24 192,12 194,30" fill="#FF78A8"/>
     </g>`
@@ -192,41 +175,24 @@ function generateHead(id: string, primary: string, secondary: string, seed: numb
     </g>`
   }
 
-  if (id === 'head-dev-antenna') {
+  if (id === 'head-cowboy-hat') {
     return `<g>
-      <path d="M122 46 C148 36, 182 36, 206 48" stroke="#1E293B" stroke-width="8" stroke-linecap="round"/>
-      <line x1="164" y1="36" x2="164" y2="4" stroke="#64748B" stroke-width="5" stroke-linecap="round"/>
-      <circle cx="164" cy="4" r="6" fill="#38EF7D" stroke="#241A38" stroke-width="3"/>
-      <path d="M152 -4 C160 -10, 168 -10, 176 -4" stroke="#38EF7D" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <!-- Wide Creased Felt Hat -->
+      <path d="M132 44 C132 20, 150 16, 164 24 C178 16, 196 20, 196 44 Z" fill="#92400E" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
+      <path d="M104 48 C125 38, 205 38, 226 48 C232 58, 198 58, 164 56 C130 58, 98 58, 104 48 Z" fill="#78350F" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
+      <path d="M128 44 C150 38, 180 38, 200 44" stroke="#FFD84D" stroke-width="4" fill="none"/>
     </g>`
   }
 
-  if (id === 'head-traffic-cone') {
+  if (id === 'head-propeller-cap') {
     return `<g>
-      <path d="M130 48 L150 42 L200 46 L175 52 Z" fill="#FF6B00" stroke="#241A38" stroke-width="6" stroke-linejoin="round"/>
-      <path d="M142 46 L162 2 L172 2 L185 46 Z" fill="#FF6B00" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
-      <polygon points="152,26 156,16 177,16 174,26" fill="#FFFDF4" stroke="#241A38" stroke-width="4"/>
-      <polygon points="146,38 150,30 180,30 182,38" fill="#FFFDF4" stroke="#241A38" stroke-width="4"/>
-    </g>`
-  }
-
-  if (id === 'head-pho-bowl' || id === 'head-noodle-cup' || id === 'head-rice-bowl' || id === 'head-hotpot-lid') {
-    return `<g>
-      <!-- Steam -->
-      <path d="M152 4 Q156 -6 160 4 M168 2 Q172 -8 176 2" stroke="#FFFDF4" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.7"/>
-      <!-- Ceramic Bowl -->
-      <path d="M132 30 H196 L184 48 H144 Z" fill="#EF4444" stroke="#241A38" stroke-width="6" stroke-linejoin="round"/>
-      <ellipse cx="164" cy="30" rx="32" ry="7" fill="#FDE68A" stroke="#241A38" stroke-width="4"/>
-      <!-- Chopsticks -->
-      <line x1="140" y1="36" x2="198" y2="18" stroke="#78350F" stroke-width="4" stroke-linecap="round"/>
-    </g>`
-  }
-
-  if (id === 'head-pirate-hat' || id === 'head-captain-cap') {
-    return `<g>
-      <path d="M108 48 C115 20, 140 16, 164 24 C188 16, 215 20, 222 48 C185 36, 145 36, 108 48 Z" fill="#18181B" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
-      <path d="M110 46 C140 34, 190 34, 220 46" stroke="#FFD84D" stroke-width="4" fill="none"/>
-      <circle cx="164" cy="30" r="4.5" fill="#FFFDF4"/>
+      <!-- Multi-color panels -->
+      <path d="M120 46 C122 22, 142 16, 160 16 C160 30, 140 44, 120 46 Z" fill="#EF4444" stroke="#241A38" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M160 16 C180 16, 202 24, 204 46 C184 44, 160 30, 160 16 Z" fill="#3B82F6" stroke="#241A38" stroke-width="6" stroke-linejoin="round"/>
+      <!-- Spinning Propeller -->
+      <ellipse cx="145" cy="10" rx="14" ry="4" fill="#EAB308" stroke="#241A38" stroke-width="3" transform="rotate(-15 145 10)"/>
+      <ellipse cx="175" cy="10" rx="14" ry="4" fill="#EAB308" stroke="#241A38" stroke-width="3" transform="rotate(15 175 10)"/>
+      <circle cx="160" cy="10" r="4" fill="#EF4444" stroke="#241A38" stroke-width="2"/>
     </g>`
   }
 
@@ -240,20 +206,16 @@ function generateHead(id: string, primary: string, secondary: string, seed: numb
 }
 
 // -------------------------------------------------------------
-// OUTFITS (Clothes with Wing Sleeves & Detailed Tailoring)
+// OUTFITS (Tailored Clothes with Wing Sleeves)
 // -------------------------------------------------------------
 function generateOutfit(id: string, primary: string, secondary: string, seed: number) {
   if (id === 'outfit-tee-white') {
     return `<g>
-      <!-- Base Shirt Body -->
       <path d="M42 163c0-27 22-46 57-52l12 15q19 17 43-1l17 3c19 8 30 19 34 33 7 33-26 50-83 48-53-1-80-18-80-46Z" fill="#FFFDF4" stroke="#241A38" stroke-width="8" stroke-linejoin="round"/>
-      <!-- Ribbed Collar -->
       <path d="M111 126 C124 138, 142 138, 155 126" stroke="#CBD5E1" stroke-width="6" stroke-linecap="round" fill="none"/>
       <path d="M111 126 C124 138, 142 138, 155 126" stroke="#241A38" stroke-width="4" stroke-linecap="round" fill="none"/>
-      <!-- Wing Arm Hole & Fold Definition -->
       <path d="M68 152 C82 142, 105 145, 120 162 C108 178, 80 182, 68 152 Z" fill="#F8FAFC" stroke="#241A38" stroke-width="5" stroke-linejoin="round"/>
       <path d="M78 162 C90 156, 105 158, 112 168" stroke="#CBD5E1" stroke-width="3.5" stroke-linecap="round" fill="none"/>
-      <!-- Red Streetwear Box Logo -->
       <rect x="135" y="152" width="22" height="14" rx="3" fill="#EF4444" stroke="#241A38" stroke-width="2.5"/>
       <circle cx="146" cy="159" r="3" fill="#FFFDF4"/>
     </g>`
@@ -261,17 +223,12 @@ function generateOutfit(id: string, primary: string, secondary: string, seed: nu
 
   if (id === 'outfit-office-shirt' || id === 'outfit-office-tie') {
     return `<g>
-      <!-- Light Blue Dress Shirt -->
       <path d="M42 163c0-27 22-46 57-52l12 15q19 17 43-1l17 3c19 8 30 19 34 33 7 33-26 50-83 48-53-1-80-18-80-46Z" fill="#E0F2FE" stroke="#241A38" stroke-width="8" stroke-linejoin="round"/>
-      <!-- Wing Cuff -->
       <path d="M68 152 C82 142, 105 145, 120 162 C108 178, 80 182, 68 152 Z" fill="#BAE6FD" stroke="#241A38" stroke-width="5" stroke-linejoin="round"/>
-      <!-- Collar -->
       <polygon points="110,125 126,142 138,126 150,142 164,125" fill="#FFFDF4" stroke="#241A38" stroke-width="5" stroke-linejoin="round"/>
-      <!-- Red Silk Tie -->
       <polygon points="131,135 145,135 141,146 135,146" fill="#EF4444" stroke="#241A38" stroke-width="3"/>
       <polygon points="135,146 141,146 148,188 138,198 128,188" fill="#EF4444" stroke="#241A38" stroke-width="5" stroke-linejoin="round"/>
       <line x1="133" y1="162" x2="143" y2="162" stroke="#FFD84D" stroke-width="3.5" stroke-linecap="round"/>
-      <!-- Breast Pocket with Pen -->
       <rect x="148" y="150" width="16" height="18" rx="2" fill="#BAE6FD" stroke="#241A38" stroke-width="3"/>
       <line x1="153" y1="145" x2="153" y2="152" stroke="#1E293B" stroke-width="3" stroke-linecap="round"/>
     </g>`
@@ -279,30 +236,21 @@ function generateOutfit(id: string, primary: string, secondary: string, seed: nu
 
   if (id === 'outfit-dev-hoodie') {
     return `<g>
-      <!-- Charcoal Hoodie -->
       <path d="M42 163c0-27 22-46 57-52l12 15q19 17 43-1l17 3c19 8 30 19 34 33 7 33-26 50-83 48-53-1-80-18-80-46Z" fill="#1E293B" stroke="#241A38" stroke-width="8" stroke-linejoin="round"/>
-      <!-- Wing Sleeve -->
       <path d="M68 152 C82 142, 105 145, 120 162 C108 178, 80 182, 68 152 Z" fill="#0F172A" stroke="#241A38" stroke-width="5" stroke-linejoin="round"/>
-      <!-- Hood Cowl -->
       <path d="M106 122 C120 142, 150 142, 168 124" stroke="#334155" stroke-width="12" stroke-linecap="round"/>
       <path d="M106 122 C120 142, 150 142, 168 124" stroke="#241A38" stroke-width="5" stroke-linecap="round" fill="none"/>
-      <!-- Drawstrings -->
       <line x1="126" y1="134" x2="124" y2="156" stroke="#FFFDF4" stroke-width="3.5" stroke-linecap="round"/>
       <line x1="146" y1="134" x2="148" y2="154" stroke="#FFFDF4" stroke-width="3.5" stroke-linecap="round"/>
-      <!-- Neon Green Code Logo -->
       <text x="145" y="165" fill="#38EF7D" font-family="monospace" font-weight="900" font-size="13" text-anchor="middle">&lt;/&gt;</text>
-      <!-- Front Kangaroo Pocket -->
       <path d="M125 175 H175 L168 198 H132 Z" fill="#0F172A" stroke="#241A38" stroke-width="5" stroke-linejoin="round"/>
     </g>`
   }
 
   if (id === 'outfit-racing-suit') {
     return `<g>
-      <!-- Red Racing Suit -->
       <path d="M42 163c0-27 22-46 57-52l12 15q19 17 43-1l17 3c19 8 30 19 34 33 7 33-26 50-83 48-53-1-80-18-80-46Z" fill="#DC2626" stroke="#241A38" stroke-width="8" stroke-linejoin="round"/>
-      <!-- Wing Sleeve in Black/Red -->
       <path d="M68 152 C82 142, 105 145, 120 162 C108 178, 80 182, 68 152 Z" fill="#991B1B" stroke="#241A38" stroke-width="5" stroke-linejoin="round"/>
-      <!-- Racing Checkered Stripe -->
       <path d="M128 126 L128 200" stroke="#FFFDF4" stroke-width="12"/>
       <rect x="122" y="132" width="6" height="8" fill="#18181B"/>
       <rect x="128" y="140" width="6" height="8" fill="#18181B"/>
@@ -310,7 +258,6 @@ function generateOutfit(id: string, primary: string, secondary: string, seed: nu
       <rect x="128" y="156" width="6" height="8" fill="#18181B"/>
       <rect x="122" y="164" width="6" height="8" fill="#18181B"/>
       <rect x="128" y="172" width="6" height="8" fill="#18181B"/>
-      <!-- Racing #07 Badge -->
       <circle cx="158" cy="158" r="12" fill="#FFFDF4" stroke="#241A38" stroke-width="3"/>
       <text x="158" y="163" fill="#DC2626" font-family="sans-serif" font-weight="900" font-size="11" text-anchor="middle">07</text>
     </g>`
@@ -318,16 +265,12 @@ function generateOutfit(id: string, primary: string, secondary: string, seed: nu
 
   if (id === 'outfit-lucky-ao-dai') {
     return `<g>
-      <!-- Emerald Green Ao Dai Silk -->
       <path d="M42 163c0-27 22-46 57-52l12 15q19 17 43-1l17 3c19 8 30 19 34 33 7 33-26 50-83 48-53-1-80-18-80-46Z" fill="#047857" stroke="#241A38" stroke-width="8" stroke-linejoin="round"/>
-      <!-- Wing Sleeve -->
       <path d="M68 152 C82 142, 105 145, 120 162 C108 178, 80 182, 68 152 Z" fill="#065F46" stroke="#241A38" stroke-width="5" stroke-linejoin="round"/>
-      <!-- Gold Mandarin Collar -->
       <path d="M114 124 C132 135, 150 126, 162 122" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/>
       <circle cx="148" cy="126" r="3" fill="#FDE68A"/>
       <circle cx="156" cy="135" r="3" fill="#FDE68A"/>
       <circle cx="165" cy="145" r="3" fill="#FDE68A"/>
-      <!-- Gold Lotus Embroidery -->
       <path d="M140 170 C140 155, 153 150, 153 150 C153 150, 166 155, 166 170 C159 175, 147 175, 140 170 Z" fill="#FDE68A" stroke="#241A38" stroke-width="2.5"/>
       <circle cx="153" cy="164" r="3" fill="#EF4444"/>
     </g>`
@@ -335,17 +278,13 @@ function generateOutfit(id: string, primary: string, secondary: string, seed: nu
 
   if (id === 'outfit-space-suit') {
     return `<g>
-      <!-- White Astronaut Suit -->
       <path d="M42 163c0-27 22-46 57-52l12 15q19 17 43-1l17 3c19 8 30 19 34 33 7 33-26 50-83 48-53-1-80-18-80-46Z" fill="#F8FAFC" stroke="#241A38" stroke-width="8" stroke-linejoin="round"/>
-      <!-- Wing Shoulder Pad -->
       <path d="M68 152 C82 142, 105 145, 120 162 C108 178, 80 182, 68 152 Z" fill="#E2E8F0" stroke="#241A38" stroke-width="5" stroke-linejoin="round"/>
-      <!-- Life Support Control Unit -->
       <rect x="125" y="145" width="44" height="34" rx="5" fill="#1E293B" stroke="#241A38" stroke-width="4"/>
       <circle cx="135" cy="155" r="3" fill="#38EF7D"/>
       <circle cx="146" cy="155" r="3" fill="#38EF7D"/>
       <circle cx="157" cy="155" r="3" fill="#EF4444"/>
       <line x1="132" y1="168" x2="160" y2="168" stroke="#38BDF8" stroke-width="3.5"/>
-      <!-- Hoses -->
       <path d="M125 156 C105 160, 100 178, 115 188" stroke="#EF4444" stroke-width="5" fill="none" stroke-linecap="round"/>
       <path d="M169 156 C185 160, 190 178, 175 188" stroke="#3B82F6" stroke-width="5" fill="none" stroke-linecap="round"/>
     </g>`
@@ -353,14 +292,10 @@ function generateOutfit(id: string, primary: string, secondary: string, seed: nu
 
   if (id === 'outfit-quack-knight' || id === 'outfit-diamond-armor' || id === 'outfit-pixel-armor' || id === 'outfit-bamboo-armor') {
     return `<g>
-      <!-- Steel Plate Armor -->
       <path d="M42 163c0-27 22-46 57-52l12 15q19 17 43-1l17 3c19 8 30 19 34 33 7 33-26 50-83 48-53-1-80-18-80-46Z" fill="#94A3B8" stroke="#241A38" stroke-width="8" stroke-linejoin="round"/>
-      <!-- Wing Pauldron -->
       <path d="M68 152 C82 142, 105 145, 120 162 C108 178, 80 182, 68 152 Z" fill="#64748B" stroke="#241A38" stroke-width="5" stroke-linejoin="round"/>
-      <!-- Gold Trim & Royal Crest -->
       <path d="M110 126 Q138 140 162 125" stroke="#FFD84D" stroke-width="6" fill="none"/>
       <polygon points="144,146 156,154 150,172 138,172 132,154" fill="#FFD84D" stroke="#241A38" stroke-width="3"/>
-      <!-- Rivets -->
       <circle cx="128" cy="155" r="2.5" fill="#FFFDF4"/>
       <circle cx="162" cy="155" r="2.5" fill="#FFFDF4"/>
     </g>`
@@ -368,11 +303,8 @@ function generateOutfit(id: string, primary: string, secondary: string, seed: nu
 
   if (id === 'outfit-cyber-samurai' || id === 'outfit-neon-tracksuit') {
     return `<g>
-      <!-- Cyber Tactical Suit -->
       <path d="M42 163c0-27 22-46 57-52l12 15q19 17 43-1l17 3c19 8 30 19 34 33 7 33-26 50-83 48-53-1-80-18-80-46Z" fill="#0F172A" stroke="#241A38" stroke-width="8" stroke-linejoin="round"/>
-      <!-- Wing Armor -->
       <path d="M68 152 C82 142, 105 145, 120 162 C108 178, 80 182, 68 152 Z" fill="#1E293B" stroke="#241A38" stroke-width="5" stroke-linejoin="round"/>
-      <!-- Glowing Power Lines -->
       <path d="M112 126 L138 152 L164 126" stroke="#00F2FE" stroke-width="5" stroke-linecap="round" fill="none"/>
       <circle cx="138" cy="152" r="5" fill="#00F2FE"/>
       <path d="M85 165 H125 L145 185 H175" stroke="#FF007F" stroke-width="4.5" fill="none" stroke-linecap="round"/>
@@ -381,11 +313,8 @@ function generateOutfit(id: string, primary: string, secondary: string, seed: nu
 
   if (id === 'outfit-golden-tux' || id === 'outfit-boss-blazer') {
     return `<g>
-      <!-- Black Suit -->
       <path d="M42 163c0-27 22-46 57-52l12 15q19 17 43-1l17 3c19 8 30 19 34 33 7 33-26 50-83 48-53-1-80-18-80-46Z" fill="#18181B" stroke="#241A38" stroke-width="8" stroke-linejoin="round"/>
-      <!-- Wing Lapel -->
       <path d="M68 152 C82 142, 105 145, 120 162 C108 178, 80 182, 68 152 Z" fill="#27272A" stroke="#241A38" stroke-width="5" stroke-linejoin="round"/>
-      <!-- Gold Lapels & Bowtie -->
       <polygon points="120,126 138,156 130,178 116,145" fill="#FFD84D" stroke="#241A38" stroke-width="4"/>
       <polygon points="162,126 146,156 154,178 168,145" fill="#FFD84D" stroke="#241A38" stroke-width="4"/>
       <polygon points="132,128 150,128 141,146" fill="#FFFDF4"/>
@@ -395,12 +324,9 @@ function generateOutfit(id: string, primary: string, secondary: string, seed: nu
 
   if (id === 'outfit-dragon-robe' || id === 'outfit-royal-mantle') {
     return `<g>
-      <!-- Imperial Silk Robe -->
       <path d="M42 163c0-27 22-46 57-52l12 15q19 17 43-1l17 3c19 8 30 19 34 33 7 33-26 50-83 48-53-1-80-18-80-46Z" fill="#B91C1C" stroke="#241A38" stroke-width="8" stroke-linejoin="round"/>
-      <!-- Wing Sleeve with Gold Border -->
       <path d="M68 152 C82 142, 105 145, 120 162 C108 178, 80 182, 68 152 Z" fill="#991B1B" stroke="#241A38" stroke-width="5" stroke-linejoin="round"/>
       <path d="M68 152 C82 142, 105 145, 120 162" stroke="#FFD84D" stroke-width="4" fill="none"/>
-      <!-- Gold Cloud Border -->
       <path d="M110 126 Q138 140 165 126" stroke="#FFD84D" stroke-width="8" stroke-linecap="round" fill="none"/>
       <circle cx="148" cy="156" r="6" fill="#FFD84D"/>
       <circle cx="148" cy="176" r="6" fill="#FFD84D"/>
@@ -425,14 +351,11 @@ function generateOutfit(id: string, primary: string, secondary: string, seed: nu
 function generateBodySkin(id: string, primary: string, secondary: string) {
   if (id === 'bodySkin-tiger-quack') {
     return `<g fill="#241A38">
-      <!-- Head Tiger Mark (Three brow stripes) -->
       <path d="M136 34 Q146 38 156 30 L154 26 Q144 32 134 30 Z"/>
       <path d="M142 45 Q152 48 162 42 L160 38 Q150 44 140 42 Z"/>
       <path d="M148 56 Q158 58 168 52 L166 48 Q156 54 146 52 Z"/>
-      <!-- Cheek Whiskers -->
       <path d="M125 72 Q136 76 145 70 L144 66 Q134 72 124 68 Z"/>
       <path d="M122 84 Q132 88 142 82 L140 78 Q130 84 120 80 Z"/>
-      <!-- Body & Wing Stripes (visible when no clothes) -->
       <path d="M65 142 Q90 138 105 148 L102 154 Q85 144 62 148 Z"/>
       <path d="M75 165 Q105 158 128 170 L125 176 Q100 165 72 172 Z"/>
       <path d="M90 188 Q120 182 148 190 L146 195 Q115 188 88 194 Z"/>
@@ -441,7 +364,6 @@ function generateBodySkin(id: string, primary: string, secondary: string) {
 
   if (id === 'bodySkin-dragon-scale') {
     return `<g>
-      <!-- Head Dragon Crest -->
       <g stroke="#C95E24" stroke-width="3" fill="none">
         <path d="M138 38 C144 44, 152 44, 158 38 C164 44, 172 44, 178 38"/>
         <path d="M144 48 C150 54, 158 54, 164 48"/>
@@ -449,10 +371,9 @@ function generateBodySkin(id: string, primary: string, secondary: string) {
       <circle cx="148" cy="40" r="2.5" fill="#FFD84D"/>
       <circle cx="168" cy="40" r="2.5" fill="#FFD84D"/>
       <circle cx="154" cy="50" r="2.5" fill="#FFD84D"/>
-      <!-- Body Dragon Scales -->
       <g stroke="#C95E24" stroke-width="4" fill="none">
-        <path d="M75 145 C80 152, 90 152, 95 145 C100 152, 110 152, 115 145 C120 152, 130 152, 135 145"/>
-        <path d="M85 160 C90 167, 100 167, 105 160 C110 167, 120 167, 125 160 C130 167, 140 167, 145 160"/>
+        <path d="M75 145 C80 152, 90 152, 95 145 C100 152, 110 152, 115 145"/>
+        <path d="M85 160 C90 167, 100 167, 105 160 C110 167, 120 167, 125 160"/>
       </g>
       <circle cx="85" cy="148" r="2.5" fill="#FFD84D"/>
       <circle cx="105" cy="148" r="2.5" fill="#FFD84D"/>
@@ -467,15 +388,12 @@ function generateBodySkin(id: string, primary: string, secondary: string) {
           <feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
       </defs>
-      <!-- Head & Temple Circuit -->
       <g stroke="#00F2FE" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none" filter="url(#circuit-glow-head)">
         <path d="M135 45 H155 L165 35 H180"/>
         <path d="M128 65 H142 L150 55"/>
-        <!-- Body Circuit -->
         <path d="M75 145 H105 L120 160 H155 L165 150"/>
         <path d="M85 165 H115 L125 175 H160"/>
       </g>
-      <!-- Nodes -->
       <circle cx="180" cy="35" r="3" fill="#FF007F"/>
       <circle cx="150" cy="55" r="3" fill="#00F2FE"/>
       <circle cx="75" cy="145" r="3" fill="#00F2FE"/>
@@ -485,14 +403,11 @@ function generateBodySkin(id: string, primary: string, secondary: string) {
 
   if (id === 'bodySkin-galaxy-dust' || id === 'bodySkin-star-freckles') {
     return `<g>
-      <!-- Cheek Stardust & 4-Point Star -->
       <g fill="#FFFDF4">
         <path d="M134 68 Q138 68 138 64 Q138 68 142 68 Q138 68 138 72 Q138 68 134 68 Z"/>
         <path d="M148 52 Q151 52 151 49 Q151 52 154 52 Q151 52 151 55 Q151 52 148 52 Z"/>
-        <!-- Body Stars -->
         <path d="M120 152 Q126 152 126 146 Q126 152 132 152 Q126 152 126 158 Q126 152 120 152 Z"/>
       </g>
-      <!-- Pastel Stardust Flecks -->
       <circle cx="128" cy="74" r="2.5" fill="#B99AFF"/>
       <circle cx="144" cy="78" r="2.5" fill="#61C9FF"/>
       <circle cx="138" cy="45" r="2.5" fill="#FF78A8"/>
@@ -503,10 +418,8 @@ function generateBodySkin(id: string, primary: string, secondary: string) {
 
   if (id === 'bodySkin-lotus-speckles') {
     return `<g fill="#FF78A8" stroke="#241A38" stroke-width="2">
-      <!-- Cheek Lotus Petals -->
       <path d="M134 65 C130 55, 142 55, 144 65 C142 75, 130 75, 134 65 Z"/>
       <path d="M148 48 C144 38, 156 38, 158 48 C156 58, 144 58, 148 48 Z"/>
-      <!-- Body Petals -->
       <path d="M85 145 C80 135, 95 135, 98 145 C95 155, 80 155, 85 145 Z"/>
       <path d="M125 140 C120 130, 135 130, 138 140 C135 150, 120 150, 125 140 Z"/>
     </g>`
@@ -514,29 +427,23 @@ function generateBodySkin(id: string, primary: string, secondary: string) {
 
   if (id === 'bodySkin-gold-veins') {
     return `<g stroke="#FFD84D" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
-      <!-- Head Kintsugi Crack -->
       <path d="M138 35 L146 45 L140 55 L152 65"/>
       <circle cx="146" cy="45" r="2" fill="#FFFDF4" stroke="none"/>
-      <!-- Body Crack -->
       <path d="M70 148 L95 155 L110 145 L135 160 L155 152"/>
     </g>`
   }
 
   if (id === 'bodySkin-storm-lines') {
     return `<g stroke="#FFD84D" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
-      <!-- Cheek Lightning Bolt -->
       <path d="M136 45 L144 55 L138 60 L148 72"/>
-      <!-- Body Lightning -->
       <path d="M75 145 L92 152 L85 160 L108 170 L100 176 L118 190"/>
     </g>`
   }
 
   if (id === 'bodySkin-koi-patches') {
     return `<g>
-      <!-- Head Koi Markings -->
       <path d="M135 42 C130 32, 152 30, 162 38 C166 48, 148 54, 138 50 Z" fill="#EF4444" opacity="0.9"/>
       <path d="M125 68 C120 58, 138 56, 145 64 C148 72, 135 78, 128 74 Z" fill="#18181B" opacity="0.85"/>
-      <!-- Body Markings -->
       <path d="M70 148 C65 135, 95 132, 110 142 C115 155, 90 165, 75 160 Z" fill="#EF4444" opacity="0.9"/>
       <path d="M125 155 C120 142, 145 140, 160 148 C168 162, 145 172, 130 168 Z" fill="#18181B" opacity="0.85"/>
     </g>`
@@ -544,11 +451,9 @@ function generateBodySkin(id: string, primary: string, secondary: string) {
 
   // Fallback Organic Cheek & Body Freckles
   return `<g fill="${primary}" stroke="#241A38" stroke-width="2">
-    <!-- Cheek Marks -->
     <circle cx="135" cy="58" r="4"/>
     <circle cx="145" cy="50" r="3.5"/>
     <circle cx="132" cy="72" r="3.5"/>
-    <!-- Body Marks -->
     <circle cx="85" cy="148" r="6"/>
     <circle cx="115" cy="142" r="5"/>
     <circle cx="145" cy="152" r="6"/>
@@ -647,7 +552,6 @@ function generateAura(id: string, primary: string, secondary: string) {
         <path d="M195 130 Q210 95 195 65 Q185 35 200 15"/>
         <path d="M128 50 Q118 30 130 10"/>
       </g>
-      <!-- Floating Coffee Beans -->
       <ellipse cx="60" cy="80" rx="5" ry="3.5" fill="#78350F" transform="rotate(-20 60 80)"/>
       <ellipse cx="205" cy="75" rx="5" ry="3.5" fill="#78350F" transform="rotate(25 205 75)"/>
     </g>`
@@ -702,9 +606,7 @@ function generateAura(id: string, primary: string, secondary: string) {
 function generateFace(id: string, primary: string) {
   if (id === 'face-shades' || id === 'face-disco-shades') {
     return `<g>
-      <!-- Left Lens -->
       <path d="M144 60 H178 C178 78, 172 86, 158 86 C146 86, 144 78, 144 60 Z" fill="#18181B" stroke="#00F2FE" stroke-width="4.5" stroke-linejoin="round"/>
-      <!-- Right Lens -->
       <path d="M182 62 H208 C208 78, 204 84, 196 84 C186 84, 182 78, 182 62 Z" fill="#18181B" stroke="#00F2FE" stroke-width="4.5" stroke-linejoin="round"/>
       <line x1="178" y1="64" x2="182" y2="64" stroke="#00F2FE" stroke-width="5"/>
       <line x1="148" y1="66" x2="160" y2="62" stroke="#FFFDF4" stroke-width="3.5" stroke-linecap="round"/>
@@ -714,13 +616,10 @@ function generateFace(id: string, primary: string) {
 
   if (id === 'face-office-burnout' || id === 'face-monday-face' || id === 'face-sleepy-eyes') {
     return `<g>
-      <!-- Dark Purple Eye Circles -->
       <ellipse cx="160" cy="84" rx="16" ry="6" fill="#7C3AED" opacity="0.45"/>
       <ellipse cx="192" cy="86" rx="14" ry="5" fill="#7C3AED" opacity="0.45"/>
-      <!-- Drooping Tired Eyelids -->
       <path d="M145 68 Q160 78 175 68" stroke="#241A38" stroke-width="5" stroke-linecap="round" fill="none"/>
       <path d="M180 72 Q192 80 204 72" stroke="#241A38" stroke-width="4.5" stroke-linecap="round" fill="none"/>
-      <!-- Blue Stress Sweat Drop -->
       <path d="M138 60 C138 56, 144 56, 144 60 C144 64, 138 64, 138 60 Z" fill="#60A5FA"/>
     </g>`
   }
@@ -765,7 +664,6 @@ function generateFace(id: string, primary: string) {
     </g>`
   }
 
-  // Face Accessory Fallback
   return `<g>
     <ellipse cx="160" cy="70" rx="18" ry="14" fill="${primary}" fill-opacity="0.35" stroke="#241A38" stroke-width="4"/>
     <ellipse cx="192" cy="73" rx="14" ry="12" fill="${primary}" fill-opacity="0.35" stroke="#241A38" stroke-width="4"/>
@@ -914,7 +812,6 @@ function generatePet(id: string, primary: string, secondary: string) {
 
 // -------------------------------------------------------------
 // TRAILS (Water Ripples, Neon Dash, Fire Sparks)
-// Behind tail: (x: 10..95, y: 190..235)
 // -------------------------------------------------------------
 function generateTrail(id: string, primary: string) {
   if (id === 'trail-ripples') {

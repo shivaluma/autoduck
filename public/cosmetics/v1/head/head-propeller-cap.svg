@@ -1,5 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
-    <path d="M122 48 C124 16, 160 8, 190 10 C204 28, 208 36, 205 48 Z" fill="#11998E" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
-    <path d="M112 50 C144 40, 185 40, 218 50 C220 56, 196 60, 164 58 C132 56, 110 55, 112 50 Z" fill="#FF5B67" stroke="#241A38" stroke-width="6" stroke-linejoin="round"/>
-    <circle cx="164" cy="32" r="6" fill="#FFFDF4" stroke="#241A38" stroke-width="3"/>
-  </g></svg>
+      <!-- Multi-color panels -->
+      <path d="M120 46 C122 22, 142 16, 160 16 C160 30, 140 44, 120 46 Z" fill="#EF4444" stroke="#241A38" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M160 16 C180 16, 202 24, 204 46 C184 44, 160 30, 160 16 Z" fill="#3B82F6" stroke="#241A38" stroke-width="6" stroke-linejoin="round"/>
+      <!-- Spinning Propeller -->
+      <ellipse cx="145" cy="10" rx="14" ry="4" fill="#EAB308" stroke="#241A38" stroke-width="3" transform="rotate(-15 145 10)"/>
+      <ellipse cx="175" cy="10" rx="14" ry="4" fill="#EAB308" stroke="#241A38" stroke-width="3" transform="rotate(15 175 10)"/>
+      <circle cx="160" cy="10" r="4" fill="#EF4444" stroke="#241A38" stroke-width="2"/>
+    </g></svg>

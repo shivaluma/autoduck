@@ -13,7 +13,6 @@
   <path d="M171 115c19 5 39 3 60-5" stroke="#C95E24" stroke-width="4" stroke-linecap="round"/>
   <path d="M89 201c1 9-4 15-15 20 12 3 24 0 32-9m30-8c1 9-4 15-15 20 12 2 23 0 31-8" fill="none" stroke="#FF9B42" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g transform="rotate(8 165 24)">
-      <!-- Crown -->
       <path d="M142 32 L146 6 L157 18 L168 2 L179 18 L190 6 L194 32 Z" fill="#FFD84D" stroke="#241A38" stroke-width="6" stroke-linejoin="round"/>
       <path d="M140 33 C156 28, 180 28, 196 33" stroke="#241A38" stroke-width="4" stroke-linecap="round"/>
       <circle cx="146" cy="7" r="3.5" fill="#FF4D5A"/>

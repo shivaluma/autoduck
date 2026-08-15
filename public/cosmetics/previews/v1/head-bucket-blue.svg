@@ -13,10 +13,7 @@
   <path d="M171 115c19 5 39 3 60-5" stroke="#C95E24" stroke-width="4" stroke-linecap="round"/>
   <path d="M89 201c1 9-4 15-15 20 12 3 24 0 32-9m30-8c1 9-4 15-15 20 12 2 23 0 31-8" fill="none" stroke="#FF9B42" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g>
-      <!-- Bucket Crown -->
       <path d="M128 46 C130 24, 158 18, 185 20 C198 22, 203 34, 202 46 Z" fill="#61C9FF" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
-      <!-- Ribbon Band -->
       <path d="M125 43 C148 37, 182 38, 204 44 L204 38 C182 32, 148 31, 125 37 Z" fill="#1C7ED6"/>
-      <!-- Bucket Brim -->
       <path d="M114 49 C144 38, 188 39, 218 50 C222 56, 196 60, 164 58 C132 56, 110 55, 114 49 Z" fill="#4DABF7" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
     </g></svg>

@@ -13,11 +13,7 @@
   <path d="M171 115c19 5 39 3 60-5" stroke="#C95E24" stroke-width="4" stroke-linecap="round"/>
   <path d="M89 201c1 9-4 15-15 20 12 3 24 0 32-9m30-8c1 9-4 15-15 20 12 2 23 0 31-8" fill="none" stroke="#FF9B42" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g>
-      <!-- Steam -->
-      <path d="M152 4 Q156 -6 160 4 M168 2 Q172 -8 176 2" stroke="#FFFDF4" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.7"/>
-      <!-- Ceramic Bowl -->
-      <path d="M132 30 H196 L184 48 H144 Z" fill="#EF4444" stroke="#241A38" stroke-width="6" stroke-linejoin="round"/>
-      <ellipse cx="164" cy="30" rx="32" ry="7" fill="#FDE68A" stroke="#241A38" stroke-width="4"/>
-      <!-- Chopsticks -->
-      <line x1="140" y1="36" x2="198" y2="18" stroke="#78350F" stroke-width="4" stroke-linecap="round"/>
-    </g></svg>
+    <path d="M122 48 C124 12, 160 4, 190 6 C204 26, 208 36, 205 48 Z" fill="#FF5B67" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
+    <path d="M112 50 C144 40, 185 40, 218 50 C220 56, 196 60, 164 58 C132 56, 110 55, 112 50 Z" fill="#FFD84D" stroke="#241A38" stroke-width="6" stroke-linejoin="round"/>
+    <circle cx="164" cy="30" r="6" fill="#FFFDF4" stroke="#241A38" stroke-width="3"/>
+  </g></svg>

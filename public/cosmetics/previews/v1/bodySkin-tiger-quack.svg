@@ -13,14 +13,11 @@
   <path d="M171 115c19 5 39 3 60-5" stroke="#C95E24" stroke-width="4" stroke-linecap="round"/>
   <path d="M89 201c1 9-4 15-15 20 12 3 24 0 32-9m30-8c1 9-4 15-15 20 12 2 23 0 31-8" fill="none" stroke="#FF9B42" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g fill="#241A38">
-      <!-- Head Tiger Mark (Three brow stripes) -->
       <path d="M136 34 Q146 38 156 30 L154 26 Q144 32 134 30 Z"/>
       <path d="M142 45 Q152 48 162 42 L160 38 Q150 44 140 42 Z"/>
       <path d="M148 56 Q158 58 168 52 L166 48 Q156 54 146 52 Z"/>
-      <!-- Cheek Whiskers -->
       <path d="M125 72 Q136 76 145 70 L144 66 Q134 72 124 68 Z"/>
       <path d="M122 84 Q132 88 142 82 L140 78 Q130 84 120 80 Z"/>
-      <!-- Body & Wing Stripes (visible when no clothes) -->
       <path d="M65 142 Q90 138 105 148 L102 154 Q85 144 62 148 Z"/>
       <path d="M75 165 Q105 158 128 170 L125 176 Q100 165 72 172 Z"/>
       <path d="M90 188 Q120 182 148 190 L146 195 Q115 188 88 194 Z"/>
