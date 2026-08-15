@@ -17,6 +17,8 @@ import {
   WEEK_FLOW,
   WILD_ITEMS,
 } from '@/lib/season3-rules-content'
+import { loadoutComboBadge } from '@/packages/race-core/src'
+import { AUTO_LOADOUT_PRESETS } from '@/packages/race-core/src/items/catalog'
 
 function Section({
   id,
@@ -167,6 +169,30 @@ export function Season3RulesGuide() {
               <p className="mt-2 text-[11px] font-black tracking-widest text-white/35">{item.id}</p>
             </article>
           ))}
+        </div>
+        <div className="rounded-2xl border-2 border-[var(--color-ggd-gold)]/30 bg-[var(--color-ggd-gold)]/8 p-4">
+          <h3 className="font-black text-[var(--color-ggd-gold)]">Loadout triangle (S3.11 · 9 item · 18 build)</h3>
+          <p className="mt-2 text-sm text-white/70">Soft counter: ⚡ Speed &gt; 🛡️ Defense &gt; 💥 Attack &gt; ⚡ Speed. Không bonus stat mono-build — synergy đến từ item mechanics.</p>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {AUTO_LOADOUT_PRESETS.map((preset) => (
+              <div key={preset.join('-')} className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm">
+                <span className="font-black">{loadoutComboBadge(preset) ?? preset.join(' + ')}</span>
+                <span className="text-white/55"> — {preset.join(' + ')}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            {[
+              { icon: '⚡', title: 'Speed', detail: 'Nitro · Draft Fin · Paddle Burst — không tấn công, chạy lên.' },
+              { icon: '🛡️', title: 'Defense', detail: 'Bubble · Feather · Shock Absorber — waste attack, không block speed.' },
+              { icon: '💥', title: 'Attack', detail: 'Rocket (boost break) · Banana · Horn — phá momentum Speed.' },
+            ].map((entry) => (
+              <div key={entry.title} className="rounded-xl border border-white/10 bg-black/15 p-3 text-xs">
+                <div className="font-black">{entry.icon} {entry.title}</div>
+                <div className="mt-1 text-white/55">{entry.detail}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </Section>
 

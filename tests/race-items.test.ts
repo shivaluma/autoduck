@@ -25,6 +25,7 @@ function defense(items: RaceItemId[]): DuckItemRuntime {
     usedItems: new Set(),
     bubbleAvailable: items.includes('BUBBLE_SHIELD'),
     featherAvailable: items.includes('FEATHER'),
+    shockAbsorberAvailable: items.includes('SHOCK_ABSORBER'),
     itemImmunityUntilTick: 0,
     rocketProtectionUntilTick: 0,
     slowMultiplier: 1,
@@ -45,7 +46,11 @@ function defense(items: RaceItemId[]): DuckItemRuntime {
     pendingAutoAction: null,
     pendingAutoActionExecuteTick: 0,
     lastOffensiveUseTick: 0,
-    pendingRocketVolley: null,
+    draftSlipstreamTicks: 0,
+    draftTargetPlayerId: null,
+    activeSpeedItemId: null,
+    queuedSpeedBoost: null,
+    boostStartedAtTick: 0,
   }
 }
 
@@ -149,7 +154,7 @@ test('slow effects use the strongest active value without weaker duration extens
   assert.ok(itemSpeedMultiplier(runtime, 30) <= ITEM_BALANCE.maximumSpeedMultiplier)
 })
 
-test('Nitro activates deterministically and ends after exactly 2 seconds', () => {
+test('Nitro activates deterministically and ends after configured duration', () => {
   const raceConfig = config([{ playerId: '2', itemIds: ['NITRO', 'BANANA'] }])
   const state = createItemRaceState(raceConfig)
   const ducks = [duck('1', 0.95, 1), duck('2', 0.93, 2)]
@@ -162,14 +167,15 @@ test('Nitro activates deterministically and ends after exactly 2 seconds', () =>
     })
   }
   const runtime = state.byPlayer.get('2')!
+  const durationTicks = Math.round(ITEM_BALANCE.nitro.durationSeconds * 60)
   assert.ok(nitroTick > 0)
-  assert.equal(runtime.boostUntilTick, nitroTick + 330)
-  assert.equal(runtime.boostMultiplier, 1.35)
-  assert.equal(itemSpeedMultiplier(runtime, nitroTick), 1.35)
-  assert.equal(itemSpeedMultiplier(runtime, nitroTick + 329), 1.35)
+  assert.equal(runtime.boostUntilTick, nitroTick + durationTicks)
+  assert.equal(runtime.boostMultiplier, ITEM_BALANCE.nitro.speedMultiplier)
+  assert.equal(itemSpeedMultiplier(runtime, nitroTick), ITEM_BALANCE.nitro.speedMultiplier)
+  assert.equal(itemSpeedMultiplier(runtime, nitroTick + durationTicks - 1), ITEM_BALANCE.nitro.speedMultiplier)
 
-  tickItemsWithAutoAI(raceConfig, state, ducks, nitroTick + 330, 60, (type) => events.push(type))
-  assert.equal(itemSpeedMultiplier(runtime, nitroTick + 330), 1)
+  tickItemsWithAutoAI(raceConfig, state, ducks, nitroTick + durationTicks, 60, (type) => events.push(type))
+  assert.equal(itemSpeedMultiplier(runtime, nitroTick + durationTicks), 1)
   assert.deepEqual(events.filter((type) => type.startsWith('NITRO')), ['NITRO_STARTED', 'NITRO_ENDED'])
 })
 
@@ -259,24 +265,47 @@ test('Rocket hits the duck ahead and applies the configured slow', () => {
   assert.equal(itemSpeedMultiplier(target, firedAt + 3), ITEM_BALANCE.rocket.slowMultiplier)
 })
 
-test('Twin rocket volley fires at two different ducks when both are in range', () => {
+test('Rocket breaks active speed boost before applying slow', () => {
   const raceConfig = config([
-    { playerId: '1', itemIds: ['BUBBLE_SHIELD', 'FEATHER'] },
-    { playerId: '3', itemIds: ['NITRO', 'FEATHER'] },
-    { playerId: '2', itemIds: ['HOMING_ROCKET', 'FEATHER'] },
+    { playerId: '1', itemIds: ['NITRO', 'FEATHER'] },
+    { playerId: '2', itemIds: ['HOMING_ROCKET', 'BANANA'] },
   ])
   const state = createItemRaceState(raceConfig)
-  const ducks = [duck('1', 0.5, 1), duck('3', 0.47, 2), duck('2', 0.4, 3)]
-  const events: Array<{ type: RaceEventType; target?: string }> = []
+  const ducks = [duck('1', 0.48, 1), duck('2', 0.4, 2)]
+  const target = state.byPlayer.get('1')!
+  target.boostMultiplier = ITEM_BALANCE.nitro.speedMultiplier
+  target.boostUntilTick = 500
+  target.activeSpeedItemId = 'NITRO'
+  const events: RaceEventType[] = []
   for (let tick = 1; tick <= 260; tick += 1) {
-    tickItemsWithAutoAI(raceConfig, state, ducks, tick, 60, (type, _source, target) => events.push({ type, target }))
-    for (const entry of ducks) entry.progress += 0.00025
-    if (events.filter((entry) => entry.type === 'ROCKET_FIRED').length >= 2) break
+    tickItemsWithAutoAI(raceConfig, state, ducks, tick, 60, (type) => events.push(type))
+    ducks[0].progress += 0.0003
+    ducks[1].progress += 0.0003
+    if (events.includes('ROCKET_HIT')) break
   }
-  const fired = events.filter((entry) => entry.type === 'ROCKET_FIRED')
-  assert.equal(fired.length, 2)
-  assert.notEqual(fired[0]?.target, fired[1]?.target)
-  assert.equal(state.byPlayer.get('2')!.usedItems.has('HOMING_ROCKET'), true)
+  assert.ok(events.includes('BOOST_BROKEN'))
+  assert.equal(target.activeSpeedItemId, null)
+  assert.equal(target.slowMultiplier, ITEM_BALANCE.rocket.slowMultiplier)
+})
+
+test('Shock Absorber mitigates the first Rocket hit', () => {
+  const raceConfig = config([
+    { playerId: '1', itemIds: ['SHOCK_ABSORBER', 'FEATHER'] },
+    { playerId: '2', itemIds: ['HOMING_ROCKET', 'BANANA'] },
+  ])
+  const state = createItemRaceState(raceConfig)
+  const ducks = [duck('1', 0.48, 1), duck('2', 0.4, 2)]
+  const events: RaceEventType[] = []
+  for (let tick = 1; tick <= 260; tick += 1) {
+    tickItemsWithAutoAI(raceConfig, state, ducks, tick, 60, (type) => events.push(type))
+    ducks[0].progress += 0.0003
+    ducks[1].progress += 0.0003
+    if (events.includes('ROCKET_HIT')) break
+  }
+  const target = state.byPlayer.get('1')!
+  assert.ok(events.includes('SHOCK_ABSORBER_PROC'))
+  assert.equal(target.shockAbsorberAvailable, false)
+  assert.equal(target.slowMultiplier, ITEM_BALANCE.shockAbsorber.slowMultiplier)
 })
 
 test('Banana stays in-lane and knocks the chasing duck backward', () => {
@@ -326,9 +355,9 @@ test('prep items auto-burn near the finish line instead of staying unused', () =
 test('full item race finishes in target window with readable bounded event volume', () => {
   const players = Array.from({ length: 8 }, (_, index) => ({ playerId: String(index + 1), name: `Duck ${index + 1}` }))
   const presets: RaceItemId[][] = [
-    ['NITRO', 'BANANA'],
-    ['BUBBLE_SHIELD', 'QUACK_HORN'],
-    ['HOMING_ROCKET', 'FEATHER'],
+    ['NITRO', 'DRAFT_FIN'],
+    ['BUBBLE_SHIELD', 'FEATHER'],
+    ['HOMING_ROCKET', 'BANANA'],
   ]
   const raceConfig = raceConfigSchema.parse({
     raceId: 'full-items',
@@ -342,7 +371,7 @@ test('full item race finishes in target window with readable bounded event volum
   assert.ok(types.has('NITRO_STARTED'))
   assert.ok(types.has('ROCKET_FIRED'))
   assert.ok(types.has('BANANA_DROPPED'))
-  assert.ok(types.has('HORN_USED'))
+  assert.ok(types.has('DRAFT_FIN_STARTED') || types.has('PADDLE_BURST_STARTED'))
   assert.ok(result.events.length < 500, `event count ${result.events.length}`)
 })
 
@@ -353,7 +382,7 @@ test('headless telemetry observes item events without retaining the official eve
     players: Array.from({ length: 8 }, (_, index) => ({ playerId: String(index + 1), name: `Duck ${index + 1}` })),
     loadouts: Array.from({ length: 8 }, (_, index) => ({
       playerId: String(index + 1),
-      itemIds: index % 2 === 0 ? ['NITRO', 'BANANA'] : ['HOMING_ROCKET', 'FEATHER'],
+      itemIds: index % 2 === 0 ? ['NITRO', 'DRAFT_FIN'] : ['HOMING_ROCKET', 'SHOCK_ABSORBER'],
       source: 'PLAYER',
     })),
     itemTuning: { nitroSpeedMultiplier: 1.1, rocketSlowMultiplier: 0.9, bananaKnockbackMultiplier: 1.1 },

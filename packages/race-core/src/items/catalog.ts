@@ -1,4 +1,5 @@
 import type { RaceItemId } from '../../../race-protocol/src'
+import type { ItemClass } from './classes'
 
 export interface RaceItemDefinition {
   id: RaceItemId
@@ -6,22 +7,26 @@ export interface RaceItemDefinition {
   icon: string
   cost: 1 | 2
   category: 'major' | 'minor'
+  itemClass: ItemClass
   description: string
 }
 
 export const RACE_ITEM_CATALOG: readonly RaceItemDefinition[] = [
-  { id: 'BUBBLE_SHIELD', name: 'Bubble Shield', icon: '🫧', cost: 2, category: 'major', description: 'Chặn Rocket hoặc Banana đầu tiên.' },
-  { id: 'HOMING_ROCKET', name: 'Homing Rocket', icon: '🚀', cost: 2, category: 'major', description: 'Twin volley: 2 rocket vào 2 dzịt phía trước, cách 0.7s — chậm 20% / 3.5s mỗi viên.' },
-  { id: 'NITRO', name: 'Nitro', icon: '⚡', cost: 2, category: 'major', description: 'Tăng tốc +35% (max) trong 5.5 giây khi cần bứt phá.' },
-  { id: 'BANANA', name: 'Banana', icon: '🍌', cost: 1, category: 'minor', description: 'Bẫy lane phía sau: knockback mạnh hơn, giữ chân kẻ đuổi.' },
-  { id: 'FEATHER', name: 'Feather', icon: '🪶', cost: 1, category: 'minor', description: 'Né Banana đầu tiên.' },
-  { id: 'QUACK_HORN', name: 'Quack Horn', icon: '🔊', cost: 1, category: 'minor', description: 'Đẩy rộng hơn — mở lane cho Rocket/Nitro.' },
+  { id: 'NITRO', name: 'Nitro', icon: '⚡', cost: 2, category: 'major', itemClass: 'SPEED', description: 'Burst +18% tốc độ / 1.5s — không stack boost.' },
+  { id: 'DRAFT_FIN', name: 'Draft Fin', icon: '🦈', cost: 1, category: 'minor', itemClass: 'SPEED', description: 'Slipstream: bám sát phía sau → +9% / 1.1s (1 lần/race).' },
+  { id: 'PADDLE_BURST', name: 'Paddle Burst', icon: '🛶', cost: 1, category: 'minor', itemClass: 'SPEED', description: 'Comeback: >65% track + nửa dưới BXH → +8% / 1.3s (1 lần/race).' },
+  { id: 'BUBBLE_SHIELD', name: 'Bubble Shield', icon: '🫧', cost: 2, category: 'major', itemClass: 'DEFENSE', description: 'Chặn 1 đòn tấn công (Rocket/Banana/wild attack).' },
+  { id: 'FEATHER', name: 'Feather', icon: '🪶', cost: 1, category: 'minor', itemClass: 'DEFENSE', description: 'Né Banana / trap / hazard nhỏ (1 lần).' },
+  { id: 'SHOCK_ABSORBER', name: 'Shock Absorber', icon: '🦺', cost: 1, category: 'minor', itemClass: 'DEFENSE', description: 'Giảm 50% Rocket/Horn đầu tiên — không chặn hẳn.' },
+  { id: 'HOMING_ROCKET', name: 'Homing Rocket', icon: '🚀', cost: 2, category: 'major', itemClass: 'ATTACK', description: 'Slow ngắn + 💥 BOOST BREAK (hủy Nitro/Draft/Paddle đang chạy).' },
+  { id: 'BANANA', name: 'Banana', icon: '🍌', cost: 1, category: 'minor', itemClass: 'ATTACK', description: 'Bẫy phía sau — phá momentum + trượt lane.' },
+  { id: 'QUACK_HORN', name: 'Quack Horn', icon: '🔊', cost: 1, category: 'minor', itemClass: 'ATTACK', description: 'Đẩy ngang vịt sát — pack fight / phá slipstream.' },
 ] as const
 
 export const AUTO_LOADOUT_PRESETS: readonly RaceItemId[][] = [
-  ['NITRO', 'BANANA'],
-  ['BUBBLE_SHIELD', 'QUACK_HORN'],
-  ['HOMING_ROCKET', 'FEATHER'],
+  ['NITRO', 'DRAFT_FIN'],
+  ['BUBBLE_SHIELD', 'FEATHER'],
+  ['HOMING_ROCKET', 'BANANA'],
 ] as const
 
 export function getRaceItem(itemId: RaceItemId) {

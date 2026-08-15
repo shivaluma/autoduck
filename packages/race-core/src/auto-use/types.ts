@@ -17,7 +17,6 @@ export interface AutoUseCandidate {
   action: 'USE' | 'DISCARD'
   score: number
   targetPlayerId?: string
-  volleyTargetPlayerIds?: string[]
   reason: AutoUseReason
   bypassThreshold?: boolean
   wildItemInstanceId?: string

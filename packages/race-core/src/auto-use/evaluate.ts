@@ -3,6 +3,7 @@ import { CORE_BALANCE } from '../config'
 import { ITEM_BALANCE } from '../items/config'
 import { PICKUP_BALANCE } from '../pickups/config'
 import type { ItemDuckState, ItemRaceState } from '../items/engine'
+import { slipstreamReady } from '../items/engine'
 import type { PickupRaceState } from '../pickups/engine'
 import { AUTO_USE_CONFIG } from './config'
 import type { AutoUseCandidate, AutoUseCandidateDraft, RaceObjectiveContext } from './types'
@@ -39,11 +40,11 @@ function duckById(ducks: ItemDuckState[], playerId: string) {
 }
 
 function hasUnusedPrep(runtime: ItemRaceState['byPlayer'] extends Map<string, infer R> ? R : never, item: RaceItemId) {
-  return runtime.itemIds.includes(item) && !runtime.usedItems.has(item) && !runtime.pendingRocketVolley
+  return runtime.itemIds.includes(item) && !runtime.usedItems.has(item)
 }
 
 function hasUnusedOffensiveMajor(runtime: ItemRaceState['byPlayer'] extends Map<string, infer R> ? R : never) {
-  return (runtime.itemIds.includes('HOMING_ROCKET') && !runtime.usedItems.has('HOMING_ROCKET') && !runtime.pendingRocketVolley)
+  return (runtime.itemIds.includes('HOMING_ROCKET') && !runtime.usedItems.has('HOMING_ROCKET'))
     || (runtime.itemIds.includes('NITRO') && !runtime.usedItems.has('NITRO'))
 }
 
@@ -119,8 +120,10 @@ function rocketTargets(ctx: EvaluationContext, kind: 'PREP' | 'WILD') {
       if (gap > 0.02 && gap < maxDistance * 0.75) score += 12
       if (ctx.objective.isCurrentlyLosing(source.playerId, source.currentRank) && target.currentRank === source.currentRank - 1) score += 35
       if (source.progress >= AUTO_USE_CONFIG.progressLate) score += 15
-      if (targetRuntime.bubbleAvailable || targetRuntime.wildBubbleAvailable) score -= ITEM_BALANCE.rocket.volleyShots > 1 ? 8 : 25
+      if (targetRuntime.bubbleAvailable || targetRuntime.wildBubbleAvailable) score -= 25
+      if (targetRuntime.shockAbsorberAvailable) score -= 12
       if (targetRuntime.featherAvailable) score -= 5
+      if (ctx.tick < targetRuntime.boostUntilTick && targetRuntime.boostMultiplier > 1) score += 18
       score -= penalty
       return { target, score }
     })
@@ -189,10 +192,50 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
     if (ctx.objective.mode === 'REVERSE') score -= 80
     if (duck.currentRank >= 2 && duck.currentRank <= 4 && gap < 0.08) score += 22
     if (duck.currentRank <= 2 && duck.progress < 0.7) score -= 12
-    if (ctx.tick < runtime.boostUntilTick) score -= 100
+    if (ctx.tick < runtime.boostUntilTick && runtime.boostMultiplier > 1) score -= 100
     if (gap > expectedGain * 2) score -= 20
     score += pressure * 0.15
     candidates.push({ itemKey: 'prep:NITRO', itemId: 'NITRO', source: 'PREP', action: 'USE', score, reason: 'OPPORTUNITY' })
+  }
+
+  if (hasUnusedPrep(runtime, 'DRAFT_FIN') && duck.progress >= ITEM_BALANCE.draftFin.armProgress && slipstreamReady(runtime, ctx.tickRate)) {
+    const ahead = runtime.draftTargetPlayerId ? duckById(ctx.ducks, runtime.draftTargetPlayerId) : null
+    let score = 30
+    if (ahead && ahead.currentRank === duck.currentRank - 1) score += 35
+    if (ctx.objective.isCurrentlyLosing(duck.playerId, duck.currentRank)) score += 20
+    if (duck.progress >= AUTO_USE_CONFIG.progressLate) score += 12
+    score += endGameBurnScore(duck.progress, 'PREP')
+    score += pressure * 0.1
+    candidates.push({
+      itemKey: 'prep:DRAFT_FIN',
+      itemId: 'DRAFT_FIN',
+      source: 'PREP',
+      action: 'USE',
+      score,
+      reason: 'OPPORTUNITY',
+    })
+  }
+
+  if (hasUnusedPrep(runtime, 'PADDLE_BURST') && duck.progress >= ITEM_BALANCE.paddleBurst.armProgress) {
+    const activeCount = activeDucks(ctx.ducks).length
+    if (duck.currentRank > Math.ceil(activeCount / 2)) {
+      let score = 0
+      if (duck.currentRank >= activeCount - 1) score += 28
+      if (duck.currentRank >= Math.ceil(activeCount * 0.75)) score += 18
+      if (ctx.objective.isCurrentlyLosing(duck.playerId, duck.currentRank)) score += 22
+      score += endGameBurnScore(duck.progress, 'PREP')
+      score += pressure * 0.12
+      if (score >= 24) {
+        candidates.push({
+          itemKey: 'prep:PADDLE_BURST',
+          itemId: 'PADDLE_BURST',
+          source: 'PREP',
+          action: 'USE',
+          score,
+          reason: 'LATE_RACE',
+        })
+      }
+    }
   }
 
   if (hasUnusedPrep(runtime, 'HOMING_ROCKET') && duck.progress >= ITEM_BALANCE.rocket.armProgress && duck.progress <= ITEM_BALANCE.rocket.disableProgress) {
@@ -206,7 +249,6 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
         action: 'USE',
         score: best.score + danger * 0.15 + pressure * 0.1,
         targetPlayerId: best.target.playerId,
-        volleyTargetPlayerIds: targets.slice(0, ITEM_BALANCE.rocket.volleyShots).map((entry) => entry.target.playerId),
         reason: 'OBJECTIVE',
       })
     }

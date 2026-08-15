@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 export const RACE_PROTOCOL_VERSION = '1.0.0'
 export const RACE_ENGINE_VERSION = '1.2.0'
-export const RACE_BALANCE_VERSION = 'S3.10'
+export const RACE_BALANCE_VERSION = 'S3.11'
 export const DEFAULT_TRACK_VERSION = 'river-01-v2'
 export const PICKUP_SPAWN_VERSION = 'pickups-v1'
 export const WILD_ITEM_BALANCE_VERSION = 'wild-items-v4'
@@ -11,7 +11,17 @@ export const RACE_TICK_RATE = 60
 
 export const playerIdSchema = z.string().min(1).max(128)
 export const raceSeedSchema = z.string().regex(/^[a-f0-9]{64}$/i, 'Race seed must be 32-byte hex')
-export const raceItemIdSchema = z.enum(['BUBBLE_SHIELD', 'HOMING_ROCKET', 'NITRO', 'BANANA', 'FEATHER', 'QUACK_HORN'])
+export const raceItemIdSchema = z.enum([
+  'NITRO',
+  'DRAFT_FIN',
+  'PADDLE_BURST',
+  'BUBBLE_SHIELD',
+  'FEATHER',
+  'SHOCK_ABSORBER',
+  'HOMING_ROCKET',
+  'BANANA',
+  'QUACK_HORN',
+])
 export type RaceItemId = z.infer<typeof raceItemIdSchema>
 
 export const wildItemIdSchema = z.enum([
@@ -182,7 +192,8 @@ export type StateSnapshotMessage = z.infer<typeof stateSnapshotMessageSchema>
 export const raceEventTypeSchema = z.enum([
   'RACE_STARTED', 'DUCK_COLLISION', 'ITEM_ACTIVATED', 'ROCKET_FIRED', 'ROCKET_HIT', 'ROCKET_BLOCKED',
   'ROCKET_EXPIRED', 'BANANA_DROPPED', 'BANANA_HIT', 'BANANA_BLOCKED', 'BANANA_EXPIRED', 'NITRO_STARTED',
-  'NITRO_ENDED', 'HORN_USED', 'FEATHER_DODGED', 'BUBBLE_POPPED', 'DUCK_FINISHED', 'RACE_FINISHED',
+  'NITRO_ENDED', 'DRAFT_FIN_STARTED', 'DRAFT_FIN_ENDED', 'PADDLE_BURST_STARTED', 'PADDLE_BURST_ENDED',
+  'BOOST_BROKEN', 'SHOCK_ABSORBER_PROC', 'HORN_USED', 'FEATHER_DODGED', 'BUBBLE_POPPED', 'DUCK_FINISHED', 'RACE_FINISHED',
   'CHAOS_RESOLVED',
   'PICKUP_ZONE_ACTIVATED', 'PICKUP_SPAWNED', 'PICKUP_COLLECTED', 'PICKUP_SKIPPED_SLOT_FULL',
   'WILD_ITEM_GRANTED', 'WILD_ITEM_USED', 'WILD_ITEM_AUTO_USED', 'WILD_ITEM_MANUAL_INPUT',

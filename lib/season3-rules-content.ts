@@ -126,8 +126,10 @@ export const LOADOUT_RULES = {
   bullets: [
     'Chọn đúng 2 item, tổng chi phí = 3 Prep Credits.',
     'Tối đa 1 Major (2 Credits). Phần còn lại là Minor (1 Credit).',
-    'Loadout khóa trước race; item tự dùng theo AI trong race (không bấm tay).',
-    'Không chọn trùng item. Host có thể auto-fill loadout cho ai chưa khóa.',
+    '9 item = 3 class: ⚡ Speed · 🛡️ Defense · 💥 Attack (3 item mỗi class).',
+    'Soft counter: Speed > Defense > Attack > Speed — không có bonus stat cho mono-build.',
+    'Badge cosmetic: ⚡ SPEED COMBO · 🛡️ DEFENSE COMBO · 💥 ATTACK COMBO · 🧪 HYBRID.',
+    'Quack Box wild loot random theo rank — không bias theo loadout class.',
   ],
   items: RACE_ITEM_CATALOG,
 }
@@ -177,14 +179,14 @@ export const RACE_PHYSICS_NOTES = [
 
 export const AUTO_USE_NOTES = [
   'Mọi item loadout và Wild Item đều auto-use trong race chính thức.',
-  'Nitro: +35% tốc độ tối đa trong 5.5 giây — AI dùng sớm hơn khi đang bám đuổi (rank 2–4, gap nhỏ).',
-  'Rocket: twin volley — 2 rocket vào 2 dzịt phía trước (khác nhau nếu đủ tầm), cách 0.7s, mỗi viên slow 20% / 3.5s. Tầm bắn rộng hơn bản cũ.',
-  'Banana: knockback mạnh hơn; AI ưu tiên thả khi còn Rocket/Nitro để giữ chân kẻ đuổi.',
-  'Bubble: chặn đòn wild sắp tới hoặc leader đốt sớm gần đích.',
-  'Horn: bán kính rộng hơn, đẩy mạnh hơn; AI ưu tiên khi còn major tấn công.',
-  'Feather: né banana/hazard nhỏ sắp tới hoặc đốt trước vạch đích.',
-  'Người chơi thủ công có cửa sổ ngắn trước khi AI tự đốt item; gần đích AI ép dùng để không mang item về nhà.',
-  'Sau khi nhặt box muộn, AI chạy thêm một pass để không ôm item tới finish.',
+  'Nitro: +18% / ~1.5s — không stack; boost đang chạy thì item speed sau queue lại.',
+  'Draft Fin: slipstream bám sát phía sau → +9% / ~1.1s (1 lần/race).',
+  'Paddle Burst: >65% track + nửa dưới BXH → +8% / ~1.3s comeback (1 lần/race).',
+  'Rocket: slow ngắn + 💥 BOOST BREAK — hủy Nitro/Draft/Paddle đang chạy rồi mới slow.',
+  'Shock Absorber: giảm ~50% Rocket/Horn đầu tiên — không chặn hẳn như Bubble.',
+  'Banana: knockback + slip — phá momentum (kể cả active boost).',
+  'Bubble/Feather: chặn/né attack như cũ. Horn: pack fight, phá slipstream.',
+  'Người chơi có cửa sổ ngắn trước khi AI tự đốt; gần đích AI ép dùng item.',
 ]
 
 export const MANUAL_WILD_USE = [

@@ -1,3 +1,4 @@
+import { performance } from 'node:perf_hooks'
 import type { DuckSnapshot, RaceConfig, RaceEvent, RaceResult, RecordedWildItemInput } from '../../race-protocol/src'
 import { CORE_BALANCE } from './config'
 import { createRaceRng, type DeterministicRng } from './rng'
@@ -56,12 +57,25 @@ export interface RaceSimulationState {
   pickupState: PickupRaceState
   manualInputs: RecordedWildItemInput[]
   lastCollisionEventTick: Map<string, number>
+  phaseProfile?: SimulationPhaseProfile
+}
+
+export interface SimulationPhaseProfile {
+  autoUseExecuteMs: number
+  itemSystemMs: number
+  movementMs: number
+  pickupMs: number
+  autoUseDecideMs: number
+  collisionMs: number
+  rankingMs: number
+  ticks: number
 }
 
 export interface SimulationOptions {
   recordEvents?: boolean
   onEvent?: (raceEvent: RaceEvent) => void
   manualInputs?: RecordedWildItemInput[]
+  phaseProfile?: SimulationPhaseProfile
 }
 
 function event(state: RaceSimulationState, value: Omit<RaceEvent, 'raceId' | 'tick' | 'timestampWithinRaceMs'>): RaceEvent {
@@ -134,6 +148,7 @@ export function createSimulation(config: RaceConfig, options: SimulationOptions 
     pickupState: createPickupRaceState(config, track),
     manualInputs: [...(options.manualInputs ?? [])],
     lastCollisionEventTick: new Map(),
+    phaseProfile: options.phaseProfile,
   }
   emitEvent(state, { type: 'RACE_STARTED', metadata: { playerCount: ducks.length } })
   announcePickupWorld(state.pickupState, (type, sourcePlayerId, targetPlayerId, metadata = {}) => {
@@ -215,6 +230,11 @@ export function stepSimulation(state: RaceSimulationState) {
   state.tick += 1
   const deltaSeconds = 1 / state.config.tickRate
   const tickStartMs = (state.tick - 1) * (1000 / state.config.tickRate)
+  const profile = state.phaseProfile
+  const mark = (label: 'autoUseExecute' | 'itemSystem' | 'movement' | 'pickup' | 'autoUseDecide' | 'collision' | 'ranking', started: number) => {
+    if (!profile) return
+    profile[`${label}Ms`] += performance.now() - started
+  }
 
   applyRecordedWildInputs(state.itemState, state.ducks, state.manualInputs, state.tick, state.config.tickRate, (type, sourcePlayerId, targetPlayerId, metadata = {}) => {
     emitEvent(state, { type, sourcePlayerId, targetPlayerId, metadata })
@@ -238,12 +258,17 @@ export function stepSimulation(state: RaceSimulationState) {
     },
   }
   const autoObjective = buildRaceObjectiveContext(state.config)
+  let phaseStart = profile ? performance.now() : 0
   tickAutoUseExecute(autoUseInput, autoObjective)
+  mark('autoUseExecute', phaseStart)
 
+  phaseStart = profile ? performance.now() : 0
   tickItemSystem(state.itemState, state.ducks, state.tick, state.config.tickRate, (type, sourcePlayerId, targetPlayerId, metadata = {}) => {
     emitEvent(state, { type, sourcePlayerId, targetPlayerId, metadata })
   })
+  mark('itemSystem', phaseStart)
 
+  phaseStart = profile ? performance.now() : 0
   for (const duck of state.ducks) {
     if (duck.finished) continue
     duck.previousProgress = duck.progress
@@ -280,15 +305,27 @@ export function stepSimulation(state: RaceSimulationState) {
       })
     }
   }
+  mark('movement', phaseStart)
 
+  phaseStart = profile ? performance.now() : 0
   tickPickupSystem(state.config, state.track, state.pickupState, state.itemState, state.ducks, state.tick, state.config.tickRate, (type, sourcePlayerId, targetPlayerId, metadata = {}) => {
     emitEvent(state, { type, sourcePlayerId, targetPlayerId, metadata })
   })
+  mark('pickup', phaseStart)
 
+  phaseStart = profile ? performance.now() : 0
   tickAutoUseDecide(autoUseInput, autoObjective)
+  mark('autoUseDecide', phaseStart)
 
+  phaseStart = profile ? performance.now() : 0
   resolveCollisions(state)
+  mark('collision', phaseStart)
+
+  phaseStart = profile ? performance.now() : 0
   updateRanks(state)
+  mark('ranking', phaseStart)
+
+  if (profile) profile.ticks += 1
   state.finished = state.ducks.every((duck) => duck.finished)
   if (state.finished) emitEvent(state, { type: 'RACE_FINISHED', metadata: {} })
   return state

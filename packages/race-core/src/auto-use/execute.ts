@@ -2,7 +2,7 @@ import type { RaceEventType } from '../../../race-protocol/src'
 import { ITEM_BALANCE } from '../items/config'
 import type { AutoUseCandidate } from './types'
 import type { ItemDuckState, ItemRaceState } from '../items/engine'
-import { beginPrepRocketVolley } from '../items/engine'
+import { firePrepRocket, slipstreamReady, tryApplyPrepSpeedBoost } from '../items/engine'
 import { activateWildItem } from '../pickups/engine'
 
 type EmitItemEvent = (type: RaceEventType, sourcePlayerId?: string, targetPlayerId?: string, metadata?: Record<string, unknown>) => void
@@ -30,22 +30,32 @@ export function executePrepAction(
     case 'NITRO': {
       if (!hasUnused(runtime, 'NITRO')) return false
       runtime.usedItems.add('NITRO')
-      runtime.boostMultiplier = itemState.tuning.nitroSpeedMultiplier
-      runtime.boostUntilTick = tick + Math.round(ITEM_BALANCE.nitro.durationSeconds * tickRate)
-      emit('NITRO_STARTED', duck.playerId, undefined, { untilTick: runtime.boostUntilTick, autoReason: candidate.reason })
+      tryApplyPrepSpeedBoost(runtime, duck.playerId, 'NITRO', itemState.tuning.nitroSpeedMultiplier, ITEM_BALANCE.nitro.durationSeconds, tick, tickRate, emit, { autoReason: candidate.reason })
+      return true
+    }
+    case 'DRAFT_FIN': {
+      if (!hasUnused(runtime, 'DRAFT_FIN') || !slipstreamReady(runtime, tickRate)) return false
+      runtime.usedItems.add('DRAFT_FIN')
+      tryApplyPrepSpeedBoost(runtime, duck.playerId, 'DRAFT_FIN', ITEM_BALANCE.draftFin.speedMultiplier, ITEM_BALANCE.draftFin.durationSeconds, tick, tickRate, emit, {
+        draftTarget: runtime.draftTargetPlayerId,
+        autoReason: candidate.reason,
+      })
+      return true
+    }
+    case 'PADDLE_BURST': {
+      if (!hasUnused(runtime, 'PADDLE_BURST')) return false
+      if (duck.progress < ITEM_BALANCE.paddleBurst.armProgress) return false
+      const activeCount = ducks.filter((entry) => !entry.finished).length
+      if (duck.currentRank <= Math.ceil(activeCount / 2)) return false
+      runtime.usedItems.add('PADDLE_BURST')
+      tryApplyPrepSpeedBoost(runtime, duck.playerId, 'PADDLE_BURST', ITEM_BALANCE.paddleBurst.speedMultiplier, ITEM_BALANCE.paddleBurst.durationSeconds, tick, tickRate, emit, { autoReason: candidate.reason })
       return true
     }
     case 'HOMING_ROCKET': {
-      if (!hasUnused(runtime, 'HOMING_ROCKET') || runtime.pendingRocketVolley) return false
-      const volleyTargets = candidate.volleyTargetPlayerIds?.length
-        ? candidate.volleyTargetPlayerIds
-        : candidate.targetPlayerId
-          ? [candidate.targetPlayerId]
-          : []
-      if (!volleyTargets.length) return false
-      const target = ducks.find((entry) => entry.playerId === volleyTargets[0])
+      if (!hasUnused(runtime, 'HOMING_ROCKET') || !candidate.targetPlayerId) return false
+      const target = ducks.find((entry) => entry.playerId === candidate.targetPlayerId)
       if (!target || target.finished) return false
-      return beginPrepRocketVolley(itemState, duck, volleyTargets, tick, tickRate, emit, candidate.reason)
+      return firePrepRocket(itemState, duck, target.playerId, tick, tickRate, emit, candidate.reason)
     }
     case 'BANANA': {
       if (!hasUnused(runtime, 'BANANA')) return false
@@ -76,14 +86,22 @@ export function executePrepAction(
       if (nearby.length === 0) return false
       runtime.usedItems.add('QUACK_HORN')
       for (const target of nearby.sort((left, right) => left.playerId.localeCompare(right.playerId))) {
+        const defense = runtimeFor(itemState, target.playerId)
+        let push = ITEM_BALANCE.horn.lateralPush
+        let shove = ITEM_BALANCE.horn.lateralShove
+        if (defense.shockAbsorberAvailable) {
+          defense.shockAbsorberAvailable = false
+          push *= ITEM_BALANCE.shockAbsorber.hornPushMultiplier
+          shove *= ITEM_BALANCE.shockAbsorber.hornShoveMultiplier
+          emit('SHOCK_ABSORBER_PROC', target.playerId, duck.playerId, { mitigated: 'QUACK_HORN' })
+        }
+        defense.draftSlipstreamTicks = 0
+        defense.draftTargetPlayerId = null
         const direction = target.lateralOffset === duck.lateralOffset
           ? (target.playerId.localeCompare(duck.playerId) < 0 ? -1 : 1)
           : Math.sign(target.lateralOffset - duck.lateralOffset)
-        target.lateralVelocity += direction * ITEM_BALANCE.horn.lateralPush
-        target.lateralOffset = Math.max(-0.95, Math.min(0.95, target.lateralOffset + direction * ITEM_BALANCE.horn.lateralShove))
-        if (target.progress >= duck.progress - ITEM_BALANCE.horn.progressRadius) {
-          target.progress = Math.max(duck.progress - ITEM_BALANCE.horn.progressRadius, target.progress - ITEM_BALANCE.horn.progressKnockback)
-        }
+        target.lateralVelocity += direction * push
+        target.lateralOffset = Math.max(-0.95, Math.min(0.95, target.lateralOffset + direction * shove))
       }
       emit('HORN_USED', duck.playerId, undefined, { targets: nearby.map((target) => target.playerId), autoReason: candidate.reason })
       return true

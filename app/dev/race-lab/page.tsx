@@ -28,8 +28,11 @@ const MAJORS: Array<{ id: RaceItemId; label: string }> = [
   { id: 'NITRO', label: '⚡ Nitro' },
 ]
 const MINORS: Array<{ id: RaceItemId; label: string }> = [
-  { id: 'BANANA', label: '🍌 Banana' },
+  { id: 'DRAFT_FIN', label: '🦈 Draft Fin' },
+  { id: 'PADDLE_BURST', label: '🛶 Paddle Burst' },
   { id: 'FEATHER', label: '🪶 Feather' },
+  { id: 'SHOCK_ABSORBER', label: '🦺 Shock Absorber' },
+  { id: 'BANANA', label: '🍌 Banana' },
   { id: 'QUACK_HORN', label: '🔊 Quack Horn' },
 ]
 

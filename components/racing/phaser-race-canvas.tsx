@@ -13,9 +13,12 @@ type PlayerLabel = { playerId: string; name: string; avatarUrl?: string | null; 
 
 const ITEM_ICONS: Record<RaceItemId, string> = {
   BUBBLE_SHIELD: '🫧', HOMING_ROCKET: '🚀', NITRO: '⚡', BANANA: '🍌', FEATHER: '🪶', QUACK_HORN: '🔊',
+  DRAFT_FIN: '🦈', PADDLE_BURST: '🛶', SHOCK_ABSORBER: '🦺',
 }
 
-const EFFECT_ICONS: Record<string, string> = { BUBBLE_SHIELD: '🫧', FEATHER: '🪶', NITRO: '⚡', SLOWED: '💫' }
+const EFFECT_ICONS: Record<string, string> = {
+  BUBBLE_SHIELD: '🫧', FEATHER: '🪶', SHOCK_ABSORBER: '🦺', NITRO: '⚡', DRAFT_FIN: '🦈', PADDLE_BURST: '🛶', SLOWED: '💫',
+}
 const WILD_ICONS: Record<WildItemId, string> = {
   MINI_NITRO: '⚡', TAILWIND: '🌊', MINI_BUBBLE: '🫧', MINI_ROCKET: '🚀', BANANA: '🍌', QUACK_HORN: '🔊', FEATHER: '🪽', SLIPSTREAM_MAGNET: '🧲',
 }
@@ -655,6 +658,10 @@ export function PhaserRaceCanvas({
             BANANA_HIT: `🍌 ${target} trượt vỏ chuối!`,
             BANANA_BLOCKED: `🛡️ ${target} né được Banana`,
             NITRO_STARTED: `⚡ ${source} NITRO!`,
+            DRAFT_FIN_STARTED: `🦈 ${source} DRAFT!`,
+            PADDLE_BURST_STARTED: `🛶 ${source} PADDLE BURST!`,
+            BOOST_BROKEN: `💥 ${target} BOOST BROKEN!`,
+            SHOCK_ABSORBER_PROC: `🦺 ${target} absorbed hit`,
             HORN_USED: `🔊 ${source} QUACKED THE PACK`,
             FEATHER_DODGED: `🪶 ${source} DODGED!`,
             BUBBLE_POPPED: `🫧 ${source} POP!`,

@@ -35,11 +35,12 @@ export interface DuckItemRuntime extends ItemDefenseState {
   pendingAutoAction: AutoUseCandidate | null
   pendingAutoActionExecuteTick: number
   lastOffensiveUseTick: number
-  pendingRocketVolley: {
-    shotsLeft: number
-    targetPlayerIds: string[]
-    nextShotTick: number
-  } | null
+  shockAbsorberAvailable: boolean
+  draftSlipstreamTicks: number
+  draftTargetPlayerId: string | null
+  activeSpeedItemId: RaceItemId | null
+  queuedSpeedBoost: { multiplier: number; durationSeconds: number; itemId: RaceItemId } | null
+  boostStartedAtTick: number
 }
 
 export interface RocketRuntime {
@@ -92,6 +93,7 @@ export function createItemRaceState(config: RaceConfig): ItemRaceState {
         usedItems: new Set<RaceItemId>(),
         bubbleAvailable: itemIds.includes('BUBBLE_SHIELD'),
         featherAvailable: itemIds.includes('FEATHER'),
+        shockAbsorberAvailable: itemIds.includes('SHOCK_ABSORBER'),
         itemImmunityUntilTick: 0,
         rocketProtectionUntilTick: 0,
         slowMultiplier: 1,
@@ -112,7 +114,11 @@ export function createItemRaceState(config: RaceConfig): ItemRaceState {
         pendingAutoAction: null,
         pendingAutoActionExecuteTick: 0,
         lastOffensiveUseTick: 0,
-        pendingRocketVolley: null,
+        draftSlipstreamTicks: 0,
+        draftTargetPlayerId: null,
+        activeSpeedItemId: null,
+        queuedSpeedBoost: null,
+        boostStartedAtTick: 0,
       }]
     })),
     rockets: [],
@@ -135,10 +141,114 @@ export function applyItemSlow(runtime: DuckItemRuntime, multiplier: number, dura
 }
 
 export function applyItemBoost(runtime: DuckItemRuntime, multiplier: number, durationSeconds: number, tick: number, tickRate: number) {
-  if (tick >= runtime.boostUntilTick || multiplier > runtime.boostMultiplier) {
-    runtime.boostMultiplier = Math.min(ITEM_BALANCE.maximumSpeedMultiplier, multiplier)
-    runtime.boostUntilTick = tick + Math.round(durationSeconds * tickRate)
+  runtime.boostMultiplier = Math.min(ITEM_BALANCE.maximumSpeedMultiplier, multiplier)
+  runtime.boostStartedAtTick = tick
+  runtime.boostUntilTick = tick + Math.round(durationSeconds * tickRate)
+}
+
+const SPEED_START_EVENT: Partial<Record<RaceItemId, RaceEventType>> = {
+  NITRO: 'NITRO_STARTED',
+  DRAFT_FIN: 'DRAFT_FIN_STARTED',
+  PADDLE_BURST: 'PADDLE_BURST_STARTED',
+}
+
+const SPEED_END_EVENT: Partial<Record<RaceItemId, RaceEventType>> = {
+  NITRO: 'NITRO_ENDED',
+  DRAFT_FIN: 'DRAFT_FIN_ENDED',
+  PADDLE_BURST: 'PADDLE_BURST_ENDED',
+}
+
+export function breakActiveSpeedBoost(
+  runtime: DuckItemRuntime,
+  tick: number,
+  emit: EmitItemEvent,
+  sourcePlayerId: string,
+  targetPlayerId: string,
+) {
+  if (tick >= runtime.boostUntilTick || runtime.boostMultiplier <= 1) return
+  const ended = runtime.activeSpeedItemId
+  const boostMultiplier = runtime.boostMultiplier
+  const remainingBoostTicks = Math.max(0, runtime.boostUntilTick - tick)
+  const originalBoostTicks = Math.max(1, runtime.boostUntilTick - runtime.boostStartedAtTick)
+  const fractionDenied = remainingBoostTicks / originalBoostTicks
+  runtime.boostMultiplier = 1
+  runtime.boostUntilTick = tick
+  runtime.boostStartedAtTick = tick
+  runtime.activeSpeedItemId = null
+  runtime.queuedSpeedBoost = null
+  if (ended && SPEED_END_EVENT[ended]) emit(SPEED_END_EVENT[ended]!, targetPlayerId, sourcePlayerId, { broken: true })
+  emit('BOOST_BROKEN', targetPlayerId, sourcePlayerId, {
+    endedItem: ended ?? null,
+    remainingBoostTicks,
+    originalBoostTicks,
+    boostMultiplier,
+    fractionDenied,
+  })
+}
+
+export function tryApplyPrepSpeedBoost(
+  runtime: DuckItemRuntime,
+  duckId: string,
+  itemId: RaceItemId,
+  multiplier: number,
+  durationSeconds: number,
+  tick: number,
+  tickRate: number,
+  emit: EmitItemEvent,
+  metadata: Record<string, unknown> = {},
+): 'applied' | 'queued' {
+  const startEvent = SPEED_START_EVENT[itemId]
+  if (!startEvent) return 'applied'
+  if (tick < runtime.boostUntilTick && runtime.boostMultiplier > 1) {
+    runtime.queuedSpeedBoost = { multiplier, durationSeconds, itemId }
+    return 'queued'
   }
+  applyItemBoost(runtime, multiplier, durationSeconds, tick, tickRate)
+  runtime.activeSpeedItemId = itemId
+  emit(startEvent, duckId, undefined, { untilTick: runtime.boostUntilTick, ...metadata })
+  return 'applied'
+}
+
+function finishSpeedBoost(runtime: DuckItemRuntime, duckId: string, tick: number, tickRate: number, emit: EmitItemEvent) {
+  const ended = runtime.activeSpeedItemId
+  runtime.boostMultiplier = 1
+  runtime.activeSpeedItemId = null
+  if (ended && SPEED_END_EVENT[ended]) emit(SPEED_END_EVENT[ended]!, duckId, undefined, {})
+  const queued = runtime.queuedSpeedBoost
+  if (!queued) return
+  runtime.queuedSpeedBoost = null
+  applyItemBoost(runtime, queued.multiplier, queued.durationSeconds, tick, tickRate)
+  runtime.activeSpeedItemId = queued.itemId
+  const startEvent = SPEED_START_EVENT[queued.itemId]
+  if (startEvent) emit(startEvent, duckId, undefined, { untilTick: runtime.boostUntilTick, queued: true })
+}
+
+function updateSlipstreamTracking(itemState: ItemRaceState, ducks: ItemDuckState[]) {
+  for (const duck of ducks) {
+    if (duck.finished) continue
+    const runtime = itemState.byPlayer.get(duck.playerId)!
+    const ahead = ducks
+      .filter((candidate) => !candidate.finished && candidate.progress > duck.progress)
+      .sort((left, right) => left.progress - right.progress || left.playerId.localeCompare(right.playerId))[0]
+    if (!ahead) {
+      runtime.draftSlipstreamTicks = 0
+      runtime.draftTargetPlayerId = null
+      continue
+    }
+    const gap = ahead.progress - duck.progress
+    const lateral = Math.abs(ahead.lateralOffset - duck.lateralOffset)
+    if (gap <= ITEM_BALANCE.draftFin.maxGap && lateral <= ITEM_BALANCE.draftFin.lateralRadius) {
+      runtime.draftSlipstreamTicks += 1
+      runtime.draftTargetPlayerId = ahead.playerId
+    } else {
+      runtime.draftSlipstreamTicks = 0
+      runtime.draftTargetPlayerId = null
+    }
+  }
+}
+
+export function slipstreamReady(runtime: DuckItemRuntime, tickRate: number) {
+  return runtime.draftSlipstreamTicks >= Math.round(ITEM_BALANCE.draftFin.holdSeconds * tickRate)
 }
 
 function bananaTouches(duck: ItemDuckState, banana: BananaRuntime) {
@@ -149,23 +259,27 @@ function bananaTouches(duck: ItemDuckState, banana: BananaRuntime) {
   return Math.abs(duck.lateralOffset - banana.lateralOffset) <= banana.hitLateralRadius
 }
 
-function firePrepRocket(
+export function firePrepRocket(
   itemState: ItemRaceState,
   source: ItemDuckState,
   targetPlayerId: string,
   tick: number,
   tickRate: number,
-  launchAtTick = tick,
+  emit: EmitItemEvent,
+  autoReason?: string,
 ) {
-  if (!itemState.byPlayer.has(targetPlayerId)) return false
+  const runtime = itemState.byPlayer.get(source.playerId)!
+  if (runtime.usedItems.has('HOMING_ROCKET')) return false
+  const target = itemState.byPlayer.has(targetPlayerId)
+  if (!target) return false
   itemState.rockets.push({
     id: itemState.nextObjectId++,
     sourcePlayerId: source.playerId,
     targetPlayerId,
     progress: source.progress,
     spawnedAtTick: tick,
-    launchAtTick,
-    expiresAtTick: launchAtTick + Math.round(ITEM_BALANCE.rocket.lifetimeSeconds * tickRate),
+    launchAtTick: tick,
+    expiresAtTick: tick + Math.round(ITEM_BALANCE.rocket.lifetimeSeconds * tickRate),
     kind: 'PREP',
     speedPerSecond: ITEM_BALANCE.rocket.projectileSpeed,
     hitRadius: ITEM_BALANCE.rocket.hitRadius,
@@ -173,70 +287,9 @@ function firePrepRocket(
     slowDurationSeconds: ITEM_BALANCE.rocket.slowDurationSeconds,
     retargeted: false,
   })
+  runtime.usedItems.add('HOMING_ROCKET')
+  emit('ROCKET_FIRED', source.playerId, targetPlayerId, { autoReason })
   return true
-}
-
-export function beginPrepRocketVolley(
-  itemState: ItemRaceState,
-  source: ItemDuckState,
-  targetPlayerIds: string[],
-  tick: number,
-  tickRate: number,
-  emit: EmitItemEvent,
-  autoReason?: string,
-) {
-  const runtime = itemState.byPlayer.get(source.playerId)!
-  if (runtime.pendingRocketVolley) return false
-  const primaryTarget = targetPlayerIds[0]
-  if (!primaryTarget || !firePrepRocket(itemState, source, primaryTarget, tick, tickRate)) return false
-
-  emit('ROCKET_FIRED', source.playerId, primaryTarget, { autoReason, volleyShot: 1 })
-
-  const volleyShots = ITEM_BALANCE.rocket.volleyShots
-  const secondaryTarget = targetPlayerIds.find((id) => id !== primaryTarget)
-  if (volleyShots <= 1 || !secondaryTarget) {
-    runtime.usedItems.add('HOMING_ROCKET')
-    return true
-  }
-
-  runtime.pendingRocketVolley = {
-    shotsLeft: 1,
-    targetPlayerIds: [secondaryTarget],
-    nextShotTick: tick + Math.round(ITEM_BALANCE.rocket.volleyDelaySeconds * tickRate),
-  }
-  return true
-}
-
-function processPendingRocketVolleys(
-  itemState: ItemRaceState,
-  ducks: ItemDuckState[],
-  tick: number,
-  tickRate: number,
-  emit: EmitItemEvent,
-) {
-  for (const duck of ducks) {
-    if (duck.finished) continue
-    const runtime = itemState.byPlayer.get(duck.playerId)!
-    const pending = runtime.pendingRocketVolley
-    if (!pending || tick < pending.nextShotTick) continue
-
-    const targetPlayerId = pending.targetPlayerIds[0]
-    if (targetPlayerId && firePrepRocket(itemState, duck, targetPlayerId, tick, tickRate)) {
-      emit('ROCKET_FIRED', duck.playerId, targetPlayerId, {
-        volleyShot: ITEM_BALANCE.rocket.volleyShots - pending.shotsLeft + 1,
-      })
-    }
-
-    pending.shotsLeft -= 1
-    pending.targetPlayerIds = pending.targetPlayerIds.slice(1)
-    if (pending.shotsLeft <= 0) {
-      runtime.pendingRocketVolley = null
-      runtime.usedItems.add('HOMING_ROCKET')
-      continue
-    }
-
-    pending.nextShotTick = tick + Math.round(ITEM_BALANCE.rocket.volleyDelaySeconds * tickRate)
-  }
 }
 
 function updateRockets(itemState: ItemRaceState, ducks: ItemDuckState[], tick: number, tickRate: number, emit: EmitItemEvent) {
@@ -278,7 +331,16 @@ function updateRockets(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
     const hitType = rocket.kind === 'WILD' ? 'MINI_ROCKET_HIT' : 'ROCKET_HIT'
     const blockedType = rocket.kind === 'WILD' ? 'MINI_ROCKET_BLOCKED' : 'ROCKET_BLOCKED'
     if (outcome === 'HIT') {
-      applyItemSlow(defense, rocket.slowMultiplier, rocket.slowDurationSeconds, tick, tickRate)
+      breakActiveSpeedBoost(defense, tick, emit, rocket.sourcePlayerId, target.playerId)
+      let slowMultiplier = rocket.slowMultiplier
+      let slowDurationSeconds = rocket.slowDurationSeconds
+      if (defense.shockAbsorberAvailable) {
+        defense.shockAbsorberAvailable = false
+        slowMultiplier = ITEM_BALANCE.shockAbsorber.slowMultiplier
+        slowDurationSeconds = ITEM_BALANCE.shockAbsorber.slowDurationSeconds
+        emit('SHOCK_ABSORBER_PROC', target.playerId, rocket.sourcePlayerId, { mitigated: incoming })
+      }
+      applyItemSlow(defense, slowMultiplier, slowDurationSeconds, tick, tickRate)
       emit(hitType, rocket.sourcePlayerId, target.playerId, {})
     } else if (outcome === 'BLOCKED_MINI_BUBBLE') {
       emit('MINI_BUBBLE_BLOCKED', target.playerId, rocket.sourcePlayerId, { blocked: incoming })
@@ -317,6 +379,7 @@ function updateBananas(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
     const hitType = banana.kind === 'WILD' ? 'WILD_BANANA_HIT' : 'BANANA_HIT'
     const blockedType = banana.kind === 'WILD' ? 'WILD_BANANA_BLOCKED' : 'BANANA_BLOCKED'
     if (outcome === 'HIT') {
+      breakActiveSpeedBoost(defense, tick, emit, banana.sourcePlayerId, target.playerId)
       const knockback = banana.progressKnockback
       target.progress = Math.max(0, target.progress - knockback)
       if (target.previousProgress !== undefined) target.previousProgress = Math.min(target.previousProgress, target.progress)
@@ -373,12 +436,11 @@ export function tickItemSystem(
     if (duck.finished) continue
     const runtime = itemState.byPlayer.get(duck.playerId)!
     if (runtime.boostMultiplier > 1 && tick >= runtime.boostUntilTick) {
-      runtime.boostMultiplier = 1
-      emit('NITRO_ENDED', duck.playerId, undefined, {})
+      finishSpeedBoost(runtime, duck.playerId, tick, tickRate, emit)
     }
     if (runtime.slowMultiplier < 1 && tick >= runtime.slowUntilTick) runtime.slowMultiplier = 1
   }
-  processPendingRocketVolleys(itemState, ducks, tick, tickRate, emit)
+  updateSlipstreamTracking(itemState, stableDucks)
   updateRockets(itemState, ducks, tick, tickRate, emit)
   updateBananas(itemState, ducks, tick, tickRate, emit)
 }
@@ -393,7 +455,9 @@ export function itemActiveEffects(runtime: DuckItemRuntime, tick: number) {
   const effects: string[] = []
   if (runtime.bubbleAvailable) effects.push('BUBBLE_SHIELD')
   if (runtime.featherAvailable) effects.push('FEATHER')
-  if (tick < runtime.boostUntilTick) effects.push('NITRO')
+  if (runtime.shockAbsorberAvailable) effects.push('SHOCK_ABSORBER')
+  if (tick < runtime.boostUntilTick && runtime.activeSpeedItemId) effects.push(runtime.activeSpeedItemId)
+  else if (tick < runtime.boostUntilTick) effects.push('NITRO')
   if (tick < runtime.slowUntilTick) effects.push('SLOWED')
   if (runtime.wildBubbleAvailable && tick < runtime.wildBubbleUntilTick) effects.push('MINI_BUBBLE')
   if (runtime.wildFeatherAvailable && tick < runtime.wildFeatherUntilTick) effects.push('WILD_FEATHER')

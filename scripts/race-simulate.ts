@@ -13,17 +13,10 @@ import {
 
 type FullLoadout = readonly [RaceItemId, RaceItemId]
 
-const FULL_LOADOUTS: readonly FullLoadout[] = [
-  ['BUBBLE_SHIELD', 'BANANA'],
-  ['BUBBLE_SHIELD', 'FEATHER'],
-  ['BUBBLE_SHIELD', 'QUACK_HORN'],
-  ['HOMING_ROCKET', 'BANANA'],
-  ['HOMING_ROCKET', 'FEATHER'],
-  ['HOMING_ROCKET', 'QUACK_HORN'],
-  ['NITRO', 'BANANA'],
-  ['NITRO', 'FEATHER'],
-  ['NITRO', 'QUACK_HORN'],
-] as const
+const MAJORS = ['NITRO', 'BUBBLE_SHIELD', 'HOMING_ROCKET'] as const satisfies readonly RaceItemId[]
+const MINORS = ['DRAFT_FIN', 'PADDLE_BURST', 'FEATHER', 'SHOCK_ABSORBER', 'BANANA', 'QUACK_HORN'] as const satisfies readonly RaceItemId[]
+
+const FULL_LOADOUTS: readonly FullLoadout[] = MAJORS.flatMap((major) => MINORS.map((minor) => [major, minor] as const))
 
 interface Aggregate {
   picks: number
@@ -97,8 +90,9 @@ if (playerCount < 2 || playerCount > 16) throw new Error('--players must be betw
 const slotStats = Array.from({ length: playerCount }, emptyAggregate)
 const loadoutStats = new Map(FULL_LOADOUTS.map((loadout) => [loadoutKey(loadout), emptyAggregate()]))
 const itemStats = new Map<RaceItemId, Aggregate>([
-  'BUBBLE_SHIELD', 'HOMING_ROCKET', 'NITRO', 'BANANA', 'FEATHER', 'QUACK_HORN',
-].map((itemId) => [itemId as RaceItemId, emptyAggregate()]))
+  ...MAJORS,
+  ...MINORS,
+].map((itemId) => [itemId, emptyAggregate()]))
 const pairwise = new Map<string, PairwiseAggregate>()
 let chainHitIncidents = 0
 let offensiveHits = 0
@@ -248,11 +242,11 @@ for (let index = 0; index < slotStats.length; index += 1) {
     violations.push(`slot ${index + 1} Bottom-2 rate ${percentage(stats.bottom2, stats.picks).toFixed(2)}% outside ±${(bottom2Tolerance * 100).toFixed(2)}pp fairness tolerance`)
   }
 }
-const winRates = [...loadoutStats].map(([loadout, stats]) => ({ loadout, rate: stats.wins / stats.picks }))
+const winRates = [...loadoutStats].map(([loadout, stats]) => ({ loadout, rate: stats.wins / stats.picks, winPct: percentage(stats.wins, stats.picks) }))
 const bestWin = [...winRates].sort((left, right) => right.rate - left.rate)[0]
 const worstWin = [...winRates].sort((left, right) => left.rate - right.rate)[0]
 if (worstWin.rate > 0 && bestWin.rate / worstWin.rate > 1.15) {
-  violations.push(`loadout win-rate ratio ${(bestWin.rate / worstWin.rate).toFixed(3)} > 1.15 (${bestWin.loadout} vs ${worstWin.loadout})`)
+  violations.push(`loadout win-rate spread ${bestWin.winPct.toFixed(2)}% vs ${worstWin.winPct.toFixed(2)}% (ratio ${(bestWin.rate / worstWin.rate).toFixed(3)}× · ${bestWin.loadout} vs ${worstWin.loadout})`)
 }
 const positions = [...loadoutStats].map(([loadout, stats]) => ({ loadout, average: stats.positionTotal / stats.picks }))
 const bestPosition = [...positions].sort((left, right) => left.average - right.average)[0]

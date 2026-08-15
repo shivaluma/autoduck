@@ -4,19 +4,20 @@ export type IncomingRaceEffect = 'ROCKET' | 'MINI_ROCKET' | 'BANANA' | 'WILD_BAN
 export type DefenseOutcome = 'HIT' | 'BLOCKED_BUBBLE' | 'BLOCKED_MINI_BUBBLE' | 'DODGED_FEATHER' | 'DODGED_WILD_FEATHER' | 'IMMUNE'
 
 export const ITEM_INTERACTION_MATRIX = {
-  ROCKET: { bubbleShield: 'BLOCK', feather: 'NO' },
-  BANANA: { bubbleShield: 'BLOCK', feather: 'DODGE' },
-  QUACK_HORN: { bubbleShield: 'NO', feather: 'NO' },
-  NATURAL_OBSTACLE: { bubbleShield: 'NO', feather: 'NO' },
-  DUCK_COLLISION: { bubbleShield: 'NO', feather: 'NO' },
-  MINI_ROCKET: { bubbleShield: 'BLOCK', feather: 'NO' },
-  WILD_BANANA: { bubbleShield: 'BLOCK', feather: 'DODGE' },
-  MINOR_HAZARD: { bubbleShield: 'NO', feather: 'DODGE' },
+  ROCKET: { bubbleShield: 'BLOCK', feather: 'NO', shockAbsorber: 'MITIGATE' },
+  BANANA: { bubbleShield: 'BLOCK', feather: 'DODGE', shockAbsorber: 'NO' },
+  QUACK_HORN: { bubbleShield: 'NO', feather: 'NO', shockAbsorber: 'MITIGATE' },
+  NATURAL_OBSTACLE: { bubbleShield: 'NO', feather: 'NO', shockAbsorber: 'NO' },
+  DUCK_COLLISION: { bubbleShield: 'NO', feather: 'NO', shockAbsorber: 'NO' },
+  MINI_ROCKET: { bubbleShield: 'BLOCK', feather: 'NO', shockAbsorber: 'MITIGATE' },
+  WILD_BANANA: { bubbleShield: 'BLOCK', feather: 'DODGE', shockAbsorber: 'NO' },
+  MINOR_HAZARD: { bubbleShield: 'NO', feather: 'DODGE', shockAbsorber: 'NO' },
 } as const
 
 export interface ItemDefenseState {
   bubbleAvailable: boolean
   featherAvailable: boolean
+  shockAbsorberAvailable: boolean
   itemImmunityUntilTick: number
   rocketProtectionUntilTick: number
   wildBubbleAvailable?: boolean
