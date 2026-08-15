@@ -1,4 +1,5 @@
-import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process'
+import { spawn, type ChildProcessByStdio } from 'node:child_process'
+import type { Readable, Writable } from 'node:stream'
 import { fileURLToPath } from 'node:url'
 import readline from 'node:readline'
 import { mergeMatchupAggregate, runMatchupBatch, type FullLoadout, type MatchupAggregate } from './balance-sim-core'
@@ -21,7 +22,7 @@ interface WorkerResultPayload {
 }
 
 class PersistentWorker {
-  private readonly child: ChildProcessWithoutNullStreams
+  private readonly child: ChildProcessByStdio<Writable, Readable, null>
   private readonly pending = new Map<number, { resolve: (value: MatchupAggregate) => void; reject: (error: Error) => void }>()
   private readonly rl: readline.Interface
   private alive = true

@@ -277,7 +277,7 @@ function recordFeatherThreat(
 }
 
 export interface RaceEventTrackerContext {
-  loadoutByPlayer: Map<string, RaceItemId[]>
+  loadoutByPlayer: Map<string, readonly RaceItemId[]>
   baselineRank: Map<string, number>
   finalRank: Map<string, number>
   focusPlayers: Set<string>
@@ -287,7 +287,7 @@ export interface RaceEventTrackerContext {
 }
 
 export function createRaceEventTrackerContext(
-  loadoutByPlayer: Map<string, RaceItemId[]>,
+  loadoutByPlayer: Map<string, readonly RaceItemId[]>,
   baselineRank: Map<string, number>,
   finalRank: Map<string, number>,
   focusPlayers: Set<string>,
