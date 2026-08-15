@@ -1,8 +1,10 @@
-import type { RaceEventType } from '../../../race-protocol/src'
+import type { RaceConfig, RaceEventType } from '../../../race-protocol/src'
 import { ITEM_BALANCE } from '../items/config'
 import type { AutoUseCandidate } from './types'
 import type { ItemDuckState, ItemRaceState } from '../items/engine'
 import { firePrepRocket, slipstreamReady, tryApplyPrepSpeedBoost } from '../items/engine'
+import { resolveRocketTarget } from './evaluate'
+import { buildRaceObjectiveContext } from './objective'
 import { activateWildItem } from '../pickups/engine'
 
 type EmitItemEvent = (type: RaceEventType, sourcePlayerId?: string, targetPlayerId?: string, metadata?: Record<string, unknown>) => void
@@ -24,22 +26,26 @@ export function executePrepAction(
   tick: number,
   tickRate: number,
   emit: EmitItemEvent,
+  executeMetadata: Record<string, unknown> = {},
+  raceConfig?: RaceConfig,
 ): boolean {
   const runtime = runtimeFor(itemState, duck.playerId)
   switch (candidate.itemId) {
     case 'NITRO': {
       if (!hasUnused(runtime, 'NITRO')) return false
+      const outcome = tryApplyPrepSpeedBoost(runtime, duck.playerId, 'NITRO', itemState.tuning.nitroSpeedMultiplier, ITEM_BALANCE.nitro.durationSeconds, tick, tickRate, emit, { autoReason: candidate.reason })
+      if (outcome === 'ignored') return false
       runtime.usedItems.add('NITRO')
-      tryApplyPrepSpeedBoost(runtime, duck.playerId, 'NITRO', itemState.tuning.nitroSpeedMultiplier, ITEM_BALANCE.nitro.durationSeconds, tick, tickRate, emit, { autoReason: candidate.reason })
       return true
     }
     case 'DRAFT_FIN': {
       if (!hasUnused(runtime, 'DRAFT_FIN') || !slipstreamReady(runtime, tickRate)) return false
-      runtime.usedItems.add('DRAFT_FIN')
-      tryApplyPrepSpeedBoost(runtime, duck.playerId, 'DRAFT_FIN', ITEM_BALANCE.draftFin.speedMultiplier, ITEM_BALANCE.draftFin.durationSeconds, tick, tickRate, emit, {
+      const outcome = tryApplyPrepSpeedBoost(runtime, duck.playerId, 'DRAFT_FIN', ITEM_BALANCE.draftFin.speedMultiplier, ITEM_BALANCE.draftFin.durationSeconds, tick, tickRate, emit, {
         draftTarget: runtime.draftTargetPlayerId,
         autoReason: candidate.reason,
       })
+      if (outcome === 'ignored') return false
+      runtime.usedItems.add('DRAFT_FIN')
       return true
     }
     case 'PADDLE_BURST': {
@@ -47,15 +53,37 @@ export function executePrepAction(
       if (duck.progress < ITEM_BALANCE.paddleBurst.armProgress) return false
       const activeCount = ducks.filter((entry) => !entry.finished).length
       if (duck.currentRank <= Math.ceil(activeCount / 2)) return false
+      const outcome = tryApplyPrepSpeedBoost(runtime, duck.playerId, 'PADDLE_BURST', ITEM_BALANCE.paddleBurst.speedMultiplier, ITEM_BALANCE.paddleBurst.durationSeconds, tick, tickRate, emit, { autoReason: candidate.reason })
+      if (outcome === 'ignored') return false
       runtime.usedItems.add('PADDLE_BURST')
-      tryApplyPrepSpeedBoost(runtime, duck.playerId, 'PADDLE_BURST', ITEM_BALANCE.paddleBurst.speedMultiplier, ITEM_BALANCE.paddleBurst.durationSeconds, tick, tickRate, emit, { autoReason: candidate.reason })
       return true
     }
     case 'HOMING_ROCKET': {
-      if (!hasUnused(runtime, 'HOMING_ROCKET') || !candidate.targetPlayerId) return false
+      if (!hasUnused(runtime, 'HOMING_ROCKET')) return false
+      if (raceConfig) {
+        const objective = buildRaceObjectiveContext(raceConfig)
+        const evalCtx = {
+          tick,
+          tickRate,
+          objective,
+          itemState,
+          pickupState: { hazards: [] } as never,
+          ducks,
+          playerId: duck.playerId,
+          secondsUntilNextPickupZone: 999,
+          prepAutoUseEnabled: true,
+          wildAutoUseEnabled: false,
+        }
+        const resolvedTarget = resolveRocketTarget(evalCtx, 'PREP', candidate.targetPlayerId)
+        if (!resolvedTarget) return false
+        candidate.targetPlayerId = resolvedTarget
+      } else if (!candidate.targetPlayerId) {
+        return false
+      }
       const target = ducks.find((entry) => entry.playerId === candidate.targetPlayerId)
       if (!target || target.finished) return false
-      return firePrepRocket(itemState, duck, target.playerId, tick, tickRate, emit, candidate.reason)
+      const fired = firePrepRocket(itemState, duck, target.playerId, tick, tickRate, emit, candidate.reason, executeMetadata)
+      return fired
     }
     case 'BANANA': {
       if (!hasUnused(runtime, 'BANANA')) return false
@@ -85,6 +113,7 @@ export function executePrepAction(
         && Math.abs(target.lateralOffset - duck.lateralOffset) <= ITEM_BALANCE.horn.lateralRadius * 1.5)
       if (nearby.length === 0) return false
       runtime.usedItems.add('QUACK_HORN')
+      let slipstreamChargeDestroyedTicks = 0
       for (const target of nearby.sort((left, right) => left.playerId.localeCompare(right.playerId))) {
         const defense = runtimeFor(itemState, target.playerId)
         let push = ITEM_BALANCE.horn.lateralPush
@@ -95,6 +124,7 @@ export function executePrepAction(
           shove *= ITEM_BALANCE.shockAbsorber.hornShoveMultiplier
           emit('SHOCK_ABSORBER_PROC', target.playerId, duck.playerId, { mitigated: 'QUACK_HORN' })
         }
+        slipstreamChargeDestroyedTicks += defense.draftSlipstreamTicks
         defense.draftSlipstreamTicks = 0
         defense.draftTargetPlayerId = null
         const direction = target.lateralOffset === duck.lateralOffset
@@ -103,7 +133,13 @@ export function executePrepAction(
         target.lateralVelocity += direction * push
         target.lateralOffset = Math.max(-0.95, Math.min(0.95, target.lateralOffset + direction * shove))
       }
-      emit('HORN_USED', duck.playerId, undefined, { targets: nearby.map((target) => target.playerId), autoReason: candidate.reason })
+      emit('HORN_USED', duck.playerId, undefined, {
+        targets: nearby.map((target) => target.playerId),
+        autoReason: candidate.reason,
+        slipstreamChargeDestroyedTicks,
+        slipstreamChargeDestroyedSeconds: slipstreamChargeDestroyedTicks / tickRate,
+        ducksHit: nearby.length,
+      })
       return true
     }
     default:
@@ -157,9 +193,11 @@ export function executeAutoItemAction(
   tickRate: number,
   emitItem: EmitItemEvent,
   emitPickup: EmitPickupEvent,
+  executeMetadata: Record<string, unknown> = {},
+  raceConfig?: RaceConfig,
 ): boolean {
   const duck = ducks.find((entry) => entry.playerId === candidate.playerId)
   if (!duck) return false
-  if (candidate.source === 'PREP') return executePrepAction(candidate, itemState, duck, ducks, tick, tickRate, emitItem)
+  if (candidate.source === 'PREP') return executePrepAction(candidate, itemState, duck, ducks, tick, tickRate, emitItem, executeMetadata, raceConfig)
   return executeWildAction(candidate, itemState, ducks, tick, tickRate, emitPickup)
 }

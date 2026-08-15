@@ -119,6 +119,7 @@ function rocketTargets(ctx: EvaluationContext, kind: 'PREP' | 'WILD') {
       const gap = target.progress - source.progress
       if (gap > 0.02 && gap < maxDistance * 0.75) score += 12
       if (ctx.objective.isCurrentlyLosing(source.playerId, source.currentRank) && target.currentRank === source.currentRank - 1) score += 35
+      score += ctx.objective.offensiveTargetRankBonus(source.playerId, target.currentRank)
       if (source.progress >= AUTO_USE_CONFIG.progressLate) score += 15
       if (targetRuntime.bubbleAvailable || targetRuntime.wildBubbleAvailable) score -= 25
       if (targetRuntime.shockAbsorberAvailable) score -= 12
@@ -129,6 +130,28 @@ function rocketTargets(ctx: EvaluationContext, kind: 'PREP' | 'WILD') {
     })
     .filter((entry): entry is { target: ItemDuckState; score: number } => entry !== null && entry.score > 0)
     .sort((left, right) => right.score - left.score || left.target.playerId.localeCompare(right.target.playerId))
+}
+
+export function resolveRocketTarget(ctx: EvaluationContext, kind: 'PREP' | 'WILD', preferredTargetId?: string) {
+  const targets = rocketTargets(ctx, kind)
+  if (preferredTargetId) {
+    const preferred = targets.find((entry) => entry.target.playerId === preferredTargetId)
+    if (preferred) return preferred.target.playerId
+  }
+  return targets[0]?.target.playerId ?? null
+}
+
+const OFFENSIVE_AUTO_ITEMS = new Set(['HOMING_ROCKET', 'BANANA', 'MINI_ROCKET', 'QUACK_HORN'])
+
+export function isOffensiveAutoItem(itemId: string) {
+  return OFFENSIVE_AUTO_ITEMS.has(itemId)
+}
+
+export function offensiveCooldownBlocks(ctx: EvaluationContext, playerId: string) {
+  const runtime = ctx.itemState.byPlayer.get(playerId)!
+  if (runtime.lastOffensiveUseTick <= 0) return false
+  const cooldownTicks = Math.round(AUTO_USE_CONFIG.cooldownMinSeconds * ctx.tickRate)
+  return ctx.tick < runtime.lastOffensiveUseTick + cooldownTicks
 }
 
 export function evaluateReactiveDefense(ctx: EvaluationContext): AutoUseCandidateDraft[] {
@@ -290,6 +313,7 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
       if (ctx.objective.isTeammate(duck.playerId, target.playerId)) netValue -= impact * 40
       else if (target.currentRank < duck.currentRank) netValue += impact * 30
       else netValue += impact * 16
+      netValue += ctx.objective.offensiveTargetRankBonus(duck.playerId, target.currentRank) * 0.4
     }
     if (hasUnusedOffensiveMajor(runtime) && netValue > 0) netValue += 10
     if (duck.currentRank >= 3 && netValue > 0) netValue += 4
@@ -420,6 +444,7 @@ export function evaluateWildCandidates(ctx: EvaluationContext): AutoUseCandidate
       if (ctx.objective.isTeammate(duck.playerId, target.playerId)) netValue -= impact * 50
       else if (target.currentRank < duck.currentRank) netValue += impact * 30
       else netValue += impact * 8
+      netValue += ctx.objective.offensiveTargetRankBonus(duck.playerId, target.currentRank) * 0.35
     }
     if (netValue + pressure * 0.1 >= 15) {
       candidates.push({
@@ -475,12 +500,19 @@ export function decideAutoItemAction(ctx: EvaluationContext): AutoUseCandidate |
 }
 
 export function revalidatePendingAction(ctx: EvaluationContext, pending: AutoUseCandidate): boolean {
+  if (isOffensiveAutoItem(String(pending.itemId)) && offensiveCooldownBlocks(ctx, ctx.playerId)) return false
   if (pending.bypassThreshold) return true
   const fresh = [
     ...evaluatePrepCandidates(ctx),
     ...evaluateWildCandidates(ctx),
   ].find((candidate) => candidate.itemKey === pending.itemKey && candidate.action === pending.action)
   if (!fresh) return false
+  if (pending.itemId === 'HOMING_ROCKET' || pending.itemId === 'MINI_ROCKET') {
+    const kind = pending.itemId === 'HOMING_ROCKET' ? 'PREP' : 'WILD'
+    const resolvedTarget = resolveRocketTarget(ctx, kind, pending.targetPlayerId)
+    if (!resolvedTarget) return false
+    pending.targetPlayerId = resolvedTarget
+  }
   const threshold = dynamicThreshold(ctx)
   return fresh.score >= threshold * 0.85
 }

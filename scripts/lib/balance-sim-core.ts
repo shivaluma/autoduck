@@ -1,5 +1,6 @@
 import { simulateRace } from '../../packages/race-core/src'
 import { CORE_BALANCE } from '../../packages/race-core/src/config'
+import { ITEM_BALANCE } from '../../packages/race-core/src/items/config'
 import { ITEM_CLASS_BY_ID, type ItemClass } from '../../packages/race-core/src/items/classes'
 import { getRaceItem } from '../../packages/race-core/src/items/catalog'
 import {
@@ -141,7 +142,11 @@ export interface CounterInstrument {
   boostBreakSuccess: number
   boostOwnerPositionsDeniedSum: number
   boostSecondsDestroyedSum: number
+  rocketBoostSecondsDestroyedSum: number
+  bananaBoostSecondsDestroyedSum: number
   boostDistanceDeniedSum: number
+  rocketBoostDistanceDeniedSum: number
+  bananaBoostDistanceDeniedSum: number
   boostFractionDeniedSum: number
   eligibleAttacksReceived: number
   attacksFullyBlocked: number
@@ -152,13 +157,137 @@ export interface CounterInstrument {
   speedOwnerPositionsImprovedSum: number
 }
 
+export interface NitroValueInstrument {
+  boostSecondsGranted: number
+  boostSecondsConsumed: number
+  boostSecondsQueued: number
+  boostSecondsBroken: number
+  boostSecondsBrokenByRocket: number
+  boostSecondsBrokenByBanana: number
+  boostDistanceGenerated: number
+  boostDistanceDenied: number
+}
+
+export interface DraftValueInstrument {
+  chargeAttempts: number
+  successfulProcs: number
+  chargeSecondsLostByHorn: number
+  chargeSecondsLostByCollision: number
+  boostDistanceGenerated: number
+}
+
+export interface RocketValueInstrument {
+  fired: number
+  validTargetAtDecision: number
+  validTargetAtExecution: number
+  hit: number
+  block: number
+  mitigate: number
+  boostSecondsDestroyed: number
+  victimDistanceDenied: number
+}
+
+export interface BananaValueInstrument {
+  drops: number
+  predictedIntersectionSum: number
+  actualCollisions: number
+  boostBreaks: number
+  distanceDenied: number
+}
+
+export interface HornValueInstrument {
+  uses: number
+  ducksHit: number
+  teammateAvoided: number
+  slipstreamChargeDestroyedSeconds: number
+  hazardAssistedDisplacement: number
+}
+
+export interface WastedValueInstrumentation {
+  nitro: NitroValueInstrument
+  draft: DraftValueInstrument
+  rocket: RocketValueInstrument
+  banana: BananaValueInstrument
+  horn: HornValueInstrument
+}
+
+function emptyNitroValue(): NitroValueInstrument {
+  return {
+    boostSecondsGranted: 0,
+    boostSecondsConsumed: 0,
+    boostSecondsQueued: 0,
+    boostSecondsBroken: 0,
+    boostSecondsBrokenByRocket: 0,
+    boostSecondsBrokenByBanana: 0,
+    boostDistanceGenerated: 0,
+    boostDistanceDenied: 0,
+  }
+}
+
+function emptyDraftValue(): DraftValueInstrument {
+  return {
+    chargeAttempts: 0,
+    successfulProcs: 0,
+    chargeSecondsLostByHorn: 0,
+    chargeSecondsLostByCollision: 0,
+    boostDistanceGenerated: 0,
+  }
+}
+
+function emptyRocketValue(): RocketValueInstrument {
+  return {
+    fired: 0,
+    validTargetAtDecision: 0,
+    validTargetAtExecution: 0,
+    hit: 0,
+    block: 0,
+    mitigate: 0,
+    boostSecondsDestroyed: 0,
+    victimDistanceDenied: 0,
+  }
+}
+
+function emptyBananaValue(): BananaValueInstrument {
+  return {
+    drops: 0,
+    predictedIntersectionSum: 0,
+    actualCollisions: 0,
+    boostBreaks: 0,
+    distanceDenied: 0,
+  }
+}
+
+function emptyHornValue(): HornValueInstrument {
+  return {
+    uses: 0,
+    ducksHit: 0,
+    teammateAvoided: 0,
+    slipstreamChargeDestroyedSeconds: 0,
+    hazardAssistedDisplacement: 0,
+  }
+}
+
+export function emptyWastedValueInstrumentation(): WastedValueInstrumentation {
+  return {
+    nitro: emptyNitroValue(),
+    draft: emptyDraftValue(),
+    rocket: emptyRocketValue(),
+    banana: emptyBananaValue(),
+    horn: emptyHornValue(),
+  }
+}
+
 export function emptyCounterInstrument(): CounterInstrument {
   return {
     boostBreakOpportunities: 0,
     boostBreakSuccess: 0,
     boostOwnerPositionsDeniedSum: 0,
     boostSecondsDestroyedSum: 0,
+    rocketBoostSecondsDestroyedSum: 0,
+    bananaBoostSecondsDestroyedSum: 0,
     boostDistanceDeniedSum: 0,
+    rocketBoostDistanceDeniedSum: 0,
+    bananaBoostDistanceDeniedSum: 0,
     boostFractionDeniedSum: 0,
     eligibleAttacksReceived: 0,
     attacksFullyBlocked: 0,
@@ -173,12 +302,13 @@ export function emptyCounterInstrument(): CounterInstrument {
 export interface RaceInstrumentation {
   items: Record<RaceItemId, ItemInstrument>
   counters: CounterInstrument
+  value: WastedValueInstrumentation
   featherExposureRaces: number
 }
 
 export function emptyRaceInstrumentation(): RaceInstrumentation {
   const items = Object.fromEntries([...MAJORS, ...MINORS].map((itemId) => [itemId, emptyItemInstrument()])) as Record<RaceItemId, ItemInstrument>
-  return { items, counters: emptyCounterInstrument(), featherExposureRaces: 0 }
+  return { items, counters: emptyCounterInstrument(), value: emptyWastedValueInstrumentation(), featherExposureRaces: 0 }
 }
 
 function activationBucket(autoReason: unknown): 'organic' | 'fallback' | 'forceBurn' {
@@ -206,6 +336,14 @@ export function mergeRaceInstrumentation(target: RaceInstrumentation, source: Ra
   target.featherExposureRaces += source.featherExposureRaces
   for (const key of Object.keys(target.counters) as Array<keyof CounterInstrument>) {
     target.counters[key] += source.counters[key]
+  }
+  const valueKeys: Array<keyof WastedValueInstrumentation> = ['nitro', 'draft', 'rocket', 'banana', 'horn']
+  for (const key of valueKeys) {
+    const left = target.value[key] as unknown as Record<string, number>
+    const right = source.value[key] as unknown as Record<string, number>
+    for (const metric of Object.keys(left)) {
+      left[metric] = (left[metric] ?? 0) + (right[metric] ?? 0)
+    }
   }
   for (const itemId of [...MAJORS, ...MINORS]) {
     const left = target.items[itemId]!
@@ -273,6 +411,74 @@ function recordFeatherThreat(
   if (options.proc) {
     feather.successfulProcs += 1
     feather.eligibleThreatProcs += 1
+  }
+}
+
+function baseRaceSpeed() {
+  return 1 / CORE_BALANCE.targetDurationSeconds
+}
+
+function boostDistanceFromSeconds(multiplier: number, seconds: number) {
+  return baseRaceSpeed() * Math.max(0, multiplier - 1) * seconds
+}
+
+function speedItemFromStartEvent(type: RaceEventType): 'NITRO' | 'DRAFT_FIN' | 'PADDLE_BURST' | null {
+  if (type === 'NITRO_STARTED') return 'NITRO'
+  if (type === 'DRAFT_FIN_STARTED') return 'DRAFT_FIN'
+  if (type === 'PADDLE_BURST_STARTED') return 'PADDLE_BURST'
+  return null
+}
+
+function speedItemFromEndEvent(type: RaceEventType): 'NITRO' | 'DRAFT_FIN' | 'PADDLE_BURST' | null {
+  if (type === 'NITRO_ENDED') return 'NITRO'
+  if (type === 'DRAFT_FIN_ENDED') return 'DRAFT_FIN'
+  if (type === 'PADDLE_BURST_ENDED') return 'PADDLE_BURST'
+  return null
+}
+
+function recordBoostBrokenValue(
+  instrumentation: RaceInstrumentation,
+  counters: CounterInstrument,
+  victimId: string,
+  focusPlayers: Set<string>,
+  metadata: Record<string, unknown>,
+  tickRate: number,
+) {
+  if (!focusPlayers.has(victimId)) return
+  const remainingBoostTicks = Number(metadata.remainingBoostTicks ?? 0)
+  const originalBoostTicks = Math.max(1, Number(metadata.originalBoostTicks ?? 1))
+  const boostMultiplier = Number(metadata.boostMultiplier ?? 1)
+  const fractionDenied = Number(metadata.fractionDenied ?? remainingBoostTicks / originalBoostTicks)
+  const secondsDestroyed = remainingBoostTicks / tickRate
+  const distanceDenied = boostDistanceFromSeconds(boostMultiplier, secondsDestroyed)
+  const breakSource = String(metadata.breakSource ?? 'ROCKET')
+  const endedItem = String(metadata.endedItem ?? 'NITRO')
+
+  counters.boostBreakOpportunities += 1
+  counters.boostBreakSuccess += 1
+  counters.boostSecondsDestroyedSum += secondsDestroyed
+  counters.boostDistanceDeniedSum += distanceDenied
+  counters.boostFractionDeniedSum += fractionDenied
+
+  if (breakSource === 'ROCKET' || breakSource === 'MINI_ROCKET') {
+    counters.rocketBoostSecondsDestroyedSum += secondsDestroyed
+    counters.rocketBoostDistanceDeniedSum += distanceDenied
+    instrumentation.value.rocket.boostSecondsDestroyed += secondsDestroyed
+    instrumentation.value.rocket.victimDistanceDenied += distanceDenied
+  } else {
+    counters.bananaBoostSecondsDestroyedSum += secondsDestroyed
+    counters.bananaBoostDistanceDeniedSum += distanceDenied
+    instrumentation.value.banana.boostBreaks += 1
+    instrumentation.value.banana.distanceDenied += distanceDenied
+  }
+
+  if (endedItem === 'NITRO') {
+    instrumentation.value.nitro.boostSecondsBroken += secondsDestroyed
+    instrumentation.value.nitro.boostDistanceDenied += distanceDenied
+    if (breakSource === 'ROCKET' || breakSource === 'MINI_ROCKET') instrumentation.value.nitro.boostSecondsBrokenByRocket += secondsDestroyed
+    else instrumentation.value.nitro.boostSecondsBrokenByBanana += secondsDestroyed
+  } else if (endedItem === 'DRAFT_FIN') {
+    instrumentation.value.draft.boostDistanceGenerated -= distanceDenied
   }
 }
 
@@ -354,11 +560,19 @@ export function trackRaceEvent(
     const loadout = loadoutByPlayer.get(event.sourcePlayerId)
     if (loadout?.includes(activationItem)) {
       bumpActivation(activationItem, event.sourcePlayerId)
+      if (activationItem === 'DRAFT_FIN') instrumentation.value.draft.chargeAttempts += 1
       if (event.type === 'HORN_USED') {
         const targets = (event.metadata.targets as string[] | undefined) ?? []
         if (targets.length >= 1) {
           instrumentation.items.QUACK_HORN!.successfulEffects += 1
           instrumentation.items.QUACK_HORN!.meaningfulEffects += 1
+        }
+        if (focusPlayers.has(event.sourcePlayerId)) {
+          instrumentation.value.horn.uses += 1
+          instrumentation.value.horn.ducksHit += Number(event.metadata.ducksHit ?? targets.length)
+          const slipstreamLost = Number(event.metadata.slipstreamChargeDestroyedSeconds ?? 0)
+          instrumentation.value.horn.slipstreamChargeDestroyedSeconds += slipstreamLost
+          instrumentation.value.draft.chargeSecondsLostByHorn += slipstreamLost
         }
       } else if (event.type !== 'ROCKET_FIRED') {
         instrumentation.items[activationItem]!.successfulEffects += 1
@@ -367,7 +581,46 @@ export function trackRaceEvent(
   }
 
   if (event.type === 'NITRO_STARTED' || event.type === 'DRAFT_FIN_STARTED' || event.type === 'PADDLE_BURST_STARTED') {
-    if (event.sourcePlayerId && focusPlayers.has(event.sourcePlayerId)) boostedPlayers.add(event.sourcePlayerId)
+    if (event.sourcePlayerId && focusPlayers.has(event.sourcePlayerId)) {
+      boostedPlayers.add(event.sourcePlayerId)
+      const speedItem = speedItemFromStartEvent(event.type)!
+      const defaults = speedItem === 'NITRO'
+        ? ITEM_BALANCE.nitro
+        : speedItem === 'DRAFT_FIN'
+          ? ITEM_BALANCE.draftFin
+          : ITEM_BALANCE.paddleBurst
+      const durationSeconds = Number(event.metadata.durationSeconds ?? defaults.durationSeconds)
+      const multiplier = Number(event.metadata.multiplier ?? defaults.speedMultiplier)
+      const distance = boostDistanceFromSeconds(multiplier, durationSeconds)
+      if (speedItem === 'NITRO') {
+        instrumentation.value.nitro.boostSecondsGranted += durationSeconds
+        instrumentation.value.nitro.boostDistanceGenerated += distance
+      } else if (speedItem === 'DRAFT_FIN') {
+        instrumentation.value.draft.successfulProcs += 1
+        instrumentation.value.draft.boostDistanceGenerated += distance
+      }
+    }
+  }
+
+  const speedEndItem = speedItemFromEndEvent(event.type)
+  if (speedEndItem && event.sourcePlayerId && focusPlayers.has(event.sourcePlayerId)) {
+    const consumedSeconds = Number(event.metadata.consumedSeconds ?? 0)
+    if (event.metadata.natural && speedEndItem === 'NITRO' && consumedSeconds > 0) {
+      instrumentation.value.nitro.boostSecondsConsumed += consumedSeconds
+    }
+  }
+
+  if (event.type === 'SPEED_BOOST_QUEUED' && event.sourcePlayerId && focusPlayers.has(event.sourcePlayerId)) {
+    if (event.metadata.itemId === 'NITRO') {
+      instrumentation.value.nitro.boostSecondsQueued += Number(event.metadata.durationSeconds ?? 0)
+    }
+  }
+
+  if (event.type === 'ROCKET_FIRED' && event.sourcePlayerId && focusPlayers.has(event.sourcePlayerId)) {
+    const rocketValue = instrumentation.value.rocket
+    rocketValue.fired += 1
+    if (event.metadata.decisionTargetId) rocketValue.validTargetAtDecision += 1
+    if (event.metadata.executeTargetId ?? event.targetPlayerId) rocketValue.validTargetAtExecution += 1
   }
 
   if (event.type === 'ROCKET_HIT' && event.targetPlayerId && event.sourcePlayerId && focusPlayers.has(event.sourcePlayerId)) {
@@ -375,28 +628,27 @@ export function trackRaceEvent(
     recordOwnerImprovement(rocket, baselineRank.get(event.sourcePlayerId)!, finalRank.get(event.sourcePlayerId)!)
     recordVictimLoss(rocket, baselineRank.get(event.targetPlayerId)!, finalRank.get(event.targetPlayerId)!)
     rocket.successfulEffects += 1
+    instrumentation.value.rocket.hit += 1
+  }
+
+  if (event.type === 'ROCKET_BLOCKED' && event.sourcePlayerId && focusPlayers.has(event.sourcePlayerId)) {
+    instrumentation.value.rocket.block += 1
+  }
+
+  if (event.type === 'BANANA_DROPPED' && event.sourcePlayerId && focusPlayers.has(event.sourcePlayerId)) {
+    instrumentation.value.banana.drops += 1
+    instrumentation.value.banana.predictedIntersectionSum += Number(event.metadata.predictedIntersection ?? 0)
+  }
+
+  if ((event.type === 'BANANA_HIT' || event.type === 'WILD_BANANA_HIT') && event.sourcePlayerId && focusPlayers.has(event.sourcePlayerId)) {
+    instrumentation.value.banana.actualCollisions += 1
   }
 
   if (event.type === 'BOOST_BROKEN' && event.sourcePlayerId && event.targetPlayerId) {
     const victimId = event.sourcePlayerId
-    const attackerId = event.targetPlayerId
-    const attackerLoadout = loadoutByPlayer.get(attackerId)
-    if (
-      attackerLoadout?.includes('HOMING_ROCKET')
-      && focusPlayers.has(attackerId)
-      && focusPlayers.has(victimId)
-    ) {
-      const remainingBoostTicks = Number(event.metadata.remainingBoostTicks ?? 0)
-      const originalBoostTicks = Math.max(1, Number(event.metadata.originalBoostTicks ?? 1))
-      const boostMultiplier = Number(event.metadata.boostMultiplier ?? 1)
-      const fractionDenied = Number(event.metadata.fractionDenied ?? remainingBoostTicks / originalBoostTicks)
-      const baseSpeed = 1 / CORE_BALANCE.targetDurationSeconds
-      instrumentation.counters.boostBreakOpportunities += 1
-      instrumentation.counters.boostBreakSuccess += 1
+    recordBoostBrokenValue(instrumentation, instrumentation.counters, victimId, focusPlayers, event.metadata, tickRate)
+    if (focusPlayers.has(victimId)) {
       instrumentation.counters.boostOwnerPositionsDeniedSum += Math.max(0, finalRank.get(victimId)! - baselineRank.get(victimId)!)
-      instrumentation.counters.boostSecondsDestroyedSum += remainingBoostTicks / tickRate
-      instrumentation.counters.boostDistanceDeniedSum += baseSpeed * Math.max(0, boostMultiplier - 1) * remainingBoostTicks / tickRate
-      instrumentation.counters.boostFractionDeniedSum += fractionDenied
     }
     boostedPlayers.delete(victimId)
   }
@@ -446,6 +698,9 @@ export function trackRaceEvent(
     const shock = instrumentation.items.SHOCK_ABSORBER!
     shock.successfulEffects += 1
     instrumentation.counters.attacksMitigated += 1
+    if (event.metadata.mitigated === 'ROCKET' || event.metadata.mitigated === 'MINI_ROCKET') {
+      instrumentation.value.rocket.mitigate += 1
+    }
     recordOwnerImprovement(shock, baselineRank.get(event.targetPlayerId)!, finalRank.get(event.targetPlayerId)!)
     if (event.sourcePlayerId) recordVictimLoss(shock, baselineRank.get(event.sourcePlayerId)!, finalRank.get(event.sourcePlayerId)!)
   }

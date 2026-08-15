@@ -63,6 +63,16 @@ export function buildRaceObjectiveContext(config: RaceConfig): RaceObjectiveCont
       if (mode === 'REVERSE') return Math.max(0, fromRank - toRank) * 12
       return Math.max(0, toRank - fromRank) * 12
     },
+    offensiveTargetRankBonus(_sourceId, targetRank) {
+      if (mode === 'REVERSE') {
+        if (targetRank <= 2) return 20
+        if (targetRank >= playerCount - 1) return -15
+        return 0
+      }
+      if (targetRank <= 2) return 8
+      if (targetRank >= playerCount - 1) return -8
+      return 0
+    },
     offensiveTargetPenalty(sourceId, targetId) {
       if (teammateMap.get(sourceId)?.has(targetId)) return Infinity
       return 0

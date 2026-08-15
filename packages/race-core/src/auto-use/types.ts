@@ -34,5 +34,6 @@ export interface RaceObjectiveContext {
   dangerScore: (playerId: string, rank: number, progress: number, ducks: Array<{ playerId: string; progress: number; currentRank: number; finished: boolean }>) => number
   opponentThreat: (sourceId: string, targetId: string) => number
   positionImprovementValue: (playerId: string, fromRank: number, toRank: number) => number
+  offensiveTargetRankBonus: (sourceId: string, targetRank: number) => number
   offensiveTargetPenalty: (sourceId: string, targetId: string) => number
 }

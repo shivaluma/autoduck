@@ -2,6 +2,7 @@ export const AUTO_USE_CONFIG = {
   decisionIntervalTicks: 15,
   reactionDelayMinSeconds: 0.12,
   reactionDelayMaxSeconds: 0.28,
+  reactiveThreatMinVisibleSeconds: 0.15,
   cooldownMinSeconds: 0.35,
   cooldownMaxSeconds: 0.55,
   bananaPredictionHorizonSeconds: 1,

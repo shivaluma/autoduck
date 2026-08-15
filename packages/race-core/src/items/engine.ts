@@ -41,7 +41,17 @@ export interface DuckItemRuntime extends ItemDefenseState {
   activeSpeedItemId: RaceItemId | null
   queuedSpeedBoost: { multiplier: number; durationSeconds: number; itemId: RaceItemId } | null
   boostStartedAtTick: number
+  reactiveRocketVisibleSinceTick: number | null
+  reactiveBananaVisibleSinceTick: number | null
 }
+
+const SPEED_BOOST_PRIORITY: Partial<Record<RaceItemId, number>> = {
+  NITRO: 3,
+  DRAFT_FIN: 2,
+  PADDLE_BURST: 1,
+}
+
+export type BoostBreakSource = 'ROCKET' | 'MINI_ROCKET' | 'BANANA' | 'WILD_BANANA'
 
 export interface RocketRuntime {
   id: number
@@ -119,6 +129,8 @@ export function createItemRaceState(config: RaceConfig): ItemRaceState {
         activeSpeedItemId: null,
         queuedSpeedBoost: null,
         boostStartedAtTick: 0,
+        reactiveRocketVisibleSinceTick: null,
+        reactiveBananaVisibleSinceTick: null,
       }]
     })),
     rockets: [],
@@ -164,6 +176,7 @@ export function breakActiveSpeedBoost(
   emit: EmitItemEvent,
   sourcePlayerId: string,
   targetPlayerId: string,
+  breakSource: BoostBreakSource,
 ) {
   if (tick >= runtime.boostUntilTick || runtime.boostMultiplier <= 1) return
   const ended = runtime.activeSpeedItemId
@@ -176,13 +189,14 @@ export function breakActiveSpeedBoost(
   runtime.boostStartedAtTick = tick
   runtime.activeSpeedItemId = null
   runtime.queuedSpeedBoost = null
-  if (ended && SPEED_END_EVENT[ended]) emit(SPEED_END_EVENT[ended]!, targetPlayerId, sourcePlayerId, { broken: true })
+  if (ended && SPEED_END_EVENT[ended]) emit(SPEED_END_EVENT[ended]!, targetPlayerId, sourcePlayerId, { broken: true, consumedSeconds: remainingBoostTicks / tickRate })
   emit('BOOST_BROKEN', targetPlayerId, sourcePlayerId, {
     endedItem: ended ?? null,
     remainingBoostTicks,
     originalBoostTicks,
     boostMultiplier,
     fractionDenied,
+    breakSource,
   })
 }
 
@@ -196,31 +210,54 @@ export function tryApplyPrepSpeedBoost(
   tickRate: number,
   emit: EmitItemEvent,
   metadata: Record<string, unknown> = {},
-): 'applied' | 'queued' {
+): 'applied' | 'queued' | 'ignored' {
   const startEvent = SPEED_START_EVENT[itemId]
   if (!startEvent) return 'applied'
   if (tick < runtime.boostUntilTick && runtime.boostMultiplier > 1) {
-    runtime.queuedSpeedBoost = { multiplier, durationSeconds, itemId }
-    return 'queued'
+    const incoming = { multiplier, durationSeconds, itemId }
+    const incomingPriority = SPEED_BOOST_PRIORITY[itemId] ?? 0
+    const existing = runtime.queuedSpeedBoost
+    if (!existing) {
+      runtime.queuedSpeedBoost = incoming
+      emit('SPEED_BOOST_QUEUED', duckId, undefined, { itemId, durationSeconds, multiplier, replacedPrevious: false })
+      return 'queued'
+    }
+    const existingPriority = SPEED_BOOST_PRIORITY[existing.itemId] ?? 0
+    if (incomingPriority > existingPriority) {
+      runtime.queuedSpeedBoost = incoming
+      emit('SPEED_BOOST_QUEUED', duckId, undefined, { itemId, durationSeconds, multiplier, replacedPrevious: true, replacedItemId: existing.itemId })
+      return 'queued'
+    }
+    return 'ignored'
   }
   applyItemBoost(runtime, multiplier, durationSeconds, tick, tickRate)
   runtime.activeSpeedItemId = itemId
-  emit(startEvent, duckId, undefined, { untilTick: runtime.boostUntilTick, ...metadata })
+  emit(startEvent, duckId, undefined, { untilTick: runtime.boostUntilTick, durationSeconds, multiplier, ...metadata })
   return 'applied'
 }
 
 function finishSpeedBoost(runtime: DuckItemRuntime, duckId: string, tick: number, tickRate: number, emit: EmitItemEvent) {
   const ended = runtime.activeSpeedItemId
+  const consumedTicks = Math.max(0, tick - runtime.boostStartedAtTick)
   runtime.boostMultiplier = 1
   runtime.activeSpeedItemId = null
-  if (ended && SPEED_END_EVENT[ended]) emit(SPEED_END_EVENT[ended]!, duckId, undefined, {})
+  if (ended && SPEED_END_EVENT[ended]) {
+    emit(SPEED_END_EVENT[ended]!, duckId, undefined, { consumedSeconds: consumedTicks / tickRate, natural: true })
+  }
   const queued = runtime.queuedSpeedBoost
   if (!queued) return
   runtime.queuedSpeedBoost = null
   applyItemBoost(runtime, queued.multiplier, queued.durationSeconds, tick, tickRate)
   runtime.activeSpeedItemId = queued.itemId
   const startEvent = SPEED_START_EVENT[queued.itemId]
-  if (startEvent) emit(startEvent, duckId, undefined, { untilTick: runtime.boostUntilTick, queued: true })
+  if (startEvent) {
+    emit(startEvent, duckId, undefined, {
+      untilTick: runtime.boostUntilTick,
+      durationSeconds: queued.durationSeconds,
+      multiplier: queued.multiplier,
+      queued: true,
+    })
+  }
 }
 
 function updateSlipstreamTracking(itemState: ItemRaceState, ducks: ItemDuckState[]) {
@@ -267,6 +304,7 @@ export function firePrepRocket(
   tickRate: number,
   emit: EmitItemEvent,
   autoReason?: string,
+  metadata: Record<string, unknown> = {},
 ) {
   const runtime = itemState.byPlayer.get(source.playerId)!
   if (runtime.usedItems.has('HOMING_ROCKET')) return false
@@ -288,7 +326,7 @@ export function firePrepRocket(
     retargeted: false,
   })
   runtime.usedItems.add('HOMING_ROCKET')
-  emit('ROCKET_FIRED', source.playerId, targetPlayerId, { autoReason })
+  emit('ROCKET_FIRED', source.playerId, targetPlayerId, { autoReason, ...metadata })
   return true
 }
 
@@ -331,7 +369,7 @@ function updateRockets(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
     const hitType = rocket.kind === 'WILD' ? 'MINI_ROCKET_HIT' : 'ROCKET_HIT'
     const blockedType = rocket.kind === 'WILD' ? 'MINI_ROCKET_BLOCKED' : 'ROCKET_BLOCKED'
     if (outcome === 'HIT') {
-      breakActiveSpeedBoost(defense, tick, emit, rocket.sourcePlayerId, target.playerId)
+      breakActiveSpeedBoost(defense, tick, emit, rocket.sourcePlayerId, target.playerId, rocket.kind === 'WILD' ? 'MINI_ROCKET' : 'ROCKET')
       let slowMultiplier = rocket.slowMultiplier
       let slowDurationSeconds = rocket.slowDurationSeconds
       if (defense.shockAbsorberAvailable) {
@@ -379,7 +417,7 @@ function updateBananas(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
     const hitType = banana.kind === 'WILD' ? 'WILD_BANANA_HIT' : 'BANANA_HIT'
     const blockedType = banana.kind === 'WILD' ? 'WILD_BANANA_BLOCKED' : 'BANANA_BLOCKED'
     if (outcome === 'HIT') {
-      breakActiveSpeedBoost(defense, tick, emit, banana.sourcePlayerId, target.playerId)
+      breakActiveSpeedBoost(defense, tick, emit, banana.sourcePlayerId, target.playerId, banana.kind === 'WILD' ? 'WILD_BANANA' : 'BANANA')
       const knockback = banana.progressKnockback
       target.progress = Math.max(0, target.progress - knockback)
       if (target.previousProgress !== undefined) target.previousProgress = Math.min(target.previousProgress, target.progress)

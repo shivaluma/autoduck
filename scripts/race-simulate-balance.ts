@@ -140,15 +140,27 @@ function printCounterLayer(instrumentation: RaceInstrumentation) {
   const boostSuccessRate = c.boostBreakOpportunities ? c.boostBreakSuccess / c.boostBreakOpportunities : 0
   const meanBoostFractionDenied = c.boostBreakSuccess ? c.boostFractionDeniedSum / c.boostBreakSuccess : 0
   const meanBoostSecondsDestroyed = c.boostBreakSuccess ? c.boostSecondsDestroyedSum / c.boostBreakSuccess : 0
+  const meanRocketBoostSecondsDestroyed = c.boostBreakSuccess ? c.rocketBoostSecondsDestroyedSum / c.boostBreakSuccess : 0
+  const meanBananaBoostSecondsDestroyed = c.boostBreakSuccess ? c.bananaBoostSecondsDestroyedSum / c.boostBreakSuccess : 0
   const meanBoostDistanceDenied = c.boostBreakSuccess ? c.boostDistanceDeniedSum / c.boostBreakSuccess : 0
   const blockRate = c.eligibleAttacksReceived ? c.attacksFullyBlocked / c.eligibleAttacksReceived : 0
   const mitigateRate = c.eligibleAttacksReceived ? c.attacksMitigated / c.eligibleAttacksReceived : 0
   const defenseUnusedRate = c.defenseItemsEquipped ? c.defenseItemsUnused / c.defenseItemsEquipped : 0
   const attackSpeedInteraction = meanBoostFractionDenied || boostSuccessRate
   console.log('\n=== Counter mechanic layer (focus ducks only) ===')
-  console.log(`ATTACK → SPEED: ops ${c.boostBreakOpportunities} · success ${c.boostBreakSuccess} · success rate ${(boostSuccessRate * 100).toFixed(1)}% · mean boost fraction denied ${(meanBoostFractionDenied * 100).toFixed(1)}% · mean seconds destroyed ${meanBoostSecondsDestroyed.toFixed(2)} · mean distance denied ${meanBoostDistanceDenied.toFixed(4)} · interaction ${interactionLayerVerdict(attackSpeedInteraction)}`)
+  console.log(`ATTACK → SPEED: ops ${c.boostBreakOpportunities} · success ${c.boostBreakSuccess} · success rate ${(boostSuccessRate * 100).toFixed(1)}% · mean boost fraction denied ${(meanBoostFractionDenied * 100).toFixed(1)}% · mean seconds destroyed ${meanBoostSecondsDestroyed.toFixed(2)} (rocket ${meanRocketBoostSecondsDestroyed.toFixed(2)} · banana ${meanBananaBoostSecondsDestroyed.toFixed(2)}) · mean distance denied ${meanBoostDistanceDenied.toFixed(4)} · interaction ${interactionLayerVerdict(attackSpeedInteraction)}`)
   console.log(`DEFENSE → ATTACK: eligible attacks ${c.eligibleAttacksReceived} · blocked ${c.attacksFullyBlocked} (${(blockRate * 100).toFixed(1)}%) · mitigated ${c.attacksMitigated} (${(mitigateRate * 100).toFixed(1)}%) · ${interactionLayerVerdict(blockRate + mitigateRate * 0.5)}`)
   console.log(`SPEED → DEFENSE: speed activations ${c.speedActivations} · owner positions improved sum ${c.speedOwnerPositionsImprovedSum.toFixed(2)} · defense unused rate ${(defenseUnusedRate * 100).toFixed(1)}%`)
+}
+
+function printWastedValueLayer(instrumentation: RaceInstrumentation) {
+  const { nitro, draft, rocket, banana, horn } = instrumentation.value
+  console.log('\n=== Wasted value layer (focus ducks · decompose rank delta) ===')
+  console.log(`Nitro: granted ${nitro.boostSecondsGranted.toFixed(2)}s · consumed ${nitro.boostSecondsConsumed.toFixed(2)}s · queued ${nitro.boostSecondsQueued.toFixed(2)}s · broken ${nitro.boostSecondsBroken.toFixed(2)}s (rocket ${nitro.boostSecondsBrokenByRocket.toFixed(2)}s · banana ${nitro.boostSecondsBrokenByBanana.toFixed(2)}s) · distance +${nitro.boostDistanceGenerated.toFixed(4)} / denied ${nitro.boostDistanceDenied.toFixed(4)}`)
+  console.log(`Draft: charge attempts ${draft.chargeAttempts} · procs ${draft.successfulProcs} · horn charge lost ${draft.chargeSecondsLostByHorn.toFixed(2)}s · collision charge lost ${draft.chargeSecondsLostByCollision.toFixed(2)}s · boost distance ${draft.boostDistanceGenerated.toFixed(4)}`)
+  console.log(`Rocket: fired ${rocket.fired} · valid@decide ${rocket.validTargetAtDecision} · valid@execute ${rocket.validTargetAtExecution} · hit ${rocket.hit} · block ${rocket.block} · mitigate ${rocket.mitigate} · boost destroyed ${rocket.boostSecondsDestroyed.toFixed(2)}s · victim distance denied ${rocket.victimDistanceDenied.toFixed(4)}`)
+  console.log(`Banana: drops ${banana.drops} · predicted intersection sum ${banana.predictedIntersectionSum.toFixed(1)} · collisions ${banana.actualCollisions} · boost breaks ${banana.boostBreaks} · distance denied ${banana.distanceDenied.toFixed(4)}`)
+  console.log(`Horn: uses ${horn.uses} · ducks hit ${horn.ducksHit} · slipstream charge destroyed ${horn.slipstreamChargeDestroyedSeconds.toFixed(2)}s · teammate avoided ${horn.teammateAvoided} · hazard-assisted displacement ${horn.hazardAssistedDisplacement.toFixed(4)}`)
 }
 
 function printItemOpportunity(instrumentation: RaceInstrumentation) {
@@ -236,6 +248,7 @@ async function runPureArchetypeAggregate(seedCount: number) {
   ])))
 
   printCounterLayer(combinedInstrumentation)
+  printWastedValueLayer(combinedInstrumentation)
   printItemOpportunity(combinedInstrumentation)
 }
 

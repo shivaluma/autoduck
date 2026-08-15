@@ -51,6 +51,8 @@ function defense(items: RaceItemId[]): DuckItemRuntime {
     activeSpeedItemId: null,
     queuedSpeedBoost: null,
     boostStartedAtTick: 0,
+    reactiveRocketVisibleSinceTick: null,
+    reactiveBananaVisibleSinceTick: null,
   }
 }
 

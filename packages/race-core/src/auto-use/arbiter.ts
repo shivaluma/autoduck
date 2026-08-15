@@ -6,7 +6,13 @@ import type { PickupRaceState } from '../pickups/engine'
 import { AUTO_USE_CONFIG } from './config'
 import { buildRaceObjectiveContext } from './objective'
 import type { RaceObjectiveContext } from './types'
-import { decideOffensiveAutoItemAction, decideReactiveAutoItemAction, revalidatePendingAction } from './evaluate'
+import {
+  decideOffensiveAutoItemAction,
+  decideReactiveAutoItemAction,
+  isOffensiveAutoItem,
+  offensiveCooldownBlocks,
+  revalidatePendingAction,
+} from './evaluate'
 import { executeAutoItemAction } from './execute'
 
 type EmitItemEvent = (type: RaceEventType, sourcePlayerId?: string, targetPlayerId?: string, metadata?: Record<string, unknown>) => void
@@ -31,6 +37,10 @@ function cooldownTicks(config: RaceConfig, playerId: string, tick: number, tickR
   return Math.round(rng.range(AUTO_USE_CONFIG.cooldownMinSeconds, AUTO_USE_CONFIG.cooldownMaxSeconds) * tickRate)
 }
 
+function reactiveMinVisibleTicks(tickRate: number) {
+  return Math.round(AUTO_USE_CONFIG.reactiveThreatMinVisibleSeconds * tickRate)
+}
+
 export interface AutoUseTickInput {
   config: RaceConfig
   track: RaceTrack
@@ -43,10 +53,6 @@ export interface AutoUseTickInput {
   wildAutoUseEnabled: boolean
   emitItem: EmitItemEvent
   emitPickup: EmitPickupEvent
-}
-
-function offensiveItem(itemId: string) {
-  return ['HOMING_ROCKET', 'BANANA', 'MINI_ROCKET', 'QUACK_HORN'].includes(itemId)
 }
 
 function finishAction(input: AutoUseTickInput, playerId: string, offensive: boolean) {
@@ -71,13 +77,7 @@ function buildEvalContext(input: AutoUseTickInput, duck: ItemDuckState, objectiv
   }
 }
 
-function executeDecision(input: AutoUseTickInput, duck: ItemDuckState, decision: NonNullable<ReturnType<typeof decideOffensiveAutoItemAction>>) {
-  if (decision.bypassThreshold) {
-    const executed = executeAutoItemAction(decision, input.itemState, input.ducks, input.tick, input.tickRate, input.emitItem, input.emitPickup)
-    if (executed) finishAction(input, duck.playerId, offensiveItem(String(decision.itemId)))
-    return
-  }
-
+function queueDecision(input: AutoUseTickInput, duck: ItemDuckState, decision: NonNullable<ReturnType<typeof decideOffensiveAutoItemAction>>) {
   const runtime = input.itemState.byPlayer.get(duck.playerId)!
   runtime.pendingAutoAction = decision
   runtime.pendingAutoActionExecuteTick = input.tick + reactionDelayTicks(input.config, duck.playerId, input.tick, input.tickRate)
@@ -90,10 +90,29 @@ function processPendingAction(input: AutoUseTickInput, duck: ItemDuckState, eval
   const pending = runtime.pendingAutoAction
   runtime.pendingAutoAction = null
   runtime.pendingAutoActionExecuteTick = 0
-  if (revalidatePendingAction(evalCtx, pending)) {
-    const executed = executeAutoItemAction(pending, input.itemState, input.ducks, input.tick, input.tickRate, input.emitItem, input.emitPickup)
-    if (executed) finishAction(input, duck.playerId, offensiveItem(String(pending.itemId)))
+
+  const decisionTargetId = pending.targetPlayerId
+  if (!revalidatePendingAction(evalCtx, pending)) return true
+
+  const executeMetadata: Record<string, unknown> = {}
+  if (pending.itemId === 'HOMING_ROCKET' || pending.itemId === 'MINI_ROCKET') {
+    executeMetadata.decisionTargetId = decisionTargetId ?? null
+    executeMetadata.executeTargetId = pending.targetPlayerId ?? null
+    executeMetadata.retargetedAtExecute = decisionTargetId !== undefined && decisionTargetId !== pending.targetPlayerId
   }
+
+  const executed = executeAutoItemAction(
+    pending,
+    input.itemState,
+    input.ducks,
+    input.tick,
+    input.tickRate,
+    input.emitItem,
+    input.emitPickup,
+    executeMetadata,
+    input.config,
+  )
+  if (executed) finishAction(input, duck.playerId, isOffensiveAutoItem(String(pending.itemId)))
   return true
 }
 
@@ -103,13 +122,16 @@ function processDuckExecute(input: AutoUseTickInput, duck: ItemDuckState, object
   const runtime = input.itemState.byPlayer.get(duck.playerId)!
   const evalCtx = buildEvalContext(input, duck, objective)
 
+  updateReactiveThreatVisibility(input, duck)
+
   if (processPendingAction(input, duck, evalCtx)) return
   if (runtime.pendingAutoAction || input.tick < runtime.nextAutoActionTick) return
   if (!input.wildAutoUseEnabled) return
+  if (offensiveCooldownBlocks(evalCtx, duck.playerId)) return
 
   const reactive = decideReactiveAutoItemAction(evalCtx)
-  if (!reactive) return
-  executeDecision(input, duck, reactive)
+  if (!reactive || !reactiveThreatReady(input, duck)) return
+  queueDecision(input, duck, reactive)
 }
 
 function processDuckDecide(input: AutoUseTickInput, duck: ItemDuckState, objective: RaceObjectiveContext) {
@@ -117,6 +139,7 @@ function processDuckDecide(input: AutoUseTickInput, duck: ItemDuckState, objecti
   if (!input.prepAutoUseEnabled && !input.wildAutoUseEnabled) return
   const runtime = input.itemState.byPlayer.get(duck.playerId)!
   if (runtime.pendingAutoAction || input.tick < runtime.nextAutoActionTick) return
+  if (offensiveCooldownBlocks(buildEvalContext(input, duck, objective), duck.playerId)) return
 
   const onDecisionTick = input.tick >= runtime.nextAutoDecisionTick
   const evalCtx = buildEvalContext(input, duck, objective)
@@ -127,7 +150,7 @@ function processDuckDecide(input: AutoUseTickInput, duck: ItemDuckState, objecti
   }
 
   if (onDecisionTick) runtime.nextAutoDecisionTick = input.tick + AUTO_USE_CONFIG.decisionIntervalTicks
-  executeDecision(input, duck, decision)
+  queueDecision(input, duck, decision)
 }
 
 function sortedDucks(ducks: ItemDuckState[]) {
@@ -138,20 +161,53 @@ function predictLateral(duck: ItemDuckState, horizonSeconds: number) {
   return duck.lateralOffset + duck.lateralVelocity * horizonSeconds
 }
 
-function hasReactiveThreat(input: AutoUseTickInput, duck: ItemDuckState) {
-  if (!input.wildAutoUseEnabled) return false
-  const runtime = input.itemState.byPlayer.get(duck.playerId)!
-  const wild = runtime.wildItem
-  if (!wild) return false
-  const incomingRocket = input.itemState.rockets.some((rocket) => rocket.targetPlayerId === duck.playerId)
-  if (incomingRocket && wild.itemId === 'MINI_BUBBLE') return true
-  if (wild.itemId !== 'FEATHER') return false
+function incomingBananaThreat(input: AutoUseTickInput, duck: ItemDuckState) {
   return input.itemState.bananas.some((banana) => {
     if (banana.sourcePlayerId === duck.playerId) return false
     const etaProgress = Math.max(0, banana.progress - duck.progress)
     return etaProgress >= 0 && etaProgress < 0.035
       && Math.abs(predictLateral(duck, 0.45) - banana.lateralOffset) <= banana.hitLateralRadius * 1.2
   })
+}
+
+function updateReactiveThreatVisibility(input: AutoUseTickInput, duck: ItemDuckState) {
+  const runtime = input.itemState.byPlayer.get(duck.playerId)!
+  const rocketVisible = input.itemState.rockets.some((rocket) => rocket.targetPlayerId === duck.playerId)
+  const bananaVisible = incomingBananaThreat(input, duck)
+
+  if (rocketVisible) {
+    if (runtime.reactiveRocketVisibleSinceTick === null) runtime.reactiveRocketVisibleSinceTick = input.tick
+  } else {
+    runtime.reactiveRocketVisibleSinceTick = null
+  }
+
+  if (bananaVisible) {
+    if (runtime.reactiveBananaVisibleSinceTick === null) runtime.reactiveBananaVisibleSinceTick = input.tick
+  } else {
+    runtime.reactiveBananaVisibleSinceTick = null
+  }
+}
+
+function reactiveThreatReady(input: AutoUseTickInput, duck: ItemDuckState) {
+  const runtime = input.itemState.byPlayer.get(duck.playerId)!
+  const wild = runtime.wildItem
+  if (!wild) return false
+  const minVisible = reactiveMinVisibleTicks(input.tickRate)
+  const incomingRocket = input.itemState.rockets.some((rocket) => rocket.targetPlayerId === duck.playerId)
+  if (incomingRocket && wild.itemId === 'MINI_BUBBLE') {
+    return runtime.reactiveRocketVisibleSinceTick !== null
+      && input.tick - runtime.reactiveRocketVisibleSinceTick >= minVisible
+  }
+  if (wild.itemId !== 'FEATHER') return false
+  if (!incomingBananaThreat(input, duck)) return false
+  return runtime.reactiveBananaVisibleSinceTick !== null
+    && input.tick - runtime.reactiveBananaVisibleSinceTick >= minVisible
+}
+
+function hasReactiveThreat(input: AutoUseTickInput, duck: ItemDuckState) {
+  if (!input.wildAutoUseEnabled) return false
+  updateReactiveThreatVisibility(input, duck)
+  return reactiveThreatReady(input, duck)
 }
 
 function duckNeedsExecute(input: AutoUseTickInput, duck: ItemDuckState) {
