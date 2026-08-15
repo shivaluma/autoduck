@@ -7,6 +7,7 @@ import { use, useEffect, useState } from 'react'
 import { CosmeticDuck } from '@/components/cosmetics/cosmetic-duck'
 import { COSMETIC_BY_ID } from '@/lib/cosmetics/catalog'
 import type { DuckAppearance } from '@/lib/cosmetics/types'
+import { GoogleAuthButton } from '@/components/auth/google-auth-button'
 
 type ProfileData = {
   userId: number
@@ -29,6 +30,8 @@ type ProfileData = {
     isKing?: boolean
   }
   isOwner?: boolean
+  isGoogleLinked?: boolean
+  googleEmail?: string | null
   personalLink?: string | null
   error?: string
 }
@@ -149,15 +152,28 @@ export default function DuckProfilePage({ params }: { params: Promise<{ userId: 
         </Link>
 
         {!profile.isOwner && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {!showTokenInput ? (
-              <button
-                type="button"
-                onClick={() => setShowTokenInput(true)}
-                className="rounded-xl border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-bold text-white/60 transition hover:bg-white/10 hover:text-white"
-              >
-                🔑 {token ? 'Đổi token' : 'Bạn là chủ dzịt này?'}
-              </button>
+              <div className="flex items-center gap-2">
+                <GoogleAuthButton
+                  mode="login"
+                  onSuccess={(res) => {
+                    if (res.token) {
+                      localStorage.setItem('autoduck_season3_token', res.token)
+                      setToken(res.token)
+                      void fetchProfile(res.token)
+                    }
+                  }}
+                  className="max-w-[180px]"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowTokenInput(true)}
+                  className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-bold text-white/60 transition hover:bg-white/10 hover:text-white"
+                >
+                  🔑 {token ? 'Đổi token' : 'Dán token'}
+                </button>
+              </div>
             ) : (
               <form onSubmit={handleTokenSubmit} className="flex items-center gap-2">
                 <input
@@ -194,7 +210,7 @@ export default function DuckProfilePage({ params }: { params: Promise<{ userId: 
               <span className="text-3xl">👑</span>
               <div>
                 <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-ggd-neon-green)]/20 px-2.5 py-0.5 text-[10px] font-black tracking-widest text-[var(--color-ggd-neon-green)]">
-                  BẠN ĐANG ĐĂNG NHẬP VỚI TƯ CÁCH CHỦ DZỊT
+                  BẠN ĐANG LÀ CHỦ CHÚ DZỊT NÀY
                 </div>
                 <h2 className="mt-1 font-display text-2xl text-white">Xin chào, {profile.name}!</h2>
               </div>
@@ -220,6 +236,30 @@ export default function DuckProfilePage({ params }: { params: Promise<{ userId: 
               </Link>
             </div>
           </div>
+
+          {/* Google Account Linking Card */}
+          <div className="mt-4 border-t border-white/10 pt-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="text-xs font-black uppercase tracking-wider text-[var(--color-ggd-gold)]">
+                  Tài khoản Google liên kết
+                </div>
+                <p className="text-xs text-white/70">
+                  Liên kết tài khoản Google để lần sau có thể đăng nhập 1-chạm mà không cần nhớ Secret Link!
+                </p>
+              </div>
+              <div className="min-w-[220px]">
+                <GoogleAuthButton
+                  mode="bind"
+                  token={token}
+                  boundEmail={profile.googleEmail}
+                  onSuccess={() => {
+                    void fetchProfile(token)
+                  }}
+                />
+              </div>
+            </div>
+          </div>
         </section>
       )}
 
@@ -230,7 +270,7 @@ export default function DuckProfilePage({ params }: { params: Promise<{ userId: 
             <CosmeticDuck appearance={profile.appearance} size={280} label={`Dzịt của ${profile.name}`} />
             {profile.stats.isKing && (
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full border-2 border-[var(--color-ggd-gold)] bg-black/80 px-3 py-1 font-display text-xs font-bold text-[var(--color-ggd-gold)] shadow-lg backdrop-blur-sm">
-                👑 KING OF THE POND (Streak x{profile.stats.kingStreak})
+                👑 VUA AO (Chuỗi x{profile.stats.kingStreak})
               </div>
             )}
           </div>
@@ -256,7 +296,7 @@ export default function DuckProfilePage({ params }: { params: Promise<{ userId: 
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/25 p-3">
               <div className="font-display text-2xl text-[var(--color-ggd-neon-green)]">{profile.stats.raceWins}</div>
-              <div className="text-[10px] font-black uppercase tracking-wider text-white/50">🏆 Race Thắng</div>
+              <div className="text-[10px] font-black uppercase tracking-wider text-white/50">🏆 Thắng Race</div>
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/25 p-3">
               <div className="font-display text-2xl text-white">{profile.stats.raceCount}</div>
@@ -264,19 +304,19 @@ export default function DuckProfilePage({ params }: { params: Promise<{ userId: 
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/25 p-3">
               <div className="font-display text-2xl text-[var(--color-ggd-orange)]">{profile.stats.scars}</div>
-              <div className="text-[10px] font-black uppercase tracking-wider text-white/50">🩹 Sẹo (Scars)</div>
+              <div className="text-[10px] font-black uppercase tracking-wider text-white/50">🩹 Sẹo</div>
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/25 p-3">
               <div className="font-display text-2xl text-[var(--color-ggd-sky)]">{profile.stats.shields}</div>
-              <div className="text-[10px] font-black uppercase tracking-wider text-white/50">🛡️ Khiên (Shield)</div>
+              <div className="text-[10px] font-black uppercase tracking-wider text-white/50">🛡️ Khiên</div>
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/25 p-3">
               <div className="font-display text-2xl text-[var(--color-ggd-lavender)]">{profile.stats.predictionPoints ?? 0}</div>
-              <div className="text-[10px] font-black uppercase tracking-wider text-white/50">🔮 Tiên Tri</div>
+              <div className="text-[10px] font-black uppercase tracking-wider text-white/50">🔮 Điểm Tiên Tri</div>
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/25 p-3">
               <div className="font-display text-2xl text-amber-300">{profile.collectionCount}</div>
-              <div className="text-[10px] font-black uppercase tracking-wider text-white/50">🎒 Bộ sưu tập</div>
+              <div className="text-[10px] font-black uppercase tracking-wider text-white/50">🎒 Trang Phục</div>
             </div>
           </div>
         </div>
@@ -286,7 +326,7 @@ export default function DuckProfilePage({ params }: { params: Promise<{ userId: 
       <section className="rounded-[2rem] border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-surface-2)] p-6 shadow-[0_6px_0_var(--color-ggd-outline)]">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
           <div>
-            <div className="text-xs font-black tracking-widest text-[var(--color-ggd-gold)]">WARDROBE & COSMETICS</div>
+            <div className="text-xs font-black tracking-widest text-[var(--color-ggd-gold)]">TỦ ĐỒ & THỜI TRANG</div>
             <h2 className="font-display text-2xl text-white sm:text-3xl">Bộ Sưu Tập Thời Trang</h2>
           </div>
           <div className="rounded-full bg-black/30 px-3.5 py-1 text-xs font-black text-white/70">

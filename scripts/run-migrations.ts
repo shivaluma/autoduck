@@ -852,6 +852,21 @@ async function createRacePickupTelemetry(prisma: PrismaClient) {
   await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "RacePickupTelemetry_playerId_raceId_idx" ON "RacePickupTelemetry"("playerId", "raceId")`)
 }
 
+async function addGoogleAuthFields(prisma: PrismaClient) {
+  try {
+    await prisma.$executeRawUnsafe(`ALTER TABLE "User" ADD COLUMN "email" TEXT`)
+  } catch (error) {
+    if (!String(error).toLowerCase().includes('duplicate column')) throw error
+  }
+  try {
+    await prisma.$executeRawUnsafe(`ALTER TABLE "User" ADD COLUMN "googleId" TEXT`)
+  } catch (error) {
+    if (!String(error).toLowerCase().includes('duplicate column')) throw error
+  }
+  await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "User_email_key" ON "User"("email")`)
+  await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "User_googleId_key" ON "User"("googleId")`)
+}
+
 const migrations: Migration[] = [
   {
     id: '2026-04-23-001-shield-charges-v1',
@@ -922,6 +937,11 @@ const migrations: Migration[] = [
     id: '2026-08-13-005-race-pickup-telemetry',
     name: 'Create per-instance Wild Item balance telemetry',
     run: createRacePickupTelemetry,
+  },
+  {
+    id: '2026-08-16-001-google-auth-fields',
+    name: 'Add googleId and email columns to User for Google Sign-In and account binding',
+    run: addGoogleAuthFields,
   },
 ]
 

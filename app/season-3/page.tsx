@@ -10,8 +10,8 @@ import { DuckCloset } from '@/components/cosmetics/duck-closet'
 import type { CosmeticDefinition, DuckAppearance } from '@/lib/cosmetics/types'
 import { QuackEconomy } from '@/components/cosmetics/quack-economy'
 import { Duckdex } from '@/components/cosmetics/duckdex'
-import { LiveWildItemPanel } from '@/components/racing/live-wild-item-panel'
 import { evaluateLoadoutPairing } from '@/lib/racing/loadout-guide'
+import { GoogleAuthButton } from '@/components/auth/google-auth-button'
 
 type SeasonData = {
   season: { name: string; year: number; weeks: number } | null
@@ -19,6 +19,8 @@ type SeasonData = {
     userId: number
     name: string
     avatarUrl?: string | null
+    email?: string | null
+    isGoogleLinked?: boolean
     predictionPoints: number
     quackPoints: number
     scars: number
@@ -99,9 +101,10 @@ export default function Season3Page() {
   const [loginInput, setLoginInput] = useState('')
   const [guestName, setGuestName] = useState('')
   const [submittedGuestName, setSubmittedGuestName] = useState('')
-  const [loginTab, setLoginTab] = useState<'token' | 'request'>('token')
+  const [loginTab, setLoginTab] = useState<'google' | 'token' | 'request'>('google')
   const [loading, setLoading] = useState(true)
   const [copiedLink, setCopiedLink] = useState(false)
+  const [showGoogleBindModal, setShowGoogleBindModal] = useState(false)
 
   async function loadSeasonData(authToken: string, syncLoadout = true) {
     setLoading(true)
@@ -284,7 +287,7 @@ export default function Season3Page() {
             </h1>
           </div>
           <div className="rounded-2xl border-2 border-white/15 bg-black/25 p-4 text-right">
-            <div className="text-[10px] font-black tracking-widest text-white/45">THỂ LỆ</div>
+            <div className="text-[10px] font-black tracking-widest text-white/45">CẨM NANG LUẬT</div>
             <Link
               href={`/season-3/rules${tokenQuery}`}
               className="mt-1 block font-display text-3xl text-[var(--color-ggd-gold)] transition hover:text-[var(--color-ggd-neon-green)]"
@@ -297,7 +300,7 @@ export default function Season3Page() {
                 href={`/season-3/rules${tokenQuery}`}
                 className="font-bold text-[var(--color-ggd-neon-green)] underline-offset-2 hover:underline"
               >
-                đọc luật đầy đủ
+                xem chi tiết luật
               </Link>
             </div>
           </div>
@@ -317,14 +320,9 @@ export default function Season3Page() {
       ) : (
         <section className="rounded-[2rem] border-4 border-[var(--color-ggd-gold)] bg-[var(--color-ggd-gold)]/10 p-6 text-center">
           <div className="text-5xl">🏆</div>
-          <h2 className="mt-2 font-display text-4xl">Season complete</h2>
-          <p className="mt-2 text-white/65">Golden Duck đang chờ host chốt champion.</p>
+          <h2 className="mt-2 font-display text-4xl">Mùa Giải Kết Thúc</h2>
+          <p className="mt-2 text-white/65">Đang chờ vinh danh Quán Quân Vô Địch Golden Duck.</p>
         </section>
-      )}
-
-      {/* Live Race Panel */}
-      {data.viewer && data.liveRace && (
-        <LiveWildItemPanel raceId={data.liveRace.id} token={token} isTest={data.liveRace.isTest} />
       )}
 
       {/* Race Prep: Loadout Picker */}
@@ -332,13 +330,13 @@ export default function Season3Page() {
         <section className="rounded-[2rem] border-4 border-[var(--color-ggd-neon-green)]/70 bg-[var(--color-ggd-panel)] p-5 shadow-[0_6px_0_var(--color-ggd-outline)]">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-neon-green)]">RACE PREP</div>
-              <h2 className="font-display text-3xl">🎒 Chọn loadout</h2>
+              <div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-neon-green)]">BƯỚC 1 · CHUẨN BỊ RA TRẬN</div>
+              <h2 className="font-display text-3xl">🎒 Chọn Trang Bị (Loadout)</h2>
             </div>
             <div className="font-black text-[var(--color-ggd-gold)]">{selectedCost}/3 Prep Credits</div>
           </div>
           <p className="mt-3 text-sm text-white/60">
-            ⚡ Speed · 🛡️ Defense · 💥 Attack — chọn đúng 1 Major (2 Credits) + 1 Minor (1 Credit).
+            ⚡ Tốc độ · 🛡️ Phòng thủ · 💥 Tấn công — chọn đúng 1 món Major (2 Credits) + 1 món Minor (1 Credit).
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {data.raceItems.map((item) => {
@@ -364,7 +362,7 @@ export default function Season3Page() {
                     <div>
                       <div className="font-black">{item.name}</div>
                       <div className="text-xs font-bold text-[var(--color-ggd-gold)]">
-                        {item.cost} Credit · {item.category}
+                        {item.cost} Credit · {item.category === 'major' ? 'Major' : 'Minor'}
                       </div>
                     </div>
                     {selected && <span className="ml-auto font-bold text-[var(--color-ggd-neon-green)]">✓</span>}
@@ -396,7 +394,7 @@ export default function Season3Page() {
             onClick={() => void saveLoadout()}
             className="mt-4 w-full rounded-xl bg-[var(--color-ggd-neon-green)] px-5 py-3 font-black text-[var(--color-ggd-outline)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-30"
           >
-            {week.loadout.status === 'ready' ? '✓ UPDATE LOADOUT' : '🔒 LOCK LOADOUT'}
+            {week.loadout.status === 'ready' ? '✓ CẬP NHẬT TRANG BỊ LOADOUT' : '🔒 KHÓA TRANG BỊ LOADOUT'}
           </button>
         </section>
       )}
@@ -405,8 +403,8 @@ export default function Season3Page() {
       {data.viewer && week?.viewerSkipped && (
         <section className="rounded-[2rem] border-4 border-white/20 bg-[var(--color-ggd-panel)] p-6 text-center">
           <div className="text-4xl">🛟</div>
-          <h2 className="mt-2 font-display text-3xl">Nghỉ race tuần này</h2>
-          <p className="mt-2 text-white/60">Bạn không cần chọn loadout hay prediction.</p>
+          <h2 className="mt-2 font-display text-3xl">Tuần Này Được Nghỉ Ngơi</h2>
+          <p className="mt-2 text-white/60">Bạn không tham gia đua tuần này nên không cần chọn đồ hay dự đoán.</p>
         </section>
       )}
 
@@ -418,7 +416,7 @@ export default function Season3Page() {
               <div className="flex items-center gap-3">
                 <Season3Avatar name={data.viewer.name} avatarUrl={data.viewer.avatarUrl} size={64} />
                 <div>
-                  <div className="text-xs font-black tracking-widest text-white/45">YOUR POND STATUS</div>
+                  <div className="text-xs font-black tracking-widest text-white/45">TRẠNG THÁI AO DZỊT</div>
                   <h2 className="font-display text-3xl">
                     {data.viewer.isKing ? '👑 ' : ''}
                     {data.viewer.name}
@@ -430,7 +428,7 @@ export default function Season3Page() {
                   <div className="font-display text-2xl text-[var(--color-ggd-gold)]">
                     {data.viewer.isKing ? `x${data.viewer.kingStreak}` : '—'}
                   </div>
-                  <div className="text-[9px] font-black text-white/45">KING STREAK</div>
+                  <div className="text-[9px] font-black text-white/45">CHUỖI THỐNG TRỊ</div>
                 </div>
               </div>
             </div>
@@ -454,11 +452,11 @@ export default function Season3Page() {
               <div className="border-t-2 border-white/10 bg-black/10 p-5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <div className="font-black text-white">🛡️ Dùng Shield tuần này?</div>
+                    <div className="font-black text-white">🛡️ Dùng Khiên cứu mạng tuần này?</div>
                     <p className="text-xs text-white/55">
                       {data.viewer.shields > 0
-                        ? 'Khiên sẽ mất sau race, bảo vệ bạn nếu rơi vào nhóm thua Chaos.'
-                        : 'Bạn hiện chưa có Khiên (tích lũy 2 Sẹo để nhận 1 Khiên).'}
+                        ? 'Khiên sẽ tiêu hao sau race. Nếu bạn rơi vào nhóm thua của Chaos tuần này, Khiên sẽ cứu bạn khỏi nhận Sẹo!'
+                        : 'Bạn hiện chưa có Khiên (tích lũy 2 Sẹo để tự động rèn thành 1 Khiên).'}
                     </p>
                   </div>
                   {week.shieldConfirmed ? (
@@ -466,7 +464,7 @@ export default function Season3Page() {
                       onClick={() => void confirmShield(false)}
                       className="rounded-xl border-2 border-[var(--color-ggd-sky)] bg-[var(--color-ggd-sky)]/10 px-4 py-2 text-xs font-black text-[var(--color-ggd-sky)] hover:bg-[var(--color-ggd-sky)]/20"
                     >
-                      ✓ ĐÃ XÁC NHẬN (HỦY?)
+                      ✓ ĐÃ BẬT KHIÊN (HỦY?)
                     </button>
                   ) : (
                     <button
@@ -474,7 +472,7 @@ export default function Season3Page() {
                       onClick={() => void confirmShield(true)}
                       className="rounded-xl bg-[var(--color-ggd-sky)] px-4 py-2 text-xs font-black text-[var(--color-ggd-outline)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-35"
                     >
-                      XÁC NHẬN DÙNG
+                      BẬT KHIÊN CỨU MẠNG
                     </button>
                   )}
                 </div>
@@ -501,6 +499,22 @@ export default function Season3Page() {
                 >
                   🦆 Trang cá nhân
                 </Link>
+
+                {/* Google Account Status Badge / Button */}
+                {data.viewer.isGoogleLinked ? (
+                  <span className="flex items-center gap-1 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1.5 font-bold text-emerald-400">
+                    <span>✓ Google:</span>
+                    <span className="max-w-[140px] truncate">{data.viewer.email || 'Đã liên kết'}</span>
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowGoogleBindModal(true)}
+                    className="flex items-center gap-1 rounded-lg border border-blue-400/40 bg-blue-500/15 px-2.5 py-1.5 font-bold text-blue-300 transition hover:bg-blue-500/25"
+                  >
+                    <span>🔗 Liên kết Google</span>
+                  </button>
+                )}
               </div>
 
               <button
@@ -511,6 +525,39 @@ export default function Season3Page() {
                 Đăng xuất / Đổi token
               </button>
             </div>
+
+            {/* Google Bind Modal */}
+            {showGoogleBindModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+                <div className="w-full max-w-md rounded-[2rem] border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-6 shadow-2xl">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                    <h3 className="font-display text-2xl text-white">🔗 Liên Kết Google</h3>
+                    <button
+                      type="button"
+                      onClick={() => setShowGoogleBindModal(false)}
+                      className="rounded-lg border border-white/20 px-2.5 py-1 text-xs text-white/60 hover:bg-white/10"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <p className="mt-3 text-xs text-white/70">
+                    Liên kết tài khoản Google với chú Dzịt <b>{data.viewer.name}</b> để đăng nhập 1-chạm cực nhanh!
+                  </p>
+                  <div className="mt-4">
+                    <GoogleAuthButton
+                      mode="bind"
+                      token={token}
+                      boundEmail={data.viewer.email}
+                      onSuccess={(res) => {
+                        setMessage(res.message || 'Đã liên kết tài khoản Google!')
+                        setShowGoogleBindModal(false)
+                        void refresh(true)
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </section>
         ) : (
           <section className="rounded-[2rem] border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-surface-2)] p-6 shadow-[0_6px_0_var(--color-ggd-outline)]">
@@ -518,11 +565,22 @@ export default function Season3Page() {
               <span className="text-4xl">🔐</span>
               <div>
                 <h2 className="font-display text-3xl">Đăng Nhập Sảnh Đua</h2>
-                <p className="text-xs text-white/60">Dùng Secret Link hoặc Token cá nhân của bạn</p>
+                <p className="text-xs text-white/60">Đăng nhập nhanh bằng Google hoặc dùng Secret Link cá nhân</p>
               </div>
             </div>
 
             <div className="mt-4 flex gap-2 border-b border-white/10 pb-2">
+              <button
+                type="button"
+                onClick={() => setLoginTab('google')}
+                className={`rounded-lg px-3 py-1 text-xs font-black transition ${
+                  loginTab === 'google'
+                    ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]'
+                    : 'text-white/50 hover:text-white'
+                }`}
+              >
+                🔴 Google Sign-In
+              </button>
               <button
                 type="button"
                 onClick={() => setLoginTab('token')}
@@ -532,7 +590,7 @@ export default function Season3Page() {
                     : 'text-white/50 hover:text-white'
                 }`}
               >
-                Dán Token / Link
+                🔑 Dán Token / Link
               </button>
               <button
                 type="button"
@@ -547,7 +605,28 @@ export default function Season3Page() {
               </button>
             </div>
 
-            {loginTab === 'token' ? (
+            {loginTab === 'google' ? (
+              <div className="mt-4 space-y-3">
+                <p className="text-xs text-white/70">
+                  Dành cho những chú Dzịt đã liên kết tài khoản Google. Bấm nút dưới đây để vào sảnh ngay!
+                </p>
+                <GoogleAuthButton
+                  mode="login"
+                  onSuccess={(res) => {
+                    if (res.token) {
+                      localStorage.setItem('autoduck_season3_token', res.token)
+                      setToken(res.token)
+                      setMessage(res.message || 'Đăng nhập thành công!')
+                      void loadSeasonData(res.token, true)
+                    }
+                  }}
+                  onError={(err) => setMessage(err)}
+                />
+                <div className="rounded-xl border border-white/10 bg-black/20 p-3 text-center text-xs text-white/50">
+                  Chưa liên kết Google? Hãy chuyển sang tab <button type="button" onClick={() => setLoginTab('token')} className="font-bold text-[var(--color-ggd-gold)] underline">Dán Token / Link</button> để đăng nhập lần đầu rồi liên kết nhé!
+                </div>
+              </div>
+            ) : loginTab === 'token' ? (
               <form onSubmit={handleLoginSubmit} className="mt-4 space-y-3">
                 <input
                   type="text"
@@ -612,14 +691,14 @@ export default function Season3Page() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-gold)]">
-                  STEP 02 • SECRET PREDICTION
+                  BƯỚC 2 · DỰ ĐOÁN BÍ MẬT
                 </div>
-                <h2 className="mt-1 font-display text-3xl">WHO GETS DUCKED?</h2>
+                <h2 className="mt-1 font-display text-3xl">AI SẼ BỊ LÀM DZỊT?</h2>
               </div>
               <div className="text-4xl">🔮</div>
             </div>
             <p className="mt-2 text-sm text-white/70">
-              Chọn 1 duck bạn nghĩ sẽ về Raw Bottom 2 trên đường đua. (+1 🔮 nếu trúng).
+              Chọn 1 chú vịt bạn nghĩ sẽ về 2 vị trí cuối cùng trên đường đua (+1 🔮 nếu đoán trúng, nhận thêm 🪙 QP nếu người đó bị Chaos xử thua).
             </p>
             <div className="mt-4 grid max-h-48 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
               {eligiblePlayers.map((player) => (
@@ -643,34 +722,34 @@ export default function Season3Page() {
               disabled={!selectedTarget}
               className="mt-4 w-full rounded-xl bg-[var(--color-ggd-gold)] px-5 py-3 font-black text-[var(--color-ggd-outline)] shadow-[0_4px_0_rgba(0,0,0,.4)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-35"
             >
-              🔒 LOCK MY PREDICTION
+              🔒 KHÓA DỰ ĐOÁN TIÊN TRI
             </button>
             {message && <p className="mt-3 text-center text-sm font-bold text-[var(--color-ggd-neon-green)]">{message}</p>}
           </section>
         ) : week?.status === 'racing' && week.raceId ? (
           <section className="rounded-[2rem] border-4 border-[var(--color-ggd-neon-green)] bg-[var(--color-ggd-neon-green)]/10 p-5 shadow-[0_6px_0_var(--color-ggd-outline)]">
-            <div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-neon-green)]">RACE LIVE</div>
-            <h2 className="mt-1 font-display text-3xl">🏁 Duck Duck Race đang chạy</h2>
-            <p className="mt-2 text-sm text-white/70">BXH tự cập nhật khi race kết thúc.</p>
+            <div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-neon-green)]">CUỘC ĐUA ĐANG DIỄN RA</div>
+            <h2 className="mt-1 font-display text-3xl">🏁 Cuộc Đua Đang Tranh Tài!</h2>
+            <p className="mt-2 text-sm text-white/70">Bảng xếp hạng sẽ tự động cập nhật ngay khi các chú vịt về đích.</p>
             <Link
               href={`/season-3/race/${week.raceId}`}
               className="mt-4 inline-block rounded-xl bg-[var(--color-ggd-neon-green)] px-5 py-3 font-black text-[var(--color-ggd-outline)] shadow-md transition hover:brightness-110"
             >
-              XEM RACE
+              VÀO XEM ĐUA LIVE
             </Link>
           </section>
         ) : (
           <section className="rounded-[2rem] border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-surface-2)] p-5">
-            <div className="text-xs font-black tracking-[0.2em] text-white/45">STEP 02 • SECRET PREDICTION</div>
+            <div className="text-xs font-black tracking-[0.2em] text-white/45">BƯỚC 2 · DỰ ĐOÁN BÍ MẬT</div>
             <h2 className="mt-1 font-display text-3xl">
-              {week?.viewerSkipped ? '🛟 REST WEEK' : week ? '🔒 PREP LOCKED' : '🎬 SEASON RECAP'}
+              {week?.viewerSkipped ? '🛟 TUẦN NGHỈ NGƠI' : week ? '🔒 ĐÃ ĐÓNG CHUẨN BỊ' : '🎬 TỔNG KẾT MÙA GIẢI'}
             </h2>
             <p className="mt-2 text-sm text-white/65">
               {week?.viewerSkipped
                 ? 'Bạn không tham gia race tuần này.'
                 : week
-                  ? 'Đang chờ host bắt đầu race.'
-                  : 'Mỗi tuần một cú twist, mỗi tuần một Duck News.'}
+                  ? 'Đã khóa lựa chọn, đang chờ hiệu lệnh xuất phát!'
+                  : 'Mỗi tuần một cú twist, mỗi tuần một bản tin Duck News.'}
             </p>
           </section>
         )}
@@ -683,11 +762,11 @@ export default function Season3Page() {
       >
         <div className="flex items-end justify-between gap-3 border-b border-white/10 pb-4">
           <div>
-            <div className="text-xs font-black tracking-[0.2em] text-white/45">LIVE POND BOARD</div>
-            <h2 className="font-display text-3xl">🏅 Bảng Xếp Hạng Ao Dzịt</h2>
+            <div className="text-xs font-black tracking-[0.2em] text-white/45">BẢNG XẾP HẠNG MÙA GIẢI</div>
+            <h2 className="font-display text-3xl">🏅 Bảng Điểm & Danh Hiệu Ao Dzịt</h2>
           </div>
           <span className="rounded-full bg-black/25 px-3 py-1 text-xs font-black text-white/55">
-            {data.players.length} DUCKS
+            {data.players.length} ĐẤU THỦ
           </span>
         </div>
         <div className="mt-4 space-y-2">
@@ -775,22 +854,22 @@ export default function Season3Page() {
       >
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-hot-pink)]">THE RECEIPTS</div>
-            <h2 className="font-display text-3xl">📰 Duck News</h2>
+            <div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-hot-pink)]">BẢNG TIN MÙA GIẢI</div>
+            <h2 className="font-display text-3xl">📰 Nhật Ký Ao Dzịt (Duck News)</h2>
           </div>
-          <span className="text-xs font-bold text-white/45">History never forgets</span>
+          <span className="text-xs font-bold text-white/45">Lịch sử không bao giờ quên</span>
         </div>
         <div className="mt-4 grid gap-3 lg:grid-cols-2">
           {data.history.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-white/15 p-5 text-sm text-white/50">
-              Chưa có tuần nào resolve.
+              Chưa có tuần đua nào hoàn thành.
             </div>
           ) : (
             data.history.map((item) => (
               <article key={item.id} className="rounded-2xl border border-white/10 bg-black/20 p-4">
                 <div className="flex items-center justify-between gap-3">
                   <span className="rounded-full bg-[var(--color-ggd-orange)]/15 px-2 py-1 text-[10px] font-black text-[var(--color-ggd-orange)]">
-                    WEEK {item.weekNumber}
+                    TUẦN {item.weekNumber}
                   </span>
                   <span className="text-[10px] font-black tracking-widest text-white/35">
                     {chaosNames[item.chaosType] ?? item.chaosType}
@@ -810,14 +889,14 @@ export default function Season3Page() {
             <span className="text-3xl">🔮</span>
             <div>
               <div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-lavender)]">
-                REVEAL AFTER RACE
+                KẾT QUẢ TIÊN TRI
               </div>
-              <h2 className="font-display text-3xl">Prediction receipts • Week {data.latestReveal.weekNumber}</h2>
+              <h2 className="font-display text-3xl">Bảng Đối Chiếu Tiên Tri • Tuần {data.latestReveal.weekNumber}</h2>
             </div>
           </div>
           <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {data.latestReveal.predictions.length === 0 ? (
-              <p className="text-sm text-white/55">Không có prediction.</p>
+              <p className="text-sm text-white/55">Không có dự đoán nào.</p>
             ) : (
               data.latestReveal.predictions.map((prediction) => (
                 <div
@@ -832,7 +911,7 @@ export default function Season3Page() {
                       prediction.pointsAwarded > 0 ? 'text-[var(--color-ggd-neon-green)]' : 'text-white/35'
                     }`}
                   >
-                    {prediction.pointsAwarded > 0 ? '✓ +1' : '✕'}
+                    {prediction.pointsAwarded > 0 ? '✓ +1 🔮' : '✕'}
                   </span>
                 </div>
               ))

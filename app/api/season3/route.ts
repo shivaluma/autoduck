@@ -35,7 +35,7 @@ async function getActiveSeason() {
     where: { status: 'active' },
     orderBy: { createdAt: 'desc' },
     include: {
-      players: { include: { user: { select: { id: true, name: true, avatarUrl: true } }, cosmetics: true, appearance: true, cosmeticPresets: true }, orderBy: { user: { name: 'asc' } } },
+      players: { include: { user: { select: { id: true, name: true, avatarUrl: true, email: true, googleId: true } }, cosmetics: true, appearance: true, cosmeticPresets: true }, orderBy: { user: { name: 'asc' } } },
       weeksPlan: { orderBy: { weekNumber: 'asc' }, include: { predictions: { include: { predictor: true, target: true } }, shieldChoices: true, loadouts: true, race: { select: { id: true, status: true } } } },
       rewards: { where: { active: true }, orderBy: { cost: 'asc' } },
     },
@@ -82,6 +82,8 @@ export async function GET(request: Request) {
         userId: viewer.userId,
         name: viewer.user.name,
         avatarUrl: viewer.user.avatarUrl,
+        email: viewer.user.email,
+        isGoogleLinked: Boolean(viewer.user.googleId || viewer.user.email),
         predictionPoints: viewer.predictionPoints,
         quackPoints: viewer.quackPoints,
         scars: viewer.scars,

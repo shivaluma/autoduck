@@ -289,9 +289,9 @@ export function Season3RulesGuide() {
       </Section>
 
       {/* Section 5: Track, Boxes, Wild Items & Hazards */}
-      <Section id="track-wild" eyebrow="TRÊN ĐƯỜNG ĐUA" title="Hộp Quà, Wild Items & Bẫy Môi Trường">
+      <Section id="track-wild" eyebrow="TRÊN ĐƯỜNG ĐUA" title="Hộp Quà, Vật Phẩm Track & Bẫy Môi Trường">
         <p>
-          Ngoài 2 item Loadout mang theo từ nhà, dọc theo dòng nước có các hộp bí ẩn mở ra <b>Wild Items</b> giúp tạo đột biến nghẹt thở.
+          Ngoài 2 món Loadout mang theo từ nhà, dọc theo dòng nước có các hộp bí ẩn mở ra các món đồ <b>Wild Item</b> giúp cuộc đua đảo chiều nghẹt thở.
         </p>
 
         {/* Track Boxes */}
@@ -308,7 +308,7 @@ export function Season3RulesGuide() {
           ))}
         </div>
 
-        {/* Live Race Interaction */}
+        {/* Race Action Highlights */}
         <div className="grid gap-3 sm:grid-cols-2">
           {RACE_ACTION_TIPS.map((tip) => (
             <div key={tip.title} className="rounded-2xl border border-white/10 bg-black/20 p-4">
@@ -323,9 +323,9 @@ export function Season3RulesGuide() {
 
         {/* Wild Items List */}
         <div>
-          <h3 className="font-display text-xl text-white">8 Loại Wild Items nhặt trên track</h3>
+          <h3 className="font-display text-xl text-white">8 Vật phẩm Wild Item nhặt trên đường đua</h3>
           <p className="mt-1 text-xs text-white/60">
-            Gồm 2 nhóm: <b>Tức thì (Instant)</b> kích hoạt ngay khi chạm hộp và <b>Giữ slot (Held)</b> cất vào túi để bấm dùng hoặc để vịt tự xài.
+            Bao gồm các món kích hoạt ngay khi chạm hộp hoặc được vịt giữ trong túi và tự động kích hoạt khi có thời cơ thích hợp:
           </p>
           <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {WILD_ITEMS_LIST.map((item) => (
@@ -334,7 +334,7 @@ export function Season3RulesGuide() {
                   <div className="flex items-center justify-between">
                     <span className="text-3xl">{item.icon}</span>
                     <span className="rounded bg-white/10 px-2 py-0.5 text-[10px] font-black text-white/60">
-                      {item.behavior === 'INSTANT' ? '⚡ Tức thì' : '🎒 Giữ túi'}
+                      {item.typeText}
                     </span>
                   </div>
                   <h4 className="mt-2 font-black text-sm text-white">{item.displayName}</h4>
@@ -347,7 +347,7 @@ export function Season3RulesGuide() {
 
         {/* Hazards */}
         <div>
-          <h3 className="font-display text-xl text-white">4 Loại bẫy chướng ngại vật (Hazards)</h3>
+          <h3 className="font-display text-xl text-white">4 Loại bẫy chướng ngại vật ngẫu nhiên</h3>
           <p className="mt-1 text-xs text-white/60">
             Mỗi race xuất hiện 0–2 chướng ngại vật ngẫu nhiên trên mặt nước. Đường đua luôn chừa làn an toàn để vịt có thể né tránh:
           </p>

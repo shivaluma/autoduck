@@ -10,6 +10,8 @@ datasource db {
 model User {
   id          Int       @id @default(autoincrement())
   name        String    @unique
+  email       String?   @unique
+  googleId    String?   @unique
   avatarUrl   String?
   scars       Int       @default(0)
   shields     Int       @default(0)
