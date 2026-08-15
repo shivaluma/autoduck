@@ -1,1 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><path d="M108 43c7-23 28-35 52-30 16 3 29 13 36 28-25-8-59-7-88 2Z" fill="#FF5B67" stroke="#241A38" stroke-width="7"/><path d="M148 41c24-4 47 0 67 12-22 8-47 7-69-2" fill="#D93E55" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+      <!-- Red Cap Dome -->
+      <path d="M118 48 C120 22, 155 14, 186 20 C202 24, 208 36, 206 48 Z" fill="#FF4D5A" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
+      <path d="M130 46 C135 28, 160 22, 185 24" stroke="#FFFDF4" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <!-- Visor jutting forward over duck brow -->
+      <path d="M172 45 C192 41, 222 43, 234 50 C220 57, 188 56, 170 51 Z" fill="#D93444" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
+      <!-- Cap Button -->
+      <circle cx="160" cy="18" r="5" fill="#FFFDF4" stroke="#241A38" stroke-width="3"/>
+    </g></svg>

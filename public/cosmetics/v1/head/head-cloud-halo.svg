@@ -1,1 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g><path d="M107 44q8-39 50-39 42 1 48 43Z" fill="#58E6B0" stroke="#241A38" stroke-width="7"/><path d="M96 48q59-14 117 5-26 17-117-5Z" fill="#FF78A8" stroke="#241A38" stroke-width="7"/><circle cx="159" cy="29" r="11" fill="#FFF4C2" stroke="#241A38" stroke-width="4"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+      <defs>
+        <filter id="halo-glow-head" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <ellipse cx="165" cy="8" rx="36" ry="10" fill="none" stroke="#FFD84D" stroke-width="8" filter="url(#halo-glow-head)"/>
+      <ellipse cx="165" cy="8" rx="36" ry="10" fill="none" stroke="#FFFDF4" stroke-width="3"/>
+      <circle cx="135" cy="6" r="2.5" fill="#FFFDF4"/>
+      <circle cx="195" cy="10" r="2.5" fill="#FFFDF4"/>
+    </g></svg>

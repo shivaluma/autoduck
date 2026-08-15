@@ -1,1 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><path d="m191 173 16-12 17 12 14-5-8 17 6 18-21-4-20 5 3-20-13-14Z" fill="#58E6B0" stroke="#241A38" stroke-width="6" stroke-linejoin="round"/><circle cx="205" cy="177" r="3" fill="#241A38"/><circle cx="222" cy="177" r="3" fill="#241A38"/><path d="m204 190 10 4 10-5" stroke="#241A38" stroke-width="4"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+    <defs>
+      <style>
+        @keyframes pet-bob-main {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-5px); }
+        }
+      </style>
+    </defs>
+    <g style="animation: pet-bob-main 2.2s ease-in-out infinite">
+      <!-- Cute Creature -->
+    <ellipse cx="216" cy="188" rx="19" ry="16" fill="#8EE3F5" stroke="#241A38" stroke-width="5"/>
+    <polygon points="204,168 200,154 212,164" fill="#11998E" stroke="#241A38" stroke-width="3.5" stroke-linejoin="round"/>
+    <polygon points="220,164 228,154 226,168" fill="#11998E" stroke="#241A38" stroke-width="3.5" stroke-linejoin="round"/>
+    <circle cx="208" cy="182" r="3" fill="#241A38"/>
+    <circle cx="222" cy="182" r="3" fill="#241A38"/>
+    <circle cx="209" cy="181" r="1" fill="#FFFDF4"/>
+    <circle cx="223" cy="181" r="1" fill="#FFFDF4"/>
+    <circle cx="204" cy="188" r="2" fill="#FF78A8" opacity="0.6"/>
+    <circle cx="226" cy="188" r="2" fill="#FF78A8" opacity="0.6"/>
+    </g>
+  </g></svg>

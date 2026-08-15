@@ -1,1 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g transform="rotate(-5 215 184)"><ellipse cx="214" cy="190" rx="25" ry="19" fill="#8EE3F5" stroke="#241A38" stroke-width="6"/><circle cx="204" cy="184" r="4" fill="#241A38"/><circle cx="222" cy="184" r="4" fill="#241A38"/><path d="m199 171-7-13 17 8m18 5 8-13-19 8" fill="#61C9FF" stroke="#241A38" stroke-width="5"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+    <defs>
+      <style>
+        @keyframes pet-bob-main {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-5px); }
+        }
+      </style>
+    </defs>
+    <g style="animation: pet-bob-main 2.2s ease-in-out infinite">
+      <!-- Capybara -->
+      <ellipse cx="216" cy="190" rx="22" ry="17" fill="#854D0E" stroke="#241A38" stroke-width="5"/>
+      <path d="M200 178 C200 168, 226 168, 228 178 L228 188 C228 194, 200 194, 200 188 Z" fill="#713F12" stroke="#241A38" stroke-width="5"/>
+      <line x1="204" y1="176" x2="210" y2="176" stroke="#241A38" stroke-width="3" stroke-linecap="round"/>
+      <line x1="218" y1="176" x2="224" y2="176" stroke="#241A38" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="211" cy="188" r="1.5" fill="#241A38"/>
+      <circle cx="217" cy="188" r="1.5" fill="#241A38"/>
+      <circle cx="214" cy="162" r="6" fill="#F59E0B" stroke="#241A38" stroke-width="3"/>
+      <circle cx="214" cy="157" r="1.5" fill="#22C55E"/>
+    </g>
+  </g></svg>

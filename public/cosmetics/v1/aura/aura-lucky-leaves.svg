@@ -1,1 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g fill="#FFD84D" stroke="#F08A5D" stroke-width="3" opacity=".8"><circle cx="214" cy="137" r="8"/><circle cx="188.8111831820431" cy="187.91168824543144" r="4"/><circle cx="128" cy="209" r="5"/><circle cx="67.18881681795692" cy="187.91168824543144" r="6"/><circle cx="42" cy="137" r="7"/><circle cx="67.1888168179569" cy="86.08831175456858" r="8"/><circle cx="127.99999999999999" cy="65" r="4"/><circle cx="188.81118318204307" cy="86.08831175456856" r="5"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+    <defs>
+      <filter id="aura-glow-dyn-1848857124" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <style>@keyframes aura-spin-dyn-1848857124 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
+    </defs>
+    <g filter="url(#aura-glow-dyn-1848857124)">
+      <ellipse cx="128" cy="137" rx="96" ry="80" stroke="#58E6B0" stroke-width="3.5" stroke-dasharray="10 8" fill="none" opacity="0.75"/>
+      <g style="animation: aura-spin-dyn-1848857124 8s linear infinite" transform-origin="128 137">
+        <circle cx="224.0" cy="137.0" r="5.5" fill="#58E6B0" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="195.9" cy="193.6" r="5.5" fill="#8EE3F5" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="128.0" cy="217.0" r="5.5" fill="#58E6B0" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="60.1" cy="193.6" r="5.5" fill="#8EE3F5" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="32.0" cy="137.0" r="5.5" fill="#58E6B0" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="60.1" cy="80.4" r="5.5" fill="#8EE3F5" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="128.0" cy="57.0" r="5.5" fill="#58E6B0" stroke="#FFFDF4" stroke-width="1.5"/><circle cx="195.9" cy="80.4" r="5.5" fill="#8EE3F5" stroke="#FFFDF4" stroke-width="1.5"/>
+      </g>
+    </g>
+  </g></svg>

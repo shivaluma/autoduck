@@ -1,1 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><path d="M82 113q-46 8-45 52 25-17 51-8m9-38q-31 35-13 69 13-21 30-32" fill="#B99AFF" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+      <rect x="48" y="125" width="22" height="42" rx="6" fill="#CBD5E1" stroke="#241A38" stroke-width="5"/>
+      <path d="M52 167 L46 188 L72 188 L66 167 Z" fill="#FF5B00" stroke="#241A38" stroke-width="4"/>
+      <polygon points="52,188 59,202 66,188" fill="#FFD84D"/>
+    </g></svg>

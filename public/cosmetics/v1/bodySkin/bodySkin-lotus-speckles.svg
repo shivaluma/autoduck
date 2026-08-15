@@ -1,1 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g opacity=".9" transform="rotate(2 124 158)" fill="#F08A5D"><rect x="75" y="135" width="15" height="22" rx="6"/><rect x="106" y="135" width="15" height="22" rx="6"/><rect x="137" y="135" width="15" height="22" rx="6"/><rect x="75" y="169" width="15" height="22" rx="6"/><rect x="106" y="169" width="15" height="22" rx="6"/><rect x="137" y="169" width="15" height="22" rx="6"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g fill="#FF78A8" stroke="#241A38" stroke-width="2">
+      <!-- Cheek Lotus Petals -->
+      <path d="M134 65 C130 55, 142 55, 144 65 C142 75, 130 75, 134 65 Z"/>
+      <path d="M148 48 C144 38, 156 38, 158 48 C156 58, 144 58, 148 48 Z"/>
+      <!-- Body Petals -->
+      <path d="M85 145 C80 135, 95 135, 98 145 C95 155, 80 155, 85 145 Z"/>
+      <path d="M125 140 C120 130, 135 130, 138 140 C135 150, 120 150, 125 140 Z"/>
+    </g></svg>

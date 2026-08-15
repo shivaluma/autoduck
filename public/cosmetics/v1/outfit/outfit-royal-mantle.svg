@@ -1,1 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><path d="M42 163c0-27 22-46 57-52l12 15q19 17 43-1l17 3c19 8 30 19 34 33 7 33-26 50-83 48-53-1-80-18-80-46Z" fill="#FFD84D" stroke="#241A38" stroke-width="8" stroke-linejoin="round"/><path d="M131 128v77" stroke="#F08A5D" stroke-width="7"/><path d="m86 151 44 18 42-20" stroke="#FFF4C2" stroke-width="5" stroke-linecap="round" fill="none"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+      <!-- Imperial Silk Robe -->
+      <path d="M42 163c0-27 22-46 57-52l12 15q19 17 43-1l17 3c19 8 30 19 34 33 7 33-26 50-83 48-53-1-80-18-80-46Z" fill="#B91C1C" stroke="#241A38" stroke-width="8" stroke-linejoin="round"/>
+      <!-- Wing Sleeve with Gold Border -->
+      <path d="M68 152 C82 142, 105 145, 120 162 C108 178, 80 182, 68 152 Z" fill="#991B1B" stroke="#241A38" stroke-width="5" stroke-linejoin="round"/>
+      <path d="M68 152 C82 142, 105 145, 120 162" stroke="#FFD84D" stroke-width="4" fill="none"/>
+      <!-- Gold Cloud Border -->
+      <path d="M110 126 Q138 140 165 126" stroke="#FFD84D" stroke-width="8" stroke-linecap="round" fill="none"/>
+      <circle cx="148" cy="156" r="6" fill="#FFD84D"/>
+      <circle cx="148" cy="176" r="6" fill="#FFD84D"/>
+    </g></svg>

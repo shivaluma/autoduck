@@ -1,1 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g opacity=".9" transform="rotate(6 124 158)" fill="#F08A5D"><rect x="75" y="135" width="15" height="22" rx="6"/><rect x="106" y="135" width="15" height="22" rx="6"/><rect x="137" y="135" width="15" height="22" rx="6"/><rect x="75" y="169" width="15" height="22" rx="6"/><rect x="106" y="169" width="15" height="22" rx="6"/><rect x="137" y="169" width="15" height="22" rx="6"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+      <!-- Head Koi Markings -->
+      <path d="M135 42 C130 32, 152 30, 162 38 C166 48, 148 54, 138 50 Z" fill="#EF4444" opacity="0.9"/>
+      <path d="M125 68 C120 58, 138 56, 145 64 C148 72, 135 78, 128 74 Z" fill="#18181B" opacity="0.85"/>
+      <!-- Body Markings -->
+      <path d="M70 148 C65 135, 95 132, 110 142 C115 155, 90 165, 75 160 Z" fill="#EF4444" opacity="0.9"/>
+      <path d="M125 155 C120 142, 145 140, 160 148 C168 162, 145 172, 130 168 Z" fill="#18181B" opacity="0.85"/>
+    </g></svg>

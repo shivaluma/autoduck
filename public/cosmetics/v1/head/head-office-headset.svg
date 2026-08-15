@@ -1,1 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g><path d="M107 44q8-39 50-39 42 1 48 43Z" fill="#F08A5D" stroke="#241A38" stroke-width="7"/><path d="M96 48q59-14 117 5-26 17-117-5Z" fill="#58E6B0" stroke="#241A38" stroke-width="7"/><circle cx="159" cy="29" r="11" fill="#FFF4C2" stroke="#241A38" stroke-width="4"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+      <!-- Headset Arch -->
+      <path d="M124 50 C128 14, 182 14, 198 50" stroke="#1E293B" stroke-width="8" stroke-linecap="round" fill="none"/>
+      <path d="M124 50 C128 14, 182 14, 198 50" stroke="#64748B" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <!-- Left & Right Ear Cushions -->
+      <rect x="116" y="44" width="14" height="22" rx="6" fill="#0F172A" stroke="#241A38" stroke-width="4"/>
+      <rect x="192" y="44" width="14" height="22" rx="6" fill="#0F172A" stroke="#241A38" stroke-width="4"/>
+      <!-- Flexible Mic Boom to Beak -->
+      <path d="M198 55 C210 65, 212 85, 188 92" stroke="#475569" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <!-- Mic Foam & Red LED -->
+      <ellipse cx="186" cy="92" rx="6" ry="4" fill="#0F172A" stroke="#241A38" stroke-width="2"/>
+      <circle cx="184" cy="91" r="1.5" fill="#EF4444"/>
+    </g></svg>

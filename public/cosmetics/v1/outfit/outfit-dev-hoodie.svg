@@ -1,1 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><path d="M42 163c0-27 22-46 57-52l12 15q19 17 43-1l17 3c19 8 30 19 34 33 7 33-26 50-83 48-53-1-80-18-80-46Z" fill="#B99AFF" stroke="#241A38" stroke-width="8" stroke-linejoin="round"/><path d="M131 128v77" stroke="#8EE3F5" stroke-width="7"/><path d="m86 151 44 18 42-20" stroke="#FFF4C2" stroke-width="5" stroke-linecap="round" fill="none"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+      <!-- Charcoal Hoodie -->
+      <path d="M42 163c0-27 22-46 57-52l12 15q19 17 43-1l17 3c19 8 30 19 34 33 7 33-26 50-83 48-53-1-80-18-80-46Z" fill="#1E293B" stroke="#241A38" stroke-width="8" stroke-linejoin="round"/>
+      <!-- Wing Sleeve -->
+      <path d="M68 152 C82 142, 105 145, 120 162 C108 178, 80 182, 68 152 Z" fill="#0F172A" stroke="#241A38" stroke-width="5" stroke-linejoin="round"/>
+      <!-- Hood Cowl -->
+      <path d="M106 122 C120 142, 150 142, 168 124" stroke="#334155" stroke-width="12" stroke-linecap="round"/>
+      <path d="M106 122 C120 142, 150 142, 168 124" stroke="#241A38" stroke-width="5" stroke-linecap="round" fill="none"/>
+      <!-- Drawstrings -->
+      <line x1="126" y1="134" x2="124" y2="156" stroke="#FFFDF4" stroke-width="3.5" stroke-linecap="round"/>
+      <line x1="146" y1="134" x2="148" y2="154" stroke="#FFFDF4" stroke-width="3.5" stroke-linecap="round"/>
+      <!-- Neon Green Code Logo -->
+      <text x="145" y="165" fill="#38EF7D" font-family="monospace" font-weight="900" font-size="13" text-anchor="middle">&lt;/&gt;</text>
+      <!-- Front Kangaroo Pocket -->
+      <path d="M125 175 H175 L168 198 H132 Z" fill="#0F172A" stroke="#241A38" stroke-width="5" stroke-linejoin="round"/>
+    </g></svg>

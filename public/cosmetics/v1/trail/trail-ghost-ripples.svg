@@ -1,1 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><path d="M18 194q31-26 68 3m-70 23q45-21 91 5m-63 15q31-10 61 0" stroke="#F08A5D" stroke-width="8" stroke-linecap="round" opacity=".85"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+    <defs>
+      <style>@keyframes stream-flow-dyn { 0% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -32; } }</style>
+    </defs>
+    <g stroke="#FF78A8" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.8" style="animation: stream-flow-dyn 1.4s linear infinite">
+      <path d="M12 198 Q50 185 88 202" stroke-dasharray="16 10"/>
+      <path d="M6 212 Q55 200 98 216" stroke-dasharray="20 12"/>
+      <path d="M20 226 Q55 215 85 228" stroke-dasharray="14 8"/>
+    </g>
+  </g></svg>

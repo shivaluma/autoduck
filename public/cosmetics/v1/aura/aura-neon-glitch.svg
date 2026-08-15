@@ -1,1 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g fill="#61C9FF" stroke="#FFD84D" stroke-width="3" opacity=".8"><circle cx="211" cy="137" r="5"/><circle cx="186.68986283848346" cy="187.91168824543144" r="6"/><circle cx="128" cy="209" r="7"/><circle cx="69.31013716151656" cy="187.91168824543144" r="8"/><circle cx="45" cy="137" r="4"/><circle cx="69.31013716151654" cy="86.08831175456858" r="5"/><circle cx="127.99999999999999" cy="65" r="6"/><circle cx="186.68986283848344" cy="86.08831175456856" r="7"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+      <defs>
+        <filter id="neon-glow-all" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <style>@keyframes orbit-spin-all { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
+      </defs>
+      <g filter="url(#neon-glow-all)">
+        <ellipse cx="128" cy="137" rx="98" ry="78" stroke="#00F2FE" stroke-width="4" stroke-dasharray="16 10" fill="none" opacity="0.85"/>
+        <g style="animation: orbit-spin-all 6s linear infinite" transform-origin="128 137">
+          <rect x="220" y="132" width="10" height="10" fill="#FF007F"/>
+          <rect x="26" y="132" width="10" height="10" fill="#00F2FE"/>
+          <rect x="123" y="50" width="10" height="10" fill="#FF007F"/>
+          <rect x="123" y="214" width="10" height="10" fill="#00F2FE"/>
+        </g>
+      </g>
+    </g></svg>

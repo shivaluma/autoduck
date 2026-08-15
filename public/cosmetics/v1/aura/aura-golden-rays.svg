@@ -1,1 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g fill="#58E6B0" stroke="#FF78A8" stroke-width="3" opacity=".8"><circle cx="210" cy="137" r="4"/><circle cx="185.9827560572969" cy="187.91168824543144" r="5"/><circle cx="128" cy="209" r="6"/><circle cx="70.01724394270312" cy="187.91168824543144" r="7"/><circle cx="46" cy="137" r="8"/><circle cx="70.01724394270309" cy="86.08831175456858" r="4"/><circle cx="127.99999999999999" cy="65" r="5"/><circle cx="185.98275605729688" cy="86.08831175456856" r="6"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+      <defs>
+        <filter id="gold-rays-glow-all" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <style>
+          @keyframes rays-spin-main { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        </style>
+      </defs>
+      <g filter="url(#gold-rays-glow-all)" style="animation: rays-spin-main 16s linear infinite" transform-origin="128 137">
+        <line x1="128" y1="137" x2="238.0" y2="137.0" stroke="#FFD84D" stroke-width="4" stroke-linecap="round" opacity="0.6"/><line x1="128" y1="137" x2="223.3" y2="192.0" stroke="#FFD84D" stroke-width="4" stroke-linecap="round" opacity="0.6"/><line x1="128" y1="137" x2="183.0" y2="232.3" stroke="#FFD84D" stroke-width="4" stroke-linecap="round" opacity="0.6"/><line x1="128" y1="137" x2="128.0" y2="247.0" stroke="#FFD84D" stroke-width="4" stroke-linecap="round" opacity="0.6"/><line x1="128" y1="137" x2="73.0" y2="232.3" stroke="#FFD84D" stroke-width="4" stroke-linecap="round" opacity="0.6"/><line x1="128" y1="137" x2="32.7" y2="192.0" stroke="#FFD84D" stroke-width="4" stroke-linecap="round" opacity="0.6"/><line x1="128" y1="137" x2="18.0" y2="137.0" stroke="#FFD84D" stroke-width="4" stroke-linecap="round" opacity="0.6"/><line x1="128" y1="137" x2="32.7" y2="82.0" stroke="#FFD84D" stroke-width="4" stroke-linecap="round" opacity="0.6"/><line x1="128" y1="137" x2="73.0" y2="41.7" stroke="#FFD84D" stroke-width="4" stroke-linecap="round" opacity="0.6"/><line x1="128" y1="137" x2="128.0" y2="27.0" stroke="#FFD84D" stroke-width="4" stroke-linecap="round" opacity="0.6"/><line x1="128" y1="137" x2="183.0" y2="41.7" stroke="#FFD84D" stroke-width="4" stroke-linecap="round" opacity="0.6"/><line x1="128" y1="137" x2="223.3" y2="82.0" stroke="#FFD84D" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+      </g>
+      <circle cx="128" cy="137" r="95" stroke="#FFD84D" stroke-width="3" stroke-dasharray="8 6" fill="none" opacity="0.8"/>
+    </g></svg>

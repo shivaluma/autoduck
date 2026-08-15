@@ -1,1 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g><path d="M107 44q8-39 50-39 42 1 48 43Z" fill="#FF5B67" stroke="#241A38" stroke-width="7"/><path d="M96 48q59-14 117 5-26 17-117-5Z" fill="#B99AFF" stroke="#241A38" stroke-width="7"/><circle cx="159" cy="29" r="10" fill="#FFF4C2" stroke="#241A38" stroke-width="4"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+      <!-- Non La Conical Hat -->
+      <polygon points="98,50 164,10 230,50" fill="#F4E0A5" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
+      <line x1="164" y1="10" x2="164" y2="50" stroke="#D4B668" stroke-width="3.5"/>
+      <path d="M118 40 C145 32, 185 32, 212 40" stroke="#D4B668" stroke-width="3.5" fill="none"/>
+      <!-- Pink Silk Ribbon -->
+      <path d="M128 50 C122 75, 126 92, 142 98" stroke="#FF5B67" stroke-width="4" fill="none" stroke-linecap="round"/>
+    </g></svg>

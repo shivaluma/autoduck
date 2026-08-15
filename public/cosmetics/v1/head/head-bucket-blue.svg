@@ -1,1 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><path d="M108 42c5-25 24-38 50-35 26 2 41 18 44 42" fill="#61C9FF" stroke="#241A38" stroke-width="7"/><path d="M96 49c28-9 78-9 114 5-20 14-85 15-114-5Z" fill="#329CD6" stroke="#241A38" stroke-width="7"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+      <!-- Bucket Crown -->
+      <path d="M128 46 C130 24, 158 18, 185 20 C198 22, 203 34, 202 46 Z" fill="#61C9FF" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
+      <!-- Ribbon Band -->
+      <path d="M125 43 C148 37, 182 38, 204 44 L204 38 C182 32, 148 31, 125 37 Z" fill="#1C7ED6"/>
+      <!-- Bucket Brim -->
+      <path d="M114 49 C144 38, 188 39, 218 50 C222 56, 196 60, 164 58 C132 56, 110 55, 114 49 Z" fill="#4DABF7" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
+    </g></svg>

@@ -1,1 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g fill="#FFD84D" stroke="#F08A5D" stroke-width="3" opacity=".8"><circle cx="216" cy="137" r="5"/><circle cx="190.22539674441617" cy="187.91168824543144" r="6"/><circle cx="128" cy="209" r="7"/><circle cx="65.77460325558383" cy="187.91168824543144" r="8"/><circle cx="40" cy="137" r="4"/><circle cx="65.7746032555838" cy="86.08831175456858" r="5"/><circle cx="127.99999999999999" cy="65" r="6"/><circle cx="190.22539674441617" cy="86.08831175456856" r="7"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+      <defs>
+        <filter id="flame-glow-all" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b1"/>
+          <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="b2"/>
+          <feMerge><feMergeNode in="b1"/><feMergeNode in="b2"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <style>
+          @keyframes flame-rise-main {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 0.85; }
+            50% { transform: translateY(-8px) scale(1.06); opacity: 1; }
+          }
+        </style>
+      </defs>
+      <g filter="url(#flame-glow-all)" style="animation: flame-rise-main 2s ease-in-out infinite" transform-origin="128 137">
+        <path d="M50 160 C30 110, 60 70, 85 85 C95 50, 140 40, 155 70 C180 45, 220 70, 215 110 C235 140, 215 190, 185 200 C155 220, 85 220, 50 160 Z" fill="#FF5B00" opacity="0.35"/>
+        <path d="M70 155 C55 120, 80 90, 100 100 C110 70, 145 65, 155 90 C175 75, 205 95, 200 125 C215 150, 195 185, 170 190 C145 205, 95 205, 70 155 Z" fill="#FFD84D" opacity="0.5"/>
+      </g>
+      <circle cx="65" cy="95" r="3.5" fill="#FFFDF4"/>
+      <circle cx="195" cy="80" r="3" fill="#FFFDF4"/>
+      <circle cx="210" cy="150" r="4" fill="#FFD84D"/>
+      <circle cx="55" cy="170" r="3" fill="#FFD84D"/>
+    </g></svg>

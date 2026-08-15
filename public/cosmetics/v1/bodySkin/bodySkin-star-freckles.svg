@@ -1,1 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g opacity=".9" transform="rotate(8 124 158)" fill="#FF78A8"><rect x="75" y="135" width="13" height="22" rx="6"/><rect x="106" y="135" width="13" height="22" rx="6"/><rect x="137" y="135" width="13" height="22" rx="6"/><rect x="75" y="169" width="13" height="22" rx="6"/><rect x="106" y="169" width="13" height="22" rx="6"/><rect x="137" y="169" width="13" height="22" rx="6"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+      <!-- Cheek Stardust & 4-Point Star -->
+      <g fill="#FFFDF4">
+        <path d="M134 68 Q138 68 138 64 Q138 68 142 68 Q138 68 138 72 Q138 68 134 68 Z"/>
+        <path d="M148 52 Q151 52 151 49 Q151 52 154 52 Q151 52 151 55 Q151 52 148 52 Z"/>
+        <!-- Body Stars -->
+        <path d="M120 152 Q126 152 126 146 Q126 152 132 152 Q126 152 126 158 Q126 152 120 152 Z"/>
+      </g>
+      <!-- Pastel Stardust Flecks -->
+      <circle cx="128" cy="74" r="2.5" fill="#B99AFF"/>
+      <circle cx="144" cy="78" r="2.5" fill="#61C9FF"/>
+      <circle cx="138" cy="45" r="2.5" fill="#FF78A8"/>
+      <circle cx="105" cy="148" r="3" fill="#B99AFF"/>
+      <circle cx="138" cy="142" r="3" fill="#61C9FF"/>
+    </g></svg>

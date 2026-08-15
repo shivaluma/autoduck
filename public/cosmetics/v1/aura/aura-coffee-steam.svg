@@ -1,1 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g fill="#58E6B0" stroke="#FF78A8" stroke-width="3" opacity=".8"><circle cx="214" cy="137" r="8"/><circle cx="188.8111831820431" cy="187.91168824543144" r="4"/><circle cx="128" cy="209" r="5"/><circle cx="67.18881681795692" cy="187.91168824543144" r="6"/><circle cx="42" cy="137" r="7"/><circle cx="67.1888168179569" cy="86.08831175456858" r="8"/><circle cx="127.99999999999999" cy="65" r="4"/><circle cx="188.81118318204307" cy="86.08831175456856" r="5"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g>
+      <defs>
+        <style>
+          @keyframes steam-rise {
+            0%, 100% { transform: translateY(0) scale(0.95); opacity: 0.4; }
+            50% { transform: translateY(-10px) scale(1.05); opacity: 0.85; }
+          }
+        </style>
+      </defs>
+      <g stroke="#BAE6FD" stroke-width="4.5" stroke-linecap="round" fill="none" opacity="0.75" style="animation: steam-rise 2.5s ease-in-out infinite">
+        <path d="M65 140 Q55 100 70 70 Q80 40 68 20"/>
+        <path d="M195 130 Q210 95 195 65 Q185 35 200 15"/>
+        <path d="M128 50 Q118 30 130 10"/>
+      </g>
+      <!-- Floating Coffee Beans -->
+      <ellipse cx="60" cy="80" rx="5" ry="3.5" fill="#78350F" transform="rotate(-20 60 80)"/>
+      <ellipse cx="205" cy="75" rx="5" ry="3.5" fill="#78350F" transform="rotate(25 205 75)"/>
+    </g></svg>

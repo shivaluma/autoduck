@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none"><g opacity="0.38"><!-- Duck Base -->
+  <path d="M47 161c-9-8-15-18-17-29 14 4 26 10 35 17" fill="#FFD84D" stroke="#241A38" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M40 164c0-36 35-57 82-55 46 1 78 22 83 51 7 34-26 51-83 49-54-1-82-17-82-45Z" fill="#FFD84D" stroke="#241A38" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M106 108c-5-31 7-63 33-79 27-17 59-8 75 15 18 25 10 59-10 78-22 22-59 27-83 9-8-6-13-14-15-23Z" fill="#FFD84D" stroke="#241A38" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M68 158c16-20 45-25 69-12-7 25-38 39-66 29" fill="#FFFDF4" opacity=".24"/>
+  <ellipse cx="191" cy="72" rx="16" ry="21" fill="#FFFDF4" stroke="#241A38" stroke-width="6"/>
+  <ellipse cx="160" cy="69" rx="21" ry="25" fill="#FFFDF4" stroke="#241A38" stroke-width="6"/>
+  <ellipse cx="165" cy="76" rx="5.5" ry="9" fill="#241A38"/>
+  <ellipse cx="195" cy="78" rx="4.5" ry="8" fill="#241A38"/>
+  <circle cx="163" cy="72" r="2.5" fill="#FFFDF4"/>
+  <circle cx="194" cy="75" r="2" fill="#FFFDF4"/>
+  <path d="M177 93c17-1 34 4 55 11 9 3 9 11 0 16-20 10-42 12-59 5-10-4-12-14-5-23 3-4 6-7 9-9Z" fill="#FF9B42" stroke="#241A38" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M171 115c19 5 39 3 60-5" stroke="#C95E24" stroke-width="4" stroke-linecap="round"/>
+  <path d="M89 201c1 9-4 15-15 20 12 3 24 0 32-9m30-8c1 9-4 15-15 20 12 2 23 0 31-8" fill="none" stroke="#FF9B42" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g>
+    <defs>
+      <style>
+        @keyframes pet-bob-main {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-5px); }
+        }
+      </style>
+    </defs>
+    <g style="animation: pet-bob-main 2.2s ease-in-out infinite">
+      <!-- Cat Pet -->
+      
+      <ellipse cx="216" cy="190" rx="18" ry="16" fill="#18181B" stroke="#241A38" stroke-width="5"/>
+      <path d="M232 188 C242 182, 246 170, 240 165 C236 168, 234 178, 230 186" fill="none" stroke="#241A38" stroke-width="4" stroke-linecap="round"/>
+      
+      <circle cx="214" cy="174" r="14" fill="#18181B" stroke="#241A38" stroke-width="5"/>
+      <polygon points="202,168 200,152 212,162" fill="#18181B" stroke="#241A38" stroke-width="4" stroke-linejoin="round"/>
+      <polygon points="204,166 202,156 210,163" fill="#FF78A8"/>
+      <polygon points="220,162 228,152 226,168" fill="#18181B" stroke="#241A38" stroke-width="4" stroke-linejoin="round"/>
+      <polygon points="221,163 226,156 224,166" fill="#FF78A8"/>
+      <circle cx="208" cy="174" r="2.5" fill="#FFD84D"/>
+      <circle cx="220" cy="174" r="2.5" fill="#FFD84D"/>
+      <polygon points="214,178 212,176 216,176" fill="#FF78A8"/>
+      <line x1="198" y1="176" x2="204" y2="176" stroke="#241A38" stroke-width="2"/>
+      <line x1="224" y1="176" x2="230" y2="176" stroke="#241A38" stroke-width="2"/>
+      <path d="M206 186 Q214 189 222 186" stroke="#EF4444" stroke-width="3.5" stroke-linecap="round"/>
+      <circle cx="214" cy="188" r="3" fill="#FFD84D" stroke="#241A38" stroke-width="1.5"/>
+    </g>
+  </g></svg>
