@@ -1,5 +1,5 @@
 import { parentPort, workerData } from 'node:worker_threads'
-import { runMatchupBatch, type FullLoadout } from './balance-sim-core.ts'
+import { runMatchupBatch, type FullLoadout } from './balance-sim-core'
 
 interface WorkerPayload {
   left: FullLoadout
