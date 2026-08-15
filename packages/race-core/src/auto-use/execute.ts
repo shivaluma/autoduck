@@ -73,6 +73,7 @@ export function executePrepAction(
           secondsUntilNextPickupZone: 999,
           prepAutoUseEnabled: true,
           wildAutoUseEnabled: false,
+          ghostPlayerIds: itemState.ghostPlayerIds,
         }
         const resolvedTarget = resolveRocketTarget(evalCtx, 'PREP', candidate.targetPlayerId)
         if (!resolvedTarget) return false

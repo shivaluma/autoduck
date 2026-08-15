@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db'
-import { filterOfficialRacers, isGhostDuck } from '@/lib/ghost-duck'
+import { isGhostDuck } from '@/lib/ghost-duck'
 import { mapSeason3RaceRanking } from '@/lib/season3-race-mapping'
 import { assertSeason3RaceDay } from '@/lib/season3-schedule'
 import { canStartSeason3TestRace, getSeason3RaceMode } from '@/lib/season3-test-mode'
@@ -298,7 +298,7 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
       ])
     }
 
-    const officialSeasonPlayers = filterOfficialRacers(players)
+    const officialSeasonPlayers = players.filter((player) => !isGhostDuck({ name: player.user.name }))
     const ranking = mapSeason3RaceRanking(result.standings.map((entry) => ({ rank: entry.rank, name: entry.name })), officialSeasonPlayers)
 
     const previousKing = players.find((player) => player.isKing)

@@ -1,3 +1,4 @@
+import type { DuckSnapshot, RaceConfig, RaceEvent, RaceResult, RecordedWildItemInput } from '../../race-protocol/src'
 import { isGhostPlayerId } from './ghost'
 import { CORE_BALANCE } from './config'
 import { createRaceRng, type DeterministicRng } from './rng'
