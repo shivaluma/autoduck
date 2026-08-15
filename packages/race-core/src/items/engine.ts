@@ -173,6 +173,7 @@ const SPEED_END_EVENT: Partial<Record<RaceItemId, RaceEventType>> = {
 export function breakActiveSpeedBoost(
   runtime: DuckItemRuntime,
   tick: number,
+  tickRate: number,
   emit: EmitItemEvent,
   sourcePlayerId: string,
   targetPlayerId: string,
@@ -369,7 +370,7 @@ function updateRockets(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
     const hitType = rocket.kind === 'WILD' ? 'MINI_ROCKET_HIT' : 'ROCKET_HIT'
     const blockedType = rocket.kind === 'WILD' ? 'MINI_ROCKET_BLOCKED' : 'ROCKET_BLOCKED'
     if (outcome === 'HIT') {
-      breakActiveSpeedBoost(defense, tick, emit, rocket.sourcePlayerId, target.playerId, rocket.kind === 'WILD' ? 'MINI_ROCKET' : 'ROCKET')
+      breakActiveSpeedBoost(defense, tick, tickRate, emit, rocket.sourcePlayerId, target.playerId, rocket.kind === 'WILD' ? 'MINI_ROCKET' : 'ROCKET')
       let slowMultiplier = rocket.slowMultiplier
       let slowDurationSeconds = rocket.slowDurationSeconds
       if (defense.shockAbsorberAvailable) {
@@ -417,7 +418,7 @@ function updateBananas(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
     const hitType = banana.kind === 'WILD' ? 'WILD_BANANA_HIT' : 'BANANA_HIT'
     const blockedType = banana.kind === 'WILD' ? 'WILD_BANANA_BLOCKED' : 'BANANA_BLOCKED'
     if (outcome === 'HIT') {
-      breakActiveSpeedBoost(defense, tick, emit, banana.sourcePlayerId, target.playerId, banana.kind === 'WILD' ? 'WILD_BANANA' : 'BANANA')
+      breakActiveSpeedBoost(defense, tick, tickRate, emit, banana.sourcePlayerId, target.playerId, banana.kind === 'WILD' ? 'WILD_BANANA' : 'BANANA')
       const knockback = banana.progressKnockback
       target.progress = Math.max(0, target.progress - knockback)
       if (target.previousProgress !== undefined) target.previousProgress = Math.min(target.previousProgress, target.progress)

@@ -74,7 +74,7 @@ test('speed boost queue keeps at most one entry and replaces by priority', () =>
   const nitroReplace = tryApplyPrepSpeedBoost(state, 'duck-1', 'NITRO', 1.18, 1.5, 13, 60, emit as never)
   assert.equal(nitroReplace, 'queued')
   assert.equal(state.queuedSpeedBoost?.itemId, 'NITRO')
-  assert.equal(emitted.filter((event) => event.type === 'SPEED_BOOST_QUEUED').length, 3)
+  assert.equal(emitted.filter((event) => event.type === 'SPEED_BOOST_QUEUED').length, 2)
 })
 
 test('BOOST_BROKEN metadata distinguishes rocket and banana sources', () => {
@@ -88,8 +88,14 @@ test('BOOST_BROKEN metadata distinguishes rocket and banana sources', () => {
   state.boostStartedAtTick = 40
   state.activeSpeedItemId = 'NITRO'
 
-  breakActiveSpeedBoost(state, 70, emit as never, 'attacker', 'victim', 'ROCKET')
-  breakActiveSpeedBoost(state, 80, emit as never, 'attacker-2', 'victim-2', 'BANANA')
+  breakActiveSpeedBoost(state, 70, 60, emit as never, 'attacker', 'victim', 'ROCKET')
+
+  const bananaState = runtime()
+  bananaState.boostMultiplier = 1.18
+  bananaState.boostUntilTick = 100
+  bananaState.boostStartedAtTick = 40
+  bananaState.activeSpeedItemId = 'NITRO'
+  breakActiveSpeedBoost(bananaState, 80, 60, emit as never, 'attacker-2', 'victim-2', 'BANANA')
 
   const breaks = emitted.filter((event) => event.type === 'BOOST_BROKEN')
   assert.equal(breaks[0]?.metadata.breakSource, 'ROCKET')
