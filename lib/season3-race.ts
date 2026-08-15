@@ -1,3 +1,4 @@
+import { prisma } from '@/lib/db'
 import { filterOfficialRacers, isGhostDuck } from '@/lib/ghost-duck'
 import { mapSeason3RaceRanking } from '@/lib/season3-race-mapping'
 import { assertSeason3RaceDay } from '@/lib/season3-schedule'
