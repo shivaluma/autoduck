@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/db'
+import { filterOfficialRacers, isGhostDuck } from '@/lib/ghost-duck'
 import { mapSeason3RaceRanking } from '@/lib/season3-race-mapping'
 import { assertSeason3RaceDay } from '@/lib/season3-schedule'
 import { canStartSeason3TestRace, getSeason3RaceMode } from '@/lib/season3-test-mode'
@@ -178,6 +178,7 @@ export async function startSeason3Race(weekId: number, options: { allowOffSchedu
         playerId: String(player.userId),
         name: player.user.name,
         cosmeticKey: player.appearance ? JSON.stringify(player.appearance) : undefined,
+        isGhost: isGhostDuck({ name: player.user.name }),
       })),
       loadouts: immutableLoadouts.map((loadout) => ({ playerId: String(loadout.player.userId), itemIds: loadout.itemIds, source: loadout.source })),
       chaosConfig: {
@@ -296,7 +297,8 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
       ])
     }
 
-    const ranking = mapSeason3RaceRanking(result.standings.map((entry) => ({ rank: entry.rank, name: entry.name })), players)
+    const officialSeasonPlayers = filterOfficialRacers(players)
+    const ranking = mapSeason3RaceRanking(result.standings.map((entry) => ({ rank: entry.rank, name: entry.name })), officialSeasonPlayers)
 
     const previousKing = players.find((player) => player.isKing)
     const chaos = chaosFromWeek(week)
@@ -350,6 +352,7 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
     await prisma.$transaction(async (tx: typeof prisma) => {
       for (const entry of resolved.ranking) {
         const player = players.find((candidate) => candidate.userId === entry.userId)
+        if (!player || isGhostDuck({ name: player.user.name })) continue
         const shieldWasUsed = player?.shieldConfirmed === true && player.shields > 0
         await tx.raceParticipant.updateMany({
           where: { raceId, userId: entry.userId, cloneIndex: null },
@@ -361,9 +364,30 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
         })
       }
 
+      for (const player of players) {
+        if (!isGhostDuck({ name: player.user.name })) continue
+        const finishTimes = result.events
+          .filter((event) => event.type === 'DUCK_FINISHED' && event.sourcePlayerId)
+          .map((event) => ({
+            playerId: event.sourcePlayerId!,
+            finishTimeMs: Number(event.metadata.finishTimeMs ?? event.timestampWithinRaceMs),
+          }))
+          .sort((left, right) => left.finishTimeMs - right.finishTimeMs || left.playerId.localeCompare(right.playerId))
+        const ghostRank = finishTimes.findIndex((entry) => entry.playerId === String(player.userId)) + 1
+        await tx.raceParticipant.updateMany({
+          where: { raceId, userId: player.userId, cloneIndex: null },
+          data: {
+            initialRank: ghostRank > 0 ? ghostRank : null,
+            gotScar: false,
+            usedShield: false,
+          },
+        })
+      }
+
       if (!race.isTest) {
         await tx.seasonPlayer.updateMany({ where: { seasonId: week.seasonId, isKing: true }, data: { isKing: false, kingStreak: 0 } })
         for (const player of players) {
+          if (isGhostDuck({ name: player.user.name })) continue
           const outcome = resolved.scarOutcomes.find((candidate) => candidate.userId === player.userId)
           const entry = resolved.ranking.find((candidate) => candidate.userId === player.userId)!
           const shieldWasUsed = player.shieldConfirmed === true && player.shields > 0

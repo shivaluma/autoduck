@@ -3,6 +3,7 @@ import {
   resolveChaosRule,
   type ChaosRuleId,
 } from '@/packages/race-core/src'
+import { filterOfficialRacers } from '@/lib/ghost-duck'
 
 export const SEASON3_KEY = 'S3'
 export const SEASON3_WEEKS = 12
@@ -88,9 +89,10 @@ export function prepareChaosCard(type: ChaosType, players: Season3Player[], rand
   if (players.length === 0) {
     throw new Error('Cannot select a chaos card without players')
   }
+  const officialPlayers = filterOfficialRacers(players)
   const prepared = prepareChaosRule(
     type as ChaosRuleId,
-    players.map((player) => ({ playerId: String(player.userId) })),
+    officialPlayers.map((player) => ({ playerId: String(player.userId) })),
     random,
   )
 

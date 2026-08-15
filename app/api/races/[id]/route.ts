@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import type { ChestEffect } from '@/lib/types'
 import { isImmortalDuck } from '@/lib/immortal-duck'
+import { isGhostDuck } from '@/lib/ghost-duck'
 import { MYSTERY_CHESTS_ENABLED } from '@/lib/feature-flags'
 import { getDragonInventory } from '@/lib/dragon/getDragonState'
 import { getDragonOrbName } from '@/lib/dragon/naming'
@@ -296,6 +297,7 @@ export async function GET(
         initialRank: p.initialRank,
         gotScar: p.gotScar,
         isImmortal: isImmortalDuck({ name: p.user.name, shields: p.user.shields }),
+        isGhost: isGhostDuck({ name: p.user.name }),
         isClone: p.isClone,
         cloneOfUserId: p.cloneOfUserId,
         cloneIndex: p.cloneIndex,

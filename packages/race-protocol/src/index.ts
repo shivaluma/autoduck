@@ -99,6 +99,7 @@ export const racePlayerConfigSchema = z.object({
   playerId: playerIdSchema,
   name: z.string().min(1).max(80),
   cosmeticKey: z.string().max(2048).optional(),
+  isGhost: z.boolean().optional().default(false),
 })
 
 export const raceConfigSchema = z.object({

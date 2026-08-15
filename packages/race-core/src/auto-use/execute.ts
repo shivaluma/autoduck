@@ -109,6 +109,7 @@ export function executePrepAction(
     case 'QUACK_HORN': {
       if (!hasUnused(runtime, 'QUACK_HORN')) return false
       const nearby = ducks.filter((target) => target.playerId !== duck.playerId && !target.finished
+        && !itemState.ghostPlayerIds.has(target.playerId)
         && Math.abs(target.progress - duck.progress) <= ITEM_BALANCE.horn.progressRadius * 1.5
         && Math.abs(target.lateralOffset - duck.lateralOffset) <= ITEM_BALANCE.horn.lateralRadius * 1.5)
       if (nearby.length === 0) return false

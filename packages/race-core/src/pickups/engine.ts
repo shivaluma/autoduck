@@ -232,6 +232,7 @@ function weightedCategory(rng: DeterministicRng, bucket: 'front' | 'middle' | 'b
 
 function nearestAhead(duck: ItemDuckState, ducks: ItemDuckState[], maximumDistance: number, itemState?: ItemRaceState, tick?: number) {
   return ducks.filter((candidate) => !candidate.finished && candidate.playerId !== duck.playerId && candidate.progress > duck.progress)
+    .filter((candidate) => !itemState?.ghostPlayerIds.has(candidate.playerId))
     .filter((candidate) => candidate.progress - duck.progress <= maximumDistance)
     .filter((candidate) => !itemState || tick === undefined || tick >= itemState.byPlayer.get(candidate.playerId)!.rocketProtectionUntilTick)
     .sort((left, right) => left.progress - right.progress || left.playerId.localeCompare(right.playerId))[0]
@@ -404,7 +405,7 @@ const HELD_HANDLERS: Record<Exclude<WildItemId, 'MINI_NITRO' | 'TAILWIND' | 'SLI
         ? PICKUP_BALANCE.miniRocket.maximumTargetDistance * PICKUP_BALANCE.miniRocket.endGameTargetDistanceMultiplier
         : PICKUP_BALANCE.miniRocket.maximumTargetDistance
     const preferred = targetPlayerId
-      ? ducks.find((candidate) => candidate.playerId === targetPlayerId && !candidate.finished && candidate.progress > duck.progress && candidate.progress - duck.progress <= maximumDistance)
+      ? ducks.find((candidate) => candidate.playerId === targetPlayerId && !candidate.finished && candidate.progress > duck.progress && candidate.progress - duck.progress <= maximumDistance && !itemState.ghostPlayerIds.has(candidate.playerId))
       : undefined
     const target = preferred ?? nearestAhead(duck, ducks, maximumDistance, itemState, tick)
     if (!target) return { ok: false, reason: 'NO_TARGET' }
@@ -419,13 +420,14 @@ const HELD_HANDLERS: Record<Exclude<WildItemId, 'MINI_NITRO' | 'TAILWIND' | 'SLI
     emit('WILD_BANANA_DROPPED', duck.playerId, undefined, { id: banana.id, progress: banana.progress, lateralOffset: banana.lateralOffset })
     return { ok: true }
   },
-  QUACK_HORN: ({ duck, ducks, emit }) => {
+  QUACK_HORN: ({ itemState, duck, ducks, emit }) => {
     const endGame = duck.progress >= PICKUP_BALANCE.autoUse.endGameBurnProgress
     const forceBurn = duck.progress >= PICKUP_BALANCE.autoUse.forceBurnProgress
     const radiusScale = forceBurn ? PICKUP_BALANCE.horn.endGameProgressRadiusMultiplier : endGame ? 1.25 : 1
     const progressRadius = PICKUP_BALANCE.horn.progressRadius * radiusScale
     const lateralRadius = PICKUP_BALANCE.horn.lateralRadius * radiusScale
     const nearby = ducks.filter((candidate) => candidate.playerId !== duck.playerId && !candidate.finished
+      && !itemState.ghostPlayerIds.has(candidate.playerId)
       && Math.abs(candidate.progress - duck.progress) <= progressRadius
       && Math.abs(candidate.lateralOffset - duck.lateralOffset) <= lateralRadius)
       .sort((left, right) => left.playerId.localeCompare(right.playerId))

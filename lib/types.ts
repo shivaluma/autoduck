@@ -179,6 +179,7 @@ export interface RaceStatus {
     initialRank: number | null
     gotScar: boolean
     isImmortal?: boolean
+    isGhost?: boolean
     isClone?: boolean
     cloneOfUserId?: number | null
     cloneIndex?: number | null

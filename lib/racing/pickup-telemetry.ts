@@ -1,5 +1,5 @@
 import { simulateRace } from '@/packages/race-core/src'
-import type { RaceConfig, RaceEvent, RaceResult, WildItemId } from '@/packages/race-protocol/src'
+import type { RaceConfig, RaceEvent, RaceResult, RaceFinishEntry, WildItemId } from '@/packages/race-protocol/src'
 
 export interface RacePickupTelemetryRow {
   raceId: number
@@ -47,11 +47,13 @@ export function buildRacePickupTelemetry(raceId: number, config: RaceConfig, off
       forceItem: config.pickupConfig?.forceItem,
     },
   }, { recordEvents: false })
-  const baselineRank = new Map(baseline.standings.map((entry) => [entry.playerId, entry.rank]))
-  const finalRank = new Map(officialResult.standings.map((entry) => [entry.playerId, entry.rank]))
+  const baselineRank = new Map<string, number>(baseline.standings.map((entry: RaceFinishEntry) => [entry.playerId, entry.rank]))
+  const finalRank = new Map<string, number>(officialResult.standings.map((entry: RaceFinishEntry) => [entry.playerId, entry.rank]))
+  const ghostPlayerIds = new Set(config.players.filter((player) => player.isGhost).map((player) => player.playerId))
   const acquisition = officialResult.events.filter((event) => event.type === 'WILD_ITEM_GRANTED' || event.type === 'INSTANT_PICKUP_TRIGGERED')
   return acquisition.flatMap((event) => {
     const playerId = event.sourcePlayerId
+    if (!playerId || ghostPlayerIds.has(playerId)) return []
     const instanceId = event.metadata.instanceId
     const itemId = event.metadata.itemId as WildItemId | undefined
     if (!playerId || typeof instanceId !== 'string' || !itemId) return []

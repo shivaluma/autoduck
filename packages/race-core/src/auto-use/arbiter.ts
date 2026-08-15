@@ -3,7 +3,7 @@ import { createRaceRng } from '../rng'
 import type { RaceTrack } from '../track'
 import type { ItemDuckState, ItemRaceState } from '../items/engine'
 import type { PickupRaceState } from '../pickups/engine'
-import { AUTO_USE_CONFIG } from './config'
+import { ghostPlayerIdsFromConfig } from '../ghost'
 import { buildRaceObjectiveContext } from './objective'
 import type { RaceObjectiveContext } from './types'
 import {
@@ -74,6 +74,7 @@ function buildEvalContext(input: AutoUseTickInput, duck: ItemDuckState, objectiv
     secondsUntilNextPickupZone: secondsUntilNextPickupZone(duck, input.track),
     prepAutoUseEnabled: input.prepAutoUseEnabled,
     wildAutoUseEnabled: input.wildAutoUseEnabled,
+    ghostPlayerIds: ghostPlayerIdsFromConfig(input.config),
   }
 }
 

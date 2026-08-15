@@ -1,4 +1,5 @@
 import type { RaceConfig, RaceEventType, RaceItemId, RaceItemTuning, WildItemId } from '../../../race-protocol/src'
+import { ghostPlayerIdsFromConfig } from '../ghost'
 import { ITEM_BALANCE } from './config'
 import { resolveIncomingRaceEffect, type ItemDefenseState } from './interactions'
 
@@ -89,6 +90,7 @@ export interface ItemRaceState {
   bananas: BananaRuntime[]
   nextObjectId: number
   tuning: Required<RaceItemTuning>
+  ghostPlayerIds: Set<string>
 }
 
 type EmitItemEvent = (type: RaceEventType, sourcePlayerId?: string, targetPlayerId?: string, metadata?: Record<string, unknown>) => void
@@ -142,6 +144,7 @@ export function createItemRaceState(config: RaceConfig): ItemRaceState {
       bananaKnockbackMultiplier: config.itemTuning?.bananaKnockbackMultiplier ?? 1,
       bananaSlowMultiplier: config.itemTuning?.bananaSlowMultiplier ?? 1,
     },
+    ghostPlayerIds: ghostPlayerIdsFromConfig(config),
   }
 }
 
@@ -309,6 +312,7 @@ export function firePrepRocket(
 ) {
   const runtime = itemState.byPlayer.get(source.playerId)!
   if (runtime.usedItems.has('HOMING_ROCKET')) return false
+  if (itemState.ghostPlayerIds.has(targetPlayerId)) return false
   const target = itemState.byPlayer.has(targetPlayerId)
   if (!target) return false
   itemState.rockets.push({
@@ -337,6 +341,7 @@ function updateRockets(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
     let target = ducks.find((duck) => duck.playerId === rocket.targetPlayerId)
     if (rocket.kind === 'WILD' && (!target || target.finished) && !rocket.retargeted && tick < rocket.expiresAtTick) {
       target = ducks.filter((duck) => !duck.finished && duck.playerId !== rocket.sourcePlayerId && duck.progress > rocket.progress)
+        .filter((duck) => !itemState.ghostPlayerIds.has(duck.playerId))
         .filter((duck) => tick >= itemState.byPlayer.get(duck.playerId)!.rocketProtectionUntilTick)
         .sort((left, right) => left.progress - right.progress || left.playerId.localeCompare(right.playerId))[0]
       if (target) {

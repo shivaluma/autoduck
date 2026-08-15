@@ -1,3 +1,4 @@
+export * from './ghost'
 export * from './auto-use'
 export * from './config'
 export * from './rng'

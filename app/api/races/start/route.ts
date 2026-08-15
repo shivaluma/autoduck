@@ -9,6 +9,7 @@ import { SHIELD_INITIAL_CHARGES, consumeShield, craftShieldIfEligible, normalize
 import type { BossRewardInput, ItemRaceModifiers } from '@/lib/mystery-chest'
 import type { ChestEffect, RaceMetaContext } from '@/lib/types'
 import { isImmortalDuck } from '@/lib/immortal-duck'
+import { isGhostDuck } from '@/lib/ghost-duck'
 import { MYSTERY_CHESTS_ENABLED } from '@/lib/feature-flags'
 import { awardDragonOrbForRace } from '@/lib/dragon/awardDragonOrb'
 import { applyDragonScaleProtection } from '@/lib/dragon/applyDragonScaleProtection'
@@ -35,6 +36,7 @@ interface WorkerPlayerInput {
   shieldCharges?: number | null
   userId: number
   isImmortal?: boolean
+  isGhost?: boolean
   isClone?: boolean
   cloneOfUserId?: number | null
   cloneIndex?: number | null
@@ -75,6 +77,7 @@ interface RaceResultEntry extends RaceVictimEntry {
   shieldId?: number | null
   shieldCharges?: number | null
   isImmortal?: boolean
+  isGhost?: boolean
   isClone: boolean
   cloneOfUserId: number | null
   cloneIndex: number | null
@@ -376,6 +379,7 @@ export async function POST(request: Request) {
     const setupParticipants = participants.map((participant) => {
       const user = (users as UserWithActiveShields[]).find((candidate) => candidate.id === participant.userId)
       const immortal = user ? isImmortalDuck({ name: user.name, shields: user.shields }) : false
+      const ghost = user ? isGhostDuck({ name: user.name }) : false
       return {
         ...participant,
         name: user?.name ?? `User ${participant.userId}`,
@@ -383,6 +387,7 @@ export async function POST(request: Request) {
         dragonScaleItemId: immortal ? undefined : participant.dragonScaleItemId,
         availableShields: user?.ownedShields.length ?? 0,
         isImmortal: immortal,
+        isGhost: ghost,
       }
     })
 
@@ -452,6 +457,7 @@ export async function POST(request: Request) {
       })(),
       userId: participant.userId,
       isImmortal: participant.isImmortal ?? false,
+      isGhost: isGhostDuck({ name: (users as UserWithActiveShields[]).find((candidate) => candidate.id === participant.userId)?.name ?? participant.displayName ?? participant.name }),
       isClone: participant.isClone ?? false,
       cloneOfUserId: participant.cloneOfUserId ?? null,
       cloneIndex: participant.cloneIndex ?? null,
@@ -603,6 +609,7 @@ async function executeRace(
         shieldId: matched?.shieldId ?? null,
         shieldCharges: matched?.shieldCharges ?? null,
         isImmortal: matched?.isImmortal ?? false,
+        isGhost: matched?.isGhost ?? false,
         isClone: matched?.isClone ?? false,
         cloneOfUserId: matched?.cloneOfUserId ?? null,
         cloneIndex: matched?.cloneIndex ?? null,
@@ -651,7 +658,7 @@ async function executeRace(
     })
     const bossUserIds = new Set((bossUsers as Array<{ id: number }>).map((boss) => boss.id))
     const bossBottomTwoVictims: RaceVictimEntry[] = [...raceResults]
-      .filter((entry) => !entry.isImmortal)
+      .filter((entry) => !entry.isImmortal && !entry.isGhost)
       .sort((left, right) => right.initialRank - left.initialRank)
       .slice(0, 2)
       .filter((entry) => bossUserIds.has(entry.cloneOfUserId ?? entry.userId))

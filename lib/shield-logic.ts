@@ -13,6 +13,7 @@ export interface RaceResultInput {
   initialRank: number // 1 là cao nhất (về đích đầu), N là thấp nhất (về bét)
   usedShield: boolean
   isImmortal?: boolean
+  isGhost?: boolean
   isClone?: boolean
   cloneOfUserId?: number | null
   cloneIndex?: number | null
@@ -90,7 +91,7 @@ export function calculatePenalties(results: RaceResultInput[], options: PenaltyO
     const player = sortedResults[i]
     const ownerId = effectiveOwnerId(player)
 
-    if (player.isImmortal) {
+    if (player.isImmortal || player.isGhost) {
       continue
     }
 
@@ -158,7 +159,7 @@ export function calculatePenalties(results: RaceResultInput[], options: PenaltyO
   }
 
   for (const player of options.forcedVictims ?? []) {
-    if (player.isImmortal) {
+    if (player.isImmortal || player.isGhost) {
       continue
     }
 

@@ -1,4 +1,4 @@
-import type { DuckSnapshot, RaceConfig, RaceEvent, RaceResult, RecordedWildItemInput } from '../../race-protocol/src'
+import { isGhostPlayerId } from './ghost'
 import { CORE_BALANCE } from './config'
 import { createRaceRng, type DeterministicRng } from './rng'
 import { createRiverTrack, currentAt, type RaceTrack } from './track'
@@ -351,7 +351,8 @@ export function snapshotRaceWorld(state: RaceSimulationState) {
 
 export function resultFromSimulation(state: RaceSimulationState): RaceResult {
   if (!state.finished) throw new Error('Race has not finished')
-  const standings = [...state.ducks]
+  const officialDucks = state.ducks.filter((duck) => !isGhostPlayerId(state.config, duck.playerId))
+  const standings = [...officialDucks]
     .sort((left, right) => left.finishTimeMs! - right.finishTimeMs! || left.playerId.localeCompare(right.playerId))
     .map((duck, index) => ({
       playerId: duck.playerId,

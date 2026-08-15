@@ -9,7 +9,7 @@ import { RaceAudioSystem } from './race-audio'
 import { COSMETIC_BY_ID } from '@/lib/cosmetics/catalog'
 import { COSMETIC_LAYER_ORDER, type DuckAppearance } from '@/lib/cosmetics/types'
 
-type PlayerLabel = { playerId: string; name: string; avatarUrl?: string | null; appearance?: DuckAppearance | null; itemIds?: RaceItemId[] }
+type PlayerLabel = { playerId: string; name: string; avatarUrl?: string | null; appearance?: DuckAppearance | null; itemIds?: RaceItemId[]; isGhost?: boolean }
 
 const ITEM_ICONS: Record<RaceItemId, string> = {
   BUBBLE_SHIELD: '🫧', HOMING_ROCKET: '🚀', NITRO: '⚡', BANANA: '🍌', FEATHER: '🪶', QUACK_HORN: '🔊',
@@ -267,6 +267,10 @@ export function PhaserRaceCanvas({
             : cosmeticLayers.length === 0 ? this.add.text(-3, -29, ['🧢', '🎩', '👒', '👑'][index % 4], { fontSize: '19px' }).setOrigin(0.5) : null
           const start = track.sample(0, -0.7 + (index / Math.max(1, scenePlayers.length - 1)) * 1.4)
           const root = this.add.container(start.x, start.y, [body, ...cosmeticLayers, ...(legacyCosmetic ? [legacyCosmetic] : []), name, rank, ...loadoutNodes, status]).setDepth(100 + index)
+          if (player.isGhost) {
+            root.setAlpha(0.58)
+            name.setText(`👻 ${player.name}`)
+          }
           root.setData('rank-label', rank)
           this.duckViews.set(player.playerId, { root, targetX: start.x, targetY: start.y, status, loadoutIcons })
         }

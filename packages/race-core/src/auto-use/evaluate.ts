@@ -19,6 +19,7 @@ export interface EvaluationContext {
   secondsUntilNextPickupZone: number
   prepAutoUseEnabled: boolean
   wildAutoUseEnabled: boolean
+  ghostPlayerIds: Set<string>
 }
 
 function endGameBurnScore(progress: number, kind: 'PREP' | 'WILD') {
@@ -107,6 +108,7 @@ function rocketTargets(ctx: EvaluationContext, kind: 'PREP' | 'WILD') {
 
   return activeDucks(ctx.ducks)
     .filter((candidate) => candidate.playerId !== source.playerId && candidate.progress > source.progress)
+    .filter((candidate) => !ctx.ghostPlayerIds.has(candidate.playerId))
     .filter((candidate) => candidate.progress - source.progress <= maxDistance)
     .filter((candidate) => ctx.tick >= ctx.itemState.byPlayer.get(candidate.playerId)!.rocketProtectionUntilTick)
     .map((target) => {
@@ -306,7 +308,7 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
   if (hasUnusedPrep(runtime, 'QUACK_HORN') && duck.progress >= ITEM_BALANCE.horn.armProgress) {
     let netValue = 0
     for (const target of activeDucks(ctx.ducks)) {
-      if (target.playerId === duck.playerId) continue
+      if (target.playerId === duck.playerId || ctx.ghostPlayerIds.has(target.playerId)) continue
       if (Math.abs(target.progress - duck.progress) > ITEM_BALANCE.horn.progressRadius * 1.5) continue
       if (Math.abs(target.lateralOffset - duck.lateralOffset) > ITEM_BALANCE.horn.lateralRadius * 1.5) continue
       const impact = ITEM_BALANCE.horn.lateralPush
@@ -437,7 +439,7 @@ export function evaluateWildCandidates(ctx: EvaluationContext): AutoUseCandidate
   if (itemId === 'QUACK_HORN') {
     let netValue = 0
     for (const target of activeDucks(ctx.ducks)) {
-      if (target.playerId === duck.playerId) continue
+      if (target.playerId === duck.playerId || ctx.ghostPlayerIds.has(target.playerId)) continue
       if (Math.abs(target.progress - duck.progress) > PICKUP_BALANCE.horn.progressRadius * 1.4) continue
       if (Math.abs(target.lateralOffset - duck.lateralOffset) > PICKUP_BALANCE.horn.lateralRadius * 1.4) continue
       const impact = PICKUP_BALANCE.horn.lateralPush

@@ -30,6 +30,7 @@ export function buildRaceItemTelemetry(raceId: number, config: RaceConfig, offic
   }
 
   return config.loadouts.flatMap((loadout) => {
+    if (ghostPlayerIds.has(loadout.playerId)) return []
     const finalRank = officialRank.get(loadout.playerId)
     const withoutItemsRank = baselineRank.get(loadout.playerId)
     if (typeof finalRank !== 'number' || typeof withoutItemsRank !== 'number') throw new Error(`Missing telemetry rank for ${loadout.playerId}`)
