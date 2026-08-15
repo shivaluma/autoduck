@@ -273,14 +273,13 @@ async function runAbsoluteLoadouts(seedCount: number) {
 }
 
 async function runMatrixScreening(seedCount: number) {
-  console.log(`\n=== 18×18 upper triangle screening (${seedCount.toLocaleString()} seeds/pair · ${upperTrianglePairs(FULL_LOADOUTS).length} pairs · bootstrap=${bootstrapMatrix}) ===`)
+  console.log(`\n=== 18×18 upper triangle screening (${seedCount.toLocaleString()} seeds/pair · ${upperTrianglePairs(FULL_LOADOUTS).length} pairs · bootstrap=${bootstrapMatrix} · workers=${workerCount}) ===`)
   const outliers: string[] = []
   const pairs = upperTrianglePairs(FULL_LOADOUTS)
   const started = performance.now()
   for (let index = 0; index < pairs.length; index += 1) {
     const [left, right] = pairs[index]!
-    const aggregate = runMatchupBatch(left, right, startIndex, seedCount, playerCount, swapSlots)
-    perf.races += seedCount * (swapSlots ? 2 : 1)
+    const aggregate = await runWorkerBatch(left, right, seedCount)
     const rate = estimateLeftWinRate(aggregate.seedOutcomes, bootstrapMatrix)
     const leftPct = rate.estimate * 100
     if (Math.abs(leftPct - 50) >= 8 || leftPct > 60 || leftPct < 40) {

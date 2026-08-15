@@ -1,4 +1,3 @@
-import { performance } from 'node:perf_hooks'
 import type { DuckSnapshot, RaceConfig, RaceEvent, RaceResult, RecordedWildItemInput } from '../../race-protocol/src'
 import { CORE_BALANCE } from './config'
 import { createRaceRng, type DeterministicRng } from './rng'
