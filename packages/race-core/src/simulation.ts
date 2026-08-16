@@ -41,6 +41,7 @@ export interface DuckPhysicsState {
   nextImpulseTick: number
   finished: boolean
   finishTimeMs: number | null
+  pacingSegments: number[]
 }
 
 export interface RaceSimulationState {
@@ -98,6 +99,46 @@ function scheduleImpulse(rng: DeterministicRng, currentTick: number, tickRate: n
   return currentTick + Math.round(rng.range(CORE_BALANCE.impulseMinSeconds, CORE_BALANCE.impulseMaxSeconds) * tickRate)
 }
 
+export function generateDuckPacingSegments(
+  rng: DeterministicRng,
+  segmentCount: number = CORE_BALANCE.pacingSegmentCount,
+  variation: number = CORE_BALANCE.pacingVariation,
+): number[] {
+  if (segmentCount <= 1 || variation <= 0) return [1]
+  const deltas: number[] = []
+  let sum = 0
+  for (let index = 0; index < segmentCount; index += 1) {
+    const delta = rng.range(-variation, variation)
+    deltas.push(delta)
+    sum += delta
+  }
+  const mean = sum / segmentCount
+  return deltas.map((delta) => Math.max(0.7, Math.min(1.3, 1 + (delta - mean))))
+}
+
+export function evaluatePacingMultiplier(segments: readonly number[], progress: number): number {
+  const count = segments.length
+  if (count === 0) return 1
+  if (count === 1) return segments[0]!
+
+  const clampedProgress = Math.max(0, Math.min(1, progress))
+  const segmentWidth = 1 / count
+  const firstCenter = segmentWidth * 0.5
+  const lastCenter = 1 - segmentWidth * 0.5
+
+  if (clampedProgress <= firstCenter) return segments[0]!
+  if (clampedProgress >= lastCenter) return segments[count - 1]!
+
+  const normalizedProgress = (clampedProgress - firstCenter) / segmentWidth
+  const segmentIndex = Math.min(count - 2, Math.floor(normalizedProgress))
+  const localT = normalizedProgress - segmentIndex
+
+  const smoothT = localT * localT * (3 - 2 * localT)
+  const from = segments[segmentIndex]!
+  const to = segments[segmentIndex + 1]!
+  return from + (to - from) * smoothT
+}
+
 export function createSimulation(config: RaceConfig, options: SimulationOptions = {}): RaceSimulationState {
   const sortedPlayers = [...config.players].sort((left, right) => left.playerId.localeCompare(right.playerId))
   const rngByPlayer = new Map<string, DeterministicRng>()
@@ -112,6 +153,7 @@ export function createSimulation(config: RaceConfig, options: SimulationOptions 
   const ducks = sortedPlayers.map((player, index) => {
     const rng = createRaceRng(config.seed, `duck:${player.playerId}`)
     rngByPlayer.set(player.playerId, rng)
+    const pacingSegments = generateDuckPacingSegments(rng, CORE_BALANCE.pacingSegmentCount, CORE_BALANCE.pacingVariation)
     const slot = lateralSlots[index]
     const lateralOffset = sortedPlayers.length === 1 ? 0 : -0.75 + (slot / (sortedPlayers.length - 1)) * 1.5
     return {
@@ -120,7 +162,7 @@ export function createSimulation(config: RaceConfig, options: SimulationOptions 
       progress: 0,
       previousProgress: 0,
       lateralOffset,
-      speed: baseSpeed,
+      speed: baseSpeed * pacingSegments[0]!,
       acceleration: 0,
       lateralVelocity: 0,
       desiredSpeed: baseSpeed * rng.range(1 - CORE_BALANCE.speedVariation, 1 + CORE_BALANCE.speedVariation),
@@ -130,6 +172,7 @@ export function createSimulation(config: RaceConfig, options: SimulationOptions 
       nextImpulseTick: scheduleImpulse(rng, 0, config.tickRate),
       finished: false,
       finishTimeMs: null,
+      pacingSegments,
     }
   })
 
@@ -282,7 +325,8 @@ export function stepSimulation(state: RaceSimulationState) {
     const currentLateralForce = current?.lateralForce ?? 0
     const itemRuntime = state.itemState.byPlayer.get(duck.playerId)!
     duck.activeEffects = itemActiveEffects(itemRuntime, state.tick)
-    const targetSpeed = duck.desiredSpeed + duck.acceleration
+    const pacingMultiplier = evaluatePacingMultiplier(duck.pacingSegments, duck.progress)
+    const targetSpeed = duck.desiredSpeed * pacingMultiplier + duck.acceleration
     duck.speed += (targetSpeed - duck.speed) * CORE_BALANCE.speedResponse * deltaSeconds
     if (state.tick < itemRuntime.magnetUntilTick) {
       const target = state.ducks.filter((candidate) => !candidate.finished && candidate.progress > duck.progress && candidate.progress - duck.progress <= PICKUP_BALANCE.magnet.maximumTargetDistance)
