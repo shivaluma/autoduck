@@ -333,10 +333,10 @@ export default function Season3Page() {
               <div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-neon-green)]">BƯỚC 1 · CHUẨN BỊ RA TRẬN</div>
               <h2 className="font-display text-3xl">🎒 Chọn Trang Bị (Loadout)</h2>
             </div>
-            <div className="font-black text-[var(--color-ggd-gold)]">{selectedCost}/3 Prep Credits</div>
+            <div className="font-black text-[var(--color-ggd-gold)]">{selectedCost}/3 Điểm Trang Bị</div>
           </div>
           <p className="mt-3 text-sm text-white/60">
-            ⚡ Tốc độ · 🛡️ Phòng thủ · 💥 Tấn công — chọn đúng 1 món Major (2 Credits) + 1 món Minor (1 Credit).
+            ⚡ Tốc Độ · 🛡️ Phòng Thủ · 💥 Tấn Công — Hãy chọn đúng 1 Món Chính (2 Điểm) và 1 Món Phụ (1 Điểm).
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {data.raceItems.map((item) => {
@@ -362,7 +362,7 @@ export default function Season3Page() {
                     <div>
                       <div className="font-black">{item.name}</div>
                       <div className="text-xs font-bold text-[var(--color-ggd-gold)]">
-                        {item.cost} Credit · {item.category === 'major' ? 'Major' : 'Minor'}
+                        {item.cost} Điểm · {item.category === 'major' ? 'Món Chính' : 'Món Phụ'}
                       </div>
                     </div>
                     {selected && <span className="ml-auto font-bold text-[var(--color-ggd-neon-green)]">✓</span>}
@@ -394,7 +394,7 @@ export default function Season3Page() {
             onClick={() => void saveLoadout()}
             className="mt-4 w-full rounded-xl bg-[var(--color-ggd-neon-green)] px-5 py-3 font-black text-[var(--color-ggd-outline)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-30"
           >
-            {week.loadout.status === 'ready' ? '✓ CẬP NHẬT TRANG BỊ LOADOUT' : '🔒 KHÓA TRANG BỊ LOADOUT'}
+            {week.loadout.status === 'ready' ? '✓ CẬP NHẬT TRANG BỊ' : '🔒 XÁC NHẬN TRANG BỊ'}
           </button>
         </section>
       )}

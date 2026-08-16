@@ -4,15 +4,15 @@ import type { RaceItemId } from '@/packages/race-protocol/src'
 export type LoadoutPairingTier = 'recommended' | 'solid' | 'niche' | 'hybrid'
 
 const PURE_COMBO_NOTES: Record<'SPEED' | 'DEFENSE' | 'ATTACK', string> = {
-  SPEED: '⚡ SPEED DEMON — burst + slipstream/comeback. Không phòng thủ → dễ bị Rocket phá boost.',
-  DEFENSE: '🛡️ FORTRESS — chặn/né/giảm đòn. Chậm hơn Speed thuần nhưng waste attack của đối thủ.',
-  ATTACK: '💥 MENACE — phá momentum + trap/pack fight. Mạnh vs Speed không mang shield.',
+  SPEED: 'Lối chơi bứt tốc áp đảo: tối ưu hóa bám đuôi và bứt phá về đích. Nhược điểm: thiếu phòng thủ, dễ bị Tên Lửa ngắt đà.',
+  DEFENSE: 'Lối chơi bất khả xâm phạm: vô hiệu hóa đòn tấn công và hạn chế va chạm. Nhược điểm: tốc độ cơ bản không quá nổi trội.',
+  ATTACK: 'Lối chơi áp đảo khống chế: ngắt đà tăng tốc của đối thủ và bẫy đường phía sau. Rất mạnh khi ép sân các vịt không mang Khiên.',
 }
 
 const HYBRID_NOTES: ReadonlyArray<{ classes: readonly [string, string]; message: string }> = [
-  { classes: ['SPEED', 'DEFENSE'], message: '🧪 MAD DUCK — burst + survivability. Ví dụ Nitro + Feather: nhanh nhưng vẫn né Banana.' },
-  { classes: ['DEFENSE', 'ATTACK'], message: '🧪 MAD DUCK — tự bảo vệ + đặt trap. Chậm — Speed build có thể chạy bỏ.' },
-  { classes: ['ATTACK', 'SPEED'], message: '🧪 MAD DUCK — phá leader rồi vượt. Zero defense — ăn Rocket là chịu nguyên.' },
+  { classes: ['SPEED', 'DEFENSE'], message: 'Lối chơi cơ động toàn diện: vừa sở hữu tốc độ bứt phá, vừa có khiên phòng hộ bảo vệ trước cạm bẫy.' },
+  { classes: ['DEFENSE', 'ATTACK'], message: 'Lối chơi rình rập an toàn: tự bảo vệ bản thân trước hiểm nguy, đồng thời tung đòn hiểm phá rối nhóm dẫn đầu.' },
+  { classes: ['ATTACK', 'SPEED'], message: 'Lối chơi tiến công thần tốc: liên tục ngắt nhịp đối thủ phía trước để chớp thời cơ vượt lên dẫn đầu.' },
 ]
 
 export function evaluateLoadoutPairing(itemIds: readonly RaceItemId[]): { tier: LoadoutPairingTier; message: string; badge: string | null; label: string | null } | null {
@@ -38,7 +38,7 @@ export function evaluateLoadoutPairing(itemIds: readonly RaceItemId[]): { tier: 
   const hybrid = HYBRID_NOTES.find((entry) => [...entry.classes].sort().join(',') === sorted)
   return {
     tier: 'hybrid',
-    message: hybrid?.message ?? '🧪 HYBRID — soft counter theo matchup, không có bonus stat.',
+    message: hybrid?.message ?? 'Lối chơi linh hoạt: kết hợp hài hòa giữa 2 trường phái để tùy biến theo từng cục diện trận đua.',
     badge,
     label,
   }

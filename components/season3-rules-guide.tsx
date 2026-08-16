@@ -224,8 +224,8 @@ export function Season3RulesGuide() {
         {/* Major Items */}
         <div>
           <div className="flex items-center gap-2">
-            <span className="rounded-md bg-purple-500/20 px-2 py-0.5 text-xs font-black text-purple-300">MAJOR ITEMS</span>
-            <span className="text-xs text-white/50">Chi phí: 2 Prep Credits (Chọn đúng 1 món)</span>
+            <span className="rounded-md bg-purple-500/20 px-2 py-0.5 text-xs font-black text-purple-300">TRANG BỊ CHÍNH (MAJOR)</span>
+            <span className="text-xs text-white/50">Chi phí: 2 Điểm (Chọn đúng 1 món)</span>
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
             {majorItems.map((item) => (
@@ -238,7 +238,7 @@ export function Season3RulesGuide() {
                   <h4 className="mt-3 font-display text-xl text-white">{item.name}</h4>
                   <p className="mt-2 text-sm text-white/75">{item.description}</p>
                 </div>
-                <div className="mt-4 text-[11px] font-black text-purple-300">2 Credits · Major</div>
+                <div className="mt-4 text-[11px] font-black text-purple-300">2 Điểm · Món Chính</div>
               </article>
             ))}
           </div>
@@ -247,8 +247,8 @@ export function Season3RulesGuide() {
         {/* Minor Items */}
         <div>
           <div className="flex items-center gap-2">
-            <span className="rounded-md bg-blue-500/20 px-2 py-0.5 text-xs font-black text-blue-300">MINOR ITEMS</span>
-            <span className="text-xs text-white/50">Chi phí: 1 Prep Credit (Chọn đúng 1 món)</span>
+            <span className="rounded-md bg-blue-500/20 px-2 py-0.5 text-xs font-black text-blue-300">TRANG BỊ PHỤ (MINOR)</span>
+            <span className="text-xs text-white/50">Chi phí: 1 Điểm (Chọn đúng 1 món)</span>
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {minorItems.map((item) => (
@@ -261,7 +261,7 @@ export function Season3RulesGuide() {
                   <h4 className="mt-3 font-display text-xl text-white">{item.name}</h4>
                   <p className="mt-2 text-sm text-white/75">{item.description}</p>
                 </div>
-                <div className="mt-4 text-[11px] font-black text-blue-300">1 Credit · Minor</div>
+                <div className="mt-4 text-[11px] font-black text-blue-300">1 Điểm · Món Phụ</div>
               </article>
             ))}
           </div>

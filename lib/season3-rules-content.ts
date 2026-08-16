@@ -150,7 +150,7 @@ export const LOADOUT_CONFIG = {
       cost: 2,
       category: 'major' as const,
       itemClass: 'SPEED' as const,
-      description: 'Tăng tốc mạnh mẽ (+18% tốc độ) trong thời gian ngắn để bứt phá dẫn đầu.',
+      description: 'Bứt tốc mạnh mẽ trong chốc lát để vượt lên dẫn đầu (không cộng dồn tốc độ).',
     },
     {
       id: 'BUBBLE_SHIELD',
@@ -159,7 +159,7 @@ export const LOADOUT_CONFIG = {
       cost: 2,
       category: 'major' as const,
       itemClass: 'DEFENSE' as const,
-      description: 'Bong bóng bảo vệ, chặn trọn vẹn 1 đòn tấn công (Tên lửa, Chuối hoặc đòn đánh).',
+      description: 'Tạo bong bóng phòng hộ, chặn hoàn toàn 1 đòn tấn công hoặc bẫy đầu tiên.',
     },
     {
       id: 'HOMING_ROCKET',
@@ -168,7 +168,7 @@ export const LOADOUT_CONFIG = {
       cost: 2,
       category: 'major' as const,
       itemClass: 'ATTACK' as const,
-      description: 'Tên lửa tầm nhiệt nhắm vào đối thủ phía trước: làm chậm mạnh và dập tắt ngay đợt tăng tốc.',
+      description: 'Bắn tên lửa tầm nhiệt làm chậm đối thủ phía trước và ngắt ngay trạng thái tăng tốc.',
     },
     {
       id: 'DRAFT_FIN',
@@ -177,7 +177,7 @@ export const LOADOUT_CONFIG = {
       cost: 1,
       category: 'minor' as const,
       itemClass: 'SPEED' as const,
-      description: 'Bám luồng nước: khi bơi sát đuôi vịt phía trước sẽ nhận cú hích tăng tốc (1 lần/race).',
+      description: 'Bám sát đuôi đối thủ phía trước để đón luồng lướt gió tăng tốc (1 lần/trận).',
     },
     {
       id: 'PADDLE_BURST',
@@ -186,7 +186,7 @@ export const LOADOUT_CONFIG = {
       cost: 1,
       category: 'minor' as const,
       itemClass: 'SPEED' as const,
-      description: 'Lội ngược dòng: kích hoạt tăng tốc ở nửa sau đường đua nếu đang nằm trong nhóm dưới (1 lần/race).',
+      description: 'Quạt nước tăng tốc lội ngược dòng ở chặng sau cuộc đua (1 lần/trận).',
     },
     {
       id: 'FEATHER',
@@ -195,7 +195,7 @@ export const LOADOUT_CONFIG = {
       cost: 1,
       category: 'minor' as const,
       itemClass: 'DEFENSE' as const,
-      description: 'Lông vũ hộ thể: tự động né 1 bẫy Chuối hoặc chướng ngại vật trên mặt nước.',
+      description: 'Lông vũ hộ thân, tự động nhảy né 1 lần dẫm phải vỏ chuối hoặc bẫy nước.',
     },
     {
       id: 'SHOCK_ABSORBER',
@@ -204,7 +204,7 @@ export const LOADOUT_CONFIG = {
       cost: 1,
       category: 'minor' as const,
       itemClass: 'DEFENSE' as const,
-      description: 'Giảm xóc: giảm 50% hiệu ứng làm chậm từ đòn Tên lửa hoặc Tiếng còi đầu tiên dính phải.',
+      description: 'Áo giảm chấn, giảm 50% lực đẩy và hiệu ứng làm chậm từ Tên Lửa / Còi đầu tiên.',
     },
     {
       id: 'BANANA',
@@ -213,7 +213,7 @@ export const LOADOUT_CONFIG = {
       cost: 1,
       category: 'minor' as const,
       itemClass: 'ATTACK' as const,
-      description: 'Thả vỏ chuối lại phía sau: khiến vịt đạp phải bị trượt bánh và mất đà.',
+      description: 'Thả vỏ chuối bẫy phía sau, khiến đối thủ giẫm phải bị trượt làn và khựng lại.',
     },
     {
       id: 'QUACK_HORN',
@@ -222,7 +222,7 @@ export const LOADOUT_CONFIG = {
       cost: 1,
       category: 'minor' as const,
       itemClass: 'ATTACK' as const,
-      description: 'Bấm còi inh ỏi: đẩy dạt các chú vịt đang bơi sát cạnh sang hai bên.',
+      description: 'Bấm còi húc dạt các đối thủ bơi sát cạnh, phá tan thế bám đuôi lướt gió.',
     },
   ],
 }

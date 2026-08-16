@@ -12,15 +12,15 @@ export interface RaceItemDefinition {
 }
 
 export const RACE_ITEM_CATALOG: readonly RaceItemDefinition[] = [
-  { id: 'NITRO', name: 'Nitro', icon: '⚡', cost: 2, category: 'major', itemClass: 'SPEED', description: 'Burst +18% tốc độ / 1.5s — không stack boost.' },
-  { id: 'DRAFT_FIN', name: 'Draft Fin', icon: '🦈', cost: 1, category: 'minor', itemClass: 'SPEED', description: 'Slipstream: bám sát phía sau → +9% / 1.1s (1 lần/race).' },
-  { id: 'PADDLE_BURST', name: 'Paddle Burst', icon: '🛶', cost: 1, category: 'minor', itemClass: 'SPEED', description: 'Comeback: >65% track + nửa dưới BXH → +8% / 1.3s (1 lần/race).' },
-  { id: 'BUBBLE_SHIELD', name: 'Bubble Shield', icon: '🫧', cost: 2, category: 'major', itemClass: 'DEFENSE', description: 'Chặn 1 đòn tấn công (Rocket/Banana/wild attack).' },
-  { id: 'FEATHER', name: 'Feather', icon: '🪶', cost: 1, category: 'minor', itemClass: 'DEFENSE', description: 'Prep passive — né Banana/trap 1 lần (khác Wild Feather Hop timed).' },
-  { id: 'SHOCK_ABSORBER', name: 'Shock Absorber', icon: '🦺', cost: 1, category: 'minor', itemClass: 'DEFENSE', description: 'Giảm 50% Rocket/Horn đầu tiên — không chặn hẳn.' },
-  { id: 'HOMING_ROCKET', name: 'Homing Rocket', icon: '🚀', cost: 2, category: 'major', itemClass: 'ATTACK', description: 'Slow ngắn + 💥 BOOST BREAK (hủy Nitro/Draft/Paddle đang chạy).' },
-  { id: 'BANANA', name: 'Banana', icon: '🍌', cost: 1, category: 'minor', itemClass: 'ATTACK', description: 'Bẫy phía sau — phá momentum + trượt lane.' },
-  { id: 'QUACK_HORN', name: 'Quack Horn', icon: '🔊', cost: 1, category: 'minor', itemClass: 'ATTACK', description: 'Đẩy ngang vịt sát — pack fight / phá slipstream.' },
+  { id: 'NITRO', name: 'Nitro', icon: '⚡', cost: 2, category: 'major', itemClass: 'SPEED', description: 'Bứt tốc mạnh mẽ trong chốc lát để vượt lên dẫn đầu (không cộng dồn tốc độ).' },
+  { id: 'DRAFT_FIN', name: 'Draft Fin', icon: '🦈', cost: 1, category: 'minor', itemClass: 'SPEED', description: 'Bám sát đuôi đối thủ phía trước để đón luồng lướt gió tăng tốc (1 lần/trận).' },
+  { id: 'PADDLE_BURST', name: 'Paddle Burst', icon: '🛶', cost: 1, category: 'minor', itemClass: 'SPEED', description: 'Quạt nước tăng tốc lội ngược dòng ở chặng sau cuộc đua (1 lần/trận).' },
+  { id: 'BUBBLE_SHIELD', name: 'Bubble Shield', icon: '🫧', cost: 2, category: 'major', itemClass: 'DEFENSE', description: 'Tạo bong bóng phòng hộ, chặn hoàn toàn 1 đòn tấn công hoặc bẫy đầu tiên.' },
+  { id: 'FEATHER', name: 'Feather', icon: '🪶', cost: 1, category: 'minor', itemClass: 'DEFENSE', description: 'Lông vũ hộ thân, tự động nhảy né 1 lần dẫm phải vỏ chuối hoặc bẫy nước.' },
+  { id: 'SHOCK_ABSORBER', name: 'Shock Absorber', icon: '🦺', cost: 1, category: 'minor', itemClass: 'DEFENSE', description: 'Áo giảm chấn, giảm 50% lực đẩy và hiệu ứng làm chậm từ Tên Lửa / Còi đầu tiên.' },
+  { id: 'HOMING_ROCKET', name: 'Homing Rocket', icon: '🚀', cost: 2, category: 'major', itemClass: 'ATTACK', description: 'Bắn tên lửa tầm nhiệt làm chậm đối thủ phía trước và ngắt ngay trạng thái tăng tốc.' },
+  { id: 'BANANA', name: 'Banana', icon: '🍌', cost: 1, category: 'minor', itemClass: 'ATTACK', description: 'Thả vỏ chuối bẫy phía sau, khiến đối thủ giẫm phải bị trượt làn và khựng lại.' },
+  { id: 'QUACK_HORN', name: 'Quack Horn', icon: '🔊', cost: 1, category: 'minor', itemClass: 'ATTACK', description: 'Bấm còi húc dạt các đối thủ bơi sát cạnh, phá tan thế bám đuôi lướt gió.' },
 ] as const
 
 export const AUTO_LOADOUT_PRESETS: readonly RaceItemId[][] = [
