@@ -25,6 +25,7 @@ export interface DuckItemRuntime extends ItemDefenseState {
   boostMultiplier: number
   boostUntilTick: number
   bubbleUntilTick: number
+  silencedUntilTick: number
   wildItem: { instanceId: string; itemId: WildItemId; acquiredAtTick: number } | null
   regularPickupCount: number
   wildBubbleAvailable: boolean
@@ -55,7 +56,7 @@ const SPEED_BOOST_PRIORITY: Partial<Record<RaceItemId, number>> = {
   PADDLE_BURST: 1,
 }
 
-export type BoostBreakSource = 'ROCKET' | 'MINI_ROCKET' | 'BANANA' | 'WILD_BANANA'
+export type BoostBreakSource = 'ROCKET' | 'MINI_ROCKET' | 'BANANA' | 'WILD_BANANA' | 'QUACK_HORN' | 'WILD_HORN'
 
 export interface RocketRuntime {
   id: number
@@ -109,6 +110,7 @@ export function createItemRaceState(config: RaceConfig): ItemRaceState {
         usedItems: new Set<RaceItemId>(),
         bubbleAvailable: false,
         bubbleUntilTick: 0,
+        silencedUntilTick: 0,
         featherAvailable: itemIds.includes('FEATHER'),
         shockAbsorberAvailable: itemIds.includes('SHOCK_ABSORBER'),
         itemImmunityUntilTick: 0,
@@ -227,6 +229,25 @@ export function tryActivateBubbleShield(
     ...metadata,
   })
   return true
+}
+
+export function triggerMenacePredatorRush(
+  itemState: ItemRaceState,
+  attackerPlayerId: string,
+  tick: number,
+  tickRate: number,
+  emit: EmitItemEvent,
+  trigger: 'ROCKET' | 'BANANA' | 'QUACK_HORN',
+) {
+  const runtime = itemState.byPlayer.get(attackerPlayerId)
+  if (!runtime || runtime.loadoutCombo !== 'MENACE') return
+  applyItemBoost(runtime, ITEM_BALANCE.menace.predatorRushMultiplier, ITEM_BALANCE.menace.predatorRushDurationSeconds, tick, tickRate)
+  emit('PREDATOR_RUSH_STARTED', attackerPlayerId, undefined, {
+    trigger,
+    multiplier: ITEM_BALANCE.menace.predatorRushMultiplier,
+    durationSeconds: ITEM_BALANCE.menace.predatorRushDurationSeconds,
+    untilTick: runtime.boostUntilTick,
+  })
 }
 
 export function tryApplyPrepSpeedBoost(
@@ -418,6 +439,9 @@ function updateRockets(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
       }
       applyItemSlow(defense, slowMultiplier, slowDurationSeconds, tick, tickRate)
       emit(hitType, rocket.sourcePlayerId, target.playerId, {})
+      if (rocket.kind === 'PREP' && rocket.sourcePlayerId) {
+        triggerMenacePredatorRush(itemState, rocket.sourcePlayerId, tick, tickRate, emit, 'ROCKET')
+      }
     } else if (outcome === 'BLOCKED_MINI_BUBBLE') {
       emit('MINI_BUBBLE_BLOCKED', target.playerId, rocket.sourcePlayerId, { blocked: incoming })
       emit(blockedType, rocket.sourcePlayerId, target.playerId, { defense: 'MINI_BUBBLE' })
@@ -462,6 +486,9 @@ function updateBananas(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
       const direction = target.lateralOffset >= banana.lateralOffset ? 1 : -1
       target.lateralVelocity += direction * banana.lateralSlip
       emit(hitType, banana.sourcePlayerId, target.playerId, { knockback })
+      if (banana.kind === 'PREP' && banana.sourcePlayerId) {
+        triggerMenacePredatorRush(itemState, banana.sourcePlayerId, tick, tickRate, emit, 'BANANA')
+      }
     } else if (outcome === 'BLOCKED_MINI_BUBBLE') {
       emit('MINI_BUBBLE_BLOCKED', target.playerId, banana.sourcePlayerId, { blocked: incoming })
       emit(blockedType, banana.sourcePlayerId, target.playerId, { blocked: true, defense: 'MINI_BUBBLE' })
@@ -536,7 +563,9 @@ export function itemActiveEffects(runtime: DuckItemRuntime, tick: number) {
   if (runtime.bubbleAvailable && tick < runtime.bubbleUntilTick) effects.push('BUBBLE_SHIELD')
   if (runtime.featherAvailable) effects.push('FEATHER')
   if (runtime.shockAbsorberAvailable) effects.push('SHOCK_ABSORBER')
+  if (tick < runtime.silencedUntilTick) effects.push('SILENCED')
   if (tick < runtime.boostUntilTick && runtime.activeSpeedItemId) effects.push(runtime.activeSpeedItemId)
+  else if (tick < runtime.boostUntilTick && runtime.loadoutCombo === 'MENACE') effects.push('PREDATOR_RUSH')
   else if (tick < runtime.boostUntilTick) effects.push('NITRO')
   if (tick < runtime.slowUntilTick) effects.push('SLOWED')
   if (runtime.wildBubbleAvailable && tick < runtime.wildBubbleUntilTick) effects.push('MINI_BUBBLE')

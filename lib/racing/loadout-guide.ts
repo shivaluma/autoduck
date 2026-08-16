@@ -6,7 +6,7 @@ export type LoadoutPairingTier = 'recommended' | 'solid' | 'niche' | 'hybrid'
 const PURE_COMBO_NOTES: Record<'SPEED' | 'DEFENSE' | 'ATTACK', string> = {
   SPEED: 'Lối chơi bứt tốc áp đảo: tối ưu hóa bám đuôi và bứt phá về đích. Nhược điểm: thiếu phòng thủ, dễ bị Tên Lửa ngắt đà.',
   DEFENSE: 'Lối chơi bất khả xâm phạm: vô hiệu hóa đòn tấn công và hạn chế va chạm. Nhược điểm: tốc độ cơ bản không quá nổi trội.',
-  ATTACK: 'Lối chơi áp đảo khống chế: ngắt đà tăng tốc của đối thủ và bẫy đường phía sau. Rất mạnh khi ép sân các vịt không mang Khiên.',
+  ATTACK: 'Lối chơi áp đảo khống chế (MENACE): phát sóng EMP khóa item, triệt tiêu tăng tốc đối thủ và nhận Predator Rush (+10% tốc độ) khi đánh trúng mục tiêu.',
 }
 
 const HYBRID_NOTES: ReadonlyArray<{ classes: readonly [string, string]; message: string }> = [

@@ -59,15 +59,20 @@ export const ITEM_BALANCE = {
   },
   horn: {
     armProgress: 0.22,
-    progressRadius: 0.024,
-    lateralRadius: 0.32,
+    progressRadius: 0.040,
+    lateralRadius: 0.48,
     lateralPush: 0.88,
     lateralShove: 0.2,
     fallbackProgress: 0.76,
+    silenceDurationSeconds: 3.0,
   },
   bubbleShield: {
     durationSeconds: 4.5,
     endGameBurnProgress: 0.82,
+  },
+  menace: {
+    predatorRushMultiplier: 1.10,
+    predatorRushDurationSeconds: 2.2,
   },
   autoUse: {
     endGameBurnProgress: 0.78,

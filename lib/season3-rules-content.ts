@@ -222,7 +222,7 @@ export const LOADOUT_CONFIG = {
       cost: 1,
       category: 'minor' as const,
       itemClass: 'ATTACK' as const,
-      description: 'Bấm còi húc dạt các đối thủ bơi sát cạnh, phá tan thế bám đuôi lướt gió.',
+      description: 'Bấm còi phát sóng EMP húc dạt các đối thủ bơi sát cạnh, triệt tiêu tăng tốc và khóa dùng item trong 3 giây.',
     },
   ],
 }

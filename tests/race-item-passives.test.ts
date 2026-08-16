@@ -5,9 +5,10 @@ import {
   createSimulation,
   stepSimulation,
   slipstreamReady,
+  tryApplyPrepSpeedBoost,
   ITEM_BALANCE,
 } from '../packages/race-core/src'
-import { evaluatePrepCandidates } from '../packages/race-core/src/auto-use/evaluate'
+import { evaluatePrepCandidates, evaluateReactiveDefense } from '../packages/race-core/src/auto-use/evaluate'
 import { executePrepAction } from '../packages/race-core/src/auto-use/execute'
 import { buildRaceObjectiveContext } from '../packages/race-core/src/auto-use/objective'
 import type { RaceConfig } from '../packages/race-protocol/src'
@@ -152,4 +153,160 @@ test('Menace reduces arm progress for offensive items', () => {
 
   assert.ok(candidates1.some((c) => c.itemId === 'HOMING_ROCKET'), 'Menace should be armed at progress 0.23')
   assert.ok(!candidates2.some((c) => c.itemId === 'HOMING_ROCKET'), 'Mixed should NOT be armed at progress 0.23')
+})
+
+test('Quack Horn dispels active speed boost and silences victims for 3.0 seconds', () => {
+  const cfg = dummyConfig([
+    { playerId: 'duck-1', itemIds: ['HOMING_ROCKET', 'QUACK_HORN'], source: 'PLAYER' },
+    { playerId: 'duck-2', itemIds: ['NITRO', 'DRAFT_FIN'], source: 'PLAYER' },
+  ])
+  const itemState = createItemRaceState(cfg)
+  const runtime1 = itemState.byPlayer.get('duck-1')!
+  const runtime2 = itemState.byPlayer.get('duck-2')!
+
+  // duck-2 has an active Nitro boost
+  tryApplyPrepSpeedBoost(runtime2, 'duck-2', 'NITRO', 1.15, 1.5, 10, 60, () => undefined)
+  assert.equal(runtime2.activeSpeedItemId, 'NITRO')
+  assert.ok(runtime2.boostMultiplier > 1)
+
+  const ducks = [
+    { playerId: 'duck-1', progress: 0.5, lateralOffset: 0, lateralVelocity: 0, currentRank: 2, finished: false },
+    { playerId: 'duck-2', progress: 0.51, lateralOffset: 0.05, lateralVelocity: 0, currentRank: 1, finished: false },
+  ]
+
+  const emitted: Array<{ type: string; source?: string; target?: string }> = []
+  const emit = (type: string, source?: string, target?: string) => {
+    emitted.push({ type, source, target })
+  }
+
+  const candidate = {
+    playerId: 'duck-1',
+    itemKey: 'prep:QUACK_HORN',
+    itemId: 'QUACK_HORN' as const,
+    source: 'PREP' as const,
+    action: 'USE' as const,
+    score: 100,
+    reason: 'OPPORTUNITY' as const,
+  }
+
+  const executed = executePrepAction(candidate, itemState, ducks[0]!, ducks, 20, 60, emit as never, {}, cfg)
+  assert.equal(executed, true)
+
+  // duck-2's boost should be broken (dispelled)
+  assert.equal(runtime2.activeSpeedItemId, null)
+  assert.equal(runtime2.boostMultiplier, 1)
+
+  // duck-2 should be silenced until tick 20 + 3 * 60 = 200
+  assert.equal(runtime2.silencedUntilTick, 20 + 3 * 60)
+  assert.ok(emitted.some((e) => e.type === 'BOOST_BROKEN'))
+  assert.ok(emitted.some((e) => e.type === 'ITEM_SILENCED'))
+  assert.ok(emitted.some((e) => e.type === 'PREDATOR_RUSH_STARTED')) // duck-1 is MENACE!
+})
+
+test('Silenced ducks cannot evaluate or execute prep items or reactive defense', () => {
+  const cfg = dummyConfig([
+    { playerId: 'duck-1', itemIds: ['BUBBLE_SHIELD', 'PADDLE_BURST'], source: 'PLAYER' },
+  ])
+  const itemState = createItemRaceState(cfg)
+  const runtime1 = itemState.byPlayer.get('duck-1')!
+  runtime1.silencedUntilTick = 500
+
+  const ducks = [
+    { playerId: 'duck-1', progress: 0.85, lateralOffset: 0, lateralVelocity: 0, currentRank: 1, finished: false },
+  ]
+  const objective = buildRaceObjectiveContext(cfg)
+  const evalCtx = {
+    tick: 100,
+    tickRate: 60,
+    objective,
+    itemState,
+    pickupState: { hazards: [] } as never,
+    ducks,
+    playerId: 'duck-1',
+    secondsUntilNextPickupZone: 999,
+    prepAutoUseEnabled: true,
+    wildAutoUseEnabled: true,
+    ghostPlayerIds: new Set<string>(),
+  }
+
+  // Prep candidates should be empty while silenced
+  const prepCandidates = evaluatePrepCandidates(evalCtx)
+  assert.equal(prepCandidates.length, 0)
+
+  // Reactive defense should be empty while silenced
+  itemState.rockets.push({
+    id: 1,
+    sourcePlayerId: 'duck-2',
+    targetPlayerId: 'duck-1',
+    progress: 0.8,
+    spawnedAtTick: 90,
+    launchAtTick: 90,
+    expiresAtTick: 300,
+    kind: 'PREP',
+    speedPerSecond: 0.16,
+    hitRadius: 0.014,
+    slowMultiplier: 0.68,
+    slowDurationSeconds: 1.15,
+    retargeted: false,
+  })
+  const reactiveCandidates = evaluateReactiveDefense(evalCtx)
+  assert.equal(reactiveCandidates.length, 0)
+
+  // Execution should be blocked
+  const candidate = {
+    playerId: 'duck-1',
+    itemKey: 'prep:BUBBLE_SHIELD',
+    itemId: 'BUBBLE_SHIELD' as const,
+    source: 'PREP' as const,
+    action: 'USE' as const,
+    score: 100,
+    reason: 'LATE_RACE' as const,
+  }
+  assert.equal(executePrepAction(candidate, itemState, ducks[0]!, ducks, 100, 60, () => undefined), false)
+})
+
+test('Horn AI prioritizes dispelling boosting targets and benefits from expanded radius', () => {
+  const cfg = dummyConfig([
+    { playerId: 'duck-1', itemIds: ['HOMING_ROCKET', 'QUACK_HORN'], source: 'PLAYER' }, // Menace
+    { playerId: 'duck-2', itemIds: ['NITRO', 'DRAFT_FIN'], source: 'PLAYER' },
+    { playerId: 'duck-3', itemIds: ['BUBBLE_SHIELD', 'FEATHER'], source: 'PLAYER' },
+  ])
+  const itemState = createItemRaceState(cfg)
+  const runtime2 = itemState.byPlayer.get('duck-2')!
+
+  // Position duck-2 at expanded progress distance (0.05) and lateral offset (0.45)
+  // Base progressRadius * 1.5 = 0.040 * 1.5 = 0.060
+  // Base lateralRadius * 1.5 = 0.48 * 1.5 = 0.72
+  const ducks = [
+    { playerId: 'duck-1', progress: 0.50, lateralOffset: 0.0, lateralVelocity: 0, currentRank: 2, finished: false },
+    { playerId: 'duck-2', progress: 0.54, lateralOffset: 0.45, lateralVelocity: 0, currentRank: 1, finished: false },
+    { playerId: 'duck-3', progress: 0.80, lateralOffset: 0.0, lateralVelocity: 0, currentRank: 3, finished: false },
+  ]
+  const objective = buildRaceObjectiveContext(cfg)
+
+  const evalCtxNormal = {
+    tick: 100,
+    tickRate: 60,
+    objective,
+    itemState,
+    pickupState: { hazards: [] } as never,
+    ducks,
+    playerId: 'duck-1',
+    secondsUntilNextPickupZone: 999,
+    prepAutoUseEnabled: true,
+    wildAutoUseEnabled: true,
+    ghostPlayerIds: new Set<string>(),
+  }
+
+  // Without boost on duck-2
+  const candidatesWithoutBoost = evaluatePrepCandidates(evalCtxNormal)
+  const hornCand1 = candidatesWithoutBoost.find((c) => c.itemId === 'QUACK_HORN')
+  assert.ok(hornCand1, 'Horn should detect duck-2 in expanded radius')
+
+  // With active Nitro boost on duck-2
+  tryApplyPrepSpeedBoost(runtime2, 'duck-2', 'NITRO', 1.15, 1.5, 90, 60, () => undefined)
+  const candidatesWithBoost = evaluatePrepCandidates(evalCtxNormal)
+  const hornCand2 = candidatesWithBoost.find((c) => c.itemId === 'QUACK_HORN')
+  assert.ok(hornCand2, 'Horn should detect boosting duck-2')
+  assert.ok(hornCand2.score > hornCand1.score, 'Horn score should be significantly higher when target is actively boosting')
 })

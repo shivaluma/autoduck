@@ -44,8 +44,8 @@ export const PICKUP_BALANCE = {
     closeBehindDistance: 0.065,
   },
   horn: {
-    progressRadius: 0.013,
-    lateralRadius: 0.24,
+    progressRadius: 0.022,
+    lateralRadius: 0.38,
     lateralPush: 0.4,
     lateralShove: 0.1,
     endGameProgressRadiusMultiplier: 1.6,

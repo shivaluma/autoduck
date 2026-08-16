@@ -812,6 +812,21 @@ export function PhaserRaceCanvas({
             return
           }
 
+          if (type === 'ITEM_SILENCED') {
+            const victim = source ?? target
+            if (victim) {
+              this.burstRing(victim.root.x, victim.root.y, 0xffbb44, 0xff4444, 0.18, 2.5)
+              this.floatEmoji(victim.root.x, victim.root.y - 12, '🔕', '22px', 480)
+            }
+            return
+          }
+
+          if (type === 'PREDATOR_RUSH_STARTED' && source) {
+            this.burstRing(source.root.x, source.root.y, 0xff5533, 0xffaa00, 0.2, 2.8)
+            this.floatEmoji(source.root.x, source.root.y - 14, '🔥', '24px', 520)
+            return
+          }
+
           if (type === 'BUBBLE_POPPED' || type === 'MINI_BUBBLE_BLOCKED') {
             const bubbleView = source ?? target
             if (bubbleView) {
@@ -902,7 +917,9 @@ export function PhaserRaceCanvas({
             PADDLE_BURST_STARTED: `🛶 ${source} PADDLE BURST!`,
             BOOST_BROKEN: `💥 ${target} BOOST BROKEN!`,
             SHOCK_ABSORBER_PROC: `🦺 ${target} absorbed hit`,
-            HORN_USED: `🔊 ${source} QUACKED THE PACK`,
+            HORN_USED: `🔊 ${source} EMP QUACK! Khóa item đối thủ`,
+            ITEM_SILENCED: `🔕 ${source} bị khóa item (3s)`,
+            PREDATOR_RUSH_STARTED: `🔥 ${source} PREDATOR RUSH (+10% tốc độ)!`,
             FEATHER_DODGED: `🪶 ${source} DODGED!`,
             BUBBLE_SHIELD_ACTIVATED: `🫧 ${source} bật Khiên Bong Bóng`,
             BUBBLE_SHIELD_EXPIRED: `🫧 ${source} Khiên hết hạn`,

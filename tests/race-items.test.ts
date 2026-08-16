@@ -26,6 +26,7 @@ function defense(items: RaceItemId[]): DuckItemRuntime {
     usedItems: new Set(),
     bubbleAvailable: items.includes('BUBBLE_SHIELD'),
     bubbleUntilTick: items.includes('BUBBLE_SHIELD') ? 1000 : 0,
+    silencedUntilTick: 0,
     featherAvailable: items.includes('FEATHER'),
     shockAbsorberAvailable: items.includes('SHOCK_ABSORBER'),
     itemImmunityUntilTick: 0,
@@ -231,7 +232,7 @@ test('Banana expires, Horn pushes only laterally, and neither hard-stuns', () =>
   assert.ok(bananaEvents.includes('BANANA_EXPIRED'))
 
   const hornConfig = config([
-    { playerId: '1', itemIds: ['NITRO', 'BANANA'] },
+    { playerId: '1', itemIds: ['NITRO', 'SHOCK_ABSORBER'] },
     { playerId: '2', itemIds: ['BUBBLE_SHIELD', 'QUACK_HORN'] },
     { playerId: '3', itemIds: ['NITRO', 'FEATHER'] },
   ])

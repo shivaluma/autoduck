@@ -20,7 +20,7 @@ export const RACE_ITEM_CATALOG: readonly RaceItemDefinition[] = [
   { id: 'SHOCK_ABSORBER', name: 'Shock Absorber', icon: '🦺', cost: 1, category: 'minor', itemClass: 'DEFENSE', description: 'Áo giảm chấn, giảm 50% lực đẩy và hiệu ứng làm chậm từ Tên Lửa / Còi đầu tiên.' },
   { id: 'HOMING_ROCKET', name: 'Homing Rocket', icon: '🚀', cost: 2, category: 'major', itemClass: 'ATTACK', description: 'Bắn tên lửa tầm nhiệt làm chậm đối thủ phía trước và ngắt ngay trạng thái tăng tốc.' },
   { id: 'BANANA', name: 'Banana', icon: '🍌', cost: 1, category: 'minor', itemClass: 'ATTACK', description: 'Thả vỏ chuối bẫy phía sau, khiến đối thủ giẫm phải bị trượt làn và khựng lại.' },
-  { id: 'QUACK_HORN', name: 'Quack Horn', icon: '🔊', cost: 1, category: 'minor', itemClass: 'ATTACK', description: 'Bấm còi húc dạt các đối thủ bơi sát cạnh, phá tan thế bám đuôi lướt gió.' },
+  { id: 'QUACK_HORN', name: 'Quack Horn', icon: '🔊', cost: 1, category: 'minor', itemClass: 'ATTACK', description: 'Bấm còi phát sóng EMP húc dạt các đối thủ bơi sát cạnh, triệt tiêu tăng tốc và khóa dùng item trong 3 giây.' },
 ] as const
 
 export const AUTO_LOADOUT_PRESETS: readonly RaceItemId[][] = [

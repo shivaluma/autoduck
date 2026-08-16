@@ -227,6 +227,7 @@ function hasReactiveThreat(input: AutoUseTickInput, duck: ItemDuckState) {
 function duckNeedsExecute(input: AutoUseTickInput, duck: ItemDuckState) {
   if (duck.finished || (!input.prepAutoUseEnabled && !input.wildAutoUseEnabled)) return false
   const runtime = input.itemState.byPlayer.get(duck.playerId)!
+  if (input.tick < runtime.silencedUntilTick) return false
   if (runtime.pendingAutoAction && input.tick >= runtime.pendingAutoActionExecuteTick) return true
   if (runtime.pendingAutoAction || input.tick < runtime.nextAutoActionTick) return false
   return hasReactiveThreat(input, duck)
@@ -235,6 +236,7 @@ function duckNeedsExecute(input: AutoUseTickInput, duck: ItemDuckState) {
 function duckNeedsDecide(input: AutoUseTickInput, duck: ItemDuckState) {
   if (duck.finished || (!input.prepAutoUseEnabled && !input.wildAutoUseEnabled)) return false
   const runtime = input.itemState.byPlayer.get(duck.playerId)!
+  if (input.tick < runtime.silencedUntilTick) return false
   if (runtime.pendingAutoAction || input.tick < runtime.nextAutoActionTick) return false
   return input.tick >= runtime.nextAutoDecisionTick
 }

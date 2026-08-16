@@ -2,7 +2,7 @@ import type { RaceConfig, RaceEventType } from '../../../race-protocol/src'
 import { ITEM_BALANCE } from '../items/config'
 import type { AutoUseCandidate } from './types'
 import type { ItemDuckState, ItemRaceState } from '../items/engine'
-import { firePrepRocket, slipstreamReady, tryActivateBubbleShield, tryApplyPrepSpeedBoost } from '../items/engine'
+import { breakActiveSpeedBoost, firePrepRocket, slipstreamReady, triggerMenacePredatorRush, tryActivateBubbleShield, tryApplyPrepSpeedBoost } from '../items/engine'
 import { resolveRocketTarget } from './evaluate'
 import { buildRaceObjectiveContext } from './objective'
 import { activateWildItem } from '../pickups/engine'
@@ -30,6 +30,7 @@ export function executePrepAction(
   raceConfig?: RaceConfig,
 ): boolean {
   const runtime = runtimeFor(itemState, duck.playerId)
+  if (tick < runtime.silencedUntilTick) return false
   switch (candidate.itemId) {
     case 'NITRO': {
       if (!hasUnused(runtime, 'NITRO')) return false
@@ -139,11 +140,24 @@ export function executePrepAction(
         slipstreamChargeDestroyedTicks += defense.draftSlipstreamTicks
         defense.draftSlipstreamTicks = 0
         defense.draftTargetPlayerId = null
+
+        // EMP: Dispel active speed boosts and silence item usage for 3.0s
+        breakActiveSpeedBoost(defense, tick, tickRate, emit, duck.playerId, target.playerId, 'QUACK_HORN')
+        defense.silencedUntilTick = Math.max(defense.silencedUntilTick, tick + Math.round(ITEM_BALANCE.horn.silenceDurationSeconds * tickRate))
+        emit('ITEM_SILENCED', target.playerId, duck.playerId, {
+          durationSeconds: ITEM_BALANCE.horn.silenceDurationSeconds,
+          untilTick: defense.silencedUntilTick,
+          source: 'QUACK_HORN',
+        })
+
         const direction = target.lateralOffset === duck.lateralOffset
           ? (target.playerId.localeCompare(duck.playerId) < 0 ? -1 : 1)
           : Math.sign(target.lateralOffset - duck.lateralOffset)
         target.lateralVelocity += direction * push
         target.lateralOffset = Math.max(-0.95, Math.min(0.95, target.lateralOffset + direction * shove))
+      }
+      if (runtime.loadoutCombo === 'MENACE') {
+        triggerMenacePredatorRush(itemState, duck.playerId, tick, tickRate, emit, 'QUACK_HORN')
       }
       emit('HORN_USED', duck.playerId, undefined, {
         targets: nearby.map((target) => target.playerId),
@@ -151,6 +165,7 @@ export function executePrepAction(
         slipstreamChargeDestroyedTicks,
         slipstreamChargeDestroyedSeconds: slipstreamChargeDestroyedTicks / tickRate,
         ducksHit: nearby.length,
+        silencedSeconds: ITEM_BALANCE.horn.silenceDurationSeconds,
       })
       return true
     }
@@ -170,6 +185,7 @@ export function executeWildAction(
   const duck = ducks.find((entry) => entry.playerId === candidate.playerId)
   if (!duck || !candidate.wildItemInstanceId) return false
   const runtime = runtimeFor(itemState, duck.playerId)
+  if (candidate.action !== 'DISCARD' && tick < runtime.silencedUntilTick) return false
 
   if (candidate.action === 'DISCARD') {
     if (!runtime.wildItem || runtime.wildItem.instanceId !== candidate.wildItemInstanceId) return false
