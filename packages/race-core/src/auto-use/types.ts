@@ -6,6 +6,7 @@ export type AutoUseReason =
   | 'OPPORTUNITY'
   | 'INVENTORY_PRESSURE'
   | 'LATE_RACE'
+  | 'END_GAME_BURN'
   | 'OBJECTIVE'
   | 'DISCARD'
 
