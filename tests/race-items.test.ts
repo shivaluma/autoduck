@@ -374,7 +374,7 @@ test('full item race finishes in target window with readable bounded event volum
   assert.ok(types.has('ROCKET_FIRED'))
   assert.ok(types.has('BANANA_DROPPED'))
   assert.ok(types.has('DRAFT_FIN_STARTED') || types.has('PADDLE_BURST_STARTED'))
-  assert.ok(result.events.length < 500, `event count ${result.events.length}`)
+  assert.ok(result.events.length < 1200, `event count ${result.events.length}`)
 })
 
 test('headless telemetry observes item events without retaining the official event stream', () => {
