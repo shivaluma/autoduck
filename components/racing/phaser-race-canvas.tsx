@@ -218,6 +218,7 @@ export function PhaserRaceCanvas({
   const serializedPlayers = JSON.stringify(players)
   const serializedManualInputs = JSON.stringify(replayManualInputs)
   const serializedLiveConfig = JSON.stringify(liveConfig ?? null)
+  const serializedReplayConfig = JSON.stringify(replayConfig ?? null)
   const initialLiveRef = useRef<{ syncTick: number; manualInputs: RecordedWildItemInput[] } | null>(null)
   if (!initialLiveRef.current && liveConfig) {
     initialLiveRef.current = { syncTick: liveSyncTick ?? 0, manualInputs: liveManualInputs }
@@ -243,9 +244,10 @@ export function PhaserRaceCanvas({
     void import('phaser').then((module) => {
       if (!active) return
       const Phaser = module.default
-      const parsedLiveConfig = liveConfig ?? (serializedLiveConfig !== 'null' ? JSON.parse(serializedLiveConfig) as RaceConfig : null)
-      const clientSimConfig = replayConfig ?? parsedLiveConfig
-      const track = createRiverTrack(clientSimConfig?.trackVersion ?? replayConfig?.trackVersion)
+      const parsedLiveConfig = serializedLiveConfig !== 'null' ? JSON.parse(serializedLiveConfig) as RaceConfig : null
+      const parsedReplayConfig = serializedReplayConfig !== 'null' ? JSON.parse(serializedReplayConfig) as RaceConfig : null
+      const clientSimConfig = parsedReplayConfig ?? parsedLiveConfig
+      const track = createRiverTrack(clientSimConfig?.trackVersion ?? parsedReplayConfig?.trackVersion)
       const scenePlayers = JSON.parse(serializedPlayers) as PlayerLabel[]
       const reducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
       const mobileViewport = typeof window !== 'undefined' && window.innerWidth < 640
@@ -1040,8 +1042,8 @@ export function PhaserRaceCanvas({
         }
       }
 
-      if (replayConfig) {
-        const runner = runClientSimulation(replayConfig, {
+      if (parsedReplayConfig) {
+        const runner = runClientSimulation(parsedReplayConfig, {
           replayMode: true,
           manualInputs: JSON.parse(serializedManualInputs) as RecordedWildItemInput[],
         })
@@ -1101,7 +1103,7 @@ export function PhaserRaceCanvas({
       game?.destroy(true)
       audio.close()
     }
-  }, [chaosType, debugPickups, liveConfig, parentId, raceId, replayConfig, serializedLiveConfig, serializedManualInputs, serializedPlayers])
+  }, [chaosType, debugPickups, parentId, raceId, serializedLiveConfig, serializedManualInputs, serializedPlayers, serializedReplayConfig])
 
   return (
     <div className="overflow-hidden rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[#112b3b] shadow-2xl">
