@@ -1,6 +1,7 @@
 import type { DuckSnapshot, RaceConfig, RaceEvent, RaceResult, RecordedWildItemInput } from '../../race-protocol/src'
 import { isGhostPlayerId } from './ghost'
 import { CORE_BALANCE } from './config'
+import { ITEM_BALANCE } from './items/config'
 import { createRaceRng, type DeterministicRng } from './rng'
 import { createRiverTrack, currentAt, type RaceTrack } from './track'
 import {
@@ -236,12 +237,14 @@ function resolveCollisions(state: RaceSimulationState) {
       const push = CORE_BALANCE.collisionPush * overlap
       const leftIsFortress = state.itemState.byPlayer.get(left.playerId)?.loadoutCombo === 'FORTRESS'
       const rightIsFortress = state.itemState.byPlayer.get(right.playerId)?.loadoutCombo === 'FORTRESS'
-      const leftPush = leftIsFortress ? push * 0.75 : push
-      const rightPush = rightIsFortress ? push * 0.75 : push
+      const leftPush = leftIsFortress ? push * ITEM_BALANCE.fortress.collisionPushMultiplier : push
+      const rightPush = rightIsFortress ? push * ITEM_BALANCE.fortress.collisionPushMultiplier : push
+      const leftSpeedLoss = leftIsFortress ? CORE_BALANCE.collisionSpeedLoss * ITEM_BALANCE.fortress.collisionSpeedLossMultiplier : CORE_BALANCE.collisionSpeedLoss
+      const rightSpeedLoss = rightIsFortress ? CORE_BALANCE.collisionSpeedLoss * ITEM_BALANCE.fortress.collisionSpeedLossMultiplier : CORE_BALANCE.collisionSpeedLoss
       lateralDelta.set(left.playerId, (lateralDelta.get(left.playerId) ?? 0) + direction * leftPush)
       lateralDelta.set(right.playerId, (lateralDelta.get(right.playerId) ?? 0) - direction * rightPush)
-      speedDelta.set(left.playerId, (speedDelta.get(left.playerId) ?? 0) - CORE_BALANCE.collisionSpeedLoss * left.speed)
-      speedDelta.set(right.playerId, (speedDelta.get(right.playerId) ?? 0) - CORE_BALANCE.collisionSpeedLoss * right.speed)
+      speedDelta.set(left.playerId, (speedDelta.get(left.playerId) ?? 0) - leftSpeedLoss * left.speed)
+      speedDelta.set(right.playerId, (speedDelta.get(right.playerId) ?? 0) - rightSpeedLoss * right.speed)
       const pairKey = `${left.playerId}:${right.playerId}`
       const lastEventTick = state.lastCollisionEventTick.get(pairKey) ?? -Infinity
       if (state.recordEvents && state.tick - lastEventTick >= Math.round(state.config.tickRate * 0.5)) {

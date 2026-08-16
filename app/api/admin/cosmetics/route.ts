@@ -32,7 +32,13 @@ export async function GET(request: Request) {
   const rarityDistribution = Object.fromEntries(['common', 'uncommon', 'rare', 'epic', 'legendary'].map((rarity) => [rarity, season.players.reduce((total: number, player: { cosmetics: Array<{ cosmeticId: string }> }) => total + player.cosmetics.filter((entry) => COSMETIC_BY_ID.get(entry.cosmeticId)?.rarity === rarity).length, 0)]))
   return NextResponse.json({
     catalog: COSMETIC_CATALOG,
-    players: season.players.map((player: { id: number; user: { name: string }; quackPoints: number; cosmetics: unknown[] }) => ({ id: player.id, name: player.user.name, quackPoints: player.quackPoints, collectionCount: player.cosmetics.length })),
+    players: season.players.map((player: { id: number; user: { name: string }; quackPoints: number; cosmetics: Array<{ cosmeticId: string }> }) => ({
+      id: player.id,
+      name: player.user.name,
+      quackPoints: player.quackPoints,
+      collectionCount: player.cosmetics.length,
+      ownedCosmeticIds: player.cosmetics.map((c) => c.cosmeticId),
+    })),
     transactions,
     pulls,
     events,
@@ -52,7 +58,18 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   if (!authorized(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const body = await request.json() as { action?: string; playerId?: number; cosmeticId?: string; amount?: number; enabled?: boolean; shopEligible?: boolean; gachaEligible?: boolean; priceOverride?: number | null; limitedLabel?: string | null }
+  const body = await request.json() as {
+    action?: string
+    playerId?: number
+    cosmeticId?: string
+    slot?: string
+    amount?: number
+    enabled?: boolean
+    shopEligible?: boolean
+    gachaEligible?: boolean
+    priceOverride?: number | null
+    limitedLabel?: string | null
+  }
   const player = body.playerId ? await prisma.seasonPlayer.findUnique({ where: { id: body.playerId } }) : null
   if (body.action === 'adjust-qp') {
     if (!player || !Number.isInteger(body.amount) || body.amount === 0) return NextResponse.json({ error: 'Player/amount không hợp lệ' }, { status: 400 })
@@ -70,6 +87,63 @@ export async function POST(request: Request) {
       if (body.action === 'grant') await tx.playerCosmetic.upsert({ where: { seasonPlayerId_cosmeticId: { seasonPlayerId: player.id, cosmeticId: body.cosmeticId! } }, create: { seasonPlayerId: player.id, cosmeticId: body.cosmeticId!, source: 'ADMIN' }, update: {} })
       else await tx.playerCosmetic.deleteMany({ where: { seasonPlayerId: player.id, cosmeticId: body.cosmeticId } })
       await tx.cosmeticAdminEvent.create({ data: { action: body.action === 'grant' ? 'GRANT_COSMETIC' : 'REVOKE_COSMETIC', actor: 'host', playerId: player.id, cosmeticId: body.cosmeticId } })
+    })
+    return NextResponse.json({ ok: true })
+  }
+  if (body.action === 'grant-all') {
+    if (!player) return NextResponse.json({ error: 'Player không hợp lệ' }, { status: 400 })
+    const targetItems = body.slot && body.slot !== 'all'
+      ? COSMETIC_CATALOG.filter((item) => item.slot === body.slot)
+      : COSMETIC_CATALOG
+
+    await prisma.$transaction(async (tx: typeof prisma) => {
+      await tx.playerCosmetic.createMany({
+        data: targetItems.map((item) => ({
+          seasonPlayerId: player.id,
+          cosmeticId: item.id,
+          source: 'ADMIN_GRANT_ALL',
+          isNew: true,
+        })),
+        skipDuplicates: true,
+      })
+      await tx.cosmeticAdminEvent.create({
+        data: {
+          action: 'GRANT_ALL_COSMETICS',
+          actor: 'host',
+          playerId: player.id,
+          metadataJson: JSON.stringify({ count: targetItems.length, slot: body.slot ?? 'all' }),
+        },
+      })
+    })
+    return NextResponse.json({ ok: true, count: targetItems.length })
+  }
+  if (body.action === 'revoke-all') {
+    if (!player) return NextResponse.json({ error: 'Player không hợp lệ' }, { status: 400 })
+    const targetItemIds = body.slot && body.slot !== 'all'
+      ? COSMETIC_CATALOG.filter((item) => item.slot === body.slot).map((item) => item.id)
+      : null
+
+    await prisma.$transaction(async (tx: typeof prisma) => {
+      if (targetItemIds) {
+        await tx.playerCosmetic.deleteMany({
+          where: {
+            seasonPlayerId: player.id,
+            cosmeticId: { in: targetItemIds },
+          },
+        })
+      } else {
+        await tx.playerCosmetic.deleteMany({
+          where: { seasonPlayerId: player.id },
+        })
+      }
+      await tx.cosmeticAdminEvent.create({
+        data: {
+          action: 'REVOKE_ALL_COSMETICS',
+          actor: 'host',
+          playerId: player.id,
+          metadataJson: JSON.stringify({ slot: body.slot ?? 'all' }),
+        },
+      })
     })
     return NextResponse.json({ ok: true })
   }

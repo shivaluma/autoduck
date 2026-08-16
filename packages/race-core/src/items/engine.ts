@@ -163,9 +163,15 @@ export function applyItemSlow(runtime: DuckItemRuntime, multiplier: number, dura
 }
 
 export function applyItemBoost(runtime: DuckItemRuntime, multiplier: number, durationSeconds: number, tick: number, tickRate: number) {
-  runtime.boostMultiplier = Math.min(ITEM_BALANCE.maximumSpeedMultiplier, multiplier)
+  const targetMultiplier = Math.min(ITEM_BALANCE.maximumSpeedMultiplier, multiplier)
+  const targetUntilTick = tick + Math.round(durationSeconds * tickRate)
+  if (tick < runtime.boostUntilTick && runtime.boostMultiplier >= targetMultiplier) {
+    runtime.boostUntilTick = Math.max(runtime.boostUntilTick, targetUntilTick)
+    return
+  }
+  runtime.boostMultiplier = targetMultiplier
   runtime.boostStartedAtTick = tick
-  runtime.boostUntilTick = tick + Math.round(durationSeconds * tickRate)
+  runtime.boostUntilTick = targetUntilTick
 }
 
 const SPEED_START_EVENT: Partial<Record<RaceItemId, RaceEventType>> = {
@@ -436,6 +442,9 @@ function updateRockets(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
         slowMultiplier = ITEM_BALANCE.shockAbsorber.slowMultiplier
         slowDurationSeconds = ITEM_BALANCE.shockAbsorber.slowDurationSeconds
         emit('SHOCK_ABSORBER_PROC', target.playerId, rocket.sourcePlayerId, { mitigated: incoming })
+        const boostMult = defense.loadoutCombo === 'FORTRESS' ? ITEM_BALANCE.fortress.surgeMultiplier : 1.05
+        const boostDur = defense.loadoutCombo === 'FORTRESS' ? ITEM_BALANCE.fortress.surgeDurationSeconds : 1.2
+        applyItemBoost(defense, boostMult, boostDur, tick, tickRate)
       }
       applyItemSlow(defense, slowMultiplier, slowDurationSeconds, tick, tickRate)
       emit(hitType, rocket.sourcePlayerId, target.playerId, {})
@@ -445,9 +454,13 @@ function updateRockets(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
     } else if (outcome === 'BLOCKED_MINI_BUBBLE') {
       emit('MINI_BUBBLE_BLOCKED', target.playerId, rocket.sourcePlayerId, { blocked: incoming })
       emit(blockedType, rocket.sourcePlayerId, target.playerId, { defense: 'MINI_BUBBLE' })
+      applyItemBoost(defense, 1.05, 1.0, tick, tickRate)
     } else if (outcome === 'BLOCKED_BUBBLE') {
       emit('BUBBLE_POPPED', target.playerId, rocket.sourcePlayerId, { blocked: 'ROCKET' })
       emit(blockedType, rocket.sourcePlayerId, target.playerId, { defense: 'BUBBLE_SHIELD' })
+      const surgeMult = defense.loadoutCombo === 'FORTRESS' ? ITEM_BALANCE.fortress.surgeMultiplier : ITEM_BALANCE.bubbleShield.burstMultiplier
+      const surgeDur = defense.loadoutCombo === 'FORTRESS' ? ITEM_BALANCE.fortress.surgeDurationSeconds : ITEM_BALANCE.bubbleShield.burstDurationSeconds
+      applyItemBoost(defense, surgeMult, surgeDur, tick, tickRate)
     } else {
       emit(blockedType, rocket.sourcePlayerId, target.playerId, { defense: 'IMMUNITY' })
     }
@@ -492,13 +505,21 @@ function updateBananas(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
     } else if (outcome === 'BLOCKED_MINI_BUBBLE') {
       emit('MINI_BUBBLE_BLOCKED', target.playerId, banana.sourcePlayerId, { blocked: incoming })
       emit(blockedType, banana.sourcePlayerId, target.playerId, { blocked: true, defense: 'MINI_BUBBLE' })
+      applyItemBoost(defense, 1.05, 1.0, tick, tickRate)
     } else if (outcome === 'BLOCKED_BUBBLE') {
       emit('BUBBLE_POPPED', target.playerId, banana.sourcePlayerId, { blocked: 'BANANA' })
       emit(blockedType, banana.sourcePlayerId, target.playerId, { blocked: true, defense: 'BUBBLE_SHIELD' })
+      const surgeMult = defense.loadoutCombo === 'FORTRESS' ? ITEM_BALANCE.fortress.surgeMultiplier : ITEM_BALANCE.bubbleShield.burstMultiplier
+      const surgeDur = defense.loadoutCombo === 'FORTRESS' ? ITEM_BALANCE.fortress.surgeDurationSeconds : ITEM_BALANCE.bubbleShield.burstDurationSeconds
+      applyItemBoost(defense, surgeMult, surgeDur, tick, tickRate)
     } else if (outcome === 'DODGED_WILD_FEATHER') {
       emit('WILD_FEATHER_DODGED', target.playerId, banana.sourcePlayerId, {})
       emit(blockedType, banana.sourcePlayerId, target.playerId, { blocked: true, defense: 'WILD_FEATHER' })
+      applyItemBoost(defense, 1.05, 1.0, tick, tickRate)
     } else if (outcome === 'DODGED_FEATHER') {
+      const surgeMult = defense.loadoutCombo === 'FORTRESS' ? ITEM_BALANCE.fortress.surgeMultiplier : 1.06
+      const surgeDur = defense.loadoutCombo === 'FORTRESS' ? ITEM_BALANCE.fortress.surgeDurationSeconds : 1.2
+      applyItemBoost(defense, surgeMult, surgeDur, tick, tickRate)
       emit('FEATHER_DODGED', target.playerId, banana.sourcePlayerId, {})
       emit('BANANA_BLOCKED', banana.sourcePlayerId, target.playerId, { defense: 'FEATHER' })
     } else {
@@ -544,6 +565,9 @@ export function tickItemSystem(
     if (runtime.slowMultiplier < 1 && tick >= runtime.slowUntilTick) runtime.slowMultiplier = 1
     if (runtime.bubbleAvailable && tick >= runtime.bubbleUntilTick) {
       runtime.bubbleAvailable = false
+      const expireMult = runtime.loadoutCombo === 'FORTRESS' ? 1.07 : 1.05
+      const expireDur = runtime.loadoutCombo === 'FORTRESS' ? 1.4 : 1.1
+      applyItemBoost(runtime, expireMult, expireDur, tick, tickRate)
       emit('BUBBLE_SHIELD_EXPIRED', duck.playerId)
     }
   }

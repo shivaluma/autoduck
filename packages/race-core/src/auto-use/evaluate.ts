@@ -407,11 +407,17 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
     }
   }
 
-  if (hasUnusedPrep(runtime, 'BUBBLE_SHIELD') && !runtime.bubbleAvailable && duck.progress >= ITEM_BALANCE.bubbleShield.endGameBurnProgress) {
+  if (hasUnusedPrep(runtime, 'BUBBLE_SHIELD') && !runtime.bubbleAvailable) {
     const isLateSprint = duck.progress >= ITEM_BALANCE.autoUse.endGameBurnProgress
-    let score = 25
-    if (ctx.objective.isCurrentlyLosing(duck.playerId, duck.currentRank)) score += 20
-    if (duck.currentRank <= 3) score += 25
+    let score = 0
+    if (duck.progress >= 0.38 && duck.currentRank <= 2) {
+      score += 42
+    } else if (duck.progress >= 0.48 && duck.currentRank <= 4) {
+      score += 34
+    } else if (duck.progress >= ITEM_BALANCE.bubbleShield.endGameBurnProgress) {
+      score += 35
+    }
+    if (ctx.objective.isCurrentlyLosing(duck.playerId, duck.currentRank) && duck.progress >= 0.50) score += 15
     if (isLateSprint) score += 30
     score += endGameBurnScore(duck.progress, 'PREP')
     score += pressure * 0.1
@@ -422,7 +428,7 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
         source: 'PREP',
         action: 'USE',
         score,
-        reason: isLateSprint ? 'END_GAME_BURN' : 'LATE_RACE',
+        reason: isLateSprint ? 'END_GAME_BURN' : duck.currentRank <= 2 ? 'OPPORTUNITY' : 'LATE_RACE',
       })
     }
   }

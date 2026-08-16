@@ -11,6 +11,8 @@ import {
   simulateRace,
   tickAutoUseAI,
   tickItemSystem,
+  tryActivateBubbleShield,
+  breakActiveSpeedBoost,
   type DuckItemRuntime,
   type ItemDuckState,
   type ItemRaceState,
@@ -378,6 +380,44 @@ test('Bubble Shield activates reactively when attacked, blocks, and expires if u
   assert.ok(events.includes('ROCKET_BLOCKED'))
   assert.ok(events.includes('BUBBLE_POPPED'))
   assert.equal(state.byPlayer.get('1')!.usedItems.has('BUBBLE_SHIELD'), true)
+})
+
+test('expired Bubble Shield does not block subsequent rockets, slow is properly applied', () => {
+  const raceConfig = config([
+    { playerId: '1', itemIds: ['BUBBLE_SHIELD', 'FEATHER'] },
+    { playerId: '2', itemIds: ['HOMING_ROCKET', 'QUACK_HORN'] },
+  ])
+  const state = createItemRaceState(raceConfig)
+  const runtime1 = state.byPlayer.get('1')!
+  const ducks = [duck('1', 0.5, 1), duck('2', 0.45, 2)]
+
+  // 1. Activate Bubble Shield manually at tick 100
+  tryActivateBubbleShield(runtime1, '1', 100, 60, () => undefined)
+  assert.equal(runtime1.bubbleAvailable, true)
+  assert.equal(runtime1.bubbleUntilTick, 100 + 4.5 * 60) // 370
+
+  // 2. Advance to tick 400 (Bubble Shield is expired in tickItemSystem)
+  tickItemSystem(state, ducks, 400, 60, () => undefined)
+  assert.equal(runtime1.bubbleAvailable, false)
+
+  // 3. Rocket hits at tick 400
+  const outcome1 = resolveIncomingRaceEffect(runtime1, 'ROCKET', 400, 60)
+  assert.equal(outcome1, 'HIT', 'Expired bubble shield must NOT block rocket')
+  breakActiveSpeedBoost(runtime1, 400, 60, () => undefined, '2', '1', 'ROCKET')
+  applyItemSlow(runtime1, ITEM_BALANCE.rocket.slowMultiplier, ITEM_BALANCE.rocket.slowDurationSeconds, 400, 60)
+  assert.equal(runtime1.slowMultiplier, ITEM_BALANCE.rocket.slowMultiplier)
+  assert.equal(runtime1.slowUntilTick, 400 + Math.round(ITEM_BALANCE.rocket.slowDurationSeconds * 60))
+  assert.equal(itemSpeedMultiplier(runtime1, 400), ITEM_BALANCE.rocket.slowMultiplier)
+
+  // 4. Second Rocket arrives at tick 430 (during post-hit immunity)
+  const outcome2 = resolveIncomingRaceEffect(runtime1, 'ROCKET', 430, 60)
+  assert.equal(outcome2, 'IMMUNE', 'Second rocket during post-hit immunity returns IMMUNE')
+
+  // 5. Third Rocket arrives at tick 550 (after slow and immunity expired)
+  const outcome3 = resolveIncomingRaceEffect(runtime1, 'ROCKET', 550, 60)
+  assert.equal(outcome3, 'HIT', 'Third rocket after immunity properly hits')
+  applyItemSlow(runtime1, ITEM_BALANCE.rocket.slowMultiplier, ITEM_BALANCE.rocket.slowDurationSeconds, 550, 60)
+  assert.equal(itemSpeedMultiplier(runtime1, 550), ITEM_BALANCE.rocket.slowMultiplier)
 })
 
 test('full item race finishes in target window with readable bounded event volume', () => {

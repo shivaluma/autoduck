@@ -908,15 +908,21 @@ export function PhaserRaceCanvas({
           const messages: Partial<Record<RaceEvent['type'], string>> = {
             ROCKET_FIRED: `🚀 ${source} → ${target}`,
             ROCKET_HIT: `💥 ${target} trúng Rocket!`,
-            ROCKET_BLOCKED: `🫧 ${target} BLOCKED!`,
+            ROCKET_BLOCKED: raceEvent.metadata.defense === 'IMMUNITY'
+              ? `🛡️ ${target} đang miễn nhiễm!`
+              : `🫧 ${target} chặn Rocket!`,
             BANANA_DROPPED: `🍌 ${source} thả Banana`,
             BANANA_HIT: `🍌 ${target} trượt vỏ chuối!`,
-            BANANA_BLOCKED: `🛡️ ${target} né được Banana`,
+            BANANA_BLOCKED: raceEvent.metadata.defense === 'FEATHER'
+              ? `🪶 ${target} né Banana bằng Lông vũ`
+              : raceEvent.metadata.defense === 'IMMUNITY'
+              ? `🛡️ ${target} đang miễn nhiễm!`
+              : `🛡️ ${target} né được Banana`,
             NITRO_STARTED: `⚡ ${source} NITRO!`,
             DRAFT_FIN_STARTED: `🦈 ${source} DRAFT!`,
             PADDLE_BURST_STARTED: `🛶 ${source} PADDLE BURST!`,
             BOOST_BROKEN: `💥 ${target} BOOST BROKEN!`,
-            SHOCK_ABSORBER_PROC: `🦺 ${target} absorbed hit`,
+            SHOCK_ABSORBER_PROC: `🦺 ${target} giảm chấn đòn đánh`,
             HORN_USED: `🔊 ${source} EMP QUACK! Khóa item đối thủ`,
             ITEM_SILENCED: `🔕 ${source} bị khóa item (3s)`,
             PREDATOR_RUSH_STARTED: `🔥 ${source} PREDATOR RUSH (+10% tốc độ)!`,
@@ -930,10 +936,16 @@ export function PhaserRaceCanvas({
             INSTANT_PICKUP_TRIGGERED: `${WILD_ICONS[raceEvent.metadata.itemId as WildItemId] ?? '⚡'} ${source} kích hoạt ${String(raceEvent.metadata.itemId ?? '').replaceAll('_', ' ')}`,
             MINI_ROCKET_FIRED: `🚀 ${source} → ${target}`,
             MINI_ROCKET_HIT: `💥 ${target} trúng Mini Rocket!`,
-            MINI_ROCKET_BLOCKED: `🫧 ${target} BLOCKED!`,
+            MINI_ROCKET_BLOCKED: raceEvent.metadata.defense === 'IMMUNITY'
+              ? `🛡️ ${target} đang miễn nhiễm!`
+              : `🫧 ${target} chặn Mini Rocket!`,
             WILD_BANANA_DROPPED: `🍌 ${source} thả Wild Banana`,
             WILD_BANANA_HIT: `🍌 ${target} đụng Banana!`,
-            WILD_BANANA_BLOCKED: `🪽 ${target} né Banana`,
+            WILD_BANANA_BLOCKED: raceEvent.metadata.defense === 'WILD_FEATHER' || raceEvent.metadata.defense === 'FEATHER'
+              ? `🪶 ${target} né Banana!`
+              : raceEvent.metadata.defense === 'IMMUNITY'
+              ? `🛡️ ${target} đang miễn nhiễm!`
+              : `🪽 ${target} né Banana`,
             MINI_BUBBLE_ACTIVATED: `🫧 ${source} bật Mini Bubble`,
             MINI_BUBBLE_BLOCKED: `🫧 ${source} BLOCKED!`,
             WILD_HORN_USED: `🔊 ${source} QUACK!`,

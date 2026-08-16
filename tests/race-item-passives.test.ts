@@ -196,8 +196,8 @@ test('Quack Horn dispels active speed boost and silences victims for 3.0 seconds
   assert.equal(runtime2.activeSpeedItemId, null)
   assert.equal(runtime2.boostMultiplier, 1)
 
-  // duck-2 should be silenced until tick 20 + 3 * 60 = 200
-  assert.equal(runtime2.silencedUntilTick, 20 + 3 * 60)
+  // duck-2 should be silenced until tick 20 + duration * 60
+  assert.equal(runtime2.silencedUntilTick, 20 + Math.round(ITEM_BALANCE.horn.silenceDurationSeconds * 60))
   assert.ok(emitted.some((e) => e.type === 'BOOST_BROKEN'))
   assert.ok(emitted.some((e) => e.type === 'ITEM_SILENCED'))
   assert.ok(emitted.some((e) => e.type === 'PREDATOR_RUSH_STARTED')) // duck-1 is MENACE!
