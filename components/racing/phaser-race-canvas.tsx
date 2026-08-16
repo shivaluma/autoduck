@@ -69,7 +69,7 @@ const PICKUP_TEXTURES = {
   'wild-SLIPSTREAM_MAGNET': '/race-pickups/item-magnet.svg',
 } as const
 
-const THEMED_STARTER_BUILDS: DuckAppearance[] = [
+const DUCK_THEME_PRESETS: DuckAppearance[] = [
   {
     bodyColorId: 'body-sunshine',
     headId: 'head-tiny-crown',
@@ -152,14 +152,32 @@ const THEMED_STARTER_BUILDS: DuckAppearance[] = [
   },
 ]
 
+const IS_DEFAULT_UNIFORM = (app?: DuckAppearance | null) => {
+  if (!app) return true
+  const isSunshine = !app.bodyColorId || app.bodyColorId === 'body-sunshine'
+  const isRedCap = app.headId === 'head-cap-red'
+  const isWhiteTee = app.outfitId === 'outfit-tee-white'
+  return isSunshine && isRedCap && isWhiteTee && !app.auraId && !app.petId && !app.backId && !app.neckId
+}
+
 function resolveDuckAppearance(player: PlayerLabel, index: number): DuckAppearance {
-  if (player.appearance && Object.keys(player.appearance).length > 0) {
+  if (player.appearance && !IS_DEFAULT_UNIFORM(player.appearance)) {
     return {
-      ...player.appearance,
-      bodyColorId: player.appearance.bodyColorId || 'body-sunshine',
+      bodyColorId: player.appearance.bodyColorId || DUCK_THEME_PRESETS[index % DUCK_THEME_PRESETS.length]!.bodyColorId,
+      outfitId: player.appearance.outfitId,
+      headId: player.appearance.headId,
+      faceId: player.appearance.faceId,
+      neckId: player.appearance.neckId,
+      backId: player.appearance.backId,
+      bodySkinId: player.appearance.bodySkinId,
+      petId: player.appearance.petId,
+      auraId: player.appearance.auraId,
+      trailId: player.appearance.trailId,
+      finishId: player.appearance.finishId,
+      nameplateId: player.appearance.nameplateId,
     }
   }
-  return THEMED_STARTER_BUILDS[index % THEMED_STARTER_BUILDS.length]!
+  return DUCK_THEME_PRESETS[index % DUCK_THEME_PRESETS.length]!
 }
 
 export interface ReplayInspection {
@@ -237,7 +255,7 @@ export function PhaserRaceCanvas({
       class DuckRaceScene extends Phaser.Scene {
         private duckViews = new Map<string, {
           root: PhaserType.GameObjects.Container
-          avatarContainer: PhaserType.GameObjects.Container
+          avatarNode: PhaserType.GameObjects.Container
           shieldBubble: PhaserType.GameObjects.Arc
           boostFlame: PhaserType.GameObjects.Container
           dizzyStars: PhaserType.GameObjects.Text
@@ -274,16 +292,16 @@ export function PhaserRaceCanvas({
             this.load.svg(key, path, { width: 128, height: 128 })
           }
 
-          const allCosmeticIdsToLoad = new Set<string>()
+          const cosmeticsToLoad = new Set<string>()
 
           for (const id of STARTER_COSMETIC_IDS) {
-            allCosmeticIdsToLoad.add(id)
+            cosmeticsToLoad.add(id)
           }
 
-          for (const preset of THEMED_STARTER_BUILDS) {
+          for (const preset of DUCK_THEME_PRESETS) {
             for (const slot of COSMETIC_LAYER_ORDER) {
               const id = preset[`${slot}Id` as keyof DuckAppearance]
-              if (id) allCosmeticIdsToLoad.add(id)
+              if (id) cosmeticsToLoad.add(id)
             }
           }
 
@@ -292,11 +310,11 @@ export function PhaserRaceCanvas({
             const app = resolveDuckAppearance(player, index)
             for (const slot of COSMETIC_LAYER_ORDER) {
               const id = app[`${slot}Id` as keyof DuckAppearance]
-              if (id) allCosmeticIdsToLoad.add(id)
+              if (id) cosmeticsToLoad.add(id)
             }
           }
 
-          for (const cosmeticId of allCosmeticIdsToLoad) {
+          for (const cosmeticId of cosmeticsToLoad) {
             const item = COSMETIC_BY_ID.get(cosmeticId)
             if (item && !this.textures.exists(`cosmetic-${item.id}`)) {
               this.load.svg(`cosmetic-${item.id}`, item.asset, { width: 512, height: 512 })
@@ -377,22 +395,10 @@ export function PhaserRaceCanvas({
 
         private createDuck(player: PlayerLabel, index: number) {
           const appearance = resolveDuckAppearance(player, index)
-          const duckDisplaySize = 106
+          const duckDisplaySize = 94
 
-          // 1. Water wake ellipse below duck at water contact level
-          const waterWake = this.add.ellipse(-14, 22, 66, 20, 0x8be5ff, 0.42)
-          if (!reducedMotion) {
-            this.tweens.add({
-              targets: waterWake,
-              scaleX: { from: 0.95, to: 1.15 },
-              scaleY: { from: 0.9, to: 1.1 },
-              alpha: { from: 0.28, to: 0.55 },
-              duration: 440,
-              yoyo: true,
-              repeat: -1,
-              ease: 'Sine.InOut',
-            })
-          }
+          // 1. Subtle water wake below duck
+          const waterWake = this.add.ellipse(-8, 16, 56, 18, 0x8be5ff, 0.35)
 
           // 2. Avatar Container with all cosmetic layers in exact COSMETIC_LAYER_ORDER
           const cosmeticLayers: PhaserType.GameObjects.Image[] = []
@@ -407,33 +413,11 @@ export function PhaserRaceCanvas({
               cosmeticLayers.push(img)
 
               if (!reducedMotion) {
-                if (slot === 'pet') {
-                  this.tweens.add({
-                    targets: img,
-                    y: { from: -4, to: 4 },
-                    duration: 480,
-                    yoyo: true,
-                    repeat: -1,
-                    ease: 'Sine.InOut',
-                  })
-                }
                 if (slot === 'aura') {
                   this.tweens.add({
                     targets: img,
-                    alpha: { from: 0.65, to: 0.98 },
-                    scaleX: { from: 1.0, to: 1.05 },
-                    scaleY: { from: 1.0, to: 1.05 },
-                    duration: 850,
-                    yoyo: true,
-                    repeat: -1,
-                    ease: 'Sine.InOut',
-                  })
-                }
-                if (slot === 'trail') {
-                  this.tweens.add({
-                    targets: img,
-                    alpha: { from: 0.6, to: 0.95 },
-                    duration: 550,
+                    alpha: { from: 0.65, to: 0.95 },
+                    duration: 900,
                     yoyo: true,
                     repeat: -1,
                     ease: 'Sine.InOut',
@@ -443,72 +427,19 @@ export function PhaserRaceCanvas({
             }
           }
 
-          const avatarContainer = this.add.container(0, 0, cosmeticLayers)
+          const avatarNode = this.add.container(0, 0, cosmeticLayers)
 
-          // 3. Natural swimming bobbing & waddle animation on avatarContainer
-          if (!reducedMotion) {
-            this.tweens.add({
-              targets: avatarContainer,
-              y: { from: -3.5, to: 3.5 },
-              duration: 420,
-              yoyo: true,
-              repeat: -1,
-              ease: 'Sine.InOut',
-            })
-            this.tweens.add({
-              targets: avatarContainer,
-              angle: { from: -2.5, to: 2.5 },
-              duration: 420,
-              yoyo: true,
-              repeat: -1,
-              ease: 'Sine.InOut',
-            })
-            this.tweens.add({
-              targets: avatarContainer,
-              scaleX: { from: 1.02, to: 0.98 },
-              scaleY: { from: 0.98, to: 1.02 },
-              duration: 420,
-              yoyo: true,
-              repeat: -1,
-              ease: 'Sine.InOut',
-            })
-          }
-
-          // 4. Dynamic Effect Overlays
-          // A. Bubble Shield sphere
-          const shieldBubble = this.add.circle(0, -2, 50, 0x67e8f9, 0.22)
-            .setStrokeStyle(3.5, 0x38bdf8, 0.85)
+          // 3. Dynamic Effect Overlays
+          const shieldBubble = this.add.circle(0, -2, 46, 0x67e8f9, 0.22)
+            .setStrokeStyle(3, 0x38bdf8, 0.85)
             .setVisible(false)
-          if (!reducedMotion) {
-            this.tweens.add({
-              targets: shieldBubble,
-              scale: { from: 0.95, to: 1.06 },
-              alpha: { from: 0.5, to: 0.9 },
-              duration: 600,
-              yoyo: true,
-              repeat: -1,
-              ease: 'Sine.InOut',
-            })
-          }
 
-          // B. Boost flame trail
-          const boostFlame = this.add.container(-42, 6, [
-            this.add.ellipse(0, 0, 48, 16, 0xffd84d, 0.65),
-            this.add.text(-6, -10, '⚡', { fontSize: '20px' }),
+          const boostFlame = this.add.container(-38, 4, [
+            this.add.ellipse(0, 0, 42, 14, 0xffd84d, 0.6),
+            this.add.text(-4, -9, '⚡', { fontSize: '18px' }),
           ]).setVisible(false)
-          if (!reducedMotion) {
-            this.tweens.add({
-              targets: boostFlame,
-              scaleX: { from: 0.9, to: 1.25 },
-              alpha: { from: 0.6, to: 1.0 },
-              duration: 200,
-              yoyo: true,
-              repeat: -1,
-            })
-          }
 
-          // C. Dizzy stars
-          const dizzyStars = this.add.text(0, -48, '💫', { fontSize: '22px' })
+          const dizzyStars = this.add.text(0, -42, '💫', { fontSize: '20px' })
             .setOrigin(0.5)
             .setVisible(false)
           if (!reducedMotion) {
@@ -520,8 +451,8 @@ export function PhaserRaceCanvas({
             })
           }
 
-          // 5. Name tag, Rank badge, Loadout icons, Status text
-          const name = this.add.text(0, 46, player.name, {
+          // 4. Name tag, Rank badge, Loadout icons, Status text
+          const name = this.add.text(0, 42, player.name, {
             color: '#ffffff',
             fontFamily: 'sans-serif',
             fontSize: '15px',
@@ -530,7 +461,7 @@ export function PhaserRaceCanvas({
             strokeThickness: 5,
           }).setOrigin(0.5, 0)
 
-          const rank = this.add.text(-36, -38, String(index + 1), {
+          const rank = this.add.text(-34, -34, String(index + 1), {
             color: '#100b20',
             fontFamily: 'sans-serif',
             fontSize: '14px',
@@ -544,7 +475,7 @@ export function PhaserRaceCanvas({
           const loadoutSpacing = 22
           const loadoutStartX = loadoutItemIds.length > 1 ? -loadoutSpacing / 2 : 0
           const loadoutNodes = loadoutItemIds.map((itemId, itemIndex) => {
-            const icon = this.add.text(loadoutStartX + itemIndex * loadoutSpacing, -58, ITEM_ICONS[itemId], {
+            const icon = this.add.text(loadoutStartX + itemIndex * loadoutSpacing, -55, ITEM_ICONS[itemId], {
               color: '#ffffff',
               fontFamily: 'sans-serif',
               fontSize: '19px',
@@ -555,7 +486,7 @@ export function PhaserRaceCanvas({
             return icon
           })
 
-          const status = this.add.text(0, 68, '', {
+          const status = this.add.text(0, 64, '', {
             color: '#ffffff',
             fontFamily: 'sans-serif',
             fontSize: '16px',
@@ -566,7 +497,7 @@ export function PhaserRaceCanvas({
           const start = track.sample(0, -0.7 + (index / Math.max(1, scenePlayers.length - 1)) * 1.4)
           const root = this.add.container(start.x, start.y, [
             waterWake,
-            avatarContainer,
+            avatarNode,
             shieldBubble,
             boostFlame,
             dizzyStars,
@@ -584,7 +515,7 @@ export function PhaserRaceCanvas({
 
           this.duckViews.set(player.playerId, {
             root,
-            avatarContainer,
+            avatarNode,
             shieldBubble,
             boostFlame,
             dizzyStars,
@@ -652,9 +583,6 @@ export function PhaserRaceCanvas({
             if (value === 0 && !reducedMotion) {
               const flash = this.add.rectangle(centerX, centerY, this.scale.width, this.scale.height, 0xffffff, 0.22).setScrollFactor(0).setDepth(1498)
               this.tweens.add({ targets: flash, alpha: 0, duration: 280, onComplete: () => flash.destroy() })
-              for (const view of this.duckViews.values()) {
-                this.tweens.add({ targets: view.root, scaleX: 1.12, scaleY: 1.12, yoyo: true, duration: 140, repeat: 1, onComplete: () => view.root.setScale(1) })
-              }
             }
             if (value < 0) {
               this.tweens.add({ targets: [overlay, countdown, countdownLabel, showcase], alpha: 0, duration: reducedMotion ? 120 : 280, onComplete: () => { overlay.destroy(); countdown.destroy(); countdownLabel.destroy(); showcase.destroy() } })
@@ -778,13 +706,6 @@ export function PhaserRaceCanvas({
           })
         }
 
-        private wobbleDuck(playerId?: string | null) {
-          if (reducedMotion || !playerId) return
-          const view = this.duckView(playerId)
-          if (!view) return
-          this.tweens.add({ targets: view.root, angle: { from: -10, to: 10 }, yoyo: true, repeat: 2, duration: 85, onComplete: () => view.root.setAngle(0) })
-        }
-
         private trackPoint(progress?: unknown, lateralOffset?: unknown) {
           if (typeof progress !== 'number') return null
           return track.sample(progress, typeof lateralOffset === 'number' ? lateralOffset : 0)
@@ -792,23 +713,9 @@ export function PhaserRaceCanvas({
 
         private playHornEffect(raceEvent: RaceEvent) {
           const sourceView = this.duckView(raceEvent.sourcePlayerId)
-          const hornTargets = Array.isArray(raceEvent.metadata.targets) ? raceEvent.metadata.targets.filter((entry): entry is string => typeof entry === 'string') : []
           if (sourceView) {
             this.burstRing(sourceView.root.x, sourceView.root.y, 0xffe08a, 0xffe08a, 0.14, 3.4)
             this.floatEmoji(sourceView.root.x, sourceView.root.y - 8, '🔊', '24px', 360)
-            if (!reducedMotion) {
-              this.tweens.add({
-                targets: sourceView.avatarContainer,
-                scaleX: 1.22,
-                scaleY: 1.22,
-                yoyo: true,
-                duration: 160,
-                repeat: 1,
-              })
-            }
-          }
-          if (!reducedMotion) {
-            for (const targetId of hornTargets) this.wobbleDuck(targetId)
           }
           if (raceEvent.sourcePlayerId) this.focusCamera(raceEvent.sourcePlayerId, 420)
         }
@@ -839,24 +746,6 @@ export function PhaserRaceCanvas({
             if (hitView) {
               this.burstRing(hitView.root.x, hitView.root.y, 0xff5a4a, 0xff5a4a, 0.18, 3.2)
               this.floatEmoji(hitView.root.x, hitView.root.y - 12, '💥', '26px', 420)
-              this.wobbleDuck(raceEvent.targetPlayerId)
-              if (!reducedMotion) {
-                this.tweens.add({
-                  targets: hitView.avatarContainer,
-                  angle: 360,
-                  duration: 480,
-                  ease: 'Cubic.Out',
-                  onComplete: () => { hitView.avatarContainer.setAngle(0) },
-                })
-                this.tweens.add({
-                  targets: hitView.avatarContainer,
-                  scaleX: 1.25,
-                  scaleY: 0.75,
-                  yoyo: true,
-                  duration: 120,
-                  repeat: 1,
-                })
-              }
             }
             if (raceEvent.targetPlayerId) this.focusCamera(raceEvent.targetPlayerId, 520)
             return
@@ -886,16 +775,6 @@ export function PhaserRaceCanvas({
             if (target) {
               this.floatEmoji(target.root.x, target.root.y - 8, '💫', '24px', 480)
               this.burstRing(target.root.x, target.root.y, 0xffe08a, 0xffe08a, 0.14, 2.8)
-              this.wobbleDuck(raceEvent.targetPlayerId)
-              if (!reducedMotion) {
-                this.tweens.add({
-                  targets: target.avatarContainer,
-                  angle: 360,
-                  duration: 440,
-                  ease: 'Cubic.Out',
-                  onComplete: () => { target.avatarContainer.setAngle(0) },
-                })
-              }
             }
             if (raceEvent.targetPlayerId) this.focusCamera(raceEvent.targetPlayerId, 480)
             return
@@ -913,17 +792,6 @@ export function PhaserRaceCanvas({
                 this.tweens.add({ targets: wake, scaleX: 2.2 + index * 0.2, alpha: 0, duration: reducedMotion ? 200 : 600 + index * 80, onComplete: () => { wake.setVisible(false); this.ellipsePool.push(wake) } })
               }
               this.floatEmoji(source.root.x, source.root.y - 16, '⚡', '26px', 520)
-              if (!reducedMotion) {
-                this.tweens.add({
-                  targets: source.root,
-                  scaleX: 1.08,
-                  scaleY: 1.08,
-                  yoyo: true,
-                  duration: 120,
-                  repeat: 1,
-                  onComplete: () => source.root.setScale(1),
-                })
-              }
             }
             if (raceEvent.sourcePlayerId) this.focusCamera(raceEvent.sourcePlayerId, 420)
             return
@@ -962,16 +830,6 @@ export function PhaserRaceCanvas({
           if (type === 'FEATHER_DODGED' || type === 'WILD_FEATHER_DODGED' || type === 'HAZARD_DODGED') {
             if (source) {
               this.floatEmoji(source.root.x, source.root.y - 18, '🪽', '24px', 520)
-              if (!reducedMotion) {
-                this.tweens.add({
-                  targets: source.avatarContainer,
-                  y: -24,
-                  yoyo: true,
-                  duration: 220,
-                  ease: 'Quad.Out',
-                  onComplete: () => { source.avatarContainer.setY(0) },
-                })
-              }
             }
             return
           }
@@ -979,16 +837,6 @@ export function PhaserRaceCanvas({
           if (type === 'WILD_FEATHER_USED' && source) {
             this.floatEmoji(source.root.x, source.root.y - 14, '🪽', '22px')
             this.burstRing(source.root.x, source.root.y, 0xd8c7ff, 0xd8c7ff, 0.12, 2.2)
-            if (!reducedMotion) {
-              this.tweens.add({
-                targets: source.avatarContainer,
-                y: -24,
-                yoyo: true,
-                duration: 220,
-                ease: 'Quad.Out',
-                onComplete: () => { source.avatarContainer.setY(0) },
-              })
-            }
             return
           }
 
@@ -996,16 +844,6 @@ export function PhaserRaceCanvas({
             const hazardEmoji = ({ ANCHOR: '⚓', WHIRLPOOL: '🌀', ICE_PATCH: '🧊', STICKY_GOO: '🟢' } as Record<string, string>)[String(raceEvent.metadata.hazardType)] ?? '☠️'
             this.floatEmoji(source.root.x, source.root.y - 10, hazardEmoji, '26px', 460)
             this.burstRing(source.root.x, source.root.y, 0x9bd4ff, 0x4a90a4, 0.16, 2.6)
-            this.wobbleDuck(raceEvent.sourcePlayerId)
-            if (!reducedMotion) {
-              this.tweens.add({
-                targets: source.avatarContainer,
-                angle: 360,
-                duration: 440,
-                ease: 'Cubic.Out',
-                onComplete: () => { source.avatarContainer.setAngle(0) },
-              })
-            }
             if (raceEvent.sourcePlayerId) this.focusCamera(raceEvent.sourcePlayerId, 460)
             return
           }
@@ -1040,22 +878,6 @@ export function PhaserRaceCanvas({
             this.burstRing(source.root.x, source.root.y, ringColor, ringColor, place <= 3 ? 0.22 : 0.1, place === 1 ? 4 : 2.8)
             this.floatEmoji(source.root.x, source.root.y - 20, medal, place === 1 ? '34px' : '28px', place === 1 ? 900 : 620)
             this.floatEmoji(source.root.x, source.root.y - 46, `#${place}`, place === 1 ? '22px' : '18px', 520)
-            if (!reducedMotion) {
-              this.tweens.add({
-                targets: source.root,
-                scaleX: place === 1 ? 1.18 : 1.1,
-                scaleY: place === 1 ? 1.18 : 1.1,
-                yoyo: true,
-                duration: place === 1 ? 180 : 130,
-                repeat: place === 1 ? 2 : 1,
-                onComplete: () => source.root.setScale(1),
-              })
-              if (place === 1) {
-                for (let index = 0; index < 6; index += 1) {
-                  this.time.delayedCall(index * 60, () => this.floatEmoji(source.root.x + (index % 3 - 1) * 22, source.root.y - 12, index % 2 === 0 ? '🎉' : '✨', '20px', 520))
-                }
-              }
-            }
             if (raceEvent.sourcePlayerId) this.focusCamera(raceEvent.sourcePlayerId, place === 1 ? 900 : place <= 3 ? 620 : 380)
           }
         }
@@ -1137,23 +959,9 @@ export function PhaserRaceCanvas({
           const smoothing = 1 - Math.exp(-delta / 85)
           const positions: Array<{ x: number; y: number }> = []
           for (const view of this.duckViews.values()) {
-            const prevX = view.root.x
-            const prevY = view.root.y
             view.root.x += (view.targetX - view.root.x) * smoothing
             view.root.y += (view.targetY - view.root.y) * smoothing
             positions.push({ x: view.root.x, y: view.root.y })
-
-            // River current banking & directional tilt
-            if (!reducedMotion) {
-              const dx = view.targetX - prevX
-              const dy = view.targetY - prevY
-              const moveDist = Math.hypot(dx, dy)
-              if (moveDist > 0.4) {
-                const targetAngle = Phaser.Math.RadToDeg(Math.atan2(dy, dx))
-                const clampedAngle = Phaser.Math.Clamp(targetAngle, -20, 20)
-                view.root.angle += (clampedAngle - view.root.angle) * 0.12
-              }
-            }
           }
           if (positions.length === 0) return
           const averageX = positions.reduce((sum, point) => sum + point.x, 0) / positions.length
@@ -1244,34 +1052,54 @@ export function PhaserRaceCanvas({
           catchUpTick: initialLive?.syncTick ?? 0,
           manualInputs: initialLive?.manualInputs ?? [],
         })
-        void sceneReady.then(() => runner.start())
-
         source = new EventSource(`/api/races/${raceId}/live`)
-        source.onmessage = (event) => {
+        source.addEventListener('engine-event', (event) => {
           try {
-            const message = JSON.parse(event.data as string) as {
-              type: string
-              world?: Pick<StateSnapshotMessage, 'ducks' | 'pickups' | 'hazards' | 'rockets' | 'bananas'>
-              tick?: number
-              event?: RaceEvent
-            }
-            if (message.type === 'snapshot' && message.world && typeof message.tick === 'number') {
-              liveScene?.queueWorld(message.world, message.tick)
-            } else if (message.type === 'event' && message.event) {
-              runner.applySyncEvent(message.event)
-            }
+            const payload = JSON.parse((event as MessageEvent<string>).data) as RaceEvent
+            if (payload.type === 'WILD_ITEM_MANUAL_INPUT') runner.applySyncEvent(payload)
           } catch {
-            // ignore parse errors
+            // Ignore malformed sync events.
           }
-        }
+        })
+        void sceneReady.then(() => runner.start())
+      } else {
+        const visualEventTypes = new Set<RaceEvent['type']>([
+          'ROCKET_FIRED', 'ROCKET_HIT', 'ROCKET_BLOCKED', 'BANANA_DROPPED', 'BANANA_HIT', 'BANANA_BLOCKED',
+          'NITRO_STARTED', 'HORN_USED', 'FEATHER_DODGED', 'BUBBLE_POPPED', 'PICKUP_COLLECTED', 'PICKUP_SKIPPED_SLOT_FULL',
+          'WILD_ITEM_GRANTED', 'INSTANT_PICKUP_TRIGGERED', 'MINI_ROCKET_FIRED', 'MINI_ROCKET_HIT', 'MINI_ROCKET_BLOCKED',
+          'WILD_BANANA_DROPPED', 'WILD_BANANA_HIT', 'WILD_BANANA_BLOCKED', 'MINI_BUBBLE_ACTIVATED', 'MINI_BUBBLE_BLOCKED',
+          'WILD_HORN_USED', 'WILD_FEATHER_USED', 'WILD_FEATHER_DODGED', 'HAZARD_HIT', 'HAZARD_DODGED', 'GOLDEN_BOX_COLLECTED', 'DUCK_FINISHED',
+        ])
+        source = new EventSource(`/api/races/${raceId}/live`)
+        source.addEventListener('snapshot', (event) => {
+          try {
+            const payload = JSON.parse((event as MessageEvent<string>).data) as StateSnapshotMessage
+            if (payload.type !== 'STATE_SNAPSHOT' || !payload.ducks) return
+            if (!liveScene) return
+            liveScene.queueWorld(payload, payload.tick)
+          } catch {
+            // Ignore malformed snapshot frames.
+          }
+        })
+        source.addEventListener('engine-event', (event) => {
+          try {
+            const payload = JSON.parse((event as MessageEvent<string>).data) as RaceEvent
+            if (!payload.type || !visualEventTypes.has(payload.type)) return
+            if (!liveScene) return
+            liveScene.applyEvent(payload)
+          } catch {
+            // Ignore malformed engine events.
+          }
+        })
       }
     })
 
     return () => {
       active = false
-      if (replayFrame) cancelAnimationFrame(replayFrame)
       source?.close()
+      if (replayFrame) cancelAnimationFrame(replayFrame)
       game?.destroy(true)
+      audio.close()
     }
   }, [chaosType, debugPickups, liveConfig, parentId, raceId, replayConfig, serializedLiveConfig, serializedManualInputs, serializedPlayers])
 
