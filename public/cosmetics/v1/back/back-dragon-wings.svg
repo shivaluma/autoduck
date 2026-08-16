@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
 <g id="back-wings">
-      <path d="M156 280 C110 220, 60 230, 40 270 C70 284, 100 296, 110 324 C80 320, 56 336, 60 356 C100 356, 136 330, 160 304 Z" fill="#EF4444" stroke="#1B132B" stroke-width="12" stroke-linejoin="round"/>
+      <path d="M156 280 C110 220, 60 230, 40 270 C70 284, 100 296, 110 324 C80 320, 56 336, 60 356 C100 356, 136 330, 160 304 Z" fill="#EF4444" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
       <path d="M156 280 C100 240, 50 250, 40 270" stroke="#FFD84D" stroke-width="8" fill="none"/>
     </g>
 </svg>

@@ -8,7 +8,7 @@
         <path d="M16 428 C72 396, 170 404, 220 436" stroke-dasharray="40 24"/>
         <path d="M44 456 C90 432, 156 436, 196 460" stroke-dasharray="28 16"/>
       </g>
-      <circle cx="36" cy="384" r="6" fill="#BAE6FD"/>
-      <circle cx="70" cy="368" r="5" fill="#BAE6FD"/>
+      <circle cx="36" cy="384" r="5" fill="#BAE6FD"/>
+      <circle cx="70" cy="368" r="4" fill="#BAE6FD"/>
     </g>
 </svg>

@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
 <g id="face-happy">
-      <circle cx="304" cy="188" r="13" fill="#FF78A8" opacity="0.85"/>
-      <circle cx="400" cy="192" r="11" fill="#FF78A8" opacity="0.85"/>
-      <path d="M304 136 Q324 120 344 136" stroke="#1B132B" stroke-width="10" stroke-linecap="round" fill="none"/>
-      <path d="M368 144 Q384 130 400 144" stroke="#1B132B" stroke-width="9" stroke-linecap="round" fill="none"/>
+      <!-- Soft cheek blush, leaving eye sockets crisp -->
+      <circle cx="304" cy="188" r="13" fill="#FF78A8" opacity="0.6"/>
+      <circle cx="400" cy="192" r="11" fill="#FF78A8" opacity="0.6"/>
+      <path d="M368 144 Q384 130 400 144" stroke="#1B132B" stroke-width="8" stroke-linecap="round" fill="none"/>
     </g>
 </svg>

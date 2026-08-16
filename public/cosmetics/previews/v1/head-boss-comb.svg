@@ -24,18 +24,18 @@
 
   <!-- Wing Silhouette & Highlight -->
   <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="#FFF1A8" opacity="0.4"/>
-  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <!-- Cheeks / Blush -->
-  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.4"/>
+  <!-- Cheeks / Blush (Soft accent) -->
+  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.45"/>
 
   <!-- Left Eye -->
-  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="12"/>
+  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
   <ellipse cx="330" cy="152" rx="11" ry="18" fill="#1B132B"/>
   <circle cx="326" cy="144" r="5" fill="#FFFDF4"/>
 
   <!-- Right Eye -->
-  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="12"/>
+  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
   <ellipse cx="390" cy="156" rx="9" ry="16" fill="#1B132B"/>
   <circle cx="388" cy="150" r="4" fill="#FFFDF4"/>
 
@@ -45,9 +45,9 @@
   <path d="M362 192 c28 0 54 8 84 18" stroke="#FFD099" stroke-width="8" stroke-linecap="round" fill="none"/>
   <!-- Beak Smile Crease & Shadow -->
   <path d="M342 230 c38 10 78 6 120 -10" stroke="#C95E24" stroke-width="8" stroke-linecap="round" fill="none"/></g>
-<g id="head-rare-2894164347">
-      <path d="M244 96 C248 38, 320 32, 380 36 C408 42, 416 68, 410 96 Z" fill="#B99AFF" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
-      <path d="M224 100 C288 80, 370 80, 436 100 C440 112, 392 120, 328 116 C264 112, 220 110, 224 100 Z" fill="#F08A5D" stroke="#1B132B" stroke-width="12" stroke-linejoin="round"/>
-      <polygon points="328,26 336,42 320,42" fill="#FFD84D" stroke="#1B132B" stroke-width="4"/>
-    </g>
+<g id="head-custom-2894164347">
+    <path d="M244 96 C248 44, 320 36, 380 40 C408 44, 416 68, 410 96 Z" fill="#B99AFF" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+    <path d="M236 96 C280 84, 370 84, 416 96" stroke="#F08A5D" stroke-width="8" fill="none"/>
+    <circle cx="328" cy="40" r="7" fill="#FFFDF4" stroke="#1B132B" stroke-width="4"/>
+  </g>
 </svg>

@@ -24,18 +24,18 @@
 
   <!-- Wing Silhouette & Highlight -->
   <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="#FFF1A8" opacity="0.4"/>
-  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <!-- Cheeks / Blush -->
-  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.4"/>
+  <!-- Cheeks / Blush (Soft accent) -->
+  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.45"/>
 
   <!-- Left Eye -->
-  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="12"/>
+  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
   <ellipse cx="330" cy="152" rx="11" ry="18" fill="#1B132B"/>
   <circle cx="326" cy="144" r="5" fill="#FFFDF4"/>
 
   <!-- Right Eye -->
-  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="12"/>
+  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
   <ellipse cx="390" cy="156" rx="9" ry="16" fill="#1B132B"/>
   <circle cx="388" cy="150" r="4" fill="#FFFDF4"/>
 
@@ -45,12 +45,11 @@
   <path d="M362 192 c28 0 54 8 84 18" stroke="#FFD099" stroke-width="8" stroke-linecap="round" fill="none"/>
   <!-- Beak Smile Crease & Shadow -->
   <path d="M342 230 c38 10 78 6 120 -10" stroke="#C95E24" stroke-width="8" stroke-linecap="round" fill="none"/></g>
-<g id="skin-organic" fill="#10B981" stroke="#1B132B" stroke-width="4">
-    <circle cx="270" cy="116" r="8"/>
-    <circle cx="290" cy="100" r="7"/>
-    <circle cx="264" cy="144" r="7"/>
-    <circle cx="170" cy="296" r="12"/>
-    <circle cx="230" cy="284" r="10"/>
-    <circle cx="290" cy="304" r="12"/>
+<g id="skin-organic" fill="#10B981" opacity="0.6">
+    <circle cx="270" cy="116" r="6"/>
+    <circle cx="290" cy="96" r="5"/>
+    <circle cx="170" cy="296" r="9"/>
+    <circle cx="230" cy="284" r="8"/>
+    <circle cx="290" cy="304" r="9"/>
   </g>
 </svg>

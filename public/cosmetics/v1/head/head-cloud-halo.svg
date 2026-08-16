@@ -1,8 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
-<g id="head-epic-1078910970">
-    <path d="M244 96 C248 30, 320 20, 380 26 C408 34, 416 64, 410 96 Z" fill="#8EE3F5" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
-    <path d="M220 98 C288 74, 370 74, 440 98 C440 114, 392 122, 328 118 C264 114, 220 110, 220 98 Z" fill="#11998E" stroke="#1B132B" stroke-width="12" stroke-linejoin="round"/>
-    <circle cx="328" cy="54" r="14" fill="#FFD84D" stroke="#1B132B" stroke-width="6"/>
-    <circle cx="328" cy="54" r="6" fill="#FFFDF4"/>
+<g id="head-custom-1078910970">
+    <path d="M244 96 C248 44, 320 36, 380 40 C408 44, 416 68, 410 96 Z" fill="#8EE3F5" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+    <path d="M236 96 C280 84, 370 84, 416 96" stroke="#11998E" stroke-width="8" fill="none"/>
+    <circle cx="328" cy="40" r="7" fill="#FFFDF4" stroke="#1B132B" stroke-width="4"/>
   </g>
 </svg>

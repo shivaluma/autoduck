@@ -1,12 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
 <g id="trail-neon">
       <defs>
-        <filter id="trail-glow-512" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
         <style>@keyframes speed-dash-512 { 0% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -80; } }</style>
       </defs>
-      <g filter="url(#trail-glow-512)" stroke="#00F2FE" stroke-width="12" stroke-linecap="round" fill="none" style="animation: speed-dash-512 0.8s linear infinite">
+      <g stroke="#00F2FE" stroke-width="8" stroke-linecap="round" fill="none" style="animation: speed-dash-512 0.8s linear infinite">
         <line x1="16" y1="390" x2="176" y2="390" stroke-dasharray="36 24"/>
         <line x1="8" y1="420" x2="208" y2="420" stroke-dasharray="48 28" stroke="#FF007F"/>
         <line x1="32" y1="450" x2="184" y2="450" stroke-dasharray="32 20"/>

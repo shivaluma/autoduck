@@ -1,15 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
 <g id="outfit-racing">
       <path d="M84 326 c0 -54 44 -92 114 -104 l24 30 q38 34 86 -2 l34 6 c38 16 60 38 68 66 c14 66 -52 100 -166 96 c-106 -2 -160 -36 -160 -92 Z" fill="#DC2626" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
-      <path d="M136 304 C164 284, 210 290, 240 324 C216 356, 160 364, 136 304 Z" fill="#991B1B" stroke="#1B132B" stroke-width="10" stroke-linejoin="round"/>
-      <path d="M256 252 L256 400" stroke="#FFFDF4" stroke-width="24"/>
-      <rect x="244" y="264" width="12" height="16" fill="#18181B"/>
-      <rect x="256" y="280" width="12" height="16" fill="#18181B"/>
-      <rect x="244" y="296" width="12" height="16" fill="#18181B"/>
-      <rect x="256" y="312" width="12" height="16" fill="#18181B"/>
-      <rect x="244" y="328" width="12" height="16" fill="#18181B"/>
-      <rect x="256" y="344" width="12" height="16" fill="#18181B"/>
-      <circle cx="316" cy="316" r="24" fill="#FFFDF4" stroke="#1B132B" stroke-width="6"/>
-      <text x="316" y="326" fill="#DC2626" font-family="sans-serif" font-weight="900" font-size="22" text-anchor="middle">07</text>
+      <path d="M136 304 C164 284, 210 290, 240 324 C216 356, 160 364, 136 304 Z" fill="#991B1B" stroke="#1B132B" stroke-width="8" stroke-linejoin="round"/>
+      <path d="M256 252 L256 400" stroke="#FFFDF4" stroke-width="20"/>
+      <rect x="246" y="264" width="10" height="16" fill="#18181B"/>
+      <rect x="256" y="280" width="10" height="16" fill="#18181B"/>
+      <rect x="246" y="296" width="10" height="16" fill="#18181B"/>
+      <rect x="256" y="312" width="10" height="16" fill="#18181B"/>
+      <rect x="246" y="328" width="10" height="16" fill="#18181B"/>
+      <rect x="256" y="344" width="10" height="16" fill="#18181B"/>
+      <circle cx="316" cy="316" r="22" fill="#FFFDF4" stroke="#1B132B" stroke-width="4"/>
+      <text x="316" y="325" fill="#DC2626" font-family="sans-serif" font-weight="900" font-size="20" text-anchor="middle">07</text>
     </g>
 </svg>

@@ -18,7 +18,7 @@ for (const item of COSMETIC_CATALOG) {
     continue
   }
   const svg = fs.readFileSync(file, 'utf8')
-  if (!svg.includes('<svg') || !svg.includes('viewBox="0 0 256 256"') || !svg.includes('</svg>')) errors.push(`Invalid 256x256 SVG: ${item.asset}`)
+  if (!svg.includes('<svg') || !svg.includes('viewBox="0 0 512 512"') || !svg.includes('</svg>')) errors.push(`Invalid 512x512 SVG: ${item.asset}`)
   if (!item.previewAsset || !fs.existsSync(path.join(process.cwd(), 'public', item.previewAsset))) errors.push(`Missing preview: ${item.id}`)
 }
 

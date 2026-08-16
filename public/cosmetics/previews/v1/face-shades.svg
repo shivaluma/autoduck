@@ -24,18 +24,18 @@
 
   <!-- Wing Silhouette & Highlight -->
   <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="#FFF1A8" opacity="0.4"/>
-  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <!-- Cheeks / Blush -->
-  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.4"/>
+  <!-- Cheeks / Blush (Soft accent) -->
+  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.45"/>
 
   <!-- Left Eye -->
-  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="12"/>
+  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
   <ellipse cx="330" cy="152" rx="11" ry="18" fill="#1B132B"/>
   <circle cx="326" cy="144" r="5" fill="#FFFDF4"/>
 
   <!-- Right Eye -->
-  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="12"/>
+  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
   <ellipse cx="390" cy="156" rx="9" ry="16" fill="#1B132B"/>
   <circle cx="388" cy="150" r="4" fill="#FFFDF4"/>
 
@@ -46,10 +46,12 @@
   <!-- Beak Smile Crease & Shadow -->
   <path d="M342 230 c38 10 78 6 120 -10" stroke="#C95E24" stroke-width="8" stroke-linecap="round" fill="none"/></g>
 <g id="face-shades">
-      <path d="M288 120 H356 C356 156, 344 172, 316 172 C292 172, 288 156, 288 120 Z" fill="#18181B" stroke="#00F2FE" stroke-width="9" stroke-linejoin="round"/>
-      <path d="M364 124 H416 C416 156, 408 168, 392 168 C372 168, 364 156, 364 124 Z" fill="#18181B" stroke="#00F2FE" stroke-width="9" stroke-linejoin="round"/>
-      <line x1="356" y1="128" x2="364" y2="128" stroke="#00F2FE" stroke-width="10"/>
-      <line x1="296" y1="132" x2="320" y2="124" stroke="#FFFDF4" stroke-width="7" stroke-linecap="round"/>
-      <line x1="372" y1="136" x2="392" y2="128" stroke="#FFFDF4" stroke-width="6" stroke-linecap="round"/>
+      <!-- Clean sunglasses frame centered on eye anchors -->
+      <path d="M288 120 H356 C356 156, 344 172, 316 172 C292 172, 288 156, 288 120 Z" fill="#18181B" stroke="#00F2FE" stroke-width="8" stroke-linejoin="round"/>
+      <path d="M364 124 H416 C416 156, 408 168, 392 168 C372 168, 364 156, 364 124 Z" fill="#18181B" stroke="#00F2FE" stroke-width="8" stroke-linejoin="round"/>
+      <line x1="356" y1="128" x2="364" y2="128" stroke="#00F2FE" stroke-width="8"/>
+      <!-- Crisp specular shine -->
+      <line x1="296" y1="132" x2="320" y2="124" stroke="#FFFDF4" stroke-width="4" stroke-linecap="round"/>
+      <line x1="372" y1="136" x2="392" y2="128" stroke="#FFFDF4" stroke-width="4" stroke-linecap="round"/>
     </g>
 </svg>

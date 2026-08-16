@@ -2,48 +2,36 @@
 <g id="aura-astral-dragon">
       <defs>
         <filter id="dragon-glow-512" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b"/>
+          <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/>
           <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
         <style>
-          @keyframes dragon-coil-512 { 0%, 100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-14px) rotate(3deg); } }
-          @keyframes dragon-flame-512 { 0%, 100% { transform: scale(1) translateY(0); opacity: 0.8; } 50% { transform: scale(1.1) translateY(-10px); opacity: 1; } }
-          @keyframes ember-rise-512 { 0% { transform: translateY(0) scale(0.6); opacity: 0; } 50% { opacity: 1; } 100% { transform: translateY(-120px) scale(1.2); opacity: 0; } }
+          @keyframes dragon-coil-512 { 0%, 100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-10px) rotate(2deg); } }
+          @keyframes ember-rise-512 { 0% { transform: translateY(0) scale(0.6); opacity: 0; } 50% { opacity: 0.9; } 100% { transform: translateY(-100px) scale(1.1); opacity: 0; } }
         </style>
       </defs>
       <g filter="url(#dragon-glow-512)">
-        <g style="animation: dragon-flame-512 2s ease-in-out infinite" transform-origin="256 274">
-          <path d="M110 370 C50 260, 100 130, 160 160 C180 80, 300 60, 330 130 C380 70, 470 120, 450 230 C490 310, 440 410, 370 420 C290 450, 160 450, 110 370 Z" fill="#DC2626" opacity="0.35"/>
-          <path d="M140 350 C90 270, 140 180, 190 200 C210 120, 300 110, 330 170 C370 120, 430 160, 420 250 C440 320, 400 390, 340 400 C280 420, 180 420, 140 350 Z" fill="#F59E0B" opacity="0.5"/>
-          <path d="M180 340 C140 280, 180 220, 220 230 C240 170, 310 160, 330 210 C360 170, 400 200, 390 270 C400 320, 370 370, 320 380 C270 390, 200 390, 180 340 Z" fill="#FEF08A" opacity="0.6"/>
+        <!-- Soft background flame with silhouette clearance -->
+        <g transform-origin="256 274">
+          <circle cx="256" cy="274" r="190" fill="#DC2626" opacity="0.18"/>
+          <circle cx="256" cy="274" r="140" fill="#F59E0B" opacity="0.22"/>
         </g>
-        <g style="animation: dragon-coil-512 3.5s ease-in-out infinite" transform-origin="256 274">
-          <path d="M70 340 C40 210, 130 90, 260 70 C380 50, 470 130, 460 250 C450 340, 390 410, 300 420 C200 430, 120 370, 160 300 C190 240, 280 240, 310 290" fill="none" stroke="#EF4444" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M70 340 C40 210, 130 90, 260 70 C380 50, 470 130, 460 250 C450 340, 390 410, 300 420 C200 430, 120 370, 160 300 C190 240, 280 240, 310 290" fill="none" stroke="#FBBF24" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
-          <polygon points="120,110 110,70 150,100" fill="#FBBF24" stroke="#1B132B" stroke-width="4"/>
-          <polygon points="200,75 200,35 230,70" fill="#FBBF24" stroke="#1B132B" stroke-width="4"/>
-          <polygon points="290,65 305,25 325,65" fill="#FBBF24" stroke="#1B132B" stroke-width="4"/>
-          <polygon points="380,85 410,50 405,95" fill="#FBBF24" stroke="#1B132B" stroke-width="4"/>
-          <polygon points="450,145 485,125 465,165" fill="#FBBF24" stroke="#1B132B" stroke-width="4"/>
+        <g style="animation: dragon-coil-512 4s ease-in-out infinite" transform-origin="256 274">
+          <path d="M70 340 C40 210, 130 90, 260 70 C380 50, 470 130, 460 250 C450 340, 390 410, 300 420 C200 430, 120 370, 160 300 C190 240, 280 240, 310 290" fill="none" stroke="#DC2626" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+          <path d="M70 340 C40 210, 130 90, 260 70 C380 50, 470 130, 460 250 C450 340, 390 410, 300 420 C200 430, 120 370, 160 300 C190 240, 280 240, 310 290" fill="none" stroke="#FBBF24" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- Dragon Head on outer left -->
           <g transform="translate(60, 170) rotate(-20)">
-            <path d="M40 30 C30 0, 0 -20, -20 -30 C-10 -10, 10 5, 25 25" fill="#FBBF24" stroke="#1B132B" stroke-width="5"/>
-            <path d="M55 20 C60 -10, 50 -40, 35 -55 C40 -30, 50 -10, 50 15" fill="#FBBF24" stroke="#1B132B" stroke-width="5"/>
-            <path d="M20 40 C10 10, 60 10, 90 30 C100 35, 110 55, 95 65 C80 75, 40 70, 20 40 Z" fill="#EF4444" stroke="#1B132B" stroke-width="8"/>
-            <path d="M45 55 C65 50, 85 55, 95 65 L70 75 Z" fill="#FBBF24"/>
-            <path d="M85 40 C110 30, 140 45, 160 35" stroke="#FDE047" stroke-width="6" fill="none" stroke-linecap="round"/>
-            <path d="M75 60 C95 75, 120 70, 140 85" stroke="#FDE047" stroke-width="5" fill="none" stroke-linecap="round"/>
-            <circle cx="50" cy="35" r="7" fill="#FEF08A" stroke="#1B132B" stroke-width="3"/>
-            <circle cx="52" cy="35" r="3" fill="#1B132B"/>
-            <path d="M15 45 C-10 40, -25 60, -35 80 C-15 70, 5 70, 15 55" fill="#F97316" stroke="#1B132B" stroke-width="5"/>
+            <path d="M20 40 C10 10, 60 10, 90 30 C100 35, 110 55, 95 65 C80 75, 40 70, 20 40 Z" fill="#DC2626" stroke="#1B132B" stroke-width="4"/>
+            <circle cx="50" cy="35" r="5" fill="#FEF08A"/>
+            <path d="M85 40 C110 30, 140 45, 160 35" stroke="#FDE047" stroke-width="4" fill="none" stroke-linecap="round"/>
           </g>
-          <circle cx="440" cy="320" r="18" fill="#FEF08A" stroke="#F97316" stroke-width="6"/>
-          <circle cx="440" cy="320" r="10" fill="#FFFDF4"/>
+          <!-- Flaming pearl on outer right -->
+          <circle cx="440" cy="320" r="16" fill="#FEF08A" stroke="#F97316" stroke-width="4"/>
         </g>
+        <!-- Subtle rising embers -->
         <g fill="#FDE047">
-          <circle cx="100" cy="400" r="6" style="animation: ember-rise-512 2.2s infinite"/>
-          <circle cx="180" cy="420" r="4" style="animation: ember-rise-512 2.8s infinite 0.5s"/>
-          <circle cx="340" cy="410" r="5" style="animation: ember-rise-512 2.4s infinite 0.9s"/>
-          <circle cx="420" cy="380" r="7" style="animation: ember-rise-512 1.9s infinite 0.3s"/>
+          <circle cx="100" cy="400" r="4" style="animation: ember-rise-512 2.2s infinite"/>
+          <circle cx="420" cy="380" r="5" style="animation: ember-rise-512 1.9s infinite 0.3s"/>
         </g>
       </g>
     </g>

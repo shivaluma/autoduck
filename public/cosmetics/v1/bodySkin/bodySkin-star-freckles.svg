@@ -1,14 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
 <g id="skin-galaxy">
-      <g fill="#FFFDF4">
-        <path d="M268 136 Q276 136 276 128 Q276 136 284 136 Q276 136 276 144 Q276 136 268 136 Z"/>
-        <path d="M296 104 Q302 104 302 98 Q302 104 308 104 Q302 104 302 110 Q302 104 296 104 Z"/>
+      <g fill="#FFFDF4" opacity="0.85">
+        <path d="M296 90 Q302 90 302 84 Q302 90 308 90 Q302 90 302 96 Q302 90 296 90 Z"/>
         <path d="M240 304 Q252 304 252 292 Q252 304 264 304 Q252 304 252 316 Q252 304 240 304 Z"/>
       </g>
-      <circle cx="256" cy="148" r="5" fill="#B99AFF"/>
-      <circle cx="288" cy="156" r="5" fill="#61C9FF"/>
-      <circle cx="276" cy="90" r="5" fill="#FF78A8"/>
-      <circle cx="210" cy="296" r="6" fill="#B99AFF"/>
-      <circle cx="276" cy="284" r="6" fill="#61C9FF"/>
+      <circle cx="276" cy="80" r="4" fill="#FF78A8"/>
+      <circle cx="210" cy="296" r="5" fill="#B99AFF"/>
+      <circle cx="276" cy="284" r="5" fill="#61C9FF"/>
     </g>
 </svg>

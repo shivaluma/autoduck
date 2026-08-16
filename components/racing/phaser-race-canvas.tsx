@@ -4,24 +4,53 @@ import { useEffect, useId, useRef } from 'react'
 import type PhaserType from 'phaser'
 import { createSimulation, itemActivationForEvent, queueWildItemInput, snapshotRaceWorld, stepSimulation } from '@/packages/race-core/src'
 import { createRiverTrack } from '@/packages/race-core/src/track'
-import { raceConfigSchema, type DuckSnapshot, type RaceConfig, type RaceEvent, type RaceItemId, type RecordedWildItemInput, type StateSnapshotMessage, type WildItemId } from '@/packages/race-protocol/src'
+import { type DuckSnapshot, type RaceConfig, type RaceEvent, type RaceItemId, type RecordedWildItemInput, type StateSnapshotMessage, type WildItemId } from '@/packages/race-protocol/src'
 import { RaceAudioSystem } from './race-audio'
-import { COSMETIC_BY_ID } from '@/lib/cosmetics/catalog'
+import { COSMETIC_BY_ID, STARTER_COSMETIC_IDS } from '@/lib/cosmetics/catalog'
 import { COSMETIC_LAYER_ORDER, type DuckAppearance } from '@/lib/cosmetics/types'
 
-type PlayerLabel = { playerId: string; name: string; avatarUrl?: string | null; appearance?: DuckAppearance | null; itemIds?: RaceItemId[]; isGhost?: boolean }
+export type PlayerLabel = {
+  playerId: string
+  name: string
+  avatarUrl?: string | null
+  appearance?: DuckAppearance | null
+  itemIds?: RaceItemId[]
+  isGhost?: boolean
+}
 
 const ITEM_ICONS: Record<RaceItemId, string> = {
-  BUBBLE_SHIELD: '🫧', HOMING_ROCKET: '🚀', NITRO: '⚡', BANANA: '🍌', FEATHER: '🪶', QUACK_HORN: '🔊',
-  DRAFT_FIN: '🦈', PADDLE_BURST: '🛶', SHOCK_ABSORBER: '🦺',
+  BUBBLE_SHIELD: '🫧',
+  HOMING_ROCKET: '🚀',
+  NITRO: '⚡',
+  BANANA: '🍌',
+  FEATHER: '🪶',
+  QUACK_HORN: '🔊',
+  DRAFT_FIN: '🦈',
+  PADDLE_BURST: '🛶',
+  SHOCK_ABSORBER: '🦺',
 }
 
 const EFFECT_ICONS: Record<string, string> = {
-  BUBBLE_SHIELD: '🫧', FEATHER: '🪶', SHOCK_ABSORBER: '🦺', NITRO: '⚡', DRAFT_FIN: '🦈', PADDLE_BURST: '🛶', SLOWED: '💫',
+  BUBBLE_SHIELD: '🫧',
+  FEATHER: '🪶',
+  SHOCK_ABSORBER: '🦺',
+  NITRO: '⚡',
+  DRAFT_FIN: '🦈',
+  PADDLE_BURST: '🛶',
+  SLOWED: '💫',
 }
+
 const WILD_ICONS: Record<WildItemId, string> = {
-  MINI_NITRO: '⚡', TAILWIND: '🌊', MINI_BUBBLE: '🫧', MINI_ROCKET: '🚀', BANANA: '🍌', QUACK_HORN: '🔊', FEATHER: '🪽', SLIPSTREAM_MAGNET: '🧲',
+  MINI_NITRO: '⚡',
+  TAILWIND: '🌊',
+  MINI_BUBBLE: '🫧',
+  MINI_ROCKET: '🚀',
+  BANANA: '🍌',
+  QUACK_HORN: '🔊',
+  FEATHER: '🪽',
+  SLIPSTREAM_MAGNET: '🧲',
 }
+
 const PICKUP_TEXTURES = {
   'pickup-QUACK_BOX': '/race-pickups/box-idle.svg',
   'pickup-GOLDEN_BOX': '/race-pickups/golden-box.svg',
@@ -39,6 +68,99 @@ const PICKUP_TEXTURES = {
   'wild-FEATHER': '/race-pickups/item-feather.svg',
   'wild-SLIPSTREAM_MAGNET': '/race-pickups/item-magnet.svg',
 } as const
+
+const THEMED_STARTER_BUILDS: DuckAppearance[] = [
+  {
+    bodyColorId: 'body-sunshine',
+    headId: 'head-tiny-crown',
+    faceId: 'face-happy',
+    outfitId: 'outfit-quack-knight',
+    bodySkinId: 'bodySkin-gold-veins',
+    petId: 'pet-corgi-pup',
+    auraId: 'aura-golden-rays',
+    trailId: 'trail-golden-water',
+  },
+  {
+    bodyColorId: 'body-mint',
+    headId: 'head-bamboo-hat',
+    faceId: 'face-happy',
+    outfitId: 'outfit-lucky-ao-dai',
+    bodySkinId: 'bodySkin-lotus-speckles',
+    petId: 'pet-calico-cat',
+    auraId: 'aura-lotus-breeze',
+    trailId: 'trail-lotus-petals',
+  },
+  {
+    bodyColorId: 'body-cyber-cyan',
+    headId: 'head-cyber-mohawk',
+    faceId: 'face-laser-visor',
+    outfitId: 'outfit-cyber-samurai',
+    bodySkinId: 'bodySkin-neon-scales',
+    petId: 'pet-tiny-drone',
+    auraId: 'aura-neon-glitch',
+    trailId: 'trail-neon-wake',
+  },
+  {
+    bodyColorId: 'body-ruby',
+    headId: 'head-dragon-horns',
+    faceId: 'face-happy',
+    outfitId: 'outfit-racing-suit',
+    bodySkinId: 'bodySkin-dragon-scale',
+    petId: 'pet-baby-dragon',
+    auraId: 'aura-dragon-flame',
+    trailId: 'trail-dragon-sparks',
+  },
+  {
+    bodyColorId: 'body-midnight',
+    headId: 'head-space-dome',
+    faceId: 'face-happy',
+    outfitId: 'outfit-space-suit',
+    bodySkinId: 'bodySkin-galaxy-dust',
+    petId: 'pet-moon-rabbit',
+    auraId: 'aura-space-dust',
+    trailId: 'trail-moon-dust',
+  },
+  {
+    bodyColorId: 'body-sky',
+    headId: 'head-office-headset',
+    faceId: 'face-office-burnout',
+    outfitId: 'outfit-office-tie',
+    bodySkinId: 'bodySkin-coffee-stains',
+    petId: 'pet-office-mouse',
+    auraId: 'aura-coffee-steam',
+    trailId: 'trail-coffee-spill',
+  },
+  {
+    bodyColorId: 'body-tangerine',
+    headId: 'head-cap-red',
+    faceId: 'face-shades',
+    outfitId: 'outfit-tee-white',
+    bodySkinId: 'bodySkin-tiger-quack',
+    petId: 'pet-shiba-inu',
+    auraId: 'aura-fireflies',
+    trailId: 'trail-ripples',
+  },
+  {
+    bodyColorId: 'body-lavender',
+    headId: 'head-wizard-hat',
+    faceId: 'face-happy',
+    outfitId: 'outfit-dev-hoodie',
+    bodySkinId: 'bodySkin-galaxy-dust',
+    petId: 'pet-mini-capybara',
+    auraId: 'aura-pixel-orbit',
+    trailId: 'trail-pixel-stream',
+  },
+]
+
+function resolveDuckAppearance(player: PlayerLabel, index: number): DuckAppearance {
+  if (player.appearance && Object.keys(player.appearance).length > 0) {
+    return {
+      ...player.appearance,
+      bodyColorId: player.appearance.bodyColorId || 'body-sunshine',
+    }
+  }
+  return THEMED_STARTER_BUILDS[index % THEMED_STARTER_BUILDS.length]!
+}
 
 export interface ReplayInspection {
   tick: number
@@ -107,13 +229,23 @@ export function PhaserRaceCanvas({
       const clientSimConfig = replayConfig ?? parsedLiveConfig
       const track = createRiverTrack(clientSimConfig?.trackVersion ?? replayConfig?.trackVersion)
       const scenePlayers = JSON.parse(serializedPlayers) as PlayerLabel[]
-      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      const mobileViewport = window.innerWidth < 640
+      const reducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      const mobileViewport = typeof window !== 'undefined' && window.innerWidth < 640
       let markSceneReady: () => void = () => {}
       const sceneReady = new Promise<void>((resolve) => { markSceneReady = resolve })
 
       class DuckRaceScene extends Phaser.Scene {
-        private duckViews = new Map<string, { root: PhaserType.GameObjects.Container; targetX: number; targetY: number; status: PhaserType.GameObjects.Text; loadoutIcons: Map<RaceItemId, PhaserType.GameObjects.Text> }>()
+        private duckViews = new Map<string, {
+          root: PhaserType.GameObjects.Container
+          avatarContainer: PhaserType.GameObjects.Container
+          shieldBubble: PhaserType.GameObjects.Arc
+          boostFlame: PhaserType.GameObjects.Container
+          dizzyStars: PhaserType.GameObjects.Text
+          targetX: number
+          targetY: number
+          status: PhaserType.GameObjects.Text
+          loadoutIcons: Map<RaceItemId, PhaserType.GameObjects.Text>
+        }>()
         private leaderboard!: PhaserType.GameObjects.Text
         private eventFeed!: PhaserType.GameObjects.Text
         private recentEvents: string[] = []
@@ -138,15 +270,36 @@ export function PhaserRaceCanvas({
         constructor() { super('duck-race') }
 
         preload() {
-          for (const [key, path] of Object.entries(PICKUP_TEXTURES)) this.load.svg(key, path, { width: 128, height: 128 })
-          for (const player of scenePlayers) {
+          for (const [key, path] of Object.entries(PICKUP_TEXTURES)) {
+            this.load.svg(key, path, { width: 128, height: 128 })
+          }
+
+          const allCosmeticIdsToLoad = new Set<string>()
+
+          for (const id of STARTER_COSMETIC_IDS) {
+            allCosmeticIdsToLoad.add(id)
+          }
+
+          for (const preset of THEMED_STARTER_BUILDS) {
+            for (const slot of COSMETIC_LAYER_ORDER) {
+              const id = preset[`${slot}Id` as keyof DuckAppearance]
+              if (id) allCosmeticIdsToLoad.add(id)
+            }
+          }
+
+          for (const [index, player] of scenePlayers.entries()) {
             if (player.avatarUrl) this.load.image(`avatar-${player.playerId}`, player.avatarUrl)
-            if (player.appearance) {
-              for (const slot of COSMETIC_LAYER_ORDER) {
-                const cosmeticId = player.appearance[`${slot}Id` as keyof DuckAppearance]
-                const item = cosmeticId ? COSMETIC_BY_ID.get(cosmeticId) : undefined
-                if (item && !this.textures.exists(`cosmetic-${item.id}`)) this.load.image(`cosmetic-${item.id}`, item.asset)
-              }
+            const app = resolveDuckAppearance(player, index)
+            for (const slot of COSMETIC_LAYER_ORDER) {
+              const id = app[`${slot}Id` as keyof DuckAppearance]
+              if (id) allCosmeticIdsToLoad.add(id)
+            }
+          }
+
+          for (const cosmeticId of allCosmeticIdsToLoad) {
+            const item = COSMETIC_BY_ID.get(cosmeticId)
+            if (item && !this.textures.exists(`cosmetic-${item.id}`)) {
+              this.load.svg(`cosmetic-${item.id}`, item.asset, { width: 512, height: 512 })
             }
           }
         }
@@ -223,56 +376,223 @@ export function PhaserRaceCanvas({
         }
 
         private createDuck(player: PlayerLabel, index: number) {
-          const body = this.add.graphics()
-          const color = [0xffd83d, 0xffb62e, 0xf7e35c, 0xffca48][index % 4]
-          body.fillStyle(0x000000, 0.22).fillEllipse(0, 18, 62, 24)
-          body.fillStyle(color, 1).fillEllipse(0, 0, 58, 42).fillCircle(17, -17, 19)
-          body.fillStyle(0xff7a28, 1).fillTriangle(33, -18, 52, -11, 33, -7)
-          body.fillStyle(0x161126, 1).fillCircle(22, -22, 3.5)
-          body.lineStyle(3, 0xffffff, 0.28).strokeEllipse(0, 0, 58, 42)
-          const name = this.add.text(0, 37, player.name, {
-            color: '#ffffff', fontFamily: 'sans-serif', fontSize: '15px', fontStyle: 'bold', stroke: '#100b20', strokeThickness: 5,
+          const appearance = resolveDuckAppearance(player, index)
+          const duckDisplaySize = 106
+
+          // 1. Water wake ellipse below duck at water contact level
+          const waterWake = this.add.ellipse(-14, 22, 66, 20, 0x8be5ff, 0.42)
+          if (!reducedMotion) {
+            this.tweens.add({
+              targets: waterWake,
+              scaleX: { from: 0.95, to: 1.15 },
+              scaleY: { from: 0.9, to: 1.1 },
+              alpha: { from: 0.28, to: 0.55 },
+              duration: 440,
+              yoyo: true,
+              repeat: -1,
+              ease: 'Sine.InOut',
+            })
+          }
+
+          // 2. Avatar Container with all cosmetic layers in exact COSMETIC_LAYER_ORDER
+          const cosmeticLayers: PhaserType.GameObjects.Image[] = []
+          for (const slot of COSMETIC_LAYER_ORDER) {
+            if ((mobileViewport || scenePlayers.length > 12) && ['finish'].includes(slot)) continue
+            const cosmeticId = appearance[`${slot}Id` as keyof DuckAppearance]
+            const item = cosmeticId ? COSMETIC_BY_ID.get(cosmeticId) : undefined
+            if (item && this.textures.exists(`cosmetic-${item.id}`)) {
+              const img = this.add.image(0, 0, `cosmetic-${item.id}`)
+                .setDisplaySize(duckDisplaySize, duckDisplaySize)
+                .setData('cosmetic-slot', slot)
+              cosmeticLayers.push(img)
+
+              if (!reducedMotion) {
+                if (slot === 'pet') {
+                  this.tweens.add({
+                    targets: img,
+                    y: { from: -4, to: 4 },
+                    duration: 480,
+                    yoyo: true,
+                    repeat: -1,
+                    ease: 'Sine.InOut',
+                  })
+                }
+                if (slot === 'aura') {
+                  this.tweens.add({
+                    targets: img,
+                    alpha: { from: 0.65, to: 0.98 },
+                    scaleX: { from: 1.0, to: 1.05 },
+                    scaleY: { from: 1.0, to: 1.05 },
+                    duration: 850,
+                    yoyo: true,
+                    repeat: -1,
+                    ease: 'Sine.InOut',
+                  })
+                }
+                if (slot === 'trail') {
+                  this.tweens.add({
+                    targets: img,
+                    alpha: { from: 0.6, to: 0.95 },
+                    duration: 550,
+                    yoyo: true,
+                    repeat: -1,
+                    ease: 'Sine.InOut',
+                  })
+                }
+              }
+            }
+          }
+
+          const avatarContainer = this.add.container(0, 0, cosmeticLayers)
+
+          // 3. Natural swimming bobbing & waddle animation on avatarContainer
+          if (!reducedMotion) {
+            this.tweens.add({
+              targets: avatarContainer,
+              y: { from: -3.5, to: 3.5 },
+              duration: 420,
+              yoyo: true,
+              repeat: -1,
+              ease: 'Sine.InOut',
+            })
+            this.tweens.add({
+              targets: avatarContainer,
+              angle: { from: -2.5, to: 2.5 },
+              duration: 420,
+              yoyo: true,
+              repeat: -1,
+              ease: 'Sine.InOut',
+            })
+            this.tweens.add({
+              targets: avatarContainer,
+              scaleX: { from: 1.02, to: 0.98 },
+              scaleY: { from: 0.98, to: 1.02 },
+              duration: 420,
+              yoyo: true,
+              repeat: -1,
+              ease: 'Sine.InOut',
+            })
+          }
+
+          // 4. Dynamic Effect Overlays
+          // A. Bubble Shield sphere
+          const shieldBubble = this.add.circle(0, -2, 50, 0x67e8f9, 0.22)
+            .setStrokeStyle(3.5, 0x38bdf8, 0.85)
+            .setVisible(false)
+          if (!reducedMotion) {
+            this.tweens.add({
+              targets: shieldBubble,
+              scale: { from: 0.95, to: 1.06 },
+              alpha: { from: 0.5, to: 0.9 },
+              duration: 600,
+              yoyo: true,
+              repeat: -1,
+              ease: 'Sine.InOut',
+            })
+          }
+
+          // B. Boost flame trail
+          const boostFlame = this.add.container(-42, 6, [
+            this.add.ellipse(0, 0, 48, 16, 0xffd84d, 0.65),
+            this.add.text(-6, -10, '⚡', { fontSize: '20px' }),
+          ]).setVisible(false)
+          if (!reducedMotion) {
+            this.tweens.add({
+              targets: boostFlame,
+              scaleX: { from: 0.9, to: 1.25 },
+              alpha: { from: 0.6, to: 1.0 },
+              duration: 200,
+              yoyo: true,
+              repeat: -1,
+            })
+          }
+
+          // C. Dizzy stars
+          const dizzyStars = this.add.text(0, -48, '💫', { fontSize: '22px' })
+            .setOrigin(0.5)
+            .setVisible(false)
+          if (!reducedMotion) {
+            this.tweens.add({
+              targets: dizzyStars,
+              angle: 360,
+              duration: 1200,
+              repeat: -1,
+            })
+          }
+
+          // 5. Name tag, Rank badge, Loadout icons, Status text
+          const name = this.add.text(0, 46, player.name, {
+            color: '#ffffff',
+            fontFamily: 'sans-serif',
+            fontSize: '15px',
+            fontStyle: 'bold',
+            stroke: '#100b20',
+            strokeThickness: 5,
           }).setOrigin(0.5, 0)
-          const rank = this.add.text(-33, -34, String(index + 1), {
-            color: '#100b20', fontFamily: 'sans-serif', fontSize: '14px', fontStyle: 'bold', backgroundColor: '#ffffffdd', padding: { x: 6, y: 3 },
+
+          const rank = this.add.text(-36, -38, String(index + 1), {
+            color: '#100b20',
+            fontFamily: 'sans-serif',
+            fontSize: '14px',
+            fontStyle: 'bold',
+            backgroundColor: '#ffffffdd',
+            padding: { x: 6, y: 3 },
           }).setOrigin(0.5)
+
           const loadoutItemIds = player.itemIds ?? []
           const loadoutIcons = new Map<RaceItemId, PhaserType.GameObjects.Text>()
           const loadoutSpacing = 22
           const loadoutStartX = loadoutItemIds.length > 1 ? -loadoutSpacing / 2 : 0
           const loadoutNodes = loadoutItemIds.map((itemId, itemIndex) => {
-            const icon = this.add.text(loadoutStartX + itemIndex * loadoutSpacing, -55, ITEM_ICONS[itemId], {
-              color: '#ffffff', fontFamily: 'sans-serif', fontSize: '19px', stroke: '#100b20', strokeThickness: 5,
+            const icon = this.add.text(loadoutStartX + itemIndex * loadoutSpacing, -58, ITEM_ICONS[itemId], {
+              color: '#ffffff',
+              fontFamily: 'sans-serif',
+              fontSize: '19px',
+              stroke: '#100b20',
+              strokeThickness: 5,
             }).setOrigin(0.5)
             loadoutIcons.set(itemId, icon)
             return icon
           })
-          const status = this.add.text(0, 60, '', { color: '#ffffff', fontFamily: 'sans-serif', fontSize: '16px', stroke: '#100b20', strokeThickness: 4 }).setOrigin(0.5)
-          const cosmeticLayers = player.appearance ? COSMETIC_LAYER_ORDER.flatMap((slot) => {
-            if ((mobileViewport || scenePlayers.length > 12) && ['aura', 'finish'].includes(slot)) return []
-            const cosmeticId = player.appearance?.[`${slot}Id` as keyof DuckAppearance]
-            const item = cosmeticId ? COSMETIC_BY_ID.get(cosmeticId) : undefined
-            return item && this.textures.exists(`cosmetic-${item.id}`)
-              ? [this.add.image(0, -1, `cosmetic-${item.id}`).setDisplaySize(94, 94).setData('cosmetic-slot', slot)]
-              : []
-          }) : []
-          for (const layer of cosmeticLayers) {
-            const slot = layer.getData('cosmetic-slot')
-            if (!reducedMotion && slot === 'pet') this.tweens.add({ targets: layer, y: { from: -3, to: 3 }, duration: 650, yoyo: true, repeat: -1, ease: 'Sine.InOut' })
-            if (!reducedMotion && slot === 'aura') this.tweens.add({ targets: layer, alpha: { from: 0.55, to: 1 }, duration: 900, yoyo: true, repeat: -1 })
-          }
-          if (cosmeticLayers.length > 0) body.setVisible(false)
-          const legacyCosmetic = cosmeticLayers.length === 0 && player.avatarUrl && this.textures.exists(`avatar-${player.playerId}`)
-            ? this.add.image(-3, -25, `avatar-${player.playerId}`).setDisplaySize(24, 24)
-            : cosmeticLayers.length === 0 ? this.add.text(-3, -29, ['🧢', '🎩', '👒', '👑'][index % 4], { fontSize: '19px' }).setOrigin(0.5) : null
+
+          const status = this.add.text(0, 68, '', {
+            color: '#ffffff',
+            fontFamily: 'sans-serif',
+            fontSize: '16px',
+            stroke: '#100b20',
+            strokeThickness: 4,
+          }).setOrigin(0.5)
+
           const start = track.sample(0, -0.7 + (index / Math.max(1, scenePlayers.length - 1)) * 1.4)
-          const root = this.add.container(start.x, start.y, [body, ...cosmeticLayers, ...(legacyCosmetic ? [legacyCosmetic] : []), name, rank, ...loadoutNodes, status]).setDepth(100 + index)
+          const root = this.add.container(start.x, start.y, [
+            waterWake,
+            avatarContainer,
+            shieldBubble,
+            boostFlame,
+            dizzyStars,
+            name,
+            rank,
+            ...loadoutNodes,
+            status,
+          ]).setDepth(100 + index)
+
           if (player.isGhost) {
             root.setAlpha(0.58)
             name.setText(`👻 ${player.name}`)
           }
           root.setData('rank-label', rank)
-          this.duckViews.set(player.playerId, { root, targetX: start.x, targetY: start.y, status, loadoutIcons })
+
+          this.duckViews.set(player.playerId, {
+            root,
+            avatarContainer,
+            shieldBubble,
+            boostFlame,
+            dizzyStars,
+            targetX: start.x,
+            targetY: start.y,
+            status,
+            loadoutIcons,
+          })
         }
 
         private markPrepItemUsed(playerId: string, itemId: RaceItemId) {
@@ -353,6 +673,16 @@ export function PhaserRaceCanvas({
             const wild = duck.wildItem ? `🎒${WILD_ICONS[duck.wildItem.itemId]}` : ''
             view.status.setText([wild, ...duck.activeEffects.map((effect) => EFFECT_ICONS[effect] ?? WILD_ICONS[effect as WildItemId] ?? '')].filter(Boolean).join(' '))
             view.root.setDepth(100 + scenePlayers.length - duck.rank)
+
+            // Dynamic Effect Visibility
+            const hasShield = duck.activeEffects.includes('BUBBLE_SHIELD') || duck.activeEffects.includes('MINI_BUBBLE')
+            view.shieldBubble.setVisible(hasShield)
+
+            const hasBoost = duck.activeEffects.some((e) => ['NITRO', 'MINI_NITRO', 'TAILWIND', 'DRAFT_FIN', 'PADDLE_BURST'].includes(e))
+            view.boostFlame.setVisible(hasBoost)
+
+            const hasSlow = duck.activeEffects.includes('SLOWED')
+            view.dizzyStars.setVisible(hasSlow)
           }
           this.leaderboard.setText(ducks.slice(0, 12).map((duck) => {
             const player = scenePlayers.find((candidate) => candidate.playerId === duck.playerId)
@@ -466,6 +796,16 @@ export function PhaserRaceCanvas({
           if (sourceView) {
             this.burstRing(sourceView.root.x, sourceView.root.y, 0xffe08a, 0xffe08a, 0.14, 3.4)
             this.floatEmoji(sourceView.root.x, sourceView.root.y - 8, '🔊', '24px', 360)
+            if (!reducedMotion) {
+              this.tweens.add({
+                targets: sourceView.avatarContainer,
+                scaleX: 1.22,
+                scaleY: 1.22,
+                yoyo: true,
+                duration: 160,
+                repeat: 1,
+              })
+            }
           }
           if (!reducedMotion) {
             for (const targetId of hornTargets) this.wobbleDuck(targetId)
@@ -500,6 +840,23 @@ export function PhaserRaceCanvas({
               this.burstRing(hitView.root.x, hitView.root.y, 0xff5a4a, 0xff5a4a, 0.18, 3.2)
               this.floatEmoji(hitView.root.x, hitView.root.y - 12, '💥', '26px', 420)
               this.wobbleDuck(raceEvent.targetPlayerId)
+              if (!reducedMotion) {
+                this.tweens.add({
+                  targets: hitView.avatarContainer,
+                  angle: 360,
+                  duration: 480,
+                  ease: 'Cubic.Out',
+                  onComplete: () => { hitView.avatarContainer.setAngle(0) },
+                })
+                this.tweens.add({
+                  targets: hitView.avatarContainer,
+                  scaleX: 1.25,
+                  scaleY: 0.75,
+                  yoyo: true,
+                  duration: 120,
+                  repeat: 1,
+                })
+              }
             }
             if (raceEvent.targetPlayerId) this.focusCamera(raceEvent.targetPlayerId, 520)
             return
@@ -530,6 +887,15 @@ export function PhaserRaceCanvas({
               this.floatEmoji(target.root.x, target.root.y - 8, '💫', '24px', 480)
               this.burstRing(target.root.x, target.root.y, 0xffe08a, 0xffe08a, 0.14, 2.8)
               this.wobbleDuck(raceEvent.targetPlayerId)
+              if (!reducedMotion) {
+                this.tweens.add({
+                  targets: target.avatarContainer,
+                  angle: 360,
+                  duration: 440,
+                  ease: 'Cubic.Out',
+                  onComplete: () => { target.avatarContainer.setAngle(0) },
+                })
+              }
             }
             if (raceEvent.targetPlayerId) this.focusCamera(raceEvent.targetPlayerId, 480)
             return
@@ -547,7 +913,17 @@ export function PhaserRaceCanvas({
                 this.tweens.add({ targets: wake, scaleX: 2.2 + index * 0.2, alpha: 0, duration: reducedMotion ? 200 : 600 + index * 80, onComplete: () => { wake.setVisible(false); this.ellipsePool.push(wake) } })
               }
               this.floatEmoji(source.root.x, source.root.y - 16, '⚡', '26px', 520)
-              if (!reducedMotion) this.tweens.add({ targets: source.root, scaleX: 1.08, scaleY: 1.08, yoyo: true, duration: 120, repeat: 1, onComplete: () => source.root.setScale(1) })
+              if (!reducedMotion) {
+                this.tweens.add({
+                  targets: source.root,
+                  scaleX: 1.08,
+                  scaleY: 1.08,
+                  yoyo: true,
+                  duration: 120,
+                  repeat: 1,
+                  onComplete: () => source.root.setScale(1),
+                })
+              }
             }
             if (raceEvent.sourcePlayerId) this.focusCamera(raceEvent.sourcePlayerId, 420)
             return
@@ -586,7 +962,16 @@ export function PhaserRaceCanvas({
           if (type === 'FEATHER_DODGED' || type === 'WILD_FEATHER_DODGED' || type === 'HAZARD_DODGED') {
             if (source) {
               this.floatEmoji(source.root.x, source.root.y - 18, '🪽', '24px', 520)
-              if (!reducedMotion) this.tweens.add({ targets: source.root, y: source.root.y - 8, yoyo: true, repeat: 1, duration: 100 })
+              if (!reducedMotion) {
+                this.tweens.add({
+                  targets: source.avatarContainer,
+                  y: -24,
+                  yoyo: true,
+                  duration: 220,
+                  ease: 'Quad.Out',
+                  onComplete: () => { source.avatarContainer.setY(0) },
+                })
+              }
             }
             return
           }
@@ -594,6 +979,16 @@ export function PhaserRaceCanvas({
           if (type === 'WILD_FEATHER_USED' && source) {
             this.floatEmoji(source.root.x, source.root.y - 14, '🪽', '22px')
             this.burstRing(source.root.x, source.root.y, 0xd8c7ff, 0xd8c7ff, 0.12, 2.2)
+            if (!reducedMotion) {
+              this.tweens.add({
+                targets: source.avatarContainer,
+                y: -24,
+                yoyo: true,
+                duration: 220,
+                ease: 'Quad.Out',
+                onComplete: () => { source.avatarContainer.setY(0) },
+              })
+            }
             return
           }
 
@@ -602,6 +997,15 @@ export function PhaserRaceCanvas({
             this.floatEmoji(source.root.x, source.root.y - 10, hazardEmoji, '26px', 460)
             this.burstRing(source.root.x, source.root.y, 0x9bd4ff, 0x4a90a4, 0.16, 2.6)
             this.wobbleDuck(raceEvent.sourcePlayerId)
+            if (!reducedMotion) {
+              this.tweens.add({
+                targets: source.avatarContainer,
+                angle: 360,
+                duration: 440,
+                ease: 'Cubic.Out',
+                onComplete: () => { source.avatarContainer.setAngle(0) },
+              })
+            }
             if (raceEvent.sourcePlayerId) this.focusCamera(raceEvent.sourcePlayerId, 460)
             return
           }
@@ -609,7 +1013,7 @@ export function PhaserRaceCanvas({
           if (type === 'PICKUP_COLLECTED' || type === 'WILD_ITEM_GRANTED') {
             if (source) {
               this.burstRing(source.root.x, source.root.y, 0x9ff5ff, 0x55d4ff, 0.14, 2.4)
-              const itemIcon = type === 'WILD_ITEM_GRANTED' ? (WILD_ICONS[raceEvent.metadata.itemId as WildItemId] ?? '📦') : '📦'
+              const itemIcon = type === 'WILD_ITEM_GRANTED' ? (WILD_ICONS[raceEvent.metadata.itemId as WildItemId] ?? '🎒') : '📦'
               this.floatEmoji(source.root.x, source.root.y - 14, itemIcon, '24px', 560)
             }
             return
@@ -637,7 +1041,15 @@ export function PhaserRaceCanvas({
             this.floatEmoji(source.root.x, source.root.y - 20, medal, place === 1 ? '34px' : '28px', place === 1 ? 900 : 620)
             this.floatEmoji(source.root.x, source.root.y - 46, `#${place}`, place === 1 ? '22px' : '18px', 520)
             if (!reducedMotion) {
-              this.tweens.add({ targets: source.root, scaleX: place === 1 ? 1.18 : 1.1, scaleY: place === 1 ? 1.18 : 1.1, yoyo: true, duration: place === 1 ? 180 : 130, repeat: place === 1 ? 2 : 1, onComplete: () => source.root.setScale(1) })
+              this.tweens.add({
+                targets: source.root,
+                scaleX: place === 1 ? 1.18 : 1.1,
+                scaleY: place === 1 ? 1.18 : 1.1,
+                yoyo: true,
+                duration: place === 1 ? 180 : 130,
+                repeat: place === 1 ? 2 : 1,
+                onComplete: () => source.root.setScale(1),
+              })
               if (place === 1) {
                 for (let index = 0; index < 6; index += 1) {
                   this.time.delayedCall(index * 60, () => this.floatEmoji(source.root.x + (index % 3 - 1) * 22, source.root.y - 12, index % 2 === 0 ? '🎉' : '✨', '20px', 520))
@@ -725,9 +1137,23 @@ export function PhaserRaceCanvas({
           const smoothing = 1 - Math.exp(-delta / 85)
           const positions: Array<{ x: number; y: number }> = []
           for (const view of this.duckViews.values()) {
+            const prevX = view.root.x
+            const prevY = view.root.y
             view.root.x += (view.targetX - view.root.x) * smoothing
             view.root.y += (view.targetY - view.root.y) * smoothing
             positions.push({ x: view.root.x, y: view.root.y })
+
+            // River current banking & directional tilt
+            if (!reducedMotion) {
+              const dx = view.targetX - prevX
+              const dy = view.targetY - prevY
+              const moveDist = Math.hypot(dx, dy)
+              if (moveDist > 0.4) {
+                const targetAngle = Phaser.Math.RadToDeg(Math.atan2(dy, dx))
+                const clampedAngle = Phaser.Math.Clamp(targetAngle, -20, 20)
+                view.root.angle += (clampedAngle - view.root.angle) * 0.12
+              }
+            }
           }
           if (positions.length === 0) return
           const averageX = positions.reduce((sum, point) => sum + point.x, 0) / positions.length
@@ -818,58 +1244,40 @@ export function PhaserRaceCanvas({
           catchUpTick: initialLive?.syncTick ?? 0,
           manualInputs: initialLive?.manualInputs ?? [],
         })
-        source = new EventSource(`/api/races/${raceId}/live`)
-        source.addEventListener('engine-event', (event) => {
-          try {
-            const payload = JSON.parse((event as MessageEvent<string>).data) as RaceEvent
-            if (payload.type === 'WILD_ITEM_MANUAL_INPUT') runner.applySyncEvent(payload)
-          } catch {
-            // Ignore malformed sync events.
-          }
-        })
         void sceneReady.then(() => runner.start())
-      } else {
-        const visualEventTypes = new Set<RaceEvent['type']>([
-          'ROCKET_FIRED', 'ROCKET_HIT', 'ROCKET_BLOCKED', 'BANANA_DROPPED', 'BANANA_HIT', 'BANANA_BLOCKED',
-          'NITRO_STARTED', 'HORN_USED', 'FEATHER_DODGED', 'BUBBLE_POPPED', 'PICKUP_COLLECTED', 'PICKUP_SKIPPED_SLOT_FULL',
-          'WILD_ITEM_GRANTED', 'INSTANT_PICKUP_TRIGGERED', 'MINI_ROCKET_FIRED', 'MINI_ROCKET_HIT', 'MINI_ROCKET_BLOCKED',
-          'WILD_BANANA_DROPPED', 'WILD_BANANA_HIT', 'WILD_BANANA_BLOCKED', 'MINI_BUBBLE_ACTIVATED', 'MINI_BUBBLE_BLOCKED',
-          'WILD_HORN_USED', 'WILD_FEATHER_USED', 'WILD_FEATHER_DODGED', 'HAZARD_HIT', 'HAZARD_DODGED', 'GOLDEN_BOX_COLLECTED', 'DUCK_FINISHED',
-        ])
+
         source = new EventSource(`/api/races/${raceId}/live`)
-        source.addEventListener('snapshot', (event) => {
+        source.onmessage = (event) => {
           try {
-            const payload = JSON.parse((event as MessageEvent<string>).data) as StateSnapshotMessage
-            if (payload.type !== 'STATE_SNAPSHOT' || !payload.ducks) return
-            if (!liveScene) return
-            liveScene.queueWorld(payload, payload.tick)
+            const message = JSON.parse(event.data as string) as {
+              type: string
+              world?: Pick<StateSnapshotMessage, 'ducks' | 'pickups' | 'hazards' | 'rockets' | 'bananas'>
+              tick?: number
+              event?: RaceEvent
+            }
+            if (message.type === 'snapshot' && message.world && typeof message.tick === 'number') {
+              liveScene?.queueWorld(message.world, message.tick)
+            } else if (message.type === 'event' && message.event) {
+              runner.applySyncEvent(message.event)
+            }
           } catch {
-            // Ignore malformed snapshot frames.
+            // ignore parse errors
           }
-        })
-        source.addEventListener('engine-event', (event) => {
-          try {
-            const payload = JSON.parse((event as MessageEvent<string>).data) as RaceEvent
-            if (!payload.type || !visualEventTypes.has(payload.type)) return
-            if (!liveScene) return
-            liveScene.applyEvent(payload)
-          } catch {
-            // Ignore malformed engine events.
-          }
-        })
+        }
       }
     })
 
     return () => {
       active = false
+      if (replayFrame) cancelAnimationFrame(replayFrame)
       source?.close()
-      cancelAnimationFrame(replayFrame)
       game?.destroy(true)
-      audio.close()
     }
-  }, [chaosType, debugPickups, parentId, raceId, replayConfig, serializedLiveConfig, serializedManualInputs, serializedPlayers])
+  }, [chaosType, debugPickups, liveConfig, parentId, raceId, replayConfig, serializedLiveConfig, serializedManualInputs, serializedPlayers])
 
-  return <div className="overflow-hidden rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[#112b3b] shadow-[0_8px_0_var(--color-ggd-outline)]">
-    <div id={parentId} className="aspect-square min-h-[320px] w-full sm:aspect-[2/1]" aria-label="Đua Dzịt race canvas" />
-  </div>
+  return (
+    <div className="overflow-hidden rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[#112b3b] shadow-2xl">
+      <div id={parentId} className="aspect-[16/9] w-full min-h-[360px] max-h-[640px]" />
+    </div>
+  )
 }

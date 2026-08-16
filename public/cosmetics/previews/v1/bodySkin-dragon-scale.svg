@@ -24,18 +24,18 @@
 
   <!-- Wing Silhouette & Highlight -->
   <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="#FFF1A8" opacity="0.4"/>
-  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <!-- Cheeks / Blush -->
-  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.4"/>
+  <!-- Cheeks / Blush (Soft accent) -->
+  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.45"/>
 
   <!-- Left Eye -->
-  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="12"/>
+  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
   <ellipse cx="330" cy="152" rx="11" ry="18" fill="#1B132B"/>
   <circle cx="326" cy="144" r="5" fill="#FFFDF4"/>
 
   <!-- Right Eye -->
-  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="12"/>
+  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
   <ellipse cx="390" cy="156" rx="9" ry="16" fill="#1B132B"/>
   <circle cx="388" cy="150" r="4" fill="#FFFDF4"/>
 
@@ -46,19 +46,13 @@
   <!-- Beak Smile Crease & Shadow -->
   <path d="M342 230 c38 10 78 6 120 -10" stroke="#C95E24" stroke-width="8" stroke-linecap="round" fill="none"/></g>
 <g id="skin-dragon">
-      <g stroke="#C95E24" stroke-width="6" fill="none">
+      <g stroke="#C95E24" stroke-width="4" fill="none">
         <path d="M276 76 C288 88, 304 88, 316 76 C328 88, 344 88, 356 76"/>
-        <path d="M288 96 C300 108, 316 108, 328 96"/>
-      </g>
-      <circle cx="296" cy="80" r="5" fill="#FFD84D"/>
-      <circle cx="336" cy="80" r="5" fill="#FFD84D"/>
-      <circle cx="308" cy="100" r="5" fill="#FFD84D"/>
-      <g stroke="#C95E24" stroke-width="8" fill="none">
         <path d="M150 290 C160 304, 180 304, 190 290 C200 304, 220 304, 230 290 C240 304, 260 304, 270 290"/>
         <path d="M170 320 C180 334, 200 334, 210 320 C220 334, 240 334, 250 320 C260 334, 280 334, 290 320"/>
       </g>
-      <circle cx="170" cy="296" r="5" fill="#FFD84D"/>
-      <circle cx="210" cy="296" r="5" fill="#FFD84D"/>
-      <circle cx="250" cy="296" r="5" fill="#FFD84D"/>
+      <circle cx="170" cy="296" r="4" fill="#FFD84D"/>
+      <circle cx="210" cy="296" r="4" fill="#FFD84D"/>
+      <circle cx="250" cy="296" r="4" fill="#FFD84D"/>
     </g>
 </svg>

@@ -24,18 +24,18 @@
 
   <!-- Wing Silhouette & Highlight -->
   <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="#FFF1A8" opacity="0.4"/>
-  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <!-- Cheeks / Blush -->
-  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.4"/>
+  <!-- Cheeks / Blush (Soft accent) -->
+  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.45"/>
 
   <!-- Left Eye -->
-  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="12"/>
+  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
   <ellipse cx="330" cy="152" rx="11" ry="18" fill="#1B132B"/>
   <circle cx="326" cy="144" r="5" fill="#FFFDF4"/>
 
   <!-- Right Eye -->
-  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="12"/>
+  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
   <ellipse cx="390" cy="156" rx="9" ry="16" fill="#1B132B"/>
   <circle cx="388" cy="150" r="4" fill="#FFFDF4"/>
 
@@ -51,7 +51,7 @@
           <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
       </defs>
-      <g fill="#FF007F" stroke="#1B132B" stroke-width="10" stroke-linejoin="round" filter="url(#mohawk-glow-512)">
+      <g fill="#FF007F" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" filter="url(#mohawk-glow-512)">
         <polygon points="240,88 232,28 268,72"/>
         <polygon points="264,72 264,8 304,56"/>
         <polygon points="296,56 312,-12 336,44"/>
@@ -59,7 +59,7 @@
         <polygon points="368,44 400,12 396,68"/>
       </g>
       <path d="M250 96 C296 76, 370 76, 410 96" stroke="#00F2FE" stroke-width="14" stroke-linecap="round"/>
-      <circle cx="264" cy="90" r="6" fill="#FFFDF4"/>
-      <circle cx="396" cy="90" r="6" fill="#FFFDF4"/>
+      <circle cx="264" cy="90" r="5" fill="#FFFDF4"/>
+      <circle cx="396" cy="90" r="5" fill="#FFFDF4"/>
     </g>
 </svg>

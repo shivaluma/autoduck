@@ -126,6 +126,7 @@ test('offensive cooldown blocks chained pending offensive actions', () => {
     ducks: [] as ItemDuckState[],
     playerId: 'duck-1',
     secondsUntilNextPickupZone: 999,
+    ghostPlayerIds: new Set<string>(),
     prepAutoUseEnabled: true,
     wildAutoUseEnabled: true,
   }
@@ -161,6 +162,7 @@ test('rocket target revalidation prefers still-valid target at execute time', ()
     ducks,
     playerId: 'duck-1',
     secondsUntilNextPickupZone: 999,
+    ghostPlayerIds: new Set<string>(),
     prepAutoUseEnabled: true,
     wildAutoUseEnabled: false,
   }

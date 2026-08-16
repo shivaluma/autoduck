@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
 <g id="back-jetpack">
-      <rect x="96" y="250" width="44" height="84" rx="12" fill="#CBD5E1" stroke="#1B132B" stroke-width="10"/>
+      <rect x="96" y="250" width="44" height="84" rx="12" fill="#CBD5E1" stroke="#1B132B" stroke-width="8"/>
       <path d="M104 334 L92 376 L144 376 L132 334 Z" fill="#FF5B00" stroke="#1B132B" stroke-width="8"/>
       <polygon points="104,376 118,404 132,376" fill="#FFD84D"/>
     </g>

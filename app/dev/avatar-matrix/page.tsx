@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { CosmeticDuck } from '@/components/cosmetics/cosmetic-duck'
 import type { DuckAppearance } from '@/lib/cosmetics/types'
 
@@ -86,13 +87,31 @@ export default function AvatarMatrixPage() {
   return (
     <main className="mx-auto min-h-screen max-w-7xl p-6 text-white">
       <header className="rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-6 shadow-xl">
-        <div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-neon-green)]">
-          DZỊT SEASON 3 — MODULAR AVATAR RIG
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-neon-green)]">
+              DZỊT SEASON 3 — MODULAR AVATAR RIG
+            </div>
+            <h1 className="font-display text-4xl">Avatar Matrix Hub</h1>
+            <p className="mt-2 text-sm text-white/70">
+              Canonical 512×512 Modular Rig Verification — Testing Layering, Occlusion, Palette Tokens, Anchors &amp; Rarity Balance
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/dev/avatar-showcase"
+              className="rounded-xl border-2 border-[var(--color-ggd-neon-green)] bg-[var(--color-ggd-neon-green)]/20 px-3 py-2 text-xs font-black text-[var(--color-ggd-neon-green)] transition hover:bg-[var(--color-ggd-neon-green)] hover:text-black"
+            >
+              Fantasy Showcase →
+            </Link>
+            <Link
+              href="/dev/avatar-compatibility"
+              className="rounded-xl border-2 border-[var(--color-ggd-gold)] bg-[var(--color-ggd-gold)]/20 px-3 py-2 text-xs font-black text-[var(--color-ggd-gold)] transition hover:bg-[var(--color-ggd-gold)] hover:text-black"
+            >
+              Compatibility Matrix →
+            </Link>
+          </div>
         </div>
-        <h1 className="font-display text-4xl">Avatar Compatibility Matrix</h1>
-        <p className="mt-2 text-sm text-white/70">
-          Canonical 512×512 Modular Rig Verification — Testing Layering, Occlusion, Palette Tokens, Anchors & Rarity Balance
-        </p>
         <div className="mt-4 flex flex-wrap gap-2">
           {(['rarities', 'matrix', 'scales', 'auras', 'combos'] as const).map((tab) => (
             <button

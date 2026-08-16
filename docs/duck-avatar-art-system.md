@@ -15,7 +15,49 @@ The goal of the **Dzịt Avatar System** is to provide a polished modular 2D gam
 
 ---
 
-## 2. Canonical Coordinate Space & ViewBox
+## 2. Core Visual Hierarchy Rule
+
+At all times and across all cosmetic combinations (especially at small thumbnail sizes like $72\times72$ to $96\times96\,\text{px}$), the avatar must strictly follow this visual hierarchy:
+
+$$\mathbf{FACE} > \mathbf{HERO\ COSMETIC} > \mathbf{BODY / CLOTHING} > \mathbf{AURA} > \mathbf{PET} > \mathbf{TRAIL}$$
+
+### The 1-Second Readability Test
+> **At $96\times96\,\text{px}$, the viewer must identify the duck's eye expression and beak in under 1 second.** Only after recognizing the face should the viewer register the thematic role (e.g., "Ah, this is Cyber / Emperor / Astronaut").
+
+---
+
+## 3. Face Safe Zone (`FACE_SAFE_ZONE`)
+
+To guarantee immediate eye contact and facial readability, a dedicated rectangular clearance zone is enforced:
+
+$$\mathbf{FACE\_SAFE\_ZONE} = [X_1: 270, Y_1: 90] \to [X_2: 430, Y_2: 240]$$
+
+```
++-------------------------------------------------------------+
+|                     (330, 44) HEAD_TOP                      |
+|                                                             |
+|           + - - - - - - - - - - - - - - - - - - +           |
+|           |        FACE_SAFE_ZONE               |           |
+|           |  (320, 138)       (382, 144)        |           |
+|           |   Left Eye         Right Eye        |           |
+|           |                                     |           |
+|           |         (386, 206)                  |           |
+|           |          Beak Area                  |           |
+|           + - - - - - - - - - - - - - - - - - - +           |
+|                                                             |
+|                    (248, 328) TORSO                         |
++-------------------------------------------------------------+
+```
+
+### Face Safe Zone Rules:
+1. **No background shapes, heavy particle emitters, or high-contrast aura geometry may cross through the Face Safe Zone.**
+2. **Face cosmetics** (glasses, visors, blush, eyebags) must accentuate or frame the eyes without obliterating the pupils or creating visual clutter.
+3. **Headwear brims** (caps, bucket hats, helmets) must stay above $Y = 116$ at the eye baseline so the eyes remain fully visible.
+4. **Body skins & tattoos** in the face region must use subtle tinting (opacity $\le 0.45$) rather than opaque high-contrast patterns.
+
+---
+
+## 4. Canonical Coordinate Space & ViewBox
 
 Every asset in the Dzịt ecosystem is authored and rendered in a single normalized coordinate space:
 
@@ -29,9 +71,9 @@ $$\mathbf{viewBox} = \begin{bmatrix} 0 & 0 & 512 & 512 \end{bmatrix}$$
 
 ---
 
-## 3. Semantic Anchor Rig Points
+## 5. Semantic Anchor Rig Points
 
-All cosmetics are positioned relative to explicit duck anatomy anchor coordinates derived from the canonical model:
+All cosmetics are positioned relative to explicit duck anatomy anchor coordinates:
 
 | Anchor Key | Coordinate $(X, Y)$ | Description & Role |
 | :--- | :--- | :--- |
@@ -60,19 +102,24 @@ All cosmetics are positioned relative to explicit duck anatomy anchor coordinate
 
 ---
 
-## 4. Stroke & Outline Standards
+## 6. Standardized Stroke Hierarchy Tokens
 
-Consistency of outline weight is vital to make layered assets feel unified:
-- **Major Outer Silhouette Stroke**: `14px`, stroke-linejoin `round`, stroke-linecap `round`.
-- **Secondary Anatomy / Cut Lines**: `8px` to `10px`.
-- **Fine Inner Details / Seams**: `4px` to `6px`.
-- **Outline Color**: Dark Purple-Black `#1B132B` (preferred over flat black `#000000` for richer game aesthetic).
+To ensure all assets look like they were drawn by a **single cohesive artist**, arbitrary stroke widths are replaced with strict discrete tokens:
+
+```typescript
+export const STROKE_TOKENS = {
+  OUTLINE_MAJOR: 14, // Outer silhouette of duck & primary wearables
+  OUTLINE_MINOR: 8,  // Secondary anatomy, internal cuts, collars, pet boundaries
+  DETAIL: 4,         // Seams, fabric folds, stitches, button details, gloss cuts
+  COLOR: '#1B132B',  // Unified Dark Purple-Black outline color
+} as const
+```
 
 ---
 
-## 5. Three-Value Cartoon Shading Language
+## 7. Shading Language & Rarity Discipline
 
-Every opaque cosmetic and body element must adhere to the 3-value shading principle:
+Every asset must obey the 3-value shading language with directional lighting from the **Top-Right** ($\approx 45^\circ$). Visual techniques are strictly gated by rarity tier to avoid aesthetic power creep:
 
 ```
 +-------------------------------------------------------+
@@ -82,152 +129,113 @@ Every opaque cosmetic and body element must adhere to the 3-value shading princi
 +-------------------------------------------------------+
 ```
 
-- **Light Source**: Directional sunlight coming from the **Top-Right** ($\approx 45^\circ$).
-- **Highlights**: Large, intentional shapes on the upper-right skull, top of beak, and shoulder curvature.
-- **Shadows**: Clean, graphic crescent shapes on lower-left belly, under-beak neck crease, and under-wing torso.
+| Tier | Geometry & Style | Shading Language | Special Shaders / FX |
+| :--- | :--- | :--- | :--- |
+| **Common** | Everyday, grounded, minimal cuts | 2 flat cartoon values | **None** (No glow, no blur) |
+| **Uncommon** | Themed occupational accents, ribbons | 2-3 values, crisp highlights | Subtle gloss speculars |
+| **Rare** | Stylized cultural & tech silhouettes | 3 values, custom badges & layers | Metallic or enamel sheen |
+| **Epic** | Multi-part sci-fi & fantasy armor | 3 values + energy accents | Glow filters (`feGaussianBlur`), neon lines |
+| **Legendary** | God-tier mythic, crowns, celestial gear | 3 values + emissive details | Multi-layer animations, gold Kintsugi, galaxy dust |
 
 ---
 
-## 6. Palette Token Architecture
+## 8. Disciplined Theme Palette Budget
 
-Colors are separated from surface Skins. The duck body is driven by semantic palette tokens:
+Each theme or fantasy collection must adhere to a strict **5-token palette budget** to prevent "random RGB gamer gear" visual noise:
 
-```typescript
-export interface DuckPaletteTokens {
-  bodyBase: string
-  bodyShadow: string
-  bodyHighlight: string
-  outline: string
-  beakBase: string
-  beakShadow: string
-  beakHighlight: string
-  feetBase: string
-  feetShadow: string
-  eyeWhite: string
-  eyePupil: string
-  eyeHighlight: string
-  blush: string
-}
-```
+$$\mathbf{Theme\ Palette} = \{ \text{PRIMARY}, \text{SECONDARY}, \text{ACCENT}, \text{NEUTRAL}, \text{FX} \}$$
 
-### Standard Color Variants:
-- **Sunshine**: `#FFD84D` / Shadow `#E5A812` / Highlight `#FFF1A8`
-- **Tangerine**: `#FF9B42` / Shadow `#D96A14` / Highlight `#FFC58D`
-- **Mint Splash**: `#58E6B0` / Shadow `#2BAF7D` / Highlight `#A3F7D5`
-- **Sky Puddle**: `#61C9FF` / Shadow `#2596D4` / Highlight `#BBE8FF`
-- **Lavender Quack**: `#B99AFF` / Shadow `#825AD9` / Highlight `#E4D7FF`
-- **Rose Pop**: `#FF78A8` / Shadow `#D63F76` / Highlight `#FFBED6`
-- **Cream Puff**: `#FFF0BD` / Shadow `#D8C27B` / Highlight `#FFFFFF`
-- **Midnight Pond**: `#5965A8` / Shadow `#384279` / Highlight `#9AA4DB`
-- **Cyber Cyan**: `#26E6E6` / Shadow `#0EA5A5` / Highlight `#A5FAFA`
-- **Ruby**: `#EF4444` / Shadow `#B91C1C` / Highlight `#FCA5A5`
-- **Emerald**: `#10B981` / Shadow `#047857` / Highlight `#6EE7B7`
-
----
-
-## 7. Explicit Deterministic Render Stack
-
-To prevent clipping and ensure accessories naturally interact with body parts, rendering uses explicit named layers:
-
-```
-[Layer 1]  AURA_BACK            - Ambient glow, background rings, backdrop runes
-[Layer 2]  TRAIL_BACK           - Race wake, ripples, tail sparks (behind duck)
-[Layer 3]  PET_BACK             - Flying/floating pet variations positioned behind
-[Layer 4]  BACK_ACCESSORY       - Backpacks, wings, capes, jetpacks (behind torso)
-[Layer 5]  HEADWEAR_BACK        - Back brims/ribbons of wide hats (e.g. wizard hat back)
-[Layer 6]  BASE_DUCK_BODY       - Feet, belly, neck, skull geometry
-[Layer 7]  SKIN_OVERLAY         - Galaxy texture, Zombie stitches, Kintsugi veins, Tiger stripes
-[Layer 8]  BASE_DUCK_FACE       - Eyes, beak, blush, nostrils
-[Layer 9]  CLOTHING_BACK        - Collar backs, hood interiors
-[Layer 10] CLOTHING_BODY        - Shirts, jackets, robes, armor plates
-[Layer 11] NECK_ACCESSORY       - Scarves, ties, bowties, medallions, lanyards
-[Layer 12] FACE_ACCESSORY       - Sunglasses, monocles, goggles, laser visors, face masks
-[Layer 13] HEADWEAR_FRONT       - Caps, beanies, crowns, helmets, front brims
-[Layer 14] FRONT_WING           - Front wing (or clothed wing sleeve) over torso
-[Layer 15] HAND_OR_WING_PROP    - Magic wand, coffee cup, racing flag, trophy
-[Layer 16] PET_FRONT            - Companion pet sitting on ground beside duck
-[Layer 17] AURA_FRONT           - Front sparkles, dynamic energy wisps, foreground particles
-[Layer 18] FRONT_FX             - Race finish effects, splash bursts
-[Layer 19] NAMEPLATE            - Floating character badge or pedestal plate
-```
+### Core Showcase Palettes:
+1. **Royal Emperor**:
+   - `PRIMARY`: Sunshine Gold (`#FFD84D`)
+   - `SECONDARY`: Royal Navy (`#1E293B`)
+   - `ACCENT`: Imperial Crimson (`#EF4444`)
+   - `NEUTRAL`: Slate Dark (`#0F172A`)
+   - `FX`: Golden Mandala Glow (`#FDE047`)
+2. **Viet Duck**:
+   - `PRIMARY`: Jade Mint (`#58E6B0`)
+   - `SECONDARY`: Bamboo Straw (`#F4E0A5`)
+   - `ACCENT`: Lotus Rose (`#FF78A8`)
+   - `NEUTRAL`: Deep Forest Green (`#065F46`)
+   - `FX`: Lotus Petal Breeze (`#FDA4AF`)
+3. **Cyber Duck**:
+   - `PRIMARY`: Cyber Cyan (`#00F2FE`)
+   - `SECONDARY`: Deep Midnight (`#0B0F19`)
+   - `ACCENT`: Neon Magenta (`#FF007F`)
+   - `NEUTRAL`: Dark Indigo (`#1E1B4B`)
+   - `FX`: Hologram HUD Cyan/Pink Glow (`#38BDF8`)
+4. **Dragon King**:
+   - `PRIMARY`: Ruby Crimson (`#DC2626`)
+   - `SECONDARY`: Charcoal Red (`#7F1D1D`)
+   - `ACCENT`: Emperor Gold (`#FFD84D`)
+   - `NEUTRAL`: Ink Purple (`#1B132B`)
+   - `FX`: Blazing Dragon Flame (`#F59E0B`)
+5. **Space Voyager**:
+   - `PRIMARY`: Cosmic Slate (`#39406E`)
+   - `SECONDARY`: Spacecraft White (`#F8FAFC`)
+   - `ACCENT`: Starlight Cyan (`#38BDF8`)
+   - `NEUTRAL`: Deep Void (`#0F172A`)
+   - `FX`: Nebula Purple / Comet Gold (`#C084FC`)
 
 ---
 
-## 8. Cosmetic Design Rules & Anatomy Fitting
+## 9. Pet Visual Contract
 
-### 1. Headwear (`head`)
-- Hats must sit firmly on the skull line `Y: 88..96` without floating.
-- Forward visors (e.g. baseball caps) project forward over the brow line $(X: 344 \to 468, Y: 90 \to 100)$.
-- Wide/Tall hats (e.g. Wizard Hat) split into `HEADWEAR_BACK` (back brim) and `HEADWEAR_FRONT` (cone and front brim) so the duck head sits inside the brim.
+Companion pets must be charming sidekicks that never compete with or overpower the hero duck:
 
-### 2. Clothing (`outfit`)
-- Must follow the torso contour with an explicit collar line $(X: 220..310, Y: 250)$ and side hemline $(X: 84..390, Y: 400)$.
-- Must include a defined wing sleeve/pauldron $(X: 136..240, Y: 304..360)$ so the duck's wing looks naturally clothed.
-
-### 3. Face Accessories (`face`)
-- Eyewear must align precisely with `EYE_LEFT` $(320, 138)$ and `EYE_RIGHT` $(382, 144)$.
-- Frame bridge must cross above the beak $(X: 356, Y: 136)$.
-- Glasses must preserve eye readability (semi-transparent lenses, styled frames, or expressive eye cuts).
-
-### 4. Skins (`bodySkin`)
-- Skins provide themed surface treatments across **Head, Face, Torso, and Tail**.
-- High-priority skins:
-  * **Galaxy**: Deep indigo/purple gradient, stardust clusters, nebula rim highlight.
-  * **Zombie**: Patchwork mint skin, cartoon stitches, cute bandage on cheek.
-  * **Lava**: Charcoal volcanic rock body with glowing magma cracks.
-  * **Chrome**: Liquid silver metallic reflections, high-contrast curved speculars.
-  * **Tiger**: Iconic three forehead stripes, cheek whiskers, wing bands.
-  * **Gold Kintsugi**: Golden ceramic repair veins across skull and body.
-
-### 5. Pets (`pet`)
-- Placed on canonical baseline `Y: 370..410`, $X: 436$ (beside duck).
-- Proportions: Roughly 25-30% of duck volume so the duck remains the primary hero.
-- Idle motion: Smooth transform-based bobbing (`translateY(-6px)`).
-
-### 6. Auras (`aura`)
-- Multi-tier FX structure (`AURA_BACK`, `AURA_PARTICLES`, `AURA_FRONT`).
-- Animations use GPU-accelerated CSS `transform` (rotate, scale, translate) and `opacity` for smooth 60fps rendering without CPU filter repaint bottlenecks.
-- 12 Game-Inspired Dynamic Visual Concepts:
-  1. **Thần Long Bao Thân (Astral Dragon Spirit)**: Celestial mythical dragon body winding from behind the duck to the front, with glowing whiskers, horns, fierce eyes, flaming dragon pearl, and rising embers.
-  2. **Phật Quang Vạn Trượng (Sacred Buddha Lotus Mandala)**: Multi-ring sacred halo with 24 golden radiant sunbeam rays, rotating Dharmachakra wheel of light, and blooming golden lotus petals.
-  3. **Lôi Thần Sấm Sét (Thunder God Lightning Tempest)**: Crackling jagged electric lightning arcs (cyan, magenta, yellow) zapping violently across dark purple storm plasma clouds.
-  4. **Hàn Băng Cực Quang (Glacial Blizzard & Frost Aurora)**: Intricate spinning snowflake mandala behind the head, floating sharp diamond ice shards, and frost spikes rising from the ground.
-  5. **Hỏa Diệm Sơn / Super Saiyan (Inferno Flame Burst)**: Multi-layer towering flame peaks (crimson red, blazing orange, golden white core) erupting upwards from the ground baseline with flying spark embers.
-  6. **U Hồn Vạn Quỷ (Cursed Phantom Souls & Will-o'-the-Wisps)**: Haunting cute ghost spirits swirling around the duck with will-o'-the-wisp soul fire orbs in emerald green and spectral teal.
-  7. **Cyber Matrix HUD (Tactical Hologram & Binary Data)**: Dual counter-rotating holographic tactical HUD rings, target angle brackets, and pulsing digital glitch data streams.
-  8. **Hoa Khai Phú Quý (Sakura & Sacred Lotus Cyclone)**: Swirling floral wind vortex carrying glowing pink lotus and cherry blossom petals around a blooming lotus pedestal.
-  9. **Cosmic Singularity (Deep Space Nebula & Galaxy Orbit)**: Tilted 3D planetary accretion rings with orbiting celestial moons, gas giants, and stardust constellation crosses.
-  10. **Neon Disco Party (Concert Laser Spotlights & Equalizer)**: Sweeping multi-color concert stage lasers, pulsing audio equalizer bounce bars at baseline, and floating vivid neon musical notes.
-  11. **Thủy Cung Thần Châu (Aquatic Tidal Wave & Pearl Ocean)**: Swirling ocean current vortex with rising hydrodynamic pearl bubbles and sea foam.
-  12. **Kim Tiền Cát Tường (Golden Coin Shower & 4-Leaf Clovers)**: Rotating wealth ring of ancient gold coins with square holes and floating lucky four-leaf clovers.
+1. **Volume & Scale Contract**:
+   - **Normal Pet**: $18\% - 28\%$ of duck volume.
+   - **Large Pet**: Maximum $35\%$ of duck volume.
+2. **Anchor Position**: Ground contact baseline $(X: 436, Y: 370..400)$.
+3. **Contrast Discipline**: Pets must have slightly softer contrast and saturation than the duck's face to ensure the viewer's focal point remains on the duck.
+4. **Stroke Hierarchy**: Outlines use `OUTLINE_MINOR` ($8\,\text{px}$) and details use `DETAIL` ($4\,\text{px}$).
 
 ---
 
-## 9. Thumbnail & Closet Card Consistency
+## 10. Aura Visual Budget & Silhouette Clearance Gap
 
-- Every preview card in Duck Closet and Duckdex uses the exact same:
-  * Normalized ViewBox `0 0 512 512`.
-  * Standardized duck silhouette underlay (opacity `0.35`).
-  * Centered camera padding ($24\,\text{px}$).
-  * Scoped SVG IDs (`id="cg-mask-${id}"`, `id="cg-filter-${id}"`) preventing SVG DOM namespace collisions.
+Auras must provide rich environmental atmosphere without swallowing the duck in visual noise:
+
+| Aura Tier | Visual Budget & Rules |
+| :--- | :--- |
+| **Common** | 2–4 subtle floating particles or ambient ripples. |
+| **Rare** | Small subtle halo or thin concentric ring with $\le 0.65$ opacity. |
+| **Epic** | Halo ring + gentle orbiting particles + front ground accent. |
+| **Legendary** | Grand thematic motif (Astral Dragon, Sacred Mandala, Blizzard) with an explicit **Silhouette Clearance Gap** ($0.25..0.40$ center opacity) behind the duck body. |
 
 ---
 
-## 10. Rarity Tier Visual Hierarchy & Anti-Inflation Rules
+## 11. Deterministic Multi-Layer Render Stacking
 
-To prevent visual inflation and preserve player excitement for high-tier cosmetics, visual complexity is strictly gated across 5 rarity tiers:
+Cosmetics render in strict z-order to guarantee deterministic layering and occlusion:
 
-| Tier | Visual Complexity | Geometry & Cut | FX & Shaders | Animation / Extra | Examples |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Common** (Gray / Green) | Clean, minimal, everyday relatable | 2 flat cartoon values, standard outlines | None (no glow, no filters) | Static | Plain White Tee, Red Race Cap, Beanie, Happy Beak, Water Ripples, Rubber Fish |
-| **Uncommon** (Blue) | Thematic occupation or street accent | 2-3 values, 1 accent colorway/ribbon | Subtle gloss highlights | Static | Blue Bucket Hat, Monday Tie, Chef Hat, Pond Shades, Calico Cat |
-| **Rare** (Purple) | Distinct stylized cut, culture/tech gear | Layered construction, custom badges/pouches | Metallic or enamel accents | Gentle bobbing/flow | Dev Hoodie, Cowboy Hat, Nón Lá, Lucky Áo Dài, Shiba Inu, Tiger Quack Skin |
-| **Epic** (Pink) | High fantasy & sci-fi motifs | Multi-part silhouettes, specialized materials | Neon glows, glass dome reflections, energy lines | Keyframed pulse, glowing eyes | Wizard Hat, Cyber Mohawk, Space Suit, Baby Dragon, Dragon Scales Skin |
-| **Legendary** (Gold) | God-tier / Mythic prestige | Ornate crowns, paladin plate, celestial relics | Glowing golden mandalas, kintsugi veins, multi-part aura | Dynamic multi-layer animations & particles | Diamond Crown, Quack Knight Armor, Kintsugi Gold Veins, Thần Long Aura, Phật Quang Mandala |
+| Render Step | Z-Index | Layer Slot | Role & Content |
+| :--- | :--- | :--- | :--- |
+| 1 | `10` | `nameplate` | Base pedestal / nameplate under the duck |
+| 2 | `20` | `aura` (Back) | Background halo, dragon coils, mandala rays, storm clouds |
+| 3 | `30` | `trail` | Water ripples, speed wakes, fire sparks behind tail tip |
+| 4 | `40` | `back` | Backpacks, jetpacks, capes, dragon wings |
+| 5 | `50` | `bodyColor` | Base duck body (feet, tail, torso, head, beak, eyes) |
+| 6 | `60` | `bodySkin` | Surface textures, tattoos, stripes, circuits, scales |
+| 7 | `70` | `outfit` | Shirts, hoodies, suits, robes, armor |
+| 8 | `80` | `neck` | Scarves, ties, necklaces, bowties |
+| 9 | `90` | `face` | Eyewear, sunglasses, laser visors, blush, masks |
+| 10 | `100` | `head` | Hats, crowns, helmets, beanies, antennas |
+| 11 | `110` | `pet` | Companion pets beside the duck |
+| 12 | `120` | `finish` | Foreground celebratory fireworks and finish effects |
 
-### Anti-Inflation Checklist:
-1. **Never give glow filters (`feGaussianBlur`) to Common or Uncommon items.**
-2. **Limit complex particle loops to Epic and Legendary auras/trails.**
-3. **Keep everyday clothes (tees, hoodies, beanies) grounded so that armored and celestial items feel truly exceptional.**
-4. **Preserve the core Dzịt duck silhouette across all items regardless of tier.**
+---
 
+## 12. Dual QA Testing Protocol
+
+To prevent regressions and ensure both artistic cohesion and modular compatibility, two separate testing environments are maintained:
+
+1. **Artistic Showcase (`/dev/avatar-showcase`)**:
+   - Curated full fantasy builds (Royal Emperor, Viet Duck, Cyber Duck, Dragon King, Space Voyager, etc.).
+   - Multi-scale readability checks ($72\,\text{px}$ Thumbnail, $140\,\text{px}$ Card, $280\,\text{px}$ Hero).
+   - Dynamic 12-Aura visual showcase.
+
+2. **Systemic Compatibility Matrix (`/dev/avatar-compatibility`)**:
+   - Isolated single-slot compatibility checks (`Base + Hat`, `Base + Face`, `Base + Outfit`).
+   - Cross-slot interaction matrix (`Hat + Face`, `Outfit + Neck`, `Large Hat + Aura`, `Skin + Hat`).
+   - Verifies anchor alignment, occlusion cleanliness, and zero unwanted overlaps across unexpected mix-and-match pairs.

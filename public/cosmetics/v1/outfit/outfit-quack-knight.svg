@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
 <g id="outfit-armor">
       <path d="M84 326 c0 -54 44 -92 114 -104 l24 30 q38 34 86 -2 l34 6 c38 16 60 38 68 66 c14 66 -52 100 -166 96 c-106 -2 -160 -36 -160 -92 Z" fill="#94A3B8" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
-      <path d="M136 304 C164 284, 210 290, 240 324 C216 356, 160 364, 136 304 Z" fill="#64748B" stroke="#1B132B" stroke-width="10" stroke-linejoin="round"/>
-      <path d="M220 252 Q276 280 324 250" stroke="#FFD84D" stroke-width="12" fill="none"/>
-      <polygon points="288,292 312,308 300,344 276,344 264,308" fill="#FFD84D" stroke="#1B132B" stroke-width="6"/>
-      <circle cx="256" cy="310" r="5" fill="#FFFDF4"/>
-      <circle cx="324" cy="310" r="5" fill="#FFFDF4"/>
+      <path d="M136 304 C164 284, 210 290, 240 324 C216 356, 160 364, 136 304 Z" fill="#64748B" stroke="#1B132B" stroke-width="8" stroke-linejoin="round"/>
+      <path d="M220 252 Q276 280 324 250" stroke="#FFD84D" stroke-width="8" fill="none"/>
+      <polygon points="288,292 312,308 300,344 276,344 264,308" fill="#FFD84D" stroke="#1B132B" stroke-width="4"/>
+      <circle cx="256" cy="310" r="4" fill="#FFFDF4"/>
+      <circle cx="324" cy="310" r="4" fill="#FFFDF4"/>
     </g>
 </svg>

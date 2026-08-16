@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
 <g id="head-chef">
       <path d="M256 76 C216 56, 216 -4, 268 -8 C288 -32, 352 -32, 372 -8 C424 -4, 432 56, 396 76 Z" fill="#FFFDF4" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
-      <path d="M272 72 V24 M310 68 V12 M350 68 V16 M380 72 V30" stroke="#E2E8F0" stroke-width="8" stroke-linecap="round"/>
-      <path d="M252 96 C300 80, 360 80, 404 96 L400 76 C360 64, 300 64, 252 76 Z" fill="#EDF2F7" stroke="#1B132B" stroke-width="12"/>
+      <path d="M272 72 V24 M310 68 V12 M350 68 V16 M380 72 V30" stroke="#CBD5E1" stroke-width="8" stroke-linecap="round"/>
+      <path d="M252 96 C300 80, 360 80, 404 96 L400 76 C360 64, 300 64, 252 76 Z" fill="#EDF2F7" stroke="#1B132B" stroke-width="8"/>
     </g>
 </svg>

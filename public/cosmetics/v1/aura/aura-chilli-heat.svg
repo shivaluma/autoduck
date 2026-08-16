@@ -1,19 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
 <g id="aura-super-saiyan-fire">
       <defs>
-        <filter id="saiyan-glow-512" x="-40%" y="-40%" width="180%" height="180%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="b1"/><feMerge><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-        <style>
-          @keyframes fire-roar-1 { 0%, 100% { transform: scaleY(1) translateY(0); } 50% { transform: scaleY(1.15) translateY(-20px); } }
-        </style>
+        <style>@keyframes fire-roar-1 { 0%, 100% { transform: scaleY(1) translateY(0); } 50% { transform: scaleY(1.08) translateY(-10px); } }</style>
       </defs>
-      <g filter="url(#saiyan-glow-512)">
-        <g style="animation: fire-roar-1 1.2s ease-in-out infinite" transform-origin="256 436">
-          <path d="M70 436 C40 330, 70 210, 110 160 C130 90, 200 40, 256 10 C310 40, 380 90, 400 160 C440 210, 470 330, 440 436 Z" fill="#DC2626" opacity="0.45"/>
-          <path d="M100 436 C80 340, 110 240, 140 190 C160 130, 210 80, 256 50 C300 80, 350 130, 370 190 C400 240, 430 340, 410 436 Z" fill="#EA580C" opacity="0.6"/>
-          <path d="M140 436 C130 360, 160 270, 190 230 C210 180, 230 140, 256 100 C280 140, 300 180, 320 230 C350 270, 380 360, 370 436 Z" fill="#FDE047" opacity="0.85"/>
-        </g>
+      <g style="animation: fire-roar-1 1.4s ease-in-out infinite" transform-origin="256 436">
+        <path d="M80 436 C50 330, 80 210, 120 160 C140 100, 200 50, 256 20 C310 50, 370 100, 390 160 C430 210, 460 330, 430 436 Z" fill="#DC2626" opacity="0.25"/>
+        <path d="M110 436 C90 340, 120 240, 150 190 C170 130, 210 90, 256 60 C300 90, 340 130, 360 190 C390 240, 420 340, 400 436 Z" fill="#EA580C" opacity="0.4"/>
+        <path d="M150 436 C140 360, 170 270, 195 230 C215 180, 235 140, 256 110 C275 140, 295 180, 315 230 C340 270, 370 360, 360 436 Z" fill="#FDE047" opacity="0.6"/>
       </g>
     </g>
 </svg>

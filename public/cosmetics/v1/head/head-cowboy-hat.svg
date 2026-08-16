@@ -2,8 +2,7 @@
 <g id="head-cowboy">
       <path d="M260 90 C264 40, 310 32, 370 36 C396 40, 404 64, 400 90 Z" fill="#854D0E" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
       <path d="M256 86 C296 76, 360 76, 402 86" stroke="#FEF08A" stroke-width="8"/>
-      <circle cx="328" cy="80" r="6" fill="#FEF08A" stroke="#1B132B" stroke-width="3"/>
-      <!-- Curled Brim -->
+      <circle cx="328" cy="80" r="6" fill="#FEF08A" stroke="#1B132B" stroke-width="4"/>
       <path d="M210 96 C240 106, 290 84, 350 84 C410 84, 440 106, 456 96 C430 118, 236 118, 210 96 Z" fill="#713F12" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
     </g>
 </svg>

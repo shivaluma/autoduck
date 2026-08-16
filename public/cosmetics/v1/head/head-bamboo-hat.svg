@@ -1,8 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
 <g id="head-non-la">
       <polygon points="196,100 328,20 460,100" fill="#F4E0A5" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
-      <line x1="328" y1="20" x2="328" y2="100" stroke="#D4B668" stroke-width="7"/>
-      <path d="M236 80 C290 64, 370 64, 424 80" stroke="#D4B668" stroke-width="7" fill="none"/>
+      <line x1="328" y1="20" x2="328" y2="100" stroke="#D4B668" stroke-width="8"/>
+      <path d="M236 80 C290 64, 370 64, 424 80" stroke="#D4B668" stroke-width="8" fill="none"/>
+      <!-- Silk chin ribbon -->
       <path d="M256 100 C244 150, 252 184, 284 196" stroke="#FF5B67" stroke-width="8" fill="none" stroke-linecap="round"/>
     </g>
 </svg>

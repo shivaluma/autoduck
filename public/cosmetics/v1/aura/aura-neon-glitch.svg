@@ -1,18 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
 <g id="aura-cyber-matrix">
       <defs>
-        <filter id="cyber-glow-512" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b1"/><feMerge><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
         <style>@keyframes hud-spin-cw { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
       </defs>
-      <g filter="url(#cyber-glow-512)">
-        <g style="animation: hud-spin-cw 16s linear infinite" transform-origin="256 274">
-          <circle cx="256" cy="274" r="195" stroke="#00F2FE" stroke-width="6" stroke-dasharray="40 18 10 18" fill="none" opacity="0.85"/>
-          <circle cx="256" cy="274" r="160" stroke="#FF007F" stroke-width="4" stroke-dasharray="24 24" fill="none" opacity="0.75"/>
-          <path d="M61 274 L81 254 M61 274 L81 294" stroke="#00F2FE" stroke-width="8" stroke-linecap="round"/>
-          <path d="M451 274 L431 254 M451 274 L431 294" stroke="#00F2FE" stroke-width="8" stroke-linecap="round"/>
-        </g>
+      <g style="animation: hud-spin-cw 20s linear infinite" transform-origin="256 274">
+        <circle cx="256" cy="274" r="195" stroke="#00F2FE" stroke-width="4" stroke-dasharray="36 18 10 18" fill="none" opacity="0.8"/>
+        <circle cx="256" cy="274" r="160" stroke="#FF007F" stroke-width="4" stroke-dasharray="20 20" fill="none" opacity="0.6"/>
+        <path d="M61 274 L75 260 M61 274 L75 288" stroke="#00F2FE" stroke-width="4" stroke-linecap="round"/>
+        <path d="M451 274 L437 260 M451 274 L437 288" stroke="#00F2FE" stroke-width="4" stroke-linecap="round"/>
       </g>
     </g>
 </svg>

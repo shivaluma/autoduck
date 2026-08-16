@@ -4,20 +4,18 @@
       <style>
         @keyframes pet-bob-512 {
           0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
+          50% { transform: translateY(-8px); }
         }
       </style>
     </defs>
-    <g style="animation: pet-bob-512 2.2s ease-in-out infinite">
+    <g style="animation: pet-bob-512 2.4s ease-in-out infinite">
       <!-- Capybara Pet -->
-      <ellipse cx="432" cy="380" rx="44" ry="34" fill="#854D0E" stroke="#1B132B" stroke-width="10"/>
-      <path d="M400 356 C400 336, 452 336, 456 356 L456 376 C456 388, 400 388, 400 376 Z" fill="#713F12" stroke="#1B132B" stroke-width="10"/>
-      <line x1="408" y1="352" x2="420" y2="352" stroke="#1B132B" stroke-width="6" stroke-linecap="round"/>
-      <line x1="436" y1="352" x2="448" y2="352" stroke="#1B132B" stroke-width="6" stroke-linecap="round"/>
-      <circle cx="422" cy="376" r="3" fill="#1B132B"/>
+      <ellipse cx="432" cy="380" rx="36" ry="28" fill="#854D0E" stroke="#1B132B" stroke-width="8"/>
+      <path d="M406 360 C406 344, 448 344, 451 360 L451 376 C451 386, 406 386, 406 376 Z" fill="#713F12" stroke="#1B132B" stroke-width="8"/>
+      <circle cx="424" cy="376" r="3" fill="#1B132B"/>
       <circle cx="434" cy="376" r="3" fill="#1B132B"/>
-      <circle cx="428" cy="324" r="12" fill="#F59E0B" stroke="#1B132B" stroke-width="6"/>
-      <circle cx="428" cy="314" r="3" fill="#22C55E"/>
+      <circle cx="428" cy="334" r="10" fill="#F59E0B" stroke="#1B132B" stroke-width="4"/>
+      <circle cx="428" cy="326" r="3" fill="#22C55E"/>
     </g>
   </g>
 </svg>

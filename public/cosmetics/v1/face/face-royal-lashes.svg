@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
 <g id="face-custom">
-    <ellipse cx="320" cy="140" rx="36" ry="28" fill="#61C9FF" fill-opacity="0.35" stroke="#1B132B" stroke-width="8"/>
-    <ellipse cx="384" cy="146" rx="28" ry="24" fill="#61C9FF" fill-opacity="0.35" stroke="#1B132B" stroke-width="8"/>
-    <line x1="356" y1="142" x2="364" y2="142" stroke="#1B132B" stroke-width="10"/>
+    <ellipse cx="320" cy="140" rx="34" ry="26" fill="#61C9FF" fill-opacity="0.25" stroke="#1B132B" stroke-width="8"/>
+    <ellipse cx="384" cy="146" rx="26" ry="22" fill="#61C9FF" fill-opacity="0.25" stroke="#1B132B" stroke-width="8"/>
+    <line x1="354" y1="142" x2="362" y2="142" stroke="#1B132B" stroke-width="8"/>
   </g>
 </svg>

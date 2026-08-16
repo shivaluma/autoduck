@@ -1,11 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
 <g id="head-headset">
-      <path d="M248 100 C256 28, 364 28, 396 100" stroke="#1E293B" stroke-width="16" stroke-linecap="round" fill="none"/>
-      <path d="M248 100 C256 28, 364 28, 396 100" stroke="#64748B" stroke-width="8" stroke-linecap="round" fill="none"/>
-      <rect x="232" y="88" width="28" height="44" rx="12" fill="#0F172A" stroke="#1B132B" stroke-width="8"/>
-      <rect x="384" y="88" width="28" height="44" rx="12" fill="#0F172A" stroke="#1B132B" stroke-width="8"/>
-      <path d="M396 110 C420 130, 424 170, 376 184" stroke="#475569" stroke-width="8" fill="none" stroke-linecap="round"/>
-      <ellipse cx="372" cy="184" rx="12" ry="8" fill="#0F172A" stroke="#1B132B" stroke-width="4"/>
-      <circle cx="368" cy="182" r="3" fill="#EF4444"/>
+      <path d="M248 96 C256 28, 364 28, 396 96" stroke="#1E293B" stroke-width="16" stroke-linecap="round" fill="none"/>
+      <path d="M248 96 C256 28, 364 28, 396 96" stroke="#64748B" stroke-width="8" stroke-linecap="round" fill="none"/>
+      <rect x="232" y="86" width="26" height="40" rx="10" fill="#0F172A" stroke="#1B132B" stroke-width="8"/>
+      <rect x="384" y="86" width="26" height="40" rx="10" fill="#0F172A" stroke="#1B132B" stroke-width="8"/>
+      <!-- Slim mic curving to chin, clear of eyes -->
+      <path d="M396 112 C424 140, 420 180, 360 196" stroke="#475569" stroke-width="8" fill="none" stroke-linecap="round"/>
+      <ellipse cx="356" cy="196" rx="10" ry="7" fill="#0F172A" stroke="#1B132B" stroke-width="4"/>
+      <circle cx="352" cy="195" r="3" fill="#EF4444"/>
     </g>
 </svg>

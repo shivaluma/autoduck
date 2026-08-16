@@ -2,10 +2,10 @@
 <g id="face-visor">
       <defs>
         <filter id="visor-glow-512" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
       </defs>
-      <path d="M280 128 C330 116, 390 120, 424 136 L420 156 C390 144, 330 140, 280 152 Z" fill="#EF4444" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" filter="url(#visor-glow-512)"/>
-      <line x1="290" y1="140" x2="412" y2="144" stroke="#FFFDF4" stroke-width="5" stroke-linecap="round"/>
+      <path d="M284 132 C330 122, 390 126, 420 140 L416 154 C390 142, 330 138, 284 148 Z" fill="#EF4444" fill-opacity="0.75" stroke="#1B132B" stroke-width="4" stroke-linejoin="round" filter="url(#visor-glow-512)"/>
+      <line x1="292" y1="142" x2="410" y2="146" stroke="#FFFDF4" stroke-width="4" stroke-linecap="round"/>
     </g>
 </svg>

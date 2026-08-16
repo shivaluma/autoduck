@@ -2,7 +2,7 @@
 <g id="head-wizard">
       <path d="M220 100 C290 72, 380 76, 444 104 C420 116, 300 116, 220 100 Z" fill="#2B1D52" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
       <path d="M264 92 C276 56, 280 20, 230 -12 C210 -24, 190 -16, 196 4 C210 30, 270 50, 376 88 Z" fill="#493282" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
-      <path d="M264 92 C310 80, 350 84, 380 92" stroke="#FFD84D" stroke-width="12"/>
+      <path d="M264 92 C310 80, 350 84, 380 92" stroke="#FFD84D" stroke-width="8"/>
       <polygon points="240,8 246,24 262,24 250,34 254,48 240,40 226,48 230,34 218,24 234,24" fill="#FFD84D"/>
     </g>
 </svg>

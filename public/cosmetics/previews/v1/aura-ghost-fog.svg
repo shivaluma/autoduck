@@ -24,18 +24,18 @@
 
   <!-- Wing Silhouette & Highlight -->
   <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="#FFF1A8" opacity="0.4"/>
-  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <!-- Cheeks / Blush -->
-  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.4"/>
+  <!-- Cheeks / Blush (Soft accent) -->
+  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.45"/>
 
   <!-- Left Eye -->
-  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="12"/>
+  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
   <ellipse cx="330" cy="152" rx="11" ry="18" fill="#1B132B"/>
   <circle cx="326" cy="144" r="5" fill="#FFFDF4"/>
 
   <!-- Right Eye -->
-  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="12"/>
+  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
   <ellipse cx="390" cy="156" rx="9" ry="16" fill="#1B132B"/>
   <circle cx="388" cy="150" r="4" fill="#FFFDF4"/>
 
@@ -47,21 +47,16 @@
   <path d="M342 230 c38 10 78 6 120 -10" stroke="#C95E24" stroke-width="8" stroke-linecap="round" fill="none"/></g>
 <g id="aura-spectral-ghosts">
       <defs>
-        <filter id="ghost-glow-512" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b1"/><feMerge><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-        <style>@keyframes ghost-drift-1 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-18px); } }</style>
+        <style>@keyframes ghost-drift-1 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-12px); } }</style>
       </defs>
-      <g filter="url(#ghost-glow-512)">
-        <ellipse cx="256" cy="274" rx="190" ry="160" fill="#064E3B" opacity="0.3"/>
-        <g style="animation: ghost-drift-1 2.8s ease-in-out infinite" transform-origin="120 160">
-          <path d="M120 130 C90 130, 80 160, 80 190 C80 230, 110 240, 100 260 C115 245, 135 245, 140 260 C145 235, 160 220, 160 190 C160 160, 150 130, 120 130 Z" fill="#6EE7B7" stroke="#065F46" stroke-width="6"/>
-          <circle cx="105" cy="175" r="5" fill="#064E3B"/><circle cx="135" cy="175" r="5" fill="#064E3B"/><ellipse cx="120" cy="195" rx="6" ry="9" fill="#064E3B"/>
-        </g>
-        <g style="animation: ghost-drift-1 3.2s ease-in-out infinite 0.4s" transform-origin="390 180">
-          <path d="M390 140 C360 140, 350 170, 350 200 C350 240, 380 250, 370 270 C385 255, 405 255, 410 270 C415 245, 430 230, 430 200 C430 170, 420 140, 390 140 Z" fill="#A7F3D0" stroke="#065F46" stroke-width="6"/>
-          <circle cx="375" cy="185" r="6" fill="#064E3B"/><circle cx="405" cy="185" r="6" fill="#064E3B"/><ellipse cx="390" cy="205" rx="7" ry="10" fill="#064E3B"/>
-        </g>
+      <ellipse cx="256" cy="274" rx="190" ry="155" fill="#064E3B" opacity="0.22"/>
+      <g style="animation: ghost-drift-1 3s ease-in-out infinite" transform-origin="110 160">
+        <path d="M110 140 C85 140, 75 165, 75 190 C75 220, 100 230, 95 245 C105 235, 120 235, 125 245 C130 225, 145 210, 145 190 C145 165, 135 140, 110 140 Z" fill="#6EE7B7" stroke="#065F46" stroke-width="4"/>
+        <circle cx="98" cy="175" r="4" fill="#064E3B"/><circle cx="122" cy="175" r="4" fill="#064E3B"/>
+      </g>
+      <g style="animation: ghost-drift-1 3.5s ease-in-out infinite 0.5s" transform-origin="400 180">
+        <path d="M400 150 C375 150, 365 175, 365 200 C365 230, 390 240, 385 255 C395 245, 410 245, 415 255 C420 235, 435 220, 435 200 C435 175, 425 150, 400 150 Z" fill="#A7F3D0" stroke="#065F46" stroke-width="4"/>
+        <circle cx="388" cy="185" r="4" fill="#064E3B"/><circle cx="412" cy="185" r="4" fill="#064E3B"/>
       </g>
     </g>
 </svg>

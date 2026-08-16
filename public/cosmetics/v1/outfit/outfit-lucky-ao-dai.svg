@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
 <g id="outfit-ao-dai">
       <path d="M84 326 c0 -54 44 -92 114 -104 l24 30 q38 34 86 -2 l34 6 c38 16 60 38 68 66 c14 66 -52 100 -166 96 c-106 -2 -160 -36 -160 -92 Z" fill="#047857" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
-      <path d="M136 304 C164 284, 210 290, 240 324 C216 356, 160 364, 136 304 Z" fill="#065F46" stroke="#1B132B" stroke-width="10" stroke-linejoin="round"/>
-      <path d="M228 248 C264 270, 300 252, 324 244" stroke="#F59E0B" stroke-width="12" stroke-linecap="round"/>
-      <circle cx="296" cy="252" r="6" fill="#FDE68A"/>
-      <circle cx="312" cy="270" r="6" fill="#FDE68A"/>
-      <circle cx="330" cy="290" r="6" fill="#FDE68A"/>
-      <path d="M280 340 C280 310, 306 300, 306 300 C306 300, 332 310, 332 340 C318 350, 294 350, 280 340 Z" fill="#FDE68A" stroke="#1B132B" stroke-width="5"/>
-      <circle cx="306" cy="328" r="6" fill="#EF4444"/>
+      <path d="M136 304 C164 284, 210 290, 240 324 C216 356, 160 364, 136 304 Z" fill="#065F46" stroke="#1B132B" stroke-width="8" stroke-linejoin="round"/>
+      <path d="M228 248 C264 270, 300 252, 324 244" stroke="#F59E0B" stroke-width="8" stroke-linecap="round"/>
+      <circle cx="296" cy="252" r="5" fill="#FDE68A"/>
+      <circle cx="312" cy="270" r="5" fill="#FDE68A"/>
+      <circle cx="330" cy="290" r="5" fill="#FDE68A"/>
+      <path d="M280 340 C280 310, 306 300, 306 300 C306 300, 332 310, 332 340 C318 350, 294 350, 280 340 Z" fill="#FDE68A" stroke="#1B132B" stroke-width="4"/>
+      <circle cx="306" cy="328" r="5" fill="#EF4444"/>
     </g>
 </svg>

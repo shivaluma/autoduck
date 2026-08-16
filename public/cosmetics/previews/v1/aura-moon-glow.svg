@@ -24,18 +24,18 @@
 
   <!-- Wing Silhouette & Highlight -->
   <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="#FFF1A8" opacity="0.4"/>
-  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <!-- Cheeks / Blush -->
-  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.4"/>
+  <!-- Cheeks / Blush (Soft accent) -->
+  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.45"/>
 
   <!-- Left Eye -->
-  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="12"/>
+  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
   <ellipse cx="330" cy="152" rx="11" ry="18" fill="#1B132B"/>
   <circle cx="326" cy="144" r="5" fill="#FFFDF4"/>
 
   <!-- Right Eye -->
-  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="12"/>
+  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
   <ellipse cx="390" cy="156" rx="9" ry="16" fill="#1B132B"/>
   <circle cx="388" cy="150" r="4" fill="#FFFDF4"/>
 
@@ -47,22 +47,12 @@
   <path d="M342 230 c38 10 78 6 120 -10" stroke="#C95E24" stroke-width="8" stroke-linecap="round" fill="none"/></g>
 <g id="aura-glacial-frost">
       <defs>
-        <filter id="frost-glow-512" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b1"/><feMerge><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-        <style>
-          @keyframes ice-orbit-512 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-          @keyframes blizzard-spin-512 { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
-        </style>
+        <style>@keyframes ice-orbit-512 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
       </defs>
-      <g filter="url(#frost-glow-512)">
-        <g style="animation: blizzard-spin-512 20s linear infinite" transform-origin="256 240">
-          <circle cx="256" cy="240" r="160" stroke="#38BDF8" stroke-width="6" stroke-dasharray="16 16" fill="none" opacity="0.75"/>
-          <line x1="256" y1="240" x2="431.0" y2="240.0" stroke="#E0F2FE" stroke-width="8" stroke-linecap="round"/><line x1="256" y1="240" x2="343.5" y2="391.6" stroke="#E0F2FE" stroke-width="8" stroke-linecap="round"/><line x1="256" y1="240" x2="168.5" y2="391.6" stroke="#E0F2FE" stroke-width="8" stroke-linecap="round"/><line x1="256" y1="240" x2="81.0" y2="240.0" stroke="#E0F2FE" stroke-width="8" stroke-linecap="round"/><line x1="256" y1="240" x2="168.5" y2="88.4" stroke="#E0F2FE" stroke-width="8" stroke-linecap="round"/><line x1="256" y1="240" x2="343.5" y2="88.4" stroke="#E0F2FE" stroke-width="8" stroke-linecap="round"/>
-        </g>
-        <g style="animation: ice-orbit-512 12s linear infinite" transform-origin="256 274">
-          <polygon points="451,254 463,274 451,294 439,274" fill="#E0F2FE" stroke="#0284C7" stroke-width="4"/><polygon points="393.88582233137674,370.6726188957803 405.88582233137674,390.6726188957803 393.88582233137674,410.6726188957803 381.88582233137674,390.6726188957803" fill="#E0F2FE" stroke="#0284C7" stroke-width="4"/><polygon points="256,419 268,439 256,459 244,439" fill="#E0F2FE" stroke="#0284C7" stroke-width="4"/><polygon points="118.11417766862326,370.6726188957804 130.11417766862326,390.6726188957804 118.11417766862326,410.6726188957804 106.11417766862326,390.6726188957804" fill="#E0F2FE" stroke="#0284C7" stroke-width="4"/><polygon points="61,254 73,274 61,294 49,274" fill="#E0F2FE" stroke="#0284C7" stroke-width="4"/><polygon points="118.1141776686232,137.32738110421968 130.1141776686232,157.32738110421968 118.1141776686232,177.32738110421968 106.1141776686232,157.32738110421968" fill="#E0F2FE" stroke="#0284C7" stroke-width="4"/><polygon points="255.99999999999997,89 268,109 255.99999999999997,129 243.99999999999997,109" fill="#E0F2FE" stroke="#0284C7" stroke-width="4"/><polygon points="393.88582233137674,137.32738110421963 405.88582233137674,157.32738110421963 393.88582233137674,177.32738110421963 381.88582233137674,157.32738110421963" fill="#E0F2FE" stroke="#0284C7" stroke-width="4"/>
-        </g>
+      <ellipse cx="256" cy="274" rx="190" ry="155" fill="#0284C7" opacity="0.18"/>
+      <g style="animation: ice-orbit-512 24s linear infinite" transform-origin="256 274">
+        <circle cx="256" cy="274" r="165" stroke="#38BDF8" stroke-width="4" stroke-dasharray="14 14" fill="none" opacity="0.6"/>
+        <polygon points="441,260 449,274 441,288 433,274" fill="#E0F2FE" stroke="#0284C7" stroke-width="4"/><polygon points="348.5,394.233937586588 356.5,408.233937586588 348.5,422.233937586588 340.5,408.233937586588" fill="#E0F2FE" stroke="#0284C7" stroke-width="4"/><polygon points="163.50000000000006,394.233937586588 171.50000000000006,408.233937586588 163.50000000000006,422.233937586588 155.50000000000006,408.233937586588" fill="#E0F2FE" stroke="#0284C7" stroke-width="4"/><polygon points="71,260 79,274 71,288 63,274" fill="#E0F2FE" stroke="#0284C7" stroke-width="4"/><polygon points="163.49999999999991,125.76606241341204 171.49999999999991,139.76606241341204 163.49999999999991,153.76606241341204 155.49999999999991,139.76606241341204" fill="#E0F2FE" stroke="#0284C7" stroke-width="4"/><polygon points="348.5,125.76606241341202 356.5,139.76606241341202 348.5,153.76606241341202 340.5,139.76606241341202" fill="#E0F2FE" stroke="#0284C7" stroke-width="4"/>
       </g>
     </g>
 </svg>

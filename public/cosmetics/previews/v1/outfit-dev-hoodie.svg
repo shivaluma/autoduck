@@ -24,18 +24,18 @@
 
   <!-- Wing Silhouette & Highlight -->
   <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="#FFF1A8" opacity="0.4"/>
-  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <!-- Cheeks / Blush -->
-  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.4"/>
+  <!-- Cheeks / Blush (Soft accent) -->
+  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.45"/>
 
   <!-- Left Eye -->
-  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="12"/>
+  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
   <ellipse cx="330" cy="152" rx="11" ry="18" fill="#1B132B"/>
   <circle cx="326" cy="144" r="5" fill="#FFFDF4"/>
 
   <!-- Right Eye -->
-  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="12"/>
+  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
   <ellipse cx="390" cy="156" rx="9" ry="16" fill="#1B132B"/>
   <circle cx="388" cy="150" r="4" fill="#FFFDF4"/>
 
@@ -47,12 +47,12 @@
   <path d="M342 230 c38 10 78 6 120 -10" stroke="#C95E24" stroke-width="8" stroke-linecap="round" fill="none"/></g>
 <g id="outfit-hoodie">
       <path d="M84 326 c0 -54 44 -92 114 -104 l24 30 q38 34 86 -2 l34 6 c38 16 60 38 68 66 c14 66 -52 100 -166 96 c-106 -2 -160 -36 -160 -92 Z" fill="#1E293B" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
-      <path d="M136 304 C164 284, 210 290, 240 324 C216 356, 160 364, 136 304 Z" fill="#0F172A" stroke="#1B132B" stroke-width="10" stroke-linejoin="round"/>
-      <path d="M212 244 C240 284, 300 284, 336 248" stroke="#334155" stroke-width="24" stroke-linecap="round"/>
-      <path d="M212 244 C240 284, 300 284, 336 248" stroke="#1B132B" stroke-width="10" stroke-linecap="round" fill="none"/>
-      <line x1="252" y1="268" x2="248" y2="312" stroke="#FFFDF4" stroke-width="7" stroke-linecap="round"/>
-      <line x1="292" y1="268" x2="296" y2="308" stroke="#FFFDF4" stroke-width="7" stroke-linecap="round"/>
-      <text x="290" y="330" fill="#38EF7D" font-family="monospace" font-weight="900" font-size="26" text-anchor="middle">&lt;/&gt;</text>
-      <path d="M250 350 H350 L336 396 H264 Z" fill="#0F172A" stroke="#1B132B" stroke-width="10" stroke-linejoin="round"/>
+      <path d="M136 304 C164 284, 210 290, 240 324 C216 356, 160 364, 136 304 Z" fill="#0F172A" stroke="#1B132B" stroke-width="8" stroke-linejoin="round"/>
+      <path d="M212 244 C240 284, 300 284, 336 248" stroke="#334155" stroke-width="20" stroke-linecap="round"/>
+      <path d="M212 244 C240 284, 300 284, 336 248" stroke="#1B132B" stroke-width="8" stroke-linecap="round" fill="none"/>
+      <line x1="252" y1="268" x2="248" y2="310" stroke="#FFFDF4" stroke-width="4" stroke-linecap="round"/>
+      <line x1="292" y1="268" x2="296" y2="306" stroke="#FFFDF4" stroke-width="4" stroke-linecap="round"/>
+      <text x="290" y="330" fill="#38EF7D" font-family="monospace" font-weight="900" font-size="24" text-anchor="middle">&lt;/&gt;</text>
+      <path d="M250 350 H350 L336 396 H264 Z" fill="#0F172A" stroke="#1B132B" stroke-width="8" stroke-linejoin="round"/>
     </g>
 </svg>

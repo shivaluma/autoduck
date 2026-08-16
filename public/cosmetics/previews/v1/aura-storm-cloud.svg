@@ -24,18 +24,18 @@
 
   <!-- Wing Silhouette & Highlight -->
   <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="#FFF1A8" opacity="0.4"/>
-  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <!-- Cheeks / Blush -->
-  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.4"/>
+  <!-- Cheeks / Blush (Soft accent) -->
+  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.45"/>
 
   <!-- Left Eye -->
-  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="12"/>
+  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
   <ellipse cx="330" cy="152" rx="11" ry="18" fill="#1B132B"/>
   <circle cx="326" cy="144" r="5" fill="#FFFDF4"/>
 
   <!-- Right Eye -->
-  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="12"/>
+  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
   <ellipse cx="390" cy="156" rx="9" ry="16" fill="#1B132B"/>
   <circle cx="388" cy="150" r="4" fill="#FFFDF4"/>
 
@@ -48,25 +48,19 @@
 <g id="aura-thunder-storm">
       <defs>
         <filter id="lightning-glow-512" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b1"/>
+          <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b1"/>
           <feMerge><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
         <style>
-          @keyframes zap-flash-1 { 0%, 100% { opacity: 0.2; } 15% { opacity: 1; transform: scale(1.05); } 30% { opacity: 0.1; } 50% { opacity: 0.9; } }
-          @keyframes zap-flash-2 { 0%, 100% { opacity: 0.9; } 20% { opacity: 0.1; } 45% { opacity: 1; } 65% { opacity: 0.2; } }
+          @keyframes zap-flash-1 { 0%, 100% { opacity: 0.2; } 15% { opacity: 0.95; } 30% { opacity: 0.1; } 50% { opacity: 0.85; } }
         </style>
       </defs>
       <g filter="url(#lightning-glow-512)">
-        <ellipse cx="256" cy="274" rx="200" ry="165" fill="#3B0764" opacity="0.35"/>
-        <g stroke="#00F2FE" stroke-linecap="round" fill="none" style="animation: zap-flash-1 1.2s infinite">
-          <path d="M90 100 L140 140 L110 170 L190 220 L160 250 L230 270" stroke-width="14"/>
-          <path d="M90 100 L140 140 L110 170 L190 220 L160 250 L230 270" stroke="#FFFDF4" stroke-width="6"/>
-          <path d="M420 80 L370 140 L410 170 L340 240 L380 270 L300 340 L340 370 L260 430" stroke-width="16" stroke="#A855F7"/>
-          <path d="M420 80 L370 140 L410 170 L340 240 L380 270 L300 340 L340 370 L260 430" stroke="#FFFDF4" stroke-width="8"/>
-        </g>
-        <g stroke="#F43F5E" stroke-linecap="round" fill="none" style="animation: zap-flash-2 0.9s infinite">
-          <path d="M256 30 L270 80 L240 110 L300 150 L270 190" stroke-width="12"/>
-          <path d="M450 250 L400 280 L430 320 L370 360 L400 390 L330 420" stroke-width="14" stroke="#00F2FE"/>
+        <ellipse cx="256" cy="274" rx="195" ry="160" fill="#3B0764" opacity="0.25"/>
+        <g stroke="#00F2FE" stroke-linecap="round" fill="none" style="animation: zap-flash-1 1.4s infinite">
+          <path d="M90 110 L140 145 L110 175 L180 220" stroke-width="8"/>
+          <path d="M420 90 L370 145 L410 175 L340 240 L380 270 L300 340" stroke-width="8" stroke="#A855F7"/>
+          <path d="M420 90 L370 145 L410 175 L340 240 L380 270 L300 340" stroke="#FFFDF4" stroke-width="4"/>
         </g>
       </g>
     </g>

@@ -1,9 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
 <g id="face-shades">
-      <path d="M288 120 H356 C356 156, 344 172, 316 172 C292 172, 288 156, 288 120 Z" fill="#18181B" stroke="#00F2FE" stroke-width="9" stroke-linejoin="round"/>
-      <path d="M364 124 H416 C416 156, 408 168, 392 168 C372 168, 364 156, 364 124 Z" fill="#18181B" stroke="#00F2FE" stroke-width="9" stroke-linejoin="round"/>
-      <line x1="356" y1="128" x2="364" y2="128" stroke="#00F2FE" stroke-width="10"/>
-      <line x1="296" y1="132" x2="320" y2="124" stroke="#FFFDF4" stroke-width="7" stroke-linecap="round"/>
-      <line x1="372" y1="136" x2="392" y2="128" stroke="#FFFDF4" stroke-width="6" stroke-linecap="round"/>
+      <!-- Clean sunglasses frame centered on eye anchors -->
+      <path d="M288 120 H356 C356 156, 344 172, 316 172 C292 172, 288 156, 288 120 Z" fill="#18181B" stroke="#00F2FE" stroke-width="8" stroke-linejoin="round"/>
+      <path d="M364 124 H416 C416 156, 408 168, 392 168 C372 168, 364 156, 364 124 Z" fill="#18181B" stroke="#00F2FE" stroke-width="8" stroke-linejoin="round"/>
+      <line x1="356" y1="128" x2="364" y2="128" stroke="#00F2FE" stroke-width="8"/>
+      <!-- Crisp specular shine -->
+      <line x1="296" y1="132" x2="320" y2="124" stroke="#FFFDF4" stroke-width="4" stroke-linecap="round"/>
+      <line x1="372" y1="136" x2="392" y2="128" stroke="#FFFDF4" stroke-width="4" stroke-linecap="round"/>
     </g>
 </svg>

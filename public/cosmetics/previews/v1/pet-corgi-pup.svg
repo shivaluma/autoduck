@@ -24,18 +24,18 @@
 
   <!-- Wing Silhouette & Highlight -->
   <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="#FFF1A8" opacity="0.4"/>
-  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <!-- Cheeks / Blush -->
-  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.4"/>
+  <!-- Cheeks / Blush (Soft accent) -->
+  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.45"/>
 
   <!-- Left Eye -->
-  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="12"/>
+  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
   <ellipse cx="330" cy="152" rx="11" ry="18" fill="#1B132B"/>
   <circle cx="326" cy="144" r="5" fill="#FFFDF4"/>
 
   <!-- Right Eye -->
-  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="12"/>
+  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
   <ellipse cx="390" cy="156" rx="9" ry="16" fill="#1B132B"/>
   <circle cx="388" cy="150" r="4" fill="#FFFDF4"/>
 
@@ -50,24 +50,24 @@
       <style>
         @keyframes pet-bob-512 {
           0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
+          50% { transform: translateY(-8px); }
         }
       </style>
     </defs>
-    <g style="animation: pet-bob-512 2.2s ease-in-out infinite">
+    <g style="animation: pet-bob-512 2.4s ease-in-out infinite">
       <!-- Corgi Pup Pet -->
-      <ellipse cx="432" cy="384" rx="42" ry="32" fill="#D97706" stroke="#1B132B" stroke-width="10"/>
-      <ellipse cx="424" cy="392" rx="24" ry="16" fill="#FFFDF4"/>
-      <circle cx="428" cy="348" r="32" fill="#D97706" stroke="#1B132B" stroke-width="10"/>
-      <polygon points="428,320 422,356 434,356" fill="#FFFDF4"/>
-      <ellipse cx="396" cy="320" rx="14" ry="28" fill="#D97706" stroke="#1B132B" stroke-width="8" transform="rotate(-25 396 320)"/>
-      <ellipse cx="396" cy="320" rx="8" ry="20" fill="#FF78A8" transform="rotate(-25 396 320)"/>
-      <ellipse cx="460" cy="320" rx="14" ry="28" fill="#D97706" stroke="#1B132B" stroke-width="8" transform="rotate(25 460 320)"/>
-      <ellipse cx="460" cy="320" rx="8" ry="20" fill="#FF78A8" transform="rotate(25 460 320)"/>
-      <circle cx="416" cy="348" r="5" fill="#1B132B"/>
-      <circle cx="440" cy="348" r="5" fill="#1B132B"/>
-      <circle cx="428" cy="356" r="5" fill="#1B132B"/>
-      <path d="M428 360 Q428 372 434 372 Q438 372 436 360 Z" fill="#FF78A8"/>
+      <ellipse cx="432" cy="382" rx="35" ry="27" fill="#D97706" stroke="#1B132B" stroke-width="8"/>
+      <ellipse cx="425" cy="389" rx="20" ry="13" fill="#FFFDF4"/>
+      <circle cx="428" cy="352" r="25" fill="#D97706" stroke="#1B132B" stroke-width="8"/>
+      <polygon points="428,330 423,358 433,358" fill="#FFFDF4"/>
+      <ellipse cx="402" cy="328" rx="11" ry="22" fill="#D97706" stroke="#1B132B" stroke-width="4" transform="rotate(-25 402 328)"/>
+      <ellipse cx="402" cy="328" rx="6" ry="16" fill="#FF78A8" transform="rotate(-25 402 328)"/>
+      <ellipse cx="454" cy="328" rx="11" ry="22" fill="#D97706" stroke="#1B132B" stroke-width="4" transform="rotate(25 454 328)"/>
+      <ellipse cx="454" cy="328" rx="6" ry="16" fill="#FF78A8" transform="rotate(25 454 328)"/>
+      <circle cx="418" cy="352" r="4" fill="#1B132B"/>
+      <circle cx="438" cy="352" r="4" fill="#1B132B"/>
+      <circle cx="428" cy="358" r="4" fill="#1B132B"/>
+      <path d="M428 362 Q428 370 433 370 Q436 370 435 362 Z" fill="#FF78A8"/>
     </g>
   </g>
 </svg>

@@ -1,6 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
-<g id="head-common-1582758379">
-      <path d="M244 96 C248 56, 320 48, 380 52 C408 56, 416 76, 410 96 Z" fill="#61C9FF" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
-      <path d="M240 96 H414" stroke="#1B132B" stroke-width="10"/>
-    </g>
+<g id="head-custom-1582758379">
+    <path d="M244 96 C248 44, 320 36, 380 40 C408 44, 416 68, 410 96 Z" fill="#61C9FF" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+    <path d="M236 96 C280 84, 370 84, 416 96" stroke="#FF78A8" stroke-width="8" fill="none"/>
+    <circle cx="328" cy="40" r="7" fill="#FFFDF4" stroke="#1B132B" stroke-width="4"/>
+  </g>
 </svg>

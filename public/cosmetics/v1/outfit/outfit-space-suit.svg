@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
 <g id="outfit-space">
       <path d="M84 326 c0 -54 44 -92 114 -104 l24 30 q38 34 86 -2 l34 6 c38 16 60 38 68 66 c14 66 -52 100 -166 96 c-106 -2 -160 -36 -160 -92 Z" fill="#F8FAFC" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
-      <path d="M136 304 C164 284, 210 290, 240 324 C216 356, 160 364, 136 304 Z" fill="#E2E8F0" stroke="#1B132B" stroke-width="10" stroke-linejoin="round"/>
+      <path d="M136 304 C164 284, 210 290, 240 324 C216 356, 160 364, 136 304 Z" fill="#E2E8F0" stroke="#1B132B" stroke-width="8" stroke-linejoin="round"/>
       <rect x="250" y="290" width="88" height="68" rx="10" fill="#1E293B" stroke="#1B132B" stroke-width="8"/>
-      <circle cx="270" cy="310" r="6" fill="#38EF7D"/>
-      <circle cx="292" cy="310" r="6" fill="#38EF7D"/>
-      <circle cx="314" cy="310" r="6" fill="#EF4444"/>
-      <line x1="264" y1="336" x2="320" y2="336" stroke="#38BDF8" stroke-width="7"/>
-      <path d="M250 312 C210 320, 200 356, 230 376" stroke="#EF4444" stroke-width="10" fill="none" stroke-linecap="round"/>
-      <path d="M338 312 C370 320, 380 356, 350 376" stroke="#3B82F6" stroke-width="10" fill="none" stroke-linecap="round"/>
+      <circle cx="270" cy="310" r="5" fill="#38EF7D"/>
+      <circle cx="292" cy="310" r="5" fill="#38EF7D"/>
+      <circle cx="314" cy="310" r="5" fill="#EF4444"/>
+      <line x1="264" y1="336" x2="320" y2="336" stroke="#38BDF8" stroke-width="4"/>
+      <path d="M250 312 C210 320, 200 356, 230 376" stroke="#EF4444" stroke-width="8" fill="none" stroke-linecap="round"/>
+      <path d="M338 312 C370 320, 380 356, 350 376" stroke="#3B82F6" stroke-width="8" fill="none" stroke-linecap="round"/>
     </g>
 </svg>

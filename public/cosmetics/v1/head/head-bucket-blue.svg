@@ -2,6 +2,7 @@
 <g id="head-bucket">
       <path d="M256 92 C260 48, 316 36, 370 40 C396 44, 406 68, 404 92 Z" fill="#61C9FF" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
       <path d="M250 86 C296 74, 364 76, 408 88 L408 76 C364 64, 296 62, 250 74 Z" fill="#1C7ED6"/>
-      <path d="M228 98 C288 76, 376 78, 436 100 C444 112, 392 120, 328 116 C264 112, 220 110, 228 98 Z" fill="#38BDF8" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+      <!-- Brim curving high above eye level Y: 104 -->
+      <path d="M228 98 C288 78, 376 80, 436 100 C444 110, 392 116, 328 112 C264 108, 220 108, 228 98 Z" fill="#38BDF8" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
     </g>
 </svg>

@@ -1,10 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
-<g id="skin-tiger" fill="#1B132B">
+<g id="skin-tiger" fill="#1B132B" opacity="0.8">
+      <!-- 3 Forehead stripes well above eyes Y: 52..84 -->
       <path d="M272 68 Q292 76 312 60 L308 52 Q288 64 268 60 Z"/>
       <path d="M284 90 Q304 96 324 84 L320 76 Q300 88 280 84 Z"/>
-      <path d="M296 112 Q316 116 336 104 L332 96 Q312 108 292 104 Z"/>
-      <path d="M250 144 Q272 152 290 140 L288 132 Q268 144 248 136 Z"/>
-      <path d="M244 168 Q264 176 284 164 L280 156 Q260 168 240 160 Z"/>
+      <!-- Flank and tail stripes -->
       <path d="M130 284 Q180 276 210 296 L204 308 Q170 288 124 296 Z"/>
       <path d="M150 330 Q210 316 256 340 L250 352 Q200 330 144 344 Z"/>
       <path d="M180 376 Q240 364 296 380 L292 390 Q230 376 176 388 Z"/>

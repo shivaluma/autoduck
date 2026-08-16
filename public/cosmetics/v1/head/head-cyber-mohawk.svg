@@ -5,7 +5,7 @@
           <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
       </defs>
-      <g fill="#FF007F" stroke="#1B132B" stroke-width="10" stroke-linejoin="round" filter="url(#mohawk-glow-512)">
+      <g fill="#FF007F" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" filter="url(#mohawk-glow-512)">
         <polygon points="240,88 232,28 268,72"/>
         <polygon points="264,72 264,8 304,56"/>
         <polygon points="296,56 312,-12 336,44"/>
@@ -13,7 +13,7 @@
         <polygon points="368,44 400,12 396,68"/>
       </g>
       <path d="M250 96 C296 76, 370 76, 410 96" stroke="#00F2FE" stroke-width="14" stroke-linecap="round"/>
-      <circle cx="264" cy="90" r="6" fill="#FFFDF4"/>
-      <circle cx="396" cy="90" r="6" fill="#FFFDF4"/>
+      <circle cx="264" cy="90" r="5" fill="#FFFDF4"/>
+      <circle cx="396" cy="90" r="5" fill="#FFFDF4"/>
     </g>
 </svg>

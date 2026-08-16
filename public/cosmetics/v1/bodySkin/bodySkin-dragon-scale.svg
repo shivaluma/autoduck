@@ -1,18 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
 <g id="skin-dragon">
-      <g stroke="#C95E24" stroke-width="6" fill="none">
+      <g stroke="#C95E24" stroke-width="4" fill="none">
         <path d="M276 76 C288 88, 304 88, 316 76 C328 88, 344 88, 356 76"/>
-        <path d="M288 96 C300 108, 316 108, 328 96"/>
-      </g>
-      <circle cx="296" cy="80" r="5" fill="#FFD84D"/>
-      <circle cx="336" cy="80" r="5" fill="#FFD84D"/>
-      <circle cx="308" cy="100" r="5" fill="#FFD84D"/>
-      <g stroke="#C95E24" stroke-width="8" fill="none">
         <path d="M150 290 C160 304, 180 304, 190 290 C200 304, 220 304, 230 290 C240 304, 260 304, 270 290"/>
         <path d="M170 320 C180 334, 200 334, 210 320 C220 334, 240 334, 250 320 C260 334, 280 334, 290 320"/>
       </g>
-      <circle cx="170" cy="296" r="5" fill="#FFD84D"/>
-      <circle cx="210" cy="296" r="5" fill="#FFD84D"/>
-      <circle cx="250" cy="296" r="5" fill="#FFD84D"/>
+      <circle cx="170" cy="296" r="4" fill="#FFD84D"/>
+      <circle cx="210" cy="296" r="4" fill="#FFD84D"/>
+      <circle cx="250" cy="296" r="4" fill="#FFD84D"/>
     </g>
 </svg>

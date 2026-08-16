@@ -24,18 +24,18 @@
 
   <!-- Wing Silhouette & Highlight -->
   <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="#FFF1A8" opacity="0.4"/>
-  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <!-- Cheeks / Blush -->
-  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.4"/>
+  <!-- Cheeks / Blush (Soft accent) -->
+  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.45"/>
 
   <!-- Left Eye -->
-  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="12"/>
+  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
   <ellipse cx="330" cy="152" rx="11" ry="18" fill="#1B132B"/>
   <circle cx="326" cy="144" r="5" fill="#FFFDF4"/>
 
   <!-- Right Eye -->
-  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="12"/>
+  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
   <ellipse cx="390" cy="156" rx="9" ry="16" fill="#1B132B"/>
   <circle cx="388" cy="150" r="4" fill="#FFFDF4"/>
 
@@ -50,28 +50,26 @@
       <style>
         @keyframes pet-bob-512 {
           0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
+          50% { transform: translateY(-8px); }
         }
       </style>
     </defs>
-    <g style="animation: pet-bob-512 2.2s ease-in-out infinite">
+    <g style="animation: pet-bob-512 2.4s ease-in-out infinite">
       <!-- Cat Pet -->
       
-      <ellipse cx="432" cy="380" rx="36" ry="32" fill="#FFFDF4" stroke="#1B132B" stroke-width="10"/>
-      <path d="M464 376 C484 364, 492 340, 480 330 C472 336, 468 356, 460 372" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round"/>
-      <ellipse cx="448" cy="372" rx="14" ry="12" fill="#F59E0B"/><ellipse cx="420" cy="392" rx="12" ry="10" fill="#18181B"/>
-      <circle cx="428" cy="348" r="28" fill="#FFFDF4" stroke="#1B132B" stroke-width="10"/>
-      <polygon points="404,336 400,304 424,324" fill="#FFFDF4" stroke="#1B132B" stroke-width="8" stroke-linejoin="round"/>
-      <polygon points="408,332 404,312 420,326" fill="#FF78A8"/>
-      <polygon points="440,324 456,304 452,336" fill="#FFFDF4" stroke="#1B132B" stroke-width="8" stroke-linejoin="round"/>
-      <polygon points="442,326 452,312 448,332" fill="#FF78A8"/>
-      <circle cx="416" cy="348" r="5" fill="#1B132B"/>
-      <circle cx="440" cy="348" r="5" fill="#1B132B"/>
-      <polygon points="428,356 424,352 432,352" fill="#FF78A8"/>
-      <line x1="396" y1="352" x2="408" y2="352" stroke="#1B132B" stroke-width="4"/>
-      <line x1="448" y1="352" x2="460" y2="352" stroke="#1B132B" stroke-width="4"/>
-      <path d="M412 372 Q428 378 444 372" stroke="#EF4444" stroke-width="7" stroke-linecap="round"/>
-      <circle cx="428" cy="376" r="6" fill="#FFD84D" stroke="#1B132B" stroke-width="3"/>
+      <ellipse cx="432" cy="380" rx="30" ry="26" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
+      <path d="M458 376 C474 366, 480 346, 470 338 C464 343, 460 358, 454 372" fill="none" stroke="#1B132B" stroke-width="4" stroke-linecap="round"/>
+      <ellipse cx="445" cy="374" rx="11" ry="10" fill="#F59E0B"/><ellipse cx="422" cy="390" rx="10" ry="8" fill="#18181B"/>
+      <circle cx="428" cy="352" r="23" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
+      <polygon points="408,342 405,316 424,332" fill="#FFFDF4" stroke="#1B132B" stroke-width="4" stroke-linejoin="round"/>
+      <polygon points="411,339 408,322 421,334" fill="#FF78A8"/>
+      <polygon points="438,332 451,316 448,342" fill="#FFFDF4" stroke="#1B132B" stroke-width="4" stroke-linejoin="round"/>
+      <polygon points="440,334 448,322 445,339" fill="#FF78A8"/>
+      <circle cx="418" cy="352" r="4" fill="#1B132B"/>
+      <circle cx="438" cy="352" r="4" fill="#1B132B"/>
+      <polygon points="428,358 425,355 431,355" fill="#FF78A8"/>
+      <path d="M415 372 Q428 377 441 372" stroke="#EF4444" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="428" cy="375" r="4" fill="#FFD84D" stroke="#1B132B" stroke-width="4"/>
     </g>
   </g>
 </svg>

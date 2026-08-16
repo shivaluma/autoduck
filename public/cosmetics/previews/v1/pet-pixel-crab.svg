@@ -24,18 +24,18 @@
 
   <!-- Wing Silhouette & Highlight -->
   <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="#FFF1A8" opacity="0.4"/>
-  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <!-- Cheeks / Blush -->
-  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.4"/>
+  <!-- Cheeks / Blush (Soft accent) -->
+  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.45"/>
 
   <!-- Left Eye -->
-  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="12"/>
+  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
   <ellipse cx="330" cy="152" rx="11" ry="18" fill="#1B132B"/>
   <circle cx="326" cy="144" r="5" fill="#FFFDF4"/>
 
   <!-- Right Eye -->
-  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="12"/>
+  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
   <ellipse cx="390" cy="156" rx="9" ry="16" fill="#1B132B"/>
   <circle cx="388" cy="150" r="4" fill="#FFFDF4"/>
 
@@ -50,21 +50,19 @@
       <style>
         @keyframes pet-bob-512 {
           0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
+          50% { transform: translateY(-8px); }
         }
       </style>
     </defs>
-    <g style="animation: pet-bob-512 2.2s ease-in-out infinite">
-      <!-- Cute Creature -->
-    <ellipse cx="432" cy="376" rx="38" ry="32" fill="#11998E" stroke="#1B132B" stroke-width="10"/>
-    <polygon points="408,336 400,308 424,328" fill="#F43F5E" stroke="#1B132B" stroke-width="7" stroke-linejoin="round"/>
-    <polygon points="440,328 456,308 452,336" fill="#F43F5E" stroke="#1B132B" stroke-width="7" stroke-linejoin="round"/>
-    <circle cx="416" cy="364" r="6" fill="#1B132B"/>
-    <circle cx="444" cy="364" r="6" fill="#1B132B"/>
-    <circle cx="418" cy="362" r="2" fill="#FFFDF4"/>
-    <circle cx="446" cy="362" r="2" fill="#FFFDF4"/>
-    <circle cx="408" cy="376" r="4" fill="#FF78A8" opacity="0.6"/>
-    <circle cx="452" cy="376" r="4" fill="#FF78A8" opacity="0.6"/>
+    <g style="animation: pet-bob-512 2.4s ease-in-out infinite">
+      <!-- Creature Companion -->
+    <ellipse cx="432" cy="378" rx="32" ry="26" fill="#11998E" stroke="#1B132B" stroke-width="8"/>
+    <polygon points="412,344 406,322 425,338" fill="#F43F5E" stroke="#1B132B" stroke-width="4" stroke-linejoin="round"/>
+    <polygon points="439,338 452,322 449,344" fill="#F43F5E" stroke="#1B132B" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="418" cy="368" r="4" fill="#1B132B"/>
+    <circle cx="442" cy="368" r="4" fill="#1B132B"/>
+    <circle cx="412" cy="378" r="3" fill="#FF78A8" opacity="0.6"/>
+    <circle cx="448" cy="378" r="3" fill="#FF78A8" opacity="0.6"/>
     </g>
   </g>
 </svg>
