@@ -2,6 +2,7 @@ import type { RaceConfig, RaceEventType, RaceItemId, RaceItemTuning, WildItemId 
 import { ghostPlayerIdsFromConfig } from '../ghost'
 import { ITEM_BALANCE } from './config'
 import { resolveIncomingRaceEffect, type ItemDefenseState } from './interactions'
+import { loadoutComboLabel, type LoadoutComboLabel } from './classes'
 
 export interface ItemDuckState {
   playerId: string
@@ -17,6 +18,7 @@ import type { AutoUseCandidate } from '../auto-use/types'
 
 export interface DuckItemRuntime extends ItemDefenseState {
   itemIds: RaceItemId[]
+  loadoutCombo: LoadoutComboLabel | null
   usedItems: Set<RaceItemId>
   slowMultiplier: number
   slowUntilTick: number
@@ -102,6 +104,7 @@ export function createItemRaceState(config: RaceConfig): ItemRaceState {
       const itemIds = [...(loadoutByPlayer.get(player.playerId) ?? [])]
       return [player.playerId, {
         itemIds,
+        loadoutCombo: loadoutComboLabel(itemIds),
         usedItems: new Set<RaceItemId>(),
         bubbleAvailable: itemIds.includes('BUBBLE_SHIELD'),
         featherAvailable: itemIds.includes('FEATHER'),
@@ -288,8 +291,15 @@ function updateSlipstreamTracking(itemState: ItemRaceState, ducks: ItemDuckState
   }
 }
 
-export function slipstreamReady(runtime: DuckItemRuntime, tickRate: number) {
-  return runtime.draftSlipstreamTicks >= Math.round(ITEM_BALANCE.draftFin.holdSeconds * tickRate)
+export function slipstreamReady(runtime: DuckItemRuntime, tickRate: number, progress?: number) {
+  let holdSeconds: number = ITEM_BALANCE.draftFin.holdSeconds
+  if (runtime.loadoutCombo === 'SPEED DEMON') {
+    holdSeconds *= 0.8
+  }
+  if (progress !== undefined && progress >= ITEM_BALANCE.autoUse.endGameBurnProgress) {
+    holdSeconds = Math.min(holdSeconds, 0.4)
+  }
+  return runtime.draftSlipstreamTicks >= Math.round(holdSeconds * tickRate)
 }
 
 function bananaTouches(duck: ItemDuckState, banana: BananaRuntime) {

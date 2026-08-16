@@ -191,8 +191,12 @@ function resolveCollisions(state: RaceSimulationState) {
         : Math.sign(left.lateralOffset - right.lateralOffset)
       const overlap = 1 - lateralDistance / CORE_BALANCE.collisionLateralRadius
       const push = CORE_BALANCE.collisionPush * overlap
-      lateralDelta.set(left.playerId, (lateralDelta.get(left.playerId) ?? 0) + direction * push)
-      lateralDelta.set(right.playerId, (lateralDelta.get(right.playerId) ?? 0) - direction * push)
+      const leftIsFortress = state.itemState.byPlayer.get(left.playerId)?.loadoutCombo === 'FORTRESS'
+      const rightIsFortress = state.itemState.byPlayer.get(right.playerId)?.loadoutCombo === 'FORTRESS'
+      const leftPush = leftIsFortress ? push * 0.75 : push
+      const rightPush = rightIsFortress ? push * 0.75 : push
+      lateralDelta.set(left.playerId, (lateralDelta.get(left.playerId) ?? 0) + direction * leftPush)
+      lateralDelta.set(right.playerId, (lateralDelta.get(right.playerId) ?? 0) - direction * rightPush)
       speedDelta.set(left.playerId, (speedDelta.get(left.playerId) ?? 0) - CORE_BALANCE.collisionSpeedLoss * left.speed)
       speedDelta.set(right.playerId, (speedDelta.get(right.playerId) ?? 0) - CORE_BALANCE.collisionSpeedLoss * right.speed)
       const pairKey = `${left.playerId}:${right.playerId}`

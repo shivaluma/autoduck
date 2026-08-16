@@ -128,6 +128,9 @@ function rocketTargets(ctx: EvaluationContext, kind: 'PREP' | 'WILD') {
       if (targetRuntime.featherAvailable) score -= 5
       if (ctx.tick < targetRuntime.boostUntilTick && targetRuntime.boostMultiplier > 1) score += 18
       score -= penalty
+      if (source.progress >= ITEM_BALANCE.autoUse.endGameBurnProgress) {
+        score = Math.max(score, 20 + clamp((maxDistance - gap) / maxDistance * 10, 0, 10))
+      }
       return { target, score }
     })
     .filter((entry): entry is { target: ItemDuckState; score: number } => entry !== null && entry.score > 0)
@@ -223,7 +226,7 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
     candidates.push({ itemKey: 'prep:NITRO', itemId: 'NITRO', source: 'PREP', action: 'USE', score, reason: 'OPPORTUNITY' })
   }
 
-  if (hasUnusedPrep(runtime, 'DRAFT_FIN') && duck.progress >= ITEM_BALANCE.draftFin.armProgress && slipstreamReady(runtime, ctx.tickRate)) {
+  if (hasUnusedPrep(runtime, 'DRAFT_FIN') && duck.progress >= ITEM_BALANCE.draftFin.armProgress && slipstreamReady(runtime, ctx.tickRate, duck.progress)) {
     const ahead = runtime.draftTargetPlayerId ? duckById(ctx.ducks, runtime.draftTargetPlayerId) : null
     let score = 30
     if (ahead && ahead.currentRank === duck.currentRank - 1) score += 35
@@ -243,11 +246,13 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
 
   if (hasUnusedPrep(runtime, 'PADDLE_BURST') && duck.progress >= ITEM_BALANCE.paddleBurst.armProgress) {
     const activeCount = activeDucks(ctx.ducks).length
-    if (duck.currentRank > Math.ceil(activeCount / 2)) {
+    const isLateSprint = duck.progress >= ITEM_BALANCE.autoUse.endGameBurnProgress
+    if (duck.currentRank > Math.ceil(activeCount / 2) || isLateSprint) {
       let score = 0
       if (duck.currentRank >= activeCount - 1) score += 28
       if (duck.currentRank >= Math.ceil(activeCount * 0.75)) score += 18
       if (ctx.objective.isCurrentlyLosing(duck.playerId, duck.currentRank)) score += 22
+      if (isLateSprint) score += 30
       score += endGameBurnScore(duck.progress, 'PREP')
       score += pressure * 0.12
       if (score >= 24) {
@@ -257,13 +262,16 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
           source: 'PREP',
           action: 'USE',
           score,
-          reason: 'LATE_RACE',
+          reason: isLateSprint ? 'END_GAME_BURN' : 'LATE_RACE',
         })
       }
     }
   }
 
-  if (hasUnusedPrep(runtime, 'HOMING_ROCKET') && duck.progress >= ITEM_BALANCE.rocket.armProgress && duck.progress <= ITEM_BALANCE.rocket.disableProgress) {
+  const rocketArmProgress = runtime.loadoutCombo === 'MENACE'
+    ? Math.max(0.15, ITEM_BALANCE.rocket.armProgress - 0.03)
+    : ITEM_BALANCE.rocket.armProgress
+  if (hasUnusedPrep(runtime, 'HOMING_ROCKET') && duck.progress >= rocketArmProgress && duck.progress <= ITEM_BALANCE.rocket.disableProgress) {
     const targets = rocketTargets(ctx, 'PREP')
     const best = targets[0]
     if (best) {
@@ -279,7 +287,10 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
     }
   }
 
-  if (hasUnusedPrep(runtime, 'BANANA') && duck.progress >= ITEM_BALANCE.banana.armProgress) {
+  const bananaArmProgress = runtime.loadoutCombo === 'MENACE'
+    ? Math.max(0.15, ITEM_BALANCE.banana.armProgress - 0.03)
+    : ITEM_BALANCE.banana.armProgress
+  if (hasUnusedPrep(runtime, 'BANANA') && duck.progress >= bananaArmProgress) {
     let score = 0
     let bestIntersection = 0
     for (const target of activeDucks(ctx.ducks)) {
@@ -305,7 +316,10 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
     }
   }
 
-  if (hasUnusedPrep(runtime, 'QUACK_HORN') && duck.progress >= ITEM_BALANCE.horn.armProgress) {
+  const hornArmProgress = runtime.loadoutCombo === 'MENACE'
+    ? Math.max(0.15, ITEM_BALANCE.horn.armProgress - 0.03)
+    : ITEM_BALANCE.horn.armProgress
+  if (hasUnusedPrep(runtime, 'QUACK_HORN') && duck.progress >= hornArmProgress) {
     let netValue = 0
     for (const target of activeDucks(ctx.ducks)) {
       if (target.playerId === duck.playerId || ctx.ghostPlayerIds?.has(target.playerId)) continue

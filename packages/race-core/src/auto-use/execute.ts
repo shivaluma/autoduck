@@ -39,7 +39,7 @@ export function executePrepAction(
       return true
     }
     case 'DRAFT_FIN': {
-      if (!hasUnused(runtime, 'DRAFT_FIN') || !slipstreamReady(runtime, tickRate)) return false
+      if (!hasUnused(runtime, 'DRAFT_FIN') || !slipstreamReady(runtime, tickRate, duck.progress)) return false
       const outcome = tryApplyPrepSpeedBoost(runtime, duck.playerId, 'DRAFT_FIN', ITEM_BALANCE.draftFin.speedMultiplier, ITEM_BALANCE.draftFin.durationSeconds, tick, tickRate, emit, {
         draftTarget: runtime.draftTargetPlayerId,
         autoReason: candidate.reason,
@@ -52,7 +52,8 @@ export function executePrepAction(
       if (!hasUnused(runtime, 'PADDLE_BURST')) return false
       if (duck.progress < ITEM_BALANCE.paddleBurst.armProgress) return false
       const activeCount = ducks.filter((entry) => !entry.finished).length
-      if (duck.currentRank <= Math.ceil(activeCount / 2)) return false
+      const isLateSprint = duck.progress >= ITEM_BALANCE.autoUse.endGameBurnProgress
+      if (!isLateSprint && duck.currentRank <= Math.ceil(activeCount / 2)) return false
       const outcome = tryApplyPrepSpeedBoost(runtime, duck.playerId, 'PADDLE_BURST', ITEM_BALANCE.paddleBurst.speedMultiplier, ITEM_BALANCE.paddleBurst.durationSeconds, tick, tickRate, emit, { autoReason: candidate.reason })
       if (outcome === 'ignored') return false
       runtime.usedItems.add('PADDLE_BURST')
@@ -120,6 +121,10 @@ export function executePrepAction(
         const defense = runtimeFor(itemState, target.playerId)
         let push = ITEM_BALANCE.horn.lateralPush
         let shove = ITEM_BALANCE.horn.lateralShove
+        if (defense.loadoutCombo === 'FORTRESS') {
+          push *= 0.75
+          shove *= 0.75
+        }
         if (defense.shockAbsorberAvailable) {
           defense.shockAbsorberAvailable = false
           push *= ITEM_BALANCE.shockAbsorber.hornPushMultiplier

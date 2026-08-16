@@ -54,7 +54,7 @@ function emptyStats(): LoadoutStats {
 }
 
 async function runEvaluation() {
-  const SAMPLES_PER_LOADOUT = 300
+  const SAMPLES_PER_LOADOUT = 150
   const PLAYER_COUNT = 8
 
   console.log('='.repeat(80))
@@ -187,7 +187,7 @@ async function runEvaluation() {
   // -------------------------------------------------------------------------
   console.log('\n[2/3] Đo lường Tam giác Khắc chế Đối đầu Trực tiếp (1v1 Matchups trong sảnh 8 vịt)...')
 
-  const H2H_SAMPLES = 250
+  const H2H_SAMPLES = 100
   const archetypeMatrix: Record<string, Record<string, { winsA: number; total: number }>> = {
     SPEED: { SPEED: { winsA: 0, total: 0 }, ATTACK: { winsA: 0, total: 0 }, DEFENSE: { winsA: 0, total: 0 } },
     ATTACK: { SPEED: { winsA: 0, total: 0 }, ATTACK: { winsA: 0, total: 0 }, DEFENSE: { winsA: 0, total: 0 } },
