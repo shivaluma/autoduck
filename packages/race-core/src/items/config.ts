@@ -65,6 +65,10 @@ export const ITEM_BALANCE = {
     lateralShove: 0.2,
     fallbackProgress: 0.76,
   },
+  bubbleShield: {
+    durationSeconds: 4.5,
+    endGameBurnProgress: 0.82,
+  },
   autoUse: {
     endGameBurnProgress: 0.78,
     forceBurnProgress: 0.92,

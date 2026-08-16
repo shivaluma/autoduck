@@ -123,7 +123,8 @@ function rocketTargets(ctx: EvaluationContext, kind: 'PREP' | 'WILD') {
       if (ctx.objective.isCurrentlyLosing(source.playerId, source.currentRank) && target.currentRank === source.currentRank - 1) score += 35
       score += ctx.objective.offensiveTargetRankBonus(source.playerId, target.currentRank)
       if (source.progress >= AUTO_USE_CONFIG.progressLate) score += 15
-      if (targetRuntime.bubbleAvailable || targetRuntime.wildBubbleAvailable) score -= 25
+      if ((targetRuntime.bubbleAvailable && ctx.tick < targetRuntime.bubbleUntilTick) || (targetRuntime.wildBubbleAvailable && ctx.tick < targetRuntime.wildBubbleUntilTick)) score -= 25
+      else if (hasUnusedPrep(targetRuntime, 'BUBBLE_SHIELD')) score -= 10
       if (targetRuntime.shockAbsorberAvailable) score -= 12
       if (targetRuntime.featherAvailable) score -= 5
       if (ctx.tick < targetRuntime.boostUntilTick && targetRuntime.boostMultiplier > 1) score += 18
@@ -160,7 +161,6 @@ export function offensiveCooldownBlocks(ctx: EvaluationContext, playerId: string
 }
 
 export function evaluateReactiveDefense(ctx: EvaluationContext): AutoUseCandidateDraft[] {
-  if (!ctx.wildAutoUseEnabled) return []
   const runtime = ctx.itemState.byPlayer.get(ctx.playerId)!
   const duck = duckById(ctx.ducks, ctx.playerId)
   const incomingRocket = ctx.itemState.rockets.some((rocket) => rocket.targetPlayerId === duck.playerId)
@@ -172,29 +172,45 @@ export function evaluateReactiveDefense(ctx: EvaluationContext): AutoUseCandidat
   })
   const reactive: AutoUseCandidateDraft[] = []
 
-  if (incomingRocket && runtime.wildItem?.itemId === 'MINI_BUBBLE') {
-    reactive.push({
-      itemKey: `wild:${runtime.wildItem.instanceId}`,
-      itemId: 'MINI_BUBBLE',
-      source: 'WILD',
-      action: 'USE',
-      score: 100,
-      reason: 'REACTIVE_DEFENSE',
-      bypassThreshold: true,
-      wildItemInstanceId: runtime.wildItem.instanceId,
-    })
+  if (ctx.prepAutoUseEnabled && hasUnusedPrep(runtime, 'BUBBLE_SHIELD') && !runtime.bubbleAvailable) {
+    if (incomingRocket || incomingBanana) {
+      reactive.push({
+        itemKey: 'prep:BUBBLE_SHIELD',
+        itemId: 'BUBBLE_SHIELD',
+        source: 'PREP',
+        action: 'USE',
+        score: 105,
+        reason: 'REACTIVE_DEFENSE',
+        bypassThreshold: true,
+      })
+    }
   }
-  if (incomingBanana && runtime.wildItem?.itemId === 'FEATHER') {
-    reactive.push({
-      itemKey: `wild:${runtime.wildItem.instanceId}`,
-      itemId: 'FEATHER',
-      source: 'WILD',
-      action: 'USE',
-      score: 95,
-      reason: 'REACTIVE_DEFENSE',
-      bypassThreshold: true,
-      wildItemInstanceId: runtime.wildItem.instanceId,
-    })
+
+  if (ctx.wildAutoUseEnabled) {
+    if (incomingRocket && runtime.wildItem?.itemId === 'MINI_BUBBLE' && !runtime.wildBubbleAvailable) {
+      reactive.push({
+        itemKey: `wild:${runtime.wildItem.instanceId}`,
+        itemId: 'MINI_BUBBLE',
+        source: 'WILD',
+        action: 'USE',
+        score: 100,
+        reason: 'REACTIVE_DEFENSE',
+        bypassThreshold: true,
+        wildItemInstanceId: runtime.wildItem.instanceId,
+      })
+    }
+    if (incomingBanana && runtime.wildItem?.itemId === 'FEATHER') {
+      reactive.push({
+        itemKey: `wild:${runtime.wildItem.instanceId}`,
+        itemId: 'FEATHER',
+        source: 'WILD',
+        action: 'USE',
+        score: 95,
+        reason: 'REACTIVE_DEFENSE',
+        bypassThreshold: true,
+        wildItemInstanceId: runtime.wildItem.instanceId,
+      })
+    }
   }
   return reactive
 }
@@ -341,6 +357,26 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
         action: 'USE',
         score: clamp(netValue * 6.5, 0, 100) + endGameBurnScore(duck.progress, 'PREP') + pressure * 0.05,
         reason: 'OPPORTUNITY',
+      })
+    }
+  }
+
+  if (hasUnusedPrep(runtime, 'BUBBLE_SHIELD') && !runtime.bubbleAvailable && duck.progress >= ITEM_BALANCE.bubbleShield.endGameBurnProgress) {
+    const isLateSprint = duck.progress >= ITEM_BALANCE.autoUse.endGameBurnProgress
+    let score = 25
+    if (ctx.objective.isCurrentlyLosing(duck.playerId, duck.currentRank)) score += 20
+    if (duck.currentRank <= 3) score += 25
+    if (isLateSprint) score += 30
+    score += endGameBurnScore(duck.progress, 'PREP')
+    score += pressure * 0.1
+    if (score >= 28) {
+      candidates.push({
+        itemKey: 'prep:BUBBLE_SHIELD',
+        itemId: 'BUBBLE_SHIELD',
+        source: 'PREP',
+        action: 'USE',
+        score,
+        reason: isLateSprint ? 'END_GAME_BURN' : 'LATE_RACE',
       })
     }
   }

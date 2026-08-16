@@ -8,7 +8,7 @@ export function itemActivationForEvent(event: RaceEvent): { playerId: string; it
   if (event.type === 'DRAFT_FIN_STARTED') return { playerId: event.sourcePlayerId, itemId: 'DRAFT_FIN' }
   if (event.type === 'PADDLE_BURST_STARTED') return { playerId: event.sourcePlayerId, itemId: 'PADDLE_BURST' }
   if (event.type === 'HORN_USED') return { playerId: event.sourcePlayerId, itemId: 'QUACK_HORN' }
-  if (event.type === 'BUBBLE_POPPED') return { playerId: event.sourcePlayerId, itemId: 'BUBBLE_SHIELD' }
+  if (event.type === 'BUBBLE_SHIELD_ACTIVATED' || event.type === 'BUBBLE_POPPED') return { playerId: event.sourcePlayerId, itemId: 'BUBBLE_SHIELD' }
   if (event.type === 'FEATHER_DODGED') return { playerId: event.sourcePlayerId, itemId: 'FEATHER' }
   if (event.type === 'SHOCK_ABSORBER_PROC') return { playerId: event.targetPlayerId ?? event.sourcePlayerId, itemId: 'SHOCK_ABSORBER' }
   return null

@@ -16,6 +16,7 @@ export const ITEM_INTERACTION_MATRIX = {
 
 export interface ItemDefenseState {
   bubbleAvailable: boolean
+  bubbleUntilTick?: number
   featherAvailable: boolean
   shockAbsorberAvailable: boolean
   itemImmunityUntilTick: number
@@ -43,8 +44,9 @@ export function resolveIncomingRaceEffect(
     return 'BLOCKED_MINI_BUBBLE'
   }
 
-  if (offensive && defense.bubbleAvailable) {
+  if (offensive && defense.bubbleAvailable && (defense.bubbleUntilTick === undefined || tick < defense.bubbleUntilTick)) {
     defense.bubbleAvailable = false
+    defense.bubbleUntilTick = 0
     defense.itemImmunityUntilTick = tick + Math.round(ITEM_BALANCE.bubblePopImmunitySeconds * tickRate)
     return 'BLOCKED_BUBBLE'
   }

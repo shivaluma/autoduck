@@ -2,7 +2,7 @@ import type { RaceConfig, RaceEventType } from '../../../race-protocol/src'
 import { ITEM_BALANCE } from '../items/config'
 import type { AutoUseCandidate } from './types'
 import type { ItemDuckState, ItemRaceState } from '../items/engine'
-import { firePrepRocket, slipstreamReady, tryApplyPrepSpeedBoost } from '../items/engine'
+import { firePrepRocket, slipstreamReady, tryActivateBubbleShield, tryApplyPrepSpeedBoost } from '../items/engine'
 import { resolveRocketTarget } from './evaluate'
 import { buildRaceObjectiveContext } from './objective'
 import { activateWildItem } from '../pickups/engine'
@@ -58,6 +58,11 @@ export function executePrepAction(
       if (outcome === 'ignored') return false
       runtime.usedItems.add('PADDLE_BURST')
       return true
+    }
+    case 'BUBBLE_SHIELD': {
+      if (!hasUnused(runtime, 'BUBBLE_SHIELD')) return false
+      const activated = tryActivateBubbleShield(runtime, duck.playerId, tick, tickRate, emit, { autoReason: candidate.reason })
+      return activated
     }
     case 'HOMING_ROCKET': {
       if (!hasUnused(runtime, 'HOMING_ROCKET')) return false

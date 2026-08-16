@@ -24,6 +24,7 @@ export interface DuckItemRuntime extends ItemDefenseState {
   slowUntilTick: number
   boostMultiplier: number
   boostUntilTick: number
+  bubbleUntilTick: number
   wildItem: { instanceId: string; itemId: WildItemId; acquiredAtTick: number } | null
   regularPickupCount: number
   wildBubbleAvailable: boolean
@@ -106,7 +107,8 @@ export function createItemRaceState(config: RaceConfig): ItemRaceState {
         itemIds,
         loadoutCombo: loadoutComboLabel(itemIds),
         usedItems: new Set<RaceItemId>(),
-        bubbleAvailable: itemIds.includes('BUBBLE_SHIELD'),
+        bubbleAvailable: false,
+        bubbleUntilTick: 0,
         featherAvailable: itemIds.includes('FEATHER'),
         shockAbsorberAvailable: itemIds.includes('SHOCK_ABSORBER'),
         itemImmunityUntilTick: 0,
@@ -205,6 +207,26 @@ export function breakActiveSpeedBoost(
     fractionDenied,
     breakSource,
   })
+}
+
+export function tryActivateBubbleShield(
+  runtime: DuckItemRuntime,
+  playerId: string,
+  tick: number,
+  tickRate: number,
+  emit: EmitItemEvent,
+  metadata: Record<string, unknown> = {},
+): boolean {
+  if (!runtime.itemIds.includes('BUBBLE_SHIELD') || runtime.usedItems.has('BUBBLE_SHIELD')) return false
+  runtime.usedItems.add('BUBBLE_SHIELD')
+  runtime.bubbleAvailable = true
+  runtime.bubbleUntilTick = tick + Math.round(ITEM_BALANCE.bubbleShield.durationSeconds * tickRate)
+  emit('BUBBLE_SHIELD_ACTIVATED', playerId, undefined, {
+    durationSeconds: ITEM_BALANCE.bubbleShield.durationSeconds,
+    untilTick: runtime.bubbleUntilTick,
+    ...metadata,
+  })
+  return true
 }
 
 export function tryApplyPrepSpeedBoost(
@@ -493,6 +515,10 @@ export function tickItemSystem(
       finishSpeedBoost(runtime, duck.playerId, tick, tickRate, emit)
     }
     if (runtime.slowMultiplier < 1 && tick >= runtime.slowUntilTick) runtime.slowMultiplier = 1
+    if (runtime.bubbleAvailable && tick >= runtime.bubbleUntilTick) {
+      runtime.bubbleAvailable = false
+      emit('BUBBLE_SHIELD_EXPIRED', duck.playerId)
+    }
   }
   updateSlipstreamTracking(itemState, stableDucks)
   updateRockets(itemState, ducks, tick, tickRate, emit)
@@ -507,7 +533,7 @@ export function itemSpeedMultiplier(runtime: DuckItemRuntime, tick: number) {
 
 export function itemActiveEffects(runtime: DuckItemRuntime, tick: number) {
   const effects: string[] = []
-  if (runtime.bubbleAvailable) effects.push('BUBBLE_SHIELD')
+  if (runtime.bubbleAvailable && tick < runtime.bubbleUntilTick) effects.push('BUBBLE_SHIELD')
   if (runtime.featherAvailable) effects.push('FEATHER')
   if (runtime.shockAbsorberAvailable) effects.push('SHOCK_ABSORBER')
   if (tick < runtime.boostUntilTick && runtime.activeSpeedItemId) effects.push(runtime.activeSpeedItemId)

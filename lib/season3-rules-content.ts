@@ -159,7 +159,7 @@ export const LOADOUT_CONFIG = {
       cost: 2,
       category: 'major' as const,
       itemClass: 'DEFENSE' as const,
-      description: 'Tạo bong bóng phòng hộ, chặn hoàn toàn 1 đòn tấn công hoặc bẫy đầu tiên.',
+      description: 'Phản xạ bật bong bóng phòng hộ trong 4.5s khi gặp nguy hiểm, chặn hoàn toàn 1 đòn tấn công hoặc bẫy.',
     },
     {
       id: 'HOMING_ROCKET',

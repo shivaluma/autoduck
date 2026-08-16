@@ -20,7 +20,9 @@ function runtime(items: Array<'NITRO' | 'DRAFT_FIN' | 'PADDLE_BURST'> = ['NITRO'
   return {
     itemIds: items,
     usedItems: new Set(),
+    loadoutCombo: null,
     bubbleAvailable: false,
+    bubbleUntilTick: 0,
     featherAvailable: false,
     shockAbsorberAvailable: false,
     itemImmunityUntilTick: 0,

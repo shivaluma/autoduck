@@ -821,7 +821,7 @@ export function PhaserRaceCanvas({
             return
           }
 
-          if (type === 'MINI_BUBBLE_ACTIVATED') {
+          if (type === 'BUBBLE_SHIELD_ACTIVATED' || type === 'MINI_BUBBLE_ACTIVATED') {
             if (source) {
               this.burstRing(source.root.x, source.root.y, 0xb8f4ff, 0x7de8ff, 0.16, 2.4)
               this.floatEmoji(source.root.x, source.root.y - 14, '🫧', '22px')
@@ -904,6 +904,8 @@ export function PhaserRaceCanvas({
             SHOCK_ABSORBER_PROC: `🦺 ${target} absorbed hit`,
             HORN_USED: `🔊 ${source} QUACKED THE PACK`,
             FEATHER_DODGED: `🪶 ${source} DODGED!`,
+            BUBBLE_SHIELD_ACTIVATED: `🫧 ${source} bật Khiên Bong Bóng`,
+            BUBBLE_SHIELD_EXPIRED: `🫧 ${source} Khiên hết hạn`,
             BUBBLE_POPPED: `🫧 ${source} POP!`,
             PICKUP_COLLECTED: `📦 ${source} mở Quack Box`,
             PICKUP_SKIPPED_SLOT_FULL: `🎒 ${source} đang FULL`,

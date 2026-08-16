@@ -22,8 +22,10 @@ import { createPickupRaceState } from '../packages/race-core/src/pickups/engine'
 function defense(items: RaceItemId[]): DuckItemRuntime {
   return {
     itemIds: items,
+    loadoutCombo: null,
     usedItems: new Set(),
     bubbleAvailable: items.includes('BUBBLE_SHIELD'),
+    bubbleUntilTick: items.includes('BUBBLE_SHIELD') ? 1000 : 0,
     featherAvailable: items.includes('FEATHER'),
     shockAbsorberAvailable: items.includes('SHOCK_ABSORBER'),
     itemImmunityUntilTick: 0,
@@ -241,7 +243,7 @@ test('Banana expires, Horn pushes only laterally, and neither hard-stuns', () =>
   }
   assert.ok(hornEvents.includes('HORN_USED'))
   assert.notEqual(hornDucks[0].lateralVelocity, 0)
-  assert.equal(itemActiveEffects(hornState.byPlayer.get('2')!, 1).includes('BUBBLE_SHIELD'), true)
+  assert.equal(itemActiveEffects(hornState.byPlayer.get('3')!, 1).includes('FEATHER'), true)
 })
 
 test('Rocket hits the duck ahead and applies the configured slow', () => {
@@ -352,6 +354,29 @@ test('prep items auto-burn near the finish line instead of staying unused', () =
   assert.ok(events.includes('BANANA_DROPPED'))
   assert.equal(state.byPlayer.get('2')!.usedItems.has('NITRO'), true)
   assert.equal(state.byPlayer.get('2')!.usedItems.has('BANANA'), true)
+})
+
+test('Bubble Shield activates reactively when attacked, blocks, and expires if untriggered', () => {
+  const raceConfig = config([
+    { playerId: '1', itemIds: ['BUBBLE_SHIELD', 'SHOCK_ABSORBER'] },
+    { playerId: '2', itemIds: ['HOMING_ROCKET', 'BANANA'] },
+  ])
+  const state = createItemRaceState(raceConfig)
+  const ducks = [duck('1', 0.45, 1), duck('2', 0.30, 2)]
+  const events: RaceEventType[] = []
+
+  // Run simulation until rocket is fired and bubble shield reactively triggers
+  for (let tick = 1; tick <= 250; tick += 1) {
+    tickItemsWithAutoAI(raceConfig, state, ducks, tick, 60, (type) => events.push(type))
+    ducks[0].progress += 0.0002
+    ducks[1].progress += 0.0002
+  }
+
+  assert.ok(events.includes('ROCKET_FIRED'))
+  assert.ok(events.includes('BUBBLE_SHIELD_ACTIVATED'))
+  assert.ok(events.includes('ROCKET_BLOCKED'))
+  assert.ok(events.includes('BUBBLE_POPPED'))
+  assert.equal(state.byPlayer.get('1')!.usedItems.has('BUBBLE_SHIELD'), true)
 })
 
 test('full item race finishes in target window with readable bounded event volume', () => {

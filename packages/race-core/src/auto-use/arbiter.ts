@@ -128,7 +128,6 @@ function processDuckExecute(input: AutoUseTickInput, duck: ItemDuckState, object
 
   if (processPendingAction(input, duck, evalCtx)) return
   if (runtime.pendingAutoAction || input.tick < runtime.nextAutoActionTick) return
-  if (!input.wildAutoUseEnabled) return
   if (offensiveCooldownBlocks(evalCtx, duck.playerId)) return
 
   const reactive = decideReactiveAutoItemAction(evalCtx)
@@ -192,22 +191,35 @@ function updateReactiveThreatVisibility(input: AutoUseTickInput, duck: ItemDuckS
 
 function reactiveThreatReady(input: AutoUseTickInput, duck: ItemDuckState) {
   const runtime = input.itemState.byPlayer.get(duck.playerId)!
-  const wild = runtime.wildItem
-  if (!wild) return false
   const minVisible = reactiveMinVisibleTicks(input.tickRate)
   const incomingRocket = input.itemState.rockets.some((rocket) => rocket.targetPlayerId === duck.playerId)
-  if (incomingRocket && wild.itemId === 'MINI_BUBBLE') {
-    return runtime.reactiveRocketVisibleSinceTick !== null
-      && input.tick - runtime.reactiveRocketVisibleSinceTick >= minVisible
+  const incomingBanana = incomingBananaThreat(input, duck)
+
+  if (input.prepAutoUseEnabled && runtime.itemIds.includes('BUBBLE_SHIELD') && !runtime.usedItems.has('BUBBLE_SHIELD') && !runtime.bubbleAvailable) {
+    if (incomingRocket && runtime.reactiveRocketVisibleSinceTick !== null && input.tick - runtime.reactiveRocketVisibleSinceTick >= minVisible) {
+      return true
+    }
+    if (incomingBanana && runtime.reactiveBananaVisibleSinceTick !== null && input.tick - runtime.reactiveBananaVisibleSinceTick >= minVisible) {
+      return true
+    }
   }
-  if (wild.itemId !== 'FEATHER') return false
-  if (!incomingBananaThreat(input, duck)) return false
-  return runtime.reactiveBananaVisibleSinceTick !== null
-    && input.tick - runtime.reactiveBananaVisibleSinceTick >= minVisible
+
+  if (input.wildAutoUseEnabled && runtime.wildItem) {
+    const wild = runtime.wildItem
+    if (incomingRocket && wild.itemId === 'MINI_BUBBLE') {
+      return runtime.reactiveRocketVisibleSinceTick !== null
+        && input.tick - runtime.reactiveRocketVisibleSinceTick >= minVisible
+    }
+    if (wild.itemId === 'FEATHER' && incomingBanana) {
+      return runtime.reactiveBananaVisibleSinceTick !== null
+        && input.tick - runtime.reactiveBananaVisibleSinceTick >= minVisible
+    }
+  }
+  return false
 }
 
 function hasReactiveThreat(input: AutoUseTickInput, duck: ItemDuckState) {
-  if (!input.wildAutoUseEnabled) return false
+  if (!input.prepAutoUseEnabled && !input.wildAutoUseEnabled) return false
   updateReactiveThreatVisibility(input, duck)
   return reactiveThreatReady(input, duck)
 }
