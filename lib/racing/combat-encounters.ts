@@ -141,10 +141,10 @@ export function extractCombatEncounters(
         mitigatedByShockAbsorber: isMitigated,
         resultTitle: isMitigated ? 'Trúng đích (Giảm sát thương) 🦺' : 'Trúng đích! 💥',
         resultDetail: isMitigated
-          ? `Bắn trúng ${targetName}! Áo Chống Sốc (Shock Absorber 🦺) của ${targetName} hấp thụ giảm 40% lực hãm.`
+          ? `Bắn trúng ${targetName}! Áo Chống Sốc (Shock Absorber 🦺) của ${targetName} hấp thụ lực đòn, hãm còn 65% trong 0.9s.`
           : isMini
-            ? `Bắn trúng ${targetName}! Hãm tốc độ còn 10% trong 3.6 giây.`
-            : `Bắn trúng ${targetName}! Hãm 35% tốc độ trong 0.65 giây.`,
+            ? `Bắn trúng ${targetName}! Hãm tốc độ còn 35% trong 2.0 giây.`
+            : `Bắn trúng ${targetName}! Hãm tốc độ còn 25% trong 2.5 giây.`,
       })
     }
 

@@ -28,7 +28,10 @@ class PersistentWorker {
   private alive = true
 
   constructor() {
-    this.child = spawn(process.execPath, ['--import', 'tsx', workerScript], {
+    const isBun = Boolean((process.versions as Record<string, string | undefined>).bun)
+    const tsxCli = fileURLToPath(new URL('../../node_modules/tsx/dist/cli.mjs', import.meta.url))
+    const args = isBun ? [workerScript] : [tsxCli, workerScript]
+    this.child = spawn(process.execPath, args, {
       stdio: ['pipe', 'pipe', 'inherit'],
     })
     this.rl = readline.createInterface({ input: this.child.stdout })

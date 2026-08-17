@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  ITEM_BALANCE,
   POSITION_CATEGORY_WEIGHTS,
   createSimulation,
   rollWildItem,
@@ -321,7 +322,7 @@ test('fuzzed pickup races finish with finite state, no duplicate collection, and
         assert.ok(Number.isFinite(duck.progress) && Number.isFinite(duck.speed) && Number.isFinite(duck.lateralOffset))
         const runtime = state.itemState.byPlayer.get(duck.playerId)!
         assert.ok(runtime.regularPickupCount <= 3)
-        assert.ok(runtime.boostMultiplier <= 1.35 && runtime.slowMultiplier >= 0.1)
+        assert.ok(runtime.boostMultiplier <= ITEM_BALANCE.maximumSpeedMultiplier && runtime.slowMultiplier >= ITEM_BALANCE.minimumSpeedMultiplier)
       }
     }
     const collected = state.pickupState.pickups.filter((pickup) => pickup.state === 'COLLECTED')
