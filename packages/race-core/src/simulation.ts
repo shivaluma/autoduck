@@ -167,7 +167,7 @@ export function createSimulation(config: RaceConfig, options: SimulationOptions 
       acceleration: 0,
       lateralVelocity: 0,
       desiredSpeed: baseSpeed * rng.range(1 - CORE_BALANCE.speedVariation, 1 + CORE_BALANCE.speedVariation),
-      desiredLateralOffset: rng.range(-0.75, 0.75),
+      desiredLateralOffset: lateralOffset,
       currentRank: index + 1,
       activeEffects: [],
       nextImpulseTick: scheduleImpulse(rng, 0, config.tickRate),
@@ -207,13 +207,111 @@ export function queueWildItemInput(state: RaceSimulationState, input: Omit<Recor
   return recorded
 }
 
+export function evaluateSmartDesiredLateralOffset(
+  state: RaceSimulationState,
+  duck: DuckPhysicsState,
+  rng: DeterministicRng,
+): number {
+  const candidateLanes = [-0.75, -0.50, -0.25, 0.0, 0.25, 0.50, 0.75]
+  const preferred = rng.range(-0.80, 0.80)
+  const candidates = [...candidateLanes, preferred, duck.lateralOffset]
+
+  const itemRuntime = state.itemState?.byPlayer?.get(duck.playerId)
+  const hasDraftFin = Boolean(itemRuntime?.itemIds.includes('DRAFT_FIN') && !itemRuntime.usedItems.has('DRAFT_FIN'))
+  const hasShield = Boolean(itemRuntime?.bubbleAvailable || itemRuntime?.wildBubbleAvailable)
+  const hasFeather = Boolean(itemRuntime?.featherAvailable || itemRuntime?.wildFeatherAvailable)
+
+  let bestCandidate = duck.lateralOffset
+  let highestScore = -Infinity
+
+  for (const candidate of candidates) {
+    // 1. Base score: organic wander preference + edge penalty + lane stability
+    let score = 10 - Math.abs(candidate - preferred) * 4
+    if (Math.abs(candidate) > 0.82) score -= 18
+    score += (1 - Math.abs(candidate - duck.lateralOffset)) * 3
+
+    // 2. Crowd / Duck traffic avoidance (Prevent clumping & occlusions)
+    for (const other of state.ducks) {
+      if (other.playerId === duck.playerId || other.finished) continue
+      const dProgress = Math.abs(duck.progress - other.progress)
+      if (dProgress < 0.065) {
+        const dLateral = Math.abs(candidate - other.lateralOffset)
+        if (dLateral < 0.24) {
+          const proximityWeight = (1 - dProgress / 0.065) * (1 - dLateral / 0.24)
+          score -= proximityWeight * 36
+
+          // If other is directly ahead and we are about to tail-end crash into them without drafting
+          if (other.progress > duck.progress && dProgress < 0.035 && dLateral < 0.12) {
+            score -= 24
+          }
+        }
+      }
+    }
+
+    // 3. Strategic Drafting: If duck has Draft Fin or wants slipstream, reward aligning behind nearest ahead duck
+    if (hasDraftFin) {
+      const ahead = state.ducks
+        .filter((c) => !c.finished && c.playerId !== duck.playerId && c.progress > duck.progress && c.progress - duck.progress <= 0.035)
+        .sort((left, right) => left.progress - right.progress)[0]
+      if (ahead && Math.abs(candidate - ahead.lateralOffset) <= 0.08) {
+        score += 26
+      }
+    }
+
+    // 4. Hazard & Trap avoidance (Bananas & Track Hazards)
+    if (state.itemState?.bananas) {
+      for (const banana of state.itemState.bananas) {
+        const dProgress = banana.progress - duck.progress
+        if (dProgress > 0 && dProgress < 0.045) {
+          if (Math.abs(candidate - banana.lateralOffset) <= banana.hitLateralRadius * 1.4) {
+            score -= (hasFeather || hasShield) ? 20 : 55
+          }
+        }
+      }
+    }
+    if (state.pickupState?.hazards) {
+      for (const hazard of state.pickupState.hazards) {
+        const dProgress = hazard.progress - duck.progress
+        if (dProgress > 0 && dProgress < 0.05) {
+          if (Math.abs(candidate - hazard.lateralOffset) <= hazard.radius * 1.3) {
+            score -= 45
+          }
+        }
+      }
+    }
+
+    // 5. Item Pickup attraction (Quack Boxes & Golden Boxes)
+    if (itemRuntime && state.pickupState?.config && itemRuntime.regularPickupCount < state.pickupState.config.regularPickupCap && !itemRuntime.wildItem) {
+      for (const pickup of state.pickupState.pickups ?? []) {
+        if (pickup.state !== 'ACTIVE') continue
+        const dProgress = pickup.progress - duck.progress
+        if (dProgress > 0 && dProgress < 0.055) {
+          if (Math.abs(candidate - pickup.lateralOffset) <= 0.14) {
+            score += pickup.type === 'GOLDEN_BOX' ? 42 : 22
+          }
+        }
+      }
+    }
+
+    // 6. Jitter for organic variation
+    score += rng.range(-1.5, 1.5)
+
+    if (score > highestScore) {
+      highestScore = score
+      bestCandidate = candidate
+    }
+  }
+
+  return clamp(bestCandidate + rng.range(-0.03, 0.03), -0.85, 0.85)
+}
+
 function updateIntent(state: RaceSimulationState, duck: DuckPhysicsState) {
   if (state.tick < duck.nextImpulseTick) return
   const rng = state.rngByPlayer.get(duck.playerId)!
   const baseSpeed = 1 / CORE_BALANCE.targetDurationSeconds
   duck.desiredSpeed = baseSpeed * rng.range(1 - CORE_BALANCE.speedVariation, 1 + CORE_BALANCE.speedVariation)
   duck.acceleration = rng.range(-CORE_BALANCE.accelerationVariation, CORE_BALANCE.accelerationVariation) * baseSpeed
-  duck.desiredLateralOffset = rng.range(-0.82, 0.82)
+  duck.desiredLateralOffset = evaluateSmartDesiredLateralOffset(state, duck, rng)
   duck.nextImpulseTick = scheduleImpulse(rng, state.tick, state.config.tickRate)
 }
 
@@ -243,8 +341,8 @@ function resolveCollisions(state: RaceSimulationState) {
       const rightSpeedLoss = rightIsFortress ? CORE_BALANCE.collisionSpeedLoss * ITEM_BALANCE.fortress.collisionSpeedLossMultiplier : CORE_BALANCE.collisionSpeedLoss
       lateralDelta.set(left.playerId, (lateralDelta.get(left.playerId) ?? 0) + direction * leftPush)
       lateralDelta.set(right.playerId, (lateralDelta.get(right.playerId) ?? 0) - direction * rightPush)
-      speedDelta.set(left.playerId, (speedDelta.get(left.playerId) ?? 0) - leftSpeedLoss * left.speed)
-      speedDelta.set(right.playerId, (speedDelta.get(right.playerId) ?? 0) - rightSpeedLoss * right.speed)
+      speedDelta.set(left.playerId, (speedDelta.get(left.playerId) ?? 0) - leftSpeedLoss * overlap * left.speed)
+      speedDelta.set(right.playerId, (speedDelta.get(right.playerId) ?? 0) - rightSpeedLoss * overlap * right.speed)
       const pairKey = `${left.playerId}:${right.playerId}`
       const lastEventTick = state.lastCollisionEventTick.get(pairKey) ?? -Infinity
       if (state.recordEvents && state.tick - lastEventTick >= Math.round(state.config.tickRate * 0.5)) {
