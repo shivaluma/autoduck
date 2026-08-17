@@ -14,5 +14,5 @@ export const CORE_BALANCE = {
   collisionPush: 0.040,
   collisionSpeedLoss: 0.008,
   pacingSegmentCount: 4,
-  pacingVariation: 0.12,
+  pacingVariation: 0.18,
 } as const

@@ -115,7 +115,7 @@ export function generateDuckPacingSegments(
     sum += delta
   }
   const mean = sum / segmentCount
-  return deltas.map((delta) => Math.max(0.7, Math.min(1.3, 1 + (delta - mean))))
+  return deltas.map((delta) => 1 + (delta - mean))
 }
 
 export function evaluatePacingMultiplier(segments: readonly number[], progress: number): number {
@@ -304,7 +304,7 @@ export function evaluateSmartDesiredLateralOffset(
         const dProgress = banana.progress - duck.progress
         if (dProgress > 0 && dProgress < 0.045) {
           if (Math.abs(candidate - banana.lateralOffset) <= banana.hitLateralRadius * 1.4) {
-            score -= (hasFeather || hasShield) ? 20 : 55
+            score -= hasShield ? 20 : (hasFeather ? 40 : 55)
           }
         }
       }

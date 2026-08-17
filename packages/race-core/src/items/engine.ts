@@ -517,9 +517,11 @@ function updateBananas(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
       emit(blockedType, banana.sourcePlayerId, target.playerId, { blocked: true, defense: 'WILD_FEATHER' })
       applyItemBoost(defense, 1.05, 1.0, tick, tickRate)
     } else if (outcome === 'DODGED_FEATHER') {
-      const surgeMult = defense.loadoutCombo === 'FORTRESS' ? ITEM_BALANCE.fortress.surgeMultiplier : 1.06
-      const surgeDur = defense.loadoutCombo === 'FORTRESS' ? ITEM_BALANCE.fortress.surgeDurationSeconds : 1.2
-      applyItemBoost(defense, surgeMult, surgeDur, tick, tickRate)
+      if (defense.loadoutCombo === 'FORTRESS') {
+        applyItemBoost(defense, ITEM_BALANCE.fortress.surgeMultiplier, ITEM_BALANCE.fortress.surgeDurationSeconds, tick, tickRate)
+      } else {
+        applyItemSlow(defense, 0.80, 0.8, tick, tickRate)
+      }
       emit('FEATHER_DODGED', target.playerId, banana.sourcePlayerId, {})
       emit('BANANA_BLOCKED', banana.sourcePlayerId, target.playerId, { defense: 'FEATHER' })
     } else {
