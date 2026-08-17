@@ -203,15 +203,6 @@ export function formatEventDetails(
         tone: 'text-[var(--color-ggd-neon-green)] border-emerald-500/30 bg-emerald-500/10',
       }
 
-    case 'MINI_NITRO_STARTED':
-      return {
-        icon: '⚡',
-        title: `${sourceName} xả Mini Nitro! ⚡`,
-        description: 'Bứt tốc tức thì +30% tốc độ trong 2.5s vút lên dẫn đầu!',
-        category: 'speed',
-        tone: 'text-[var(--color-ggd-neon-green)] border-emerald-500/30 bg-emerald-500/10',
-      }
-
     case 'PADDLE_BURST_STARTED':
       return {
         icon: '🛶',
