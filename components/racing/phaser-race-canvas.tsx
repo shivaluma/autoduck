@@ -335,6 +335,7 @@ export function PhaserRaceCanvas({
           this.cameras.main.setBackgroundColor('#112b3b')
           this.cameras.main.setBounds(-250, -850, track.length + 500, 1700)
           this.drawRiver()
+          this.drawBoostGates()
           if (debugPickups) this.drawPickupDebug()
           scenePlayers.forEach((player, index) => this.createDuck(player, index))
           const chaosLabel = chaosType ?? clientSimConfig?.chaosConfig?.type
@@ -379,6 +380,63 @@ export function PhaserRaceCanvas({
               else currents.lineTo(point.x, point.y)
             }
             currents.strokePath()
+          }
+        }
+
+        private drawBoostGates() {
+          if (!track.boostGates?.length) return
+
+          for (const gate of track.boostGates) {
+            const leftBank = track.sample(gate.progress, -1)
+            const rightBank = track.sample(gate.progress, 1)
+
+            const baseGfx = this.add.graphics().setDepth(35)
+            baseGfx.lineStyle(6, 0x14283c, 0.85)
+            baseGfx.lineBetween(leftBank.x, leftBank.y, rightBank.x, rightBank.y)
+
+            for (const lane of gate.lanes) {
+              const p0 = track.sample(gate.progress - 0.003, lane.minLateral)
+              const p1 = track.sample(gate.progress - 0.003, lane.maxLateral)
+              const p2 = track.sample(gate.progress + 0.007, lane.maxLateral)
+              const p3 = track.sample(gate.progress + 0.007, lane.minLateral)
+              const center = track.sample(gate.progress + 0.002, lane.centerLateral)
+
+              const padGfx = this.add.graphics().setDepth(40)
+              padGfx.fillStyle(lane.colorHex, 0.26)
+              padGfx.lineStyle(3, lane.colorHex, 0.9)
+              padGfx.beginPath()
+              padGfx.moveTo(p0.x, p0.y)
+              padGfx.lineTo(p1.x, p1.y)
+              padGfx.lineTo(p2.x, p2.y)
+              padGfx.lineTo(p3.x, p3.y)
+              padGfx.closePath()
+              padGfx.fillPath()
+              padGfx.strokePath()
+
+              const angle = Math.atan2(center.tangentY, center.tangentX)
+              const tagText = lane.tier === 'HYPER' ? '⚡⚡ +25%' : lane.tier === 'SUPER' ? '⚡ +16%' : lane.tier === 'STANDARD' ? '+8%' : '+2%'
+              this.add.text(center.x, center.y, tagText, {
+                fontFamily: 'sans-serif',
+                fontSize: '11px',
+                fontStyle: 'bold',
+                color: lane.colorName,
+                backgroundColor: '#0a101ecc',
+                padding: { x: 5, y: 2 },
+                stroke: '#000000',
+                strokeThickness: 2,
+              }).setOrigin(0.5).setRotation(angle).setDepth(45)
+
+              if (!reducedMotion) {
+                this.tweens.add({
+                  targets: padGfx,
+                  alpha: { from: 0.65, to: 1.0 },
+                  duration: 800,
+                  yoyo: true,
+                  repeat: -1,
+                  ease: 'Sine.InOut',
+                })
+              }
+            }
           }
         }
 
@@ -893,6 +951,15 @@ export function PhaserRaceCanvas({
             return
           }
 
+          if (type === 'BOOST_GATE_PASSED' && source) {
+            const colorHex = (raceEvent.metadata.colorHex as number) ?? 0xffb703
+            const tier = String(raceEvent.metadata.tier ?? '')
+            const emoji = tier === 'HYPER' ? '⚡⚡' : tier === 'SUPER' ? '⚡' : '✨'
+            this.burstRing(source.root.x, source.root.y, colorHex, colorHex, 0.2, 2.7)
+            this.floatEmoji(source.root.x, source.root.y - 14, emoji, '24px', 460)
+            return
+          }
+
           if (type === 'DUCK_FINISHED' && source) {
             this.finishCelebrationCount += 1
             const place = this.finishCelebrationCount
@@ -961,6 +1028,7 @@ export function PhaserRaceCanvas({
             HAZARD_HIT: `☠️ ${source} đụng ${String(raceEvent.metadata.hazardType ?? 'hazard').replaceAll('_', ' ')}`,
             HAZARD_DODGED: `🪽 ${source} né hazard!`,
             GOLDEN_BOX_COLLECTED: `🪙 ${source} FOUND THE GOLDEN BOX!`,
+            BOOST_GATE_PASSED: `⚡ ${source} qua Cổng ${String(raceEvent.metadata.label ?? 'Boost')}`,
           }
           const message = messages[raceEvent.type]
           audio.raceEvent(raceEvent.type)

@@ -11,8 +11,8 @@ export const CORE_BALANCE = {
   maximumLateralVelocity: 0.85,
   collisionProgressRadius: 0.009,
   collisionLateralRadius: 0.18,
-  collisionPush: 0.045,
-  collisionSpeedLoss: 0.025,
+  collisionPush: 0.040,
+  collisionSpeedLoss: 0.008,
   pacingSegmentCount: 4,
   pacingVariation: 0.12,
 } as const

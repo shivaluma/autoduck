@@ -5,6 +5,7 @@ import { ITEM_BALANCE } from './items/config'
 import { createRaceRng, type DeterministicRng } from './rng'
 import { createRiverTrack, currentAt, type RaceTrack } from './track'
 import {
+  applyItemBoost,
   createItemRaceState,
   itemActiveEffects,
   itemSpeedMultiplier,
@@ -212,7 +213,7 @@ export function evaluateSmartDesiredLateralOffset(
   duck: DuckPhysicsState,
   rng: DeterministicRng,
 ): number {
-  const candidateLanes = [-0.75, -0.50, -0.25, 0.0, 0.25, 0.50, 0.75]
+  const candidateLanes = [-0.75, -0.6375, -0.50, -0.2125, 0.0, 0.2125, 0.50, 0.6375, 0.75]
   const preferred = rng.range(-0.80, 0.80)
   const candidates = [...candidateLanes, preferred, duck.lateralOffset]
 
@@ -258,7 +259,46 @@ export function evaluateSmartDesiredLateralOffset(
       }
     }
 
-    // 4. Hazard & Trap avoidance (Bananas & Track Hazards)
+    // 4. Boost Gate strategic positioning (Risk vs Reward on 4 multi-tier lanes)
+    if (state.track.boostGates) {
+      const upcomingGate = state.track.boostGates.find(
+        (gate) => gate.progress > duck.progress && gate.progress - duck.progress <= 0.095,
+      )
+      if (upcomingGate) {
+        const dGate = upcomingGate.progress - duck.progress
+        const proximityWeight = 1 - dGate / 0.095
+        const targetLane = upcomingGate.lanes.find((l) => candidate >= l.minLateral && candidate <= l.maxLateral)
+          ?? (candidate < -0.85 ? upcomingGate.lanes[0] : upcomingGate.lanes[upcomingGate.lanes.length - 1])!
+
+        let gateReward = 0
+        if (targetLane.tier === 'HYPER') gateReward = 36
+        else if (targetLane.tier === 'SUPER') gateReward = 24
+        else if (targetLane.tier === 'STANDARD') gateReward = 12
+        else if (targetLane.tier === 'NEUTRAL') gateReward = 2
+
+        let competitorsInLane = 0
+        for (const other of state.ducks) {
+          if (other.playerId === duck.playerId || other.finished) continue
+          const otherProgressDist = Math.abs(duck.progress - other.progress)
+          if (otherProgressDist < 0.07) {
+            if (other.lateralOffset >= targetLane.minLateral - 0.06 && other.lateralOffset <= targetLane.maxLateral + 0.06) {
+              competitorsInLane += 1
+            }
+          }
+        }
+
+        let crowdPenalty = 0
+        if (targetLane.tier === 'HYPER') crowdPenalty = competitorsInLane * 22
+        else if (targetLane.tier === 'SUPER') crowdPenalty = competitorsInLane * 14
+        else if (targetLane.tier === 'STANDARD') crowdPenalty = competitorsInLane * 8
+        else if (targetLane.tier === 'NEUTRAL') crowdPenalty = competitorsInLane * 3
+
+        const laneAlignmentBonus = (1 - Math.abs(candidate - targetLane.centerLateral) / 0.25) * 5
+        score += (gateReward - crowdPenalty + laneAlignmentBonus) * proximityWeight
+      }
+    }
+
+    // 5. Hazard & Trap avoidance (Bananas & Track Hazards)
     if (state.itemState?.bananas) {
       for (const banana of state.itemState.bananas) {
         const dProgress = banana.progress - duck.progress
@@ -280,7 +320,7 @@ export function evaluateSmartDesiredLateralOffset(
       }
     }
 
-    // 5. Item Pickup attraction (Quack Boxes & Golden Boxes)
+    // 6. Item Pickup attraction (Quack Boxes & Golden Boxes)
     if (itemRuntime && state.pickupState?.config && itemRuntime.regularPickupCount < state.pickupState.config.regularPickupCap && !itemRuntime.wildItem) {
       for (const pickup of state.pickupState.pickups ?? []) {
         if (pickup.state !== 'ACTIVE') continue
@@ -293,7 +333,7 @@ export function evaluateSmartDesiredLateralOffset(
       }
     }
 
-    // 6. Jitter for organic variation
+    // 7. Jitter for organic variation
     score += rng.range(-1.5, 1.5)
 
     if (score > highestScore) {
@@ -440,6 +480,31 @@ export function stepSimulation(state: RaceSimulationState) {
     duck.lateralVelocity = clamp(duck.lateralVelocity, -CORE_BALANCE.maximumLateralVelocity, CORE_BALANCE.maximumLateralVelocity)
     duck.lateralOffset = clamp(duck.lateralOffset + duck.lateralVelocity * deltaSeconds, -0.95, 0.95)
     duck.progress += Math.max(0, duck.speed * currentMultiplier * itemSpeedMultiplier(itemRuntime, state.tick) * deltaSeconds)
+
+    if (state.track.boostGates) {
+      for (const gate of state.track.boostGates) {
+        if (duck.previousProgress < gate.progress && duck.progress >= gate.progress) {
+          const lane = gate.lanes.find((l) => duck.lateralOffset >= l.minLateral && duck.lateralOffset <= l.maxLateral)
+            ?? (duck.lateralOffset < -0.85 ? gate.lanes[0] : gate.lanes[gate.lanes.length - 1])!
+
+          applyItemBoost(itemRuntime, lane.speedMultiplier, lane.durationSeconds, state.tick, state.config.tickRate)
+          emitEvent(state, {
+            type: 'BOOST_GATE_PASSED',
+            sourcePlayerId: duck.playerId,
+            metadata: {
+              gateId: gate.id,
+              laneId: lane.id,
+              tier: lane.tier,
+              multiplier: lane.speedMultiplier,
+              durationSeconds: lane.durationSeconds,
+              colorHex: lane.colorHex,
+              colorName: lane.colorName,
+              label: lane.label,
+            },
+          })
+        }
+      }
+    }
 
     if (duck.progress >= 1) {
       const travelled = duck.progress - duck.previousProgress

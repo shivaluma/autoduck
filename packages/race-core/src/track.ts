@@ -1,3 +1,24 @@
+export type BoostLaneTier = 'HYPER' | 'SUPER' | 'STANDARD' | 'NEUTRAL'
+
+export interface BoostLane {
+  id: string
+  tier: BoostLaneTier
+  minLateral: number
+  maxLateral: number
+  centerLateral: number
+  speedMultiplier: number
+  durationSeconds: number
+  colorHex: number
+  colorName: string
+  label: string
+}
+
+export interface BoostGate {
+  id: string
+  progress: number
+  lanes: BoostLane[]
+}
+
 export interface CurrentZone {
   startProgress: number
   endProgress: number
@@ -47,11 +68,41 @@ export interface RaceTrack {
   currents: CurrentZone[]
   pickupZones: PickupZone[]
   hazardZones: HazardZone[]
+  boostGates: BoostGate[]
   pickupLayoutVersion: string
   sample(progress: number, lateralOffset: number): TrackPoint
 }
 
 const clamp = (value: number, minimum: number, maximum: number) => Math.max(minimum, Math.min(maximum, value))
+
+const BOOST_TIER_CONFIG: Record<BoostLaneTier, { speedMultiplier: number; durationSeconds: number; colorHex: number; colorName: string; label: string }> = {
+  HYPER: { speedMultiplier: 1.25, durationSeconds: 1.8, colorHex: 0xffb703, colorName: '#ffb703', label: 'HYPER +25%' },
+  SUPER: { speedMultiplier: 1.16, durationSeconds: 1.5, colorHex: 0x00f0ff, colorName: '#00f0ff', label: 'SUPER +16%' },
+  STANDARD: { speedMultiplier: 1.08, durationSeconds: 1.2, colorHex: 0x06d6a0, colorName: '#06d6a0', label: 'STANDARD +8%' },
+  NEUTRAL: { speedMultiplier: 1.02, durationSeconds: 1.0, colorHex: 0xa855f7, colorName: '#a855f7', label: 'CLEAR +2%' },
+}
+
+function createBoostLanes(gateId: string, tiers: [BoostLaneTier, BoostLaneTier, BoostLaneTier, BoostLaneTier]): BoostLane[] {
+  const boundaries = [-0.85, -0.425, 0.0, 0.425, 0.85]
+  return tiers.map((tier, index) => {
+    const minLateral = boundaries[index]!
+    const maxLateral = boundaries[index + 1]!
+    const centerLateral = (minLateral + maxLateral) / 2
+    const config = BOOST_TIER_CONFIG[tier]
+    return {
+      id: `${gateId}-lane-${index + 1}`,
+      tier,
+      minLateral,
+      maxLateral,
+      centerLateral,
+      speedMultiplier: config.speedMultiplier,
+      durationSeconds: config.durationSeconds,
+      colorHex: config.colorHex,
+      colorName: config.colorName,
+      label: config.label,
+    }
+  })
+}
 
 export function createRiverTrack(version = 'river-01-v2'): RaceTrack {
   const length = 4200
@@ -88,12 +139,36 @@ export function createRiverTrack(version = 'river-01-v2'): RaceTrack {
     ], allowedTypes: ['ANCHOR', 'WHIRLPOOL', 'STICKY_GOO'] },
   ]
 
+  const boostGates: BoostGate[] = [
+    {
+      id: 'boost-gate-1',
+      progress: 0.26,
+      lanes: createBoostLanes('bg-1', ['HYPER', 'SUPER', 'STANDARD', 'NEUTRAL']),
+    },
+    {
+      id: 'boost-gate-2',
+      progress: 0.48,
+      lanes: createBoostLanes('bg-2', ['STANDARD', 'HYPER', 'NEUTRAL', 'SUPER']),
+    },
+    {
+      id: 'boost-gate-3',
+      progress: 0.68,
+      lanes: createBoostLanes('bg-3', ['NEUTRAL', 'STANDARD', 'SUPER', 'HYPER']),
+    },
+    {
+      id: 'boost-gate-4',
+      progress: 0.85,
+      lanes: createBoostLanes('bg-4', ['SUPER', 'HYPER', 'STANDARD', 'NEUTRAL']),
+    },
+  ]
+
   return {
     version,
     length,
     currents,
     pickupZones,
     hazardZones,
+    boostGates,
     pickupLayoutVersion: 'river-pickups-v1',
     sample(progress, lateralOffset) {
       const p = clamp(progress, 0, 1)

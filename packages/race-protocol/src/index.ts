@@ -207,6 +207,7 @@ export const raceEventTypeSchema = z.enum([
   'WILD_HORN_USED', 'WILD_FEATHER_USED', 'WILD_FEATHER_DODGED',
   'HAZARD_SPAWNED', 'HAZARD_HIT', 'HAZARD_DODGED',
   'GOLDEN_BOX_SPAWNED', 'GOLDEN_BOX_COLLECTED', 'QP_TRACK_REWARD_GRANTED',
+  'BOOST_GATE_PASSED',
 ])
 export type RaceEventType = z.infer<typeof raceEventTypeSchema>
 
