@@ -21,6 +21,13 @@ type AdminState = {
     skippedPlayerIds: number[]
     predictionCount: number
     loadoutReadyCount: number
+    loadoutReadyUserIds?: number[]
+    predictionUserIds?: number[]
+    missingLoadoutUserIds?: number[]
+    missingPredictionUserIds?: number[]
+    missingLoadoutNames?: string[]
+    missingPredictionNames?: string[]
+    fullyReadyUserIds?: number[]
     shieldConfirmations: string[]
     recap: string | null
     raceId: number | null
@@ -127,6 +134,20 @@ export default function AdminSeason3Page() {
           {data.players.map((player) => <div key={player.id} className={`rounded-2xl border-2 p-4 ${currentWeek?.skippedPlayerIds.includes(player.id) ? 'border-white/10 bg-black/25 opacity-55' : 'border-white/15 bg-[var(--color-ggd-surface-2)]'}`}>
             <div className="flex items-center gap-3"><Season3Avatar name={player.name} avatarUrl={player.avatarUrl} size={40} /><div className="font-black">{player.isKing ? '👑 ' : ''}{player.name}</div></div>
             <div className="mt-1 flex items-center gap-1 text-sm text-white/60">🩹 {player.scars} · 🛡️ {player.shields} · 🔮 {player.predictionPoints} <Season3PointTooltip /></div>
+            {currentWeek && !currentWeek.skippedPlayerIds.includes(player.id) && (
+              <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-bold">
+                {currentWeek.loadoutReadyUserIds?.includes(player.id) ? (
+                  <span className="rounded-md border border-emerald-500/30 bg-emerald-500/20 px-2 py-0.5 text-emerald-300">🎒 Loadout ✓</span>
+                ) : (
+                  <span className="rounded-md border border-rose-500/30 bg-rose-500/20 px-2 py-0.5 text-rose-300">🎒 Chưa chọn đồ</span>
+                )}
+                {currentWeek.predictionUserIds?.includes(player.id) ? (
+                  <span className="rounded-md border border-purple-500/30 bg-purple-500/20 px-2 py-0.5 text-purple-300">🔮 Dự đoán ✓</span>
+                ) : (
+                  <span className="rounded-md border border-amber-500/30 bg-amber-500/20 px-2 py-0.5 text-amber-300">🔮 Chưa dự đoán</span>
+                )}
+              </div>
+            )}
             <a className="mt-3 block truncate text-xs text-[var(--color-ggd-neon-green)] hover:underline" href={player.personalLink} target="_blank" rel="noreferrer">{player.personalLink}</a>
             {currentWeek?.status === 'open' && <button onClick={() => void act({ action: 'toggle-skip', weekId: currentWeek.id, userId: player.id })} className="mt-3 rounded-lg border border-white/20 px-2.5 py-1 text-[11px] font-black hover:bg-white/10">{currentWeek.skippedPlayerIds.includes(player.id) ? '↩ THAM GIA LẠI (ADD BACK)' : '🛟 TẠM NGHỈ TUẦN NÀY (SKIP)'}</button>}
           </div>)}
@@ -159,6 +180,55 @@ export default function AdminSeason3Page() {
         <p className="mt-2 text-sm text-white/60">Mục tiêu / Nhóm Chaos: {nameById.get(currentWeek.chaosTargetUserId ?? -1) ?? '—'}{currentWeek.chaosGroups ? ` · ${currentWeek.chaosGroups.map((group) => group.map((id) => nameById.get(id) ?? id).join(' + ')).join(' / ')}` : ''}</p>
         <p className="mt-2 text-sm text-[var(--color-ggd-sky)]">🛡️ Đã xác nhận bật Khiên cứu mạng: {currentWeek.shieldConfirmations.length > 0 ? currentWeek.shieldConfirmations.join(', ') : 'Chưa có ai'}</p>
         {currentWeek.skippedPlayerIds.length > 0 && <p className="mt-2 text-sm text-white/50">🛟 Tạm nghỉ tuần này: {currentWeek.skippedPlayerIds.map((id) => nameById.get(id) ?? id).join(', ')}</p>}
+
+        {/* Missing Prep Tracker for Admin */}
+        {currentWeek.status === 'open' && (
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <div className={`rounded-2xl border-2 p-4 ${
+              (currentWeek.missingLoadoutNames?.length ?? 0) > 0 
+                ? 'border-rose-500/40 bg-rose-500/10' 
+                : 'border-emerald-500/40 bg-emerald-500/10'
+            }`}>
+              <div className="flex items-center justify-between">
+                <span className="font-display text-lg text-white">🎒 Chưa chọn Loadout ({currentWeek.missingLoadoutNames?.length ?? 0})</span>
+                {(currentWeek.missingLoadoutNames?.length ?? 0) === 0 && <span className="text-xs font-black text-emerald-400">✓ ĐỦ 100%</span>}
+              </div>
+              {(currentWeek.missingLoadoutNames?.length ?? 0) > 0 ? (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {currentWeek.missingLoadoutNames?.map((name) => (
+                    <span key={name} className="rounded-lg bg-rose-500/25 px-2.5 py-1 text-xs font-black text-rose-200">
+                      {name}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-1 text-xs text-emerald-300/80">Tất cả tuyển thủ đã hoàn tất chọn Loadout.</p>
+              )}
+            </div>
+
+            <div className={`rounded-2xl border-2 p-4 ${
+              (currentWeek.missingPredictionNames?.length ?? 0) > 0 
+                ? 'border-amber-500/40 bg-amber-500/10' 
+                : 'border-emerald-500/40 bg-emerald-500/10'
+            }`}>
+              <div className="flex items-center justify-between">
+                <span className="font-display text-lg text-white">🔮 Chưa gửi Dự Đoán ({currentWeek.missingPredictionNames?.length ?? 0})</span>
+                {(currentWeek.missingPredictionNames?.length ?? 0) === 0 && <span className="text-xs font-black text-emerald-400">✓ ĐỦ 100%</span>}
+              </div>
+              {(currentWeek.missingPredictionNames?.length ?? 0) > 0 ? (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {currentWeek.missingPredictionNames?.map((name) => (
+                    <span key={name} className="rounded-lg bg-amber-500/25 px-2.5 py-1 text-xs font-black text-amber-200">
+                      {name}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-1 text-xs text-emerald-300/80">Tất cả tuyển thủ đã hoàn tất dự đoán tiên tri.</p>
+              )}
+            </div>
+          </div>
+        )}
         {canStartSeason3TestRace(currentWeek.status) && <div className="mt-5 flex flex-wrap items-center gap-3">
           {currentWeek.status === 'open' && <button onClick={() => void act({ action: 'lock', weekId: currentWeek.id })} className="rounded-xl bg-[var(--color-ggd-gold)] px-5 py-3 font-black text-[var(--color-ggd-outline)] transition-transform hover:scale-105">🔒 KHÓA CHUẨN BỊ (LOCK PREP)</button>}
           {currentWeek.status === 'locked' && <><button onClick={() => void act({ action: 'start-race', weekId: currentWeek.id })} className="rounded-xl bg-[var(--color-ggd-neon-green)] px-5 py-3 font-black text-[var(--color-ggd-outline)] transition-transform hover:scale-105">🏁 BẮT ĐẦU CUỘC ĐUA CHÍNH THỨC</button><button onClick={() => void act({ action: 'unlock', weekId: currentWeek.id })} className="rounded-xl border-2 border-white/20 px-5 py-3 font-black hover:bg-white/10">↩ MỞ LẠI CHUẨN BỊ (UNLOCK)</button></>}

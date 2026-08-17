@@ -31,6 +31,12 @@ export async function GET(
       )
     }
 
+    const token = new URL(request.url).searchParams.get('token')
+    const viewerPlayer = token ? await prisma.seasonPlayer.findUnique({
+      where: { accessToken: token },
+      include: { user: true },
+    }) : null
+
     const race = await prisma.race.findUnique({
       where: { id: raceId },
       include: {
@@ -43,6 +49,16 @@ export async function GET(
         },
         engineEvents: {
           orderBy: [{ tick: 'asc' }, { id: 'asc' }],
+        },
+        seasonWeek: {
+          include: {
+            predictions: {
+              include: {
+                predictor: true,
+                target: true,
+              },
+            },
+          },
         },
       },
     })
@@ -309,6 +325,29 @@ export async function GET(
         timestamp: c.timestamp,
         content: c.content,
       })),
+      seasonPrediction: viewerPlayer && race.seasonWeek ? (() => {
+        const viewerPred = race.seasonWeek.predictions.find((p: { predictorPlayerId: number; targetUserId: number; target: { name: string; avatarUrl: string | null }; pointsAwarded: number | null }) => p.predictorPlayerId === viewerPlayer.id)
+        if (!viewerPred) return null
+        return {
+          predictorName: viewerPlayer.user.name,
+          targetUserId: viewerPred.targetUserId,
+          targetName: viewerPred.target.name,
+          targetAvatarUrl: viewerPred.target.avatarUrl,
+          pointsAwarded: viewerPred.pointsAwarded,
+        }
+      })() : null,
+      seasonPredictions: race.status === 'finished' && race.seasonWeek ? race.seasonWeek.predictions.map((p: {
+        predictor: { name: string }
+        targetUserId: number
+        target: { name: string; avatarUrl: string | null }
+        pointsAwarded: number | null
+      }) => ({
+        predictorName: p.predictor.name,
+        targetUserId: p.targetUserId,
+        targetName: p.target.name,
+        targetAvatarUrl: p.target.avatarUrl,
+        pointsAwarded: p.pointsAwarded,
+      })) : [],
     })
   } catch (error) {
     console.error('Failed to fetch race:', error)

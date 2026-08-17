@@ -106,22 +106,56 @@ export async function GET(request: Request) {
       isKing: player.isKing,
       kingStreak: player.kingStreak,
     })),
-    weeks: season.weeksPlan.map((week: { id: number; weekNumber: number; status: string; chaosType: string; chaosTargetUserId: number | null; chaosTargetUserId2: number | null; chaosPayload: string | null; skippedPlayerIdsJson: string | null; predictions: unknown[]; loadouts: Array<{ status: string; userId: number }>; shieldChoices: Array<{ userId: number; seasonPlayer: { user: { name: string } } }>; recap: string | null; race: { id: number; status: string } | null }) => ({
-      id: week.id,
-      weekNumber: week.weekNumber,
-      status: week.status,
-      chaosType: week.chaosType,
-      chaosTargetUserId: week.chaosTargetUserId,
-      chaosTargetUserId2: week.chaosTargetUserId2,
-      chaosGroups: parseChaosGroups(week.chaosPayload),
-      skippedPlayerIds: parseSkippedPlayerIds(week.skippedPlayerIdsJson),
-      predictionCount: week.predictions.length,
-      loadoutReadyCount: week.loadouts.filter((loadout) => !parseSkippedPlayerIds(week.skippedPlayerIdsJson).includes(loadout.userId) && (loadout.status === 'ready' || loadout.status === 'auto')).length,
-      shieldConfirmations: week.shieldChoices.filter((choice) => !parseSkippedPlayerIds(week.skippedPlayerIdsJson).includes(choice.userId)).map((choice) => choice.seasonPlayer.user.name),
-      recap: week.recap,
-      raceId: week.race?.id ?? null,
-      raceStatus: week.race?.status ?? null,
-    })),
+    weeks: season.weeksPlan.map((week: { id: number; weekNumber: number; status: string; chaosType: string; chaosTargetUserId: number | null; chaosTargetUserId2: number | null; chaosPayload: string | null; skippedPlayerIdsJson: string | null; predictions: Array<{ predictorUserId: number }>; loadouts: Array<{ status: string; userId: number }>; shieldChoices: Array<{ userId: number; seasonPlayer: { user: { name: string } } }>; recap: string | null; race: { id: number; status: string } | null }) => {
+      const skippedPlayerIds = parseSkippedPlayerIds(week.skippedPlayerIdsJson)
+      const activePlayers = season.players.filter((player: { userId: number }) => !skippedPlayerIds.includes(player.userId))
+
+      const loadoutReadyUserIds = week.loadouts
+        .filter((loadout) => !skippedPlayerIds.includes(loadout.userId) && (loadout.status === 'ready' || loadout.status === 'auto'))
+        .map((loadout) => loadout.userId)
+
+      const predictionUserIds = week.predictions
+        .filter((prediction) => !skippedPlayerIds.includes(prediction.predictorUserId))
+        .map((prediction) => prediction.predictorUserId)
+
+      const missingLoadoutUserIds = activePlayers
+        .filter((player: { userId: number }) => !loadoutReadyUserIds.includes(player.userId))
+        .map((player: { userId: number }) => player.userId)
+
+      const missingPredictionUserIds = activePlayers
+        .filter((player: { userId: number }) => !predictionUserIds.includes(player.userId))
+        .map((player: { userId: number }) => player.userId)
+
+      const missingLoadoutNames = missingLoadoutUserIds.map((userId: number) => season.players.find((p: { userId: number; user: { name: string } }) => p.userId === userId)?.user.name ?? String(userId))
+      const missingPredictionNames = missingPredictionUserIds.map((userId: number) => season.players.find((p: { userId: number; user: { name: string } }) => p.userId === userId)?.user.name ?? String(userId))
+      const fullyReadyUserIds = activePlayers
+        .filter((player: { userId: number }) => loadoutReadyUserIds.includes(player.userId) && predictionUserIds.includes(player.userId))
+        .map((player: { userId: number }) => player.userId)
+
+      return {
+        id: week.id,
+        weekNumber: week.weekNumber,
+        status: week.status,
+        chaosType: week.chaosType,
+        chaosTargetUserId: week.chaosTargetUserId,
+        chaosTargetUserId2: week.chaosTargetUserId2,
+        chaosGroups: parseChaosGroups(week.chaosPayload),
+        skippedPlayerIds,
+        predictionCount: week.predictions.length,
+        loadoutReadyCount: loadoutReadyUserIds.length,
+        loadoutReadyUserIds,
+        predictionUserIds,
+        missingLoadoutUserIds,
+        missingPredictionUserIds,
+        missingLoadoutNames,
+        missingPredictionNames,
+        fullyReadyUserIds,
+        shieldConfirmations: week.shieldChoices.filter((choice) => !skippedPlayerIds.includes(choice.userId)).map((choice) => choice.seasonPlayer.user.name),
+        recap: week.recap,
+        raceId: week.race?.id ?? null,
+        raceStatus: week.race?.status ?? null,
+      }
+    }),
     rewards: season.rewards,
     balance: {
       items: summarizeTelemetry('itemId'),

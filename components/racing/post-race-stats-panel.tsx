@@ -8,6 +8,10 @@ import {
   type PostRacePlayerInput,
   type PostRacePlayerStats,
 } from '@/lib/racing/post-race-stats'
+import {
+  extractCombatEncounters,
+  type CombatEncounter,
+} from '@/lib/racing/combat-encounters'
 
 function formatSeconds(value: number) {
   if (value <= 0) return '0s'
@@ -49,10 +53,14 @@ function PlayerRow({
   player,
   expanded,
   onToggle,
+  encountersDealt,
+  encountersReceived,
 }: {
   player: PostRacePlayerStats
   expanded: boolean
   onToggle: () => void
+  encountersDealt: CombatEncounter[]
+  encountersReceived: CombatEncounter[]
 }) {
   const topEfficiency = player.efficiencyScore >= 8
   return (
@@ -71,7 +79,7 @@ function PlayerRow({
         <span className="text-xs text-white/35">{expanded ? '▲' : '▼'}</span>
       </button>
       {expanded && (
-        <div className="border-b border-white/10 bg-black/20 px-5 py-4">
+        <div className="border-b border-white/10 bg-black/20 px-5 py-4 space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div><div className="text-[10px] font-black uppercase text-white/40">Tốc độ TB / đỉnh</div><div className="font-black">{formatSpeed(player.averageSpeed)} · {formatSpeed(player.peakSpeed)}</div></div>
             <div><div className="text-[10px] font-black uppercase text-white/40">Hạng không item</div><div className="font-black">#{player.baselineRank} → #{player.finalRank} ({formatDelta(player.rankDelta)})</div></div>
@@ -82,8 +90,72 @@ function PlayerRow({
             <div><div className="text-[10px] font-black uppercase text-white/40">Finish time</div><div className="font-black">{player.finishTimeMs ? formatSeconds(player.finishTimeMs / 1000) : '—'}</div></div>
             <div><div className="text-[10px] font-black uppercase text-white/40">Điểm hiệu quả</div><div className="font-black text-[var(--color-ggd-neon-green)]">{player.efficiencyScore.toFixed(1)}</div></div>
           </div>
+
+          {/* Combat Log for this Player */}
+          {(encountersDealt.length > 0 || encountersReceived.length > 0) && (
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-3.5 space-y-3">
+              <div className="text-[10px] font-black uppercase tracking-[0.15em] text-[var(--color-ggd-gold)]">
+                ⚔️ Nhật ký tác chiến cá nhân
+              </div>
+
+              {/* Attacks Dealt */}
+              {encountersDealt.length > 0 && (
+                <div>
+                  <div className="text-xs font-bold text-white/60 mb-1.5">Đòn tấn công đã tung ra:</div>
+                  <div className="space-y-1.5">
+                    {encountersDealt.map((enc) => (
+                      <div
+                        key={enc.id}
+                        className={`flex flex-wrap items-center justify-between gap-2 rounded-xl px-3 py-1.5 text-xs border ${
+                          enc.success
+                            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                            : 'border-sky-500/30 bg-sky-500/10 text-sky-300'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[10px] text-white/50">{enc.timeFormatted}</span>
+                          <span>{enc.weaponIcon} ➔ <strong>{enc.targetName}</strong></span>
+                        </div>
+                        <div className="text-right font-medium text-white/80">
+                          {enc.success ? '✅ Trúng đích' : `❌ ${enc.defenseName || 'Bị chặn'}`}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Attacks Received */}
+              {encountersReceived.length > 0 && (
+                <div>
+                  <div className="text-xs font-bold text-white/60 mb-1.5">Đòn tấn công đã hứng chịu:</div>
+                  <div className="space-y-1.5">
+                    {encountersReceived.map((enc) => (
+                      <div
+                        key={enc.id}
+                        className={`flex flex-wrap items-center justify-between gap-2 rounded-xl px-3 py-1.5 text-xs border ${
+                          enc.success
+                            ? 'border-rose-500/30 bg-rose-500/10 text-rose-300'
+                            : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[10px] text-white/50">{enc.timeFormatted}</span>
+                          <span>{enc.weaponIcon} ⬅️ từ <strong>{enc.attackerName}</strong></span>
+                        </div>
+                        <div className="text-right font-medium text-white/80">
+                          {enc.success ? '💥 Dính đòn' : `🛡️ Hóa giải (${enc.defenseName})`}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {player.itemStats.length > 0 && (
-            <div className="mt-4">
+            <div>
               <div className="text-[10px] font-black uppercase tracking-[0.15em] text-white/40">Item breakdown</div>
               <div className="mt-2 flex flex-wrap gap-2">
                 {player.itemStats.map((item) => (
@@ -111,6 +183,25 @@ export function PostRaceStatsPanel({
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const stats = useMemo(() => buildPostRaceStats(config, events, players), [config, events, players])
+  const combat = useMemo(() => extractCombatEncounters(events, players), [events, players])
+
+  const combatByPlayer = useMemo(() => {
+    const dealt = new Map<string, CombatEncounter[]>()
+    const received = new Map<string, CombatEncounter[]>()
+    for (const p of players) {
+      dealt.set(p.playerId, [])
+      received.set(p.playerId, [])
+    }
+    for (const enc of combat.encounters) {
+      if (dealt.has(enc.attackerId)) {
+        dealt.get(enc.attackerId)!.push(enc)
+      }
+      if (received.has(enc.targetId)) {
+        received.get(enc.targetId)!.push(enc)
+      }
+    }
+    return { dealt, received }
+  }, [combat.encounters, players])
 
   if (events.length === 0) {
     return (
@@ -197,6 +288,8 @@ export function PostRaceStatsPanel({
             player={player}
             expanded={expandedId === player.playerId}
             onToggle={() => setExpandedId((current) => current === player.playerId ? null : player.playerId)}
+            encountersDealt={combatByPlayer.dealt.get(player.playerId) ?? []}
+            encountersReceived={combatByPlayer.received.get(player.playerId) ?? []}
           />
         ))}
       </div>

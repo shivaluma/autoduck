@@ -191,6 +191,20 @@ export interface RaceStatus {
     timestamp: number
     content: string
   }[]
+  seasonPrediction?: {
+    predictorName: string
+    targetUserId: number
+    targetName: string
+    targetAvatarUrl?: string | null
+    pointsAwarded?: number
+  } | null
+  seasonPredictions?: {
+    predictorName: string
+    targetUserId: number
+    targetName: string
+    targetAvatarUrl?: string | null
+    pointsAwarded: number
+  }[]
 }
 
 export interface RaceRecap {

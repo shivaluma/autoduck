@@ -198,6 +198,7 @@ export function PhaserRaceCanvas({
   replayPaused = false,
   replayManualInputs = [],
   onReplayInspect,
+  onLiveFinished,
   chaosType,
   debugPickups = false,
 }: {
@@ -211,6 +212,7 @@ export function PhaserRaceCanvas({
   replayPaused?: boolean
   replayManualInputs?: RecordedWildItemInput[]
   onReplayInspect?: (inspection: ReplayInspection) => void
+  onLiveFinished?: () => void
   chaosType?: string
   debugPickups?: boolean
 }) {
@@ -225,6 +227,7 @@ export function PhaserRaceCanvas({
   }
   const playbackRef = useRef({ speed: replaySpeed, paused: replayPaused })
   const inspectRef = useRef(onReplayInspect)
+  const onLiveFinishedRef = useRef(onLiveFinished)
 
   useEffect(() => {
     playbackRef.current = { speed: replaySpeed, paused: replayPaused }
@@ -233,6 +236,10 @@ export function PhaserRaceCanvas({
   useEffect(() => {
     inspectRef.current = onReplayInspect
   }, [onReplayInspect])
+
+  useEffect(() => {
+    onLiveFinishedRef.current = onLiveFinished
+  }, [onLiveFinished])
 
   useEffect(() => {
     let active = true
@@ -1051,6 +1058,9 @@ export function PhaserRaceCanvas({
           for (const raceEvent of newEvents) scene.applyEvent(raceEvent)
           eventCount = simulation.events.length
           inspectRef.current?.({ tick: simulation.tick, finished: simulation.finished, ducks: world.ducks, newEvents })
+          if (simulation.finished) {
+            onLiveFinishedRef.current?.()
+          }
           if (!simulation.finished) replayFrame = requestAnimationFrame(loop)
         }
 
@@ -1090,9 +1100,15 @@ export function PhaserRaceCanvas({
           try {
             const payload = JSON.parse((event as MessageEvent<string>).data) as RaceEvent
             if (payload.type === 'WILD_ITEM_MANUAL_INPUT') runner.applySyncEvent(payload)
+            if (payload.type === 'RACE_FINISHED') {
+              onLiveFinishedRef.current?.()
+            }
           } catch {
             // Ignore malformed sync events.
           }
+        })
+        source.addEventListener('finished', () => {
+          onLiveFinishedRef.current?.()
         })
         void sceneReady.then(() => runner.start())
       } else {
@@ -1104,6 +1120,9 @@ export function PhaserRaceCanvas({
           'WILD_HORN_USED', 'WILD_FEATHER_USED', 'WILD_FEATHER_DODGED', 'HAZARD_HIT', 'HAZARD_DODGED', 'GOLDEN_BOX_COLLECTED', 'DUCK_FINISHED',
         ])
         source = new EventSource(`/api/races/${raceId}/live`)
+        source.addEventListener('finished', () => {
+          onLiveFinishedRef.current?.()
+        })
         source.addEventListener('snapshot', (event) => {
           try {
             const payload = JSON.parse((event as MessageEvent<string>).data) as StateSnapshotMessage

@@ -57,6 +57,7 @@ export async function GET(request: Request) {
     const skippedPlayerIds = parseSkippedPlayerIds(currentWeek?.skippedPlayerIdsJson)
     const latestResolvedWeek = [...season.weeksPlan].reverse().find((week: { status: string }) => week.status === 'resolved') ?? null
     const viewerLoadout = viewer && currentWeek ? currentWeek.loadouts.find((loadout: { seasonPlayerId: number }) => loadout.seasonPlayerId === viewer.id) : null
+    const viewerPrediction = viewer && currentWeek ? currentWeek.predictions.find((prediction: { predictorPlayerId: number }) => prediction.predictorPlayerId === viewer.id) : null
     const liveRace = viewer ? await prisma.race.findFirst({
       where: { status: { in: ['pending', 'running'] }, engineVersion: { not: null }, participants: { some: { userId: viewer.userId } } },
       orderBy: { createdAt: 'desc' },
@@ -123,7 +124,10 @@ export async function GET(request: Request) {
         chaosTargetName2: currentWeek.chaosTargetUserId2 === null ? null : season.players.find((player: { userId: number }) => player.userId === currentWeek.chaosTargetUserId2)?.user.name ?? null,
         predictionsLockedAt: currentWeek.predictionsLockedAt,
         predictionCount: currentWeek.predictions.length,
-        predictionSubmitted: Boolean(viewer && currentWeek.predictions.some((prediction: { predictorPlayerId: number }) => prediction.predictorPlayerId === viewer.id)),
+        predictionSubmitted: Boolean(viewerPrediction),
+        predictionTargetUserId: viewerPrediction?.targetUserId ?? null,
+        predictionTargetName: viewerPrediction?.target.name ?? null,
+        predictionTargetAvatarUrl: viewerPrediction?.target.avatarUrl ?? null,
         shieldConfirmed: Boolean(viewer && currentWeek.shieldChoices.some((choice: { seasonPlayerId: number }) => choice.seasonPlayerId === viewer.id)),
         loadoutReadyCount: currentWeek.loadouts.filter((loadout: { status: string }) => loadout.status === 'ready' || loadout.status === 'auto').length,
         loadout: viewerLoadout ? { itemIds: parseItemIds(viewerLoadout.itemIdsJson), status: viewerLoadout.status } : { itemIds: [], status: 'draft' },

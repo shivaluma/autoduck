@@ -47,6 +47,9 @@ type SeasonData = {
     viewerSkipped: boolean
     predictionCount: number
     predictionSubmitted: boolean
+    predictionTargetUserId?: number | null
+    predictionTargetName?: string | null
+    predictionTargetAvatarUrl?: string | null
     shieldConfirmed: boolean
     loadoutReadyCount: number
     loadout: { itemIds: RaceItemId[]; status: string }
@@ -115,6 +118,9 @@ export default function Season3Page() {
       if (syncLoadout) {
         setSelectedItems(next.currentWeek?.loadout.itemIds ?? [])
       }
+      if (next.currentWeek?.predictionTargetUserId) {
+        setSelectedTarget(next.currentWeek.predictionTargetUserId)
+      }
     } catch {
       setMessage('Không tải được dữ liệu Season 3.')
     } finally {
@@ -129,6 +135,9 @@ export default function Season3Page() {
       const next = (await response.json()) as SeasonData
       setData(next)
       if (syncLoadout || !silent) setSelectedItems(next.currentWeek?.loadout.itemIds ?? [])
+      if (next.currentWeek?.predictionTargetUserId && !selectedTarget) {
+        setSelectedTarget(next.currentWeek.predictionTargetUserId)
+      }
     } finally {
       if (!silent) setLoading(false)
     }
@@ -447,6 +456,35 @@ export default function Season3Page() {
               <StatTile icon="🪙" label="Quack Points" value={data.viewer.quackPoints} tone="text-amber-300" />
             </div>
 
+            {/* Current Week Prep Summary */}
+            {week && !week.viewerSkipped && (
+              <div className="border-t-2 border-white/10 bg-black/15 px-5 py-3 text-xs">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-bold text-white/50">Tuần {week.weekNumber}:</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {week.loadout.status === 'ready' || week.loadout.status === 'auto' ? (
+                      <span className="rounded-lg border border-emerald-500/30 bg-emerald-500/20 px-2.5 py-1 font-black text-emerald-300">
+                        🎒 Loadout: Đã sẵn sàng
+                      </span>
+                    ) : (
+                      <span className="rounded-lg border border-rose-500/30 bg-rose-500/20 px-2.5 py-1 font-black text-rose-300">
+                        🎒 Loadout: Chưa chọn
+                      </span>
+                    )}
+                    {week.predictionSubmitted && week.predictionTargetName ? (
+                      <span className="rounded-lg border border-purple-500/30 bg-purple-500/20 px-2.5 py-1 font-black text-purple-300">
+                        🔮 Đã đoán: {week.predictionTargetName}
+                      </span>
+                    ) : (
+                      <span className="rounded-lg border border-amber-500/30 bg-amber-500/20 px-2.5 py-1 font-black text-amber-300">
+                        🔮 Chưa gửi dự đoán
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Shield Confirmation */}
             {week?.status === 'open' && !week.viewerSkipped && (
               <div className="border-t-2 border-white/10 bg-black/10 p-5">
@@ -700,6 +738,22 @@ export default function Season3Page() {
             <p className="mt-2 text-sm text-white/70">
               Chọn 1 chú vịt bạn nghĩ sẽ về 2 vị trí cuối cùng trên đường đua (+1 🔮 nếu đoán trúng, nhận thêm 🪙 QP nếu người đó bị Chaos xử thua).
             </p>
+            {week.predictionSubmitted && week.predictionTargetName && (
+              <div className="mt-3 rounded-2xl border-2 border-[var(--color-ggd-gold)] bg-black/40 p-3.5 shadow-inner">
+                <div className="text-[10px] font-black uppercase tracking-widest text-[var(--color-ggd-gold)]">
+                  🎯 Dự đoán đã lưu của bạn
+                </div>
+                <div className="mt-1 flex items-center gap-2.5 font-black text-white">
+                  <Season3Avatar name={week.predictionTargetName} avatarUrl={week.predictionTargetAvatarUrl} size={32} />
+                  <span>Bạn đã chọn:</span>
+                  <span className="text-lg text-[var(--color-ggd-gold)]">{week.predictionTargetName}</span>
+                  <span className="rounded-full border border-emerald-500/30 bg-emerald-500/20 px-2 py-0.5 text-xs text-emerald-300">Đã lưu ✓</span>
+                </div>
+                <p className="mt-1 text-xs text-white/60">
+                  Bạn có thể chọn chú vịt khác bên dưới và bấm nút Cập nhật bất kỳ lúc nào trước khi Host khóa.
+                </p>
+              </div>
+            )}
             <div className="mt-4 grid max-h-48 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
               {eligiblePlayers.map((player) => (
                 <button
@@ -722,21 +776,43 @@ export default function Season3Page() {
               disabled={!selectedTarget}
               className="mt-4 w-full rounded-xl bg-[var(--color-ggd-gold)] px-5 py-3 font-black text-[var(--color-ggd-outline)] shadow-[0_4px_0_rgba(0,0,0,.4)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-35"
             >
-              🔒 KHÓA DỰ ĐOÁN TIÊN TRI
+              {week.predictionSubmitted ? '✓ CẬP NHẬT DỰ ĐOÁN TIÊN TRI' : '🔒 KHÓA DỰ ĐOÁN TIÊN TRI'}
             </button>
             {message && <p className="mt-3 text-center text-sm font-bold text-[var(--color-ggd-neon-green)]">{message}</p>}
           </section>
-        ) : week?.status === 'racing' && week.raceId ? (
-          <section className="rounded-[2rem] border-4 border-[var(--color-ggd-neon-green)] bg-[var(--color-ggd-neon-green)]/10 p-5 shadow-[0_6px_0_var(--color-ggd-outline)]">
-            <div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-neon-green)]">CUỘC ĐUA ĐANG DIỄN RA</div>
-            <h2 className="mt-1 font-display text-3xl">🏁 Cuộc Đua Đang Tranh Tài!</h2>
-            <p className="mt-2 text-sm text-white/70">Bảng xếp hạng sẽ tự động cập nhật ngay khi các chú vịt về đích.</p>
-            <Link
-              href={`/season-3/race/${week.raceId}`}
-              className="mt-4 inline-block rounded-xl bg-[var(--color-ggd-neon-green)] px-5 py-3 font-black text-[var(--color-ggd-outline)] shadow-md transition hover:brightness-110"
-            >
-              VÀO XEM ĐUA LIVE
-            </Link>
+        ) : (week?.status === 'locked' || week?.status === 'racing') && data.viewer && !week.viewerSkipped ? (
+          <section className="rounded-[2rem] border-4 border-[var(--color-ggd-gold)] bg-[linear-gradient(135deg,rgba(255,204,0,.15),rgba(36,21,72,.9))] p-5 shadow-[0_6px_0_var(--color-ggd-outline)]">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-gold)]">
+                  {week.status === 'racing' ? 'CUỘC ĐUA ĐANG DIỄN RA' : 'ĐÃ KHÓA CHUẨN BỊ'}
+                </div>
+                <h2 className="mt-1 font-display text-3xl">🔮 Dự Đoán Tiên Tri</h2>
+              </div>
+              <div className="text-4xl">🔮</div>
+            </div>
+            {week.predictionSubmitted && week.predictionTargetName ? (
+              <div className="mt-4 rounded-2xl border-2 border-[var(--color-ggd-gold)] bg-black/35 p-4">
+                <div className="text-xs text-white/50">Chú vịt bạn đã dự đoán bị làm Dzịt (top 2 cuối):</div>
+                <div className="mt-2 flex items-center gap-3">
+                  <Season3Avatar name={week.predictionTargetName} avatarUrl={week.predictionTargetAvatarUrl} size={44} />
+                  <div>
+                    <div className="font-display text-2xl text-[var(--color-ggd-gold)]">{week.predictionTargetName}</div>
+                    <span className="text-xs text-white/60">Chúc bạn may mắn nhận +1 🔮 và thưởng QP!</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="mt-3 text-sm text-white/60">Bạn chưa kịp gửi dự đoán tuần này trước khi khóa.</p>
+            )}
+            {week.status === 'racing' && week.raceId && (
+              <Link
+                href={`/season-3/race/${week.raceId}`}
+                className="mt-4 inline-block rounded-xl bg-[var(--color-ggd-neon-green)] px-5 py-3 font-black text-[var(--color-ggd-outline)] shadow-md transition hover:brightness-110"
+              >
+                🏁 VÀO XEM ĐUA LIVE
+              </Link>
+            )}
           </section>
         ) : (
           <section className="rounded-[2rem] border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-surface-2)] p-5">
