@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="face-sg-gem">
+      <polygon points="352,105 356,118 369,122 356,126 352,139 348,126 335,122 348,118" fill="#FDE047" stroke="#1B132B" stroke-width="4"/>
+      <circle cx="352" cy="122" r="4" fill="#FF78A8"/>
+      <circle cx="305" cy="188" r="10" fill="#FF78A8" opacity="0.6"/>
+      <circle cx="395" cy="192" r="9" fill="#FF78A8" opacity="0.6"/>
+      <polygon points="295,175 297,178 300,178 298,180 299,183 295,181 291,183 292,180 290,178 293,178" fill="#FFFDF4"/>
+      <polygon points="405,180 407,183 410,183 408,185 409,188 405,186 401,188 402,185 400,183 403,183" fill="#FFFDF4"/>
+    </g>
+</svg>

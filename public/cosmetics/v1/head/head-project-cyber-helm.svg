@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="head-project-helm">
+      <path d="M236 94 C240 38, 310 26, 376 36 C408 44, 420 68, 416 94 Z" fill="#0F172A" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+      <path d="M246 90 C280 60, 360 60, 400 90" stroke="#00F2FE" stroke-width="8" fill="none"/>
+      <polygon points="390,30 425,-5 415,40" fill="#00F2FE" stroke="#1B132B" stroke-width="4"/>
+      <rect x="230" y="80" width="20" height="30" rx="6" fill="#38BDF8" stroke="#1B132B" stroke-width="4"/>
+      <rect x="402" y="80" width="20" height="30" rx="6" fill="#38BDF8" stroke="#1B132B" stroke-width="4"/>
+    </g>
+</svg>

@@ -179,8 +179,8 @@ test('Nitro activates deterministically and ends after configured duration', () 
   assert.ok(nitroTick > 0)
   assert.equal(runtime.boostUntilTick, nitroTick + durationTicks)
   assert.equal(runtime.boostMultiplier, ITEM_BALANCE.nitro.speedMultiplier)
-  assert.equal(itemSpeedMultiplier(runtime, nitroTick), ITEM_BALANCE.nitro.speedMultiplier)
-  assert.equal(itemSpeedMultiplier(runtime, nitroTick + durationTicks - 1), ITEM_BALANCE.nitro.speedMultiplier)
+  assert.equal(itemSpeedMultiplier(runtime, nitroTick), 1.0)
+  assert.equal(itemSpeedMultiplier(runtime, nitroTick + 30), ITEM_BALANCE.nitro.speedMultiplier)
 
   tickItemsWithAutoAI(raceConfig, state, ducks, nitroTick + durationTicks, 60, (type) => events.push(type))
   assert.equal(itemSpeedMultiplier(runtime, nitroTick + durationTicks), 1)
@@ -274,35 +274,7 @@ test('Rocket hits the duck ahead and applies the configured slow', () => {
 })
 
 test('Rocket applies two-stage stagger then recovery slow', () => {
-  const runtime: DuckItemRuntime = {
-    itemIds: ['FEATHER'],
-    usedItems: new Set(),
-    speedMultiplier: 1,
-    boostMultiplier: 1,
-    slowMultiplier: 1,
-    slowUntilTick: 0,
-    boostUntilTick: 0,
-    boostStartedAtTick: 0,
-    activeSpeedItemId: null,
-    queuedSpeedBoost: null,
-    bubbleAvailable: false,
-    featherAvailable: false,
-    shockAbsorberAvailable: false,
-    itemImmunityUntilTick: 0,
-    rocketProtectionUntilTick: 0,
-    draftSlipstreamTicks: 0,
-    draftTargetPlayerId: null,
-    silencedUntilTick: 0,
-    lastItemUseTick: 0,
-    lastOffensiveUseTick: 0,
-    nextAutoDecisionTick: 0,
-    nextAutoActionTick: 0,
-    pendingAutoAction: null,
-    pendingAutoActionExecuteTick: 0,
-    reactiveRocketVisibleSinceTick: null,
-    reactiveBananaVisibleSinceTick: null,
-    loadoutCombo: null,
-  }
+  const runtime: DuckItemRuntime = defense(['FEATHER'])
 
   // Hit at tick 100 with tickRate 60
   applyStagedSlow(

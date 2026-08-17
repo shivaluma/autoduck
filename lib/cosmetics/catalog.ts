@@ -45,20 +45,107 @@ const CORE_CATALOG: CosmeticDefinition[] = [
   cosmetic('aura-fireflies', 'Pond Fireflies', 'aura', 'epic', 'auraCenter', { collection: 'River Royalty', animation: 'orbit' }),
 ]
 
-const COLLECTIONS = ['Office Survivors', 'River Royalty', 'Cyber Quack', 'Street Duck', 'Viet Duck', 'Space Duck', 'Food Fight', 'Cursed Collection']
+const COLLECTIONS = [
+  'Office Survivors', 'River Royalty', 'Cyber Quack', 'Street Duck',
+  'Viet Duck', 'Space Duck', 'Food Fight', 'Cursed Collection',
+  'Spirit Realm', 'Star Guardians', 'Blood Moon', 'Arcane Hextech',
+  'Reddit Collectibles', 'Coven Gods', 'High Noon',
+]
 const RARITIES: CosmeticDefinition['rarity'][] = ['common', 'uncommon', 'rare', 'epic', 'legendary']
 const EXTRA_NAMES: Record<string, string[]> = {
-  bodySkin: ['Lotus Speckles', 'River Stripes', 'Pixel Pond', 'Cloud Patches', 'Coffee Stains', 'Neon Scales', 'Star Freckles', 'Barcode Duck', 'Bamboo Marks', 'Chilli Dots', 'Moon Craters', 'Circuit Feathers', 'Newsprint', 'Tiger Quack', 'Confetti Rain', 'Koi Patches', 'Storm Lines', 'Galaxy Dust', 'Lucky Tiles', 'Cursed Scribble', 'Gold Veins', 'Prism Checks', 'Dragon Scale'],
-  face: ['Sleepy Eyes', 'Office Burnout', 'Laser Visor', 'Monocle', 'Heart Eyes', 'Angry Brows', 'Tiny Moustache', 'Star Glasses', 'Swimming Goggles', 'Pixel Eyes', 'Anime Sparkle', 'Detective Lens', 'Chef Focus', 'Moon Gaze', 'Cyber Scan', 'Lucky Wink', 'Panic Face', 'Villain Brows', 'Disco Shades', 'Golden Gaze', 'Ghost Eyes', 'Frog Goggles', 'Diamond Tears', 'Monday Face', 'Victory Wink', 'Space Visor', 'Chilli Tears', 'Royal Lashes'],
-  head: ['Beanie', 'Office Headset', 'Paper Crown', 'Chef Hat', 'Traffic Cone', 'Lotus Hat', 'Motorbike Helmet', 'Cowboy Hat', 'Wizard Hat', 'Space Dome', 'Propeller Cap', 'Viking Horns', 'Detective Hat', 'Party Cone', 'Rice Bowl', 'Noodle Cup', 'Bamboo Hat', 'Cloud Halo', 'Dev Antenna', 'Cat Ears', 'Frog Hood', 'Pirate Hat', 'Captain Cap', 'Disco Ball', 'Moon Tiara', 'Dragon Horns', 'Golden Laurel', 'Cyber Mohawk', 'Bread Beret', 'Coffee Lid', 'Rocket Helm', 'Fish Crown', 'Storm Cloud', 'Mushroom Cap', 'Lucky Helmet', 'Neon Fedora', 'Paper Boat', 'Royal Turban', 'Cursed Candle', 'Galaxy Crown', 'Boss Comb', 'Quackphone', 'Hotpot Lid', 'Victory Wreath', 'Diamond Crown', 'Satellite Dish', 'Pho Bowl', 'Tiny Pond'],
-  neck: ['Office Lanyard', 'Red Scarf', 'Golden Bow', 'Lotus Chain', 'Cyber Collar', 'Royal Cape Clip'],
-  outfit: ['Office Shirt', 'Dev Hoodie', 'Street Jacket', 'Chef Apron', 'Space Suit', 'Wizard Robe', 'Biker Vest', 'Sailor Shirt', 'Lotus Tunic', 'Pixel Armor', 'Royal Mantle', 'Football Jersey', 'Pajamas', 'Detective Coat', 'Rain Poncho', 'Noodle Armor', 'Coffee Uniform', 'Dragon Robe', 'Disco Suit', 'Pirate Coat', 'Cloud Sweater', 'Neon Tracksuit', 'Moon Kimono', 'Racing Suit', 'Golden Tux', 'Cursed Cloak', 'Bamboo Armor', 'Hotpot Apron', 'Galaxy Jacket', 'Victory Cape', 'Frog Onesie', 'Bread Suit', 'Storm Coat', 'Diamond Armor', 'Pond Lifeguard', 'Retro Windbreaker', 'Cyber Samurai', 'Lucky Áo Dài', 'Quack Knight', 'Boss Blazer'],
-  back: ['Office Backpack', 'Paper Wings', 'Jetpack', 'Bamboo Basket', 'Royal Cape', 'Dragon Wings', 'Cloud Pack', 'Neon Battery', 'Chef Knives', 'Space Tank', 'Lucky Flag', 'Cursed Hands', 'Lotus Fan', 'Rocket Pack', 'Disco Speakers', 'Tiny Pond Pack'],
-  pet: ['Rubber Fish', 'Tiny Drone', 'Coffee Slime', 'Baby Dragon', 'Cloud Cat', 'Pixel Crab', 'Lotus Spirit', 'Space Frog', 'Noodle Worm', 'Golden Carp', 'Cursed Eye', 'Mini Capybara', 'Office Mouse', 'Neon Jellyfish', 'Bread Pigeon', 'Tiny Shark', 'Moon Rabbit', 'Hotpot Spirit', 'Shiba Inu', 'Corgi Pup', 'Calico Cat', 'Lucky Black Cat', 'Golden Retriever', 'Cyber Hamster'],
-  aura: ['Coffee Steam', 'Royal Sparkles', 'Neon Glitch', 'Lotus Breeze', 'Storm Cloud', 'Pixel Orbit', 'Golden Rays', 'Ghost Fog', 'Space Dust', 'Chilli Heat', 'Bubble Halo', 'Dragon Flame', 'Disco Lights', 'Moon Glow', 'Lucky Leaves'],
-  trail: ['Bubble Wake', 'Neon Wake', 'Lotus Petals', 'Coffee Spill', 'Pixel Stream', 'Golden Water', 'Storm Foam', 'Rainbow Wake', 'Ghost Ripples', 'Chilli Sauce', 'Moon Dust', 'Dragon Sparks', 'Paper Boats'],
-  finish: ['Confetti Quack', 'Golden Splash', 'Pixel Explosion', 'Lotus Bloom', 'Dragon Roar', 'Coffee Burst', 'Moon Landing', 'Neon Victory', 'Storm Strike', 'Royal Fireworks'],
-  nameplate: ['Office Badge', 'River Ribbon', 'Cyber Tag', 'Street Sticker', 'Lotus Frame', 'Space Panel', 'Golden Plaque', 'Cursed Label', 'Coffee Card', 'Dragon Banner', 'Moon Plate', 'Victory Sign'],
+  bodySkin: [
+    'Lotus Speckles', 'River Stripes', 'Pixel Pond', 'Cloud Patches', 'Coffee Stains',
+    'Neon Scales', 'Star Freckles', 'Barcode Duck', 'Bamboo Marks', 'Chilli Dots',
+    'Moon Craters', 'Circuit Feathers', 'Newsprint', 'Tiger Quack', 'Confetti Rain',
+    'Koi Patches', 'Storm Lines', 'Galaxy Dust', 'Lucky Tiles', 'Cursed Scribble',
+    'Gold Veins', 'Prism Checks', 'Dragon Scale',
+    'Spirit Inks', 'Hextech Runes', 'KDA Iridescent', 'Blood Moon Markings', 'Star Constellations',
+    'Snoo Wireframe', 'Coven Bramble', 'Diamond Facets', 'Porcelain Glaze', 'High Noon Brands',
+  ],
+  face: [
+    'Sleepy Eyes', 'Office Burnout', 'Laser Visor', 'Monocle', 'Heart Eyes',
+    'Angry Brows', 'Tiny Moustache', 'Star Glasses', 'Swimming Goggles', 'Pixel Eyes',
+    'Anime Sparkle', 'Detective Lens', 'Chef Focus', 'Moon Gaze', 'Cyber Scan',
+    'Lucky Wink', 'Panic Face', 'Villain Brows', 'Disco Shades', 'Golden Gaze',
+    'Ghost Eyes', 'Frog Goggles', 'Diamond Tears', 'Monday Face', 'Victory Wink',
+    'Space Visor', 'Chilli Tears', 'Royal Lashes',
+    'Spirit Fox Mask', 'KDA Neon Demon Visor', 'Star Guardian Gem', 'Blood Moon Oni Half Mask', 'Rojom Abyss Eyes',
+    'Arcane Hextech Monocle', 'Snoo Heart Blush', 'High Noon Smolder', 'Coven Occult Veil', 'PROJECT HUD Reticle',
+  ],
+  head: [
+    'Beanie', 'Office Headset', 'Paper Crown', 'Chef Hat', 'Traffic Cone',
+    'Lotus Hat', 'Motorbike Helmet', 'Cowboy Hat', 'Wizard Hat', 'Space Dome',
+    'Propeller Cap', 'Viking Horns', 'Detective Hat', 'Party Cone', 'Rice Bowl',
+    'Noodle Cup', 'Bamboo Hat', 'Cloud Halo', 'Dev Antenna', 'Cat Ears',
+    'Frog Hood', 'Pirate Hat', 'Captain Cap', 'Disco Ball', 'Moon Tiara',
+    'Dragon Horns', 'Golden Laurel', 'Cyber Mohawk', 'Bread Beret', 'Coffee Lid',
+    'Rocket Helm', 'Fish Crown', 'Storm Cloud', 'Mushroom Cap', 'Lucky Helmet',
+    'Neon Fedora', 'Paper Boat', 'Royal Turban', 'Cursed Candle', 'Galaxy Crown',
+    'Boss Comb', 'Quackphone', 'Hotpot Lid', 'Victory Wreath', 'Diamond Crown',
+    'Satellite Dish', 'Pho Bowl', 'Tiny Pond',
+    'Snoo Antenna Glow', 'Spirit Blossom Kanzashi', 'Star Guardian Wings Tiara', 'Blood Moon Horns', 'Reddit Cone Head Prime',
+    'PROJECT Cyber Helm', 'Coven Antler Crown', 'Winterblessed Crown', 'High Noon Hellfire Hat', 'Dark Star Singularity',
+  ],
+  neck: [
+    'Office Lanyard', 'Red Scarf', 'Golden Bow', 'Lotus Chain', 'Cyber Collar', 'Royal Cape Clip',
+    'Spirit Prayer Beads', 'Star Guardian Ribbon', 'Blood Moon Magatama', 'PROJECT Energy Collar', 'Reddit Diamond Pendant',
+    'Coven Raven Skull', 'Arcane Hextech Choker', 'High Noon Bandana', 'KDA Golden Collar', 'Winterblessed Fur Collar',
+  ],
+  outfit: [
+    'Office Shirt', 'Dev Hoodie', 'Street Jacket', 'Chef Apron', 'Space Suit',
+    'Wizard Robe', 'Biker Vest', 'Sailor Shirt', 'Lotus Tunic', 'Pixel Armor',
+    'Royal Mantle', 'Football Jersey', 'Pajamas', 'Detective Coat', 'Rain Poncho',
+    'Noodle Armor', 'Coffee Uniform', 'Dragon Robe', 'Disco Suit', 'Pirate Coat',
+    'Cloud Sweater', 'Neon Tracksuit', 'Moon Kimono', 'Racing Suit', 'Golden Tux',
+    'Cursed Cloak', 'Bamboo Armor', 'Hotpot Apron', 'Galaxy Jacket', 'Victory Cape',
+    'Frog Onesie', 'Bread Suit', 'Storm Coat', 'Diamond Armor', 'Pond Lifeguard',
+    'Retro Windbreaker', 'Cyber Samurai', 'Lucky Áo Dài', 'Quack Knight', 'Boss Blazer',
+    'Spirit Blossom Haori', 'Star Guardian Sailor Dress', 'KDA Holographic Jacket', 'PROJECT Cyber Exosuit', 'Blood Moon Assassin Garb',
+    'Coven Witch Gown', 'High Noon Gunslinger Poncho', 'Reddit Drip Squad Puffer', 'Porcelain Hanfu Robe', 'Winterblessed Regal Coat',
+  ],
+  back: [
+    'Office Backpack', 'Paper Wings', 'Jetpack', 'Bamboo Basket', 'Royal Cape',
+    'Dragon Wings', 'Cloud Pack', 'Neon Battery', 'Chef Knives', 'Space Tank',
+    'Lucky Flag', 'Cursed Hands', 'Lotus Fan', 'Rocket Pack', 'Disco Speakers', 'Tiny Pond Pack',
+    'Spirit Fox Nine Tails', 'Star Guardian Wings', 'PROJECT Cyber Katanas', 'Blood Moon Eclipse Wheel', 'The Hands Spectral Grasp',
+    'Coven Raven Wings', 'Dark Star Cosmic Void', 'Reddit Diamond Hands Wings', 'Hextech Jet Boosters', 'High Noon Fiery Shroud',
+  ],
+  pet: [
+    'Rubber Fish', 'Tiny Drone', 'Coffee Slime', 'Baby Dragon', 'Cloud Cat',
+    'Pixel Crab', 'Lotus Spirit', 'Space Frog', 'Noodle Worm', 'Golden Carp',
+    'Cursed Eye', 'Mini Capybara', 'Office Mouse', 'Neon Jellyfish', 'Bread Pigeon',
+    'Tiny Shark', 'Moon Rabbit', 'Hotpot Spirit', 'Shiba Inu', 'Corgi Pup',
+    'Calico Cat', 'Lucky Black Cat', 'Golden Retriever', 'Cyber Hamster',
+    'Spirit Fox Kiko', 'Star Guardian Dango', 'Reddit Snoo Mini Bot', 'Blood Moon Little Crow', 'Porofessor Poro',
+    'Little Legend Pengu', 'PROJECT Cyber Drone', 'Coven Shadow Familiar', 'Cafe Cutie Pastry Pup', 'Arcane Firelight Beetle',
+  ],
+  aura: [
+    'Coffee Steam', 'Royal Sparkles', 'Neon Glitch', 'Lotus Breeze', 'Storm Cloud',
+    'Pixel Orbit', 'Golden Rays', 'Ghost Fog', 'Space Dust', 'Chilli Heat',
+    'Bubble Halo', 'Dragon Flame', 'Disco Lights', 'Moon Glow', 'Lucky Leaves',
+    'Spirit Blossom Petals', 'Star Guardian Stardust', 'Blood Moon Eclipse', 'PROJECT Matrix Grid', 'Coven Dark Eclipse',
+    'Dark Star Event Horizon', 'Reddit Upvote Tornado', 'High Noon Hellfire Flare', 'Winterblessed Aurora Ribbon', 'Arcane Hextech Anomaly',
+  ],
+  trail: [
+    'Bubble Wake', 'Neon Wake', 'Lotus Petals', 'Coffee Spill', 'Pixel Stream',
+    'Golden Water', 'Storm Foam', 'Rainbow Wake', 'Ghost Ripples', 'Chilli Sauce',
+    'Moon Dust', 'Dragon Sparks', 'Paper Boats',
+    'Spirit Blossom Sakura', 'Star Guardian Starlight', 'Blood Moon Crimson Ink', 'PROJECT Cyber Glitch', 'Dark Star Void Dust',
+    'Reddit Upvote Stream', 'High Noon Sulfur Smoke', 'Winterblessed Snowflakes', 'Arcane Hextech Lightning', 'Porcelain Blue Wave',
+  ],
+  finish: [
+    'Confetti Quack', 'Golden Splash', 'Pixel Explosion', 'Lotus Bloom', 'Dragon Roar',
+    'Coffee Burst', 'Moon Landing', 'Neon Victory', 'Storm Strike', 'Royal Fireworks',
+    'Star Guardian Starfall', 'Spirit Blossom Torii Bloom', 'Blood Moon Eclipse Burst', 'PROJECT Laser Strike', 'Dark Star Supernova',
+    'Reddit Diamond Rocket', 'Arcane Hextech Overdrive', 'High Noon Quickdraw Flare', 'Coven Occult Thorn Burst', 'Winterblessed Aurora Burst',
+  ],
+  nameplate: [
+    'Office Badge', 'River Ribbon', 'Cyber Tag', 'Street Sticker', 'Lotus Frame',
+    'Space Panel', 'Golden Plaque', 'Cursed Label', 'Coffee Card', 'Dragon Banner',
+    'Moon Plate', 'Victory Sign',
+    'Spirit Blossom Shrine', 'Star Guardian Crest', 'Blood Moon Torii Crest', 'PROJECT Cyber Tag', 'Coven Gothic Plaque',
+    'Dark Star Void Horizon', 'Reddit Hexagon Avatar Border', 'High Noon Wanted Plate', 'Winterblessed Frost Frame', 'Porcelain Dragon Plinth',
+  ],
 }
 
 const EXTRA_BODY_COLORS: Array<[string, string]> = [
@@ -66,6 +153,9 @@ const EXTRA_BODY_COLORS: Array<[string, string]> = [
   ['Coffee', '#9A6948'], ['Lotus', '#F4A7C5'], ['Silver', '#B9C3D2'], ['Emerald', '#2DBE79'],
   ['Ruby', '#CB4052'], ['Cyber Cyan', '#26E6E6'], ['Royal Purple', '#673AB7'], ['Chilli', '#EF3E36'],
   ['Galaxy', '#39406E'], ['Peach', '#FFB38A'], ['Bamboo', '#78A84B'], ['Ghost', '#DDEAF2'],
+  ['Spirit Blossom Lotus', '#FFC0D9'], ['Star Guardian Blue', '#85E3FF'], ['Blood Moon Crimson', '#991B1B'], ['Void Purple', '#6B21A8'],
+  ['Hextech Blue', '#0284C7'], ['Snoo Cosmic Abyss', '#1E1B4B'], ['WSB Diamond Mint', '#34D399'], ['Coven Bone White', '#F1F5F9'],
+  ['High Noon Sulfur', '#EA580C'], ['Porcelain Cobalt', '#2563EB'],
 ]
 
 function slug(value: string) {

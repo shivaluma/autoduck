@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="pet-companion">
+    <defs>
+      <style>
+        @keyframes pet-bob-512 {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-8px); }
+        }
+      </style>
+    </defs>
+    <g style="animation: pet-bob-512 2.4s ease-in-out infinite">
+      <!-- Reddit Snoo Mini Bot -->
+      <ellipse cx="432" cy="390" rx="26" ry="10" fill="#00F2FE" opacity="0.75"/>
+      <circle cx="432" cy="360" r="24" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
+      <path d="M432 336 L432 322 L442 320" stroke="#1B132B" stroke-width="8" stroke-linecap="round" fill="none"/>
+      <circle cx="444" cy="318" r="5" fill="#FF4500" stroke="#1B132B" stroke-width="4"/>
+      <ellipse cx="432" cy="360" rx="16" ry="10" fill="#0F172A"/>
+      <circle cx="426" cy="360" r="3" fill="#00F2FE"/>
+      <circle cx="438" cy="360" r="3" fill="#00F2FE"/>
+    </g>
+  </g>
+</svg>

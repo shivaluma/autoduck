@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="skin-spirit-inks" stroke="#C084FC" stroke-width="4" fill="none" opacity="0.8">
+      <path d="M280 75 C310 65, 330 85, 350 70" stroke-linecap="round"/>
+      <path d="M140 290 C175 270, 220 300, 260 280 C290 265, 320 295, 340 285" stroke-width="8" stroke-linecap="round"/>
+      <circle cx="160" cy="275" r="4" fill="#FDA4AF" stroke="none"/>
+      <circle cx="235" cy="305" r="5" fill="#FDA4AF" stroke="none"/>
+      <circle cx="310" cy="275" r="4" fill="#FDA4AF" stroke="none"/>
+    </g>
+</svg>

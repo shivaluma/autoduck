@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="head-high-noon-hat">
+      <path d="M256 90 C260 38, 310 28, 370 34 C396 38, 406 62, 402 90 Z" fill="#18181B" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+      <path d="M200 96 C240 106, 290 82, 350 82 C410 82, 444 106, 466 96 C434 120, 230 120, 200 96 Z" fill="#271810" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+      <path d="M250 86 Q315 72 380 84" stroke="#EA580C" stroke-width="8" fill="none"/>
+      <polygon points="315,62 322,76 332,76 324,84 327,96 315,88 303,96 306,84 298,76 308,76" fill="#FBBF24"/>
+    </g>
+</svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="head-sg-tiara">
+      <path d="M260 88 C295 50, 365 50, 400 88" stroke="#FDE047" stroke-width="14" stroke-linecap="round" fill="none"/>
+      <polygon points="260,88 230,40 275,65" fill="#FFFDF4" stroke="#1B132B" stroke-width="8" stroke-linejoin="round"/>
+      <polygon points="400,88 430,40 385,65" fill="#FFFDF4" stroke="#1B132B" stroke-width="8" stroke-linejoin="round"/>
+      <polygon points="330,30 336,46 352,52 336,58 330,74 324,58 308,52 324,46" fill="#FDE047" stroke="#1B132B" stroke-width="4"/>
+      <circle cx="330" cy="52" r="5" fill="#FF78A8"/>
+    </g>
+</svg>

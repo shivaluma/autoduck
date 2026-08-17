@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="nameplate-pedestal">
+    <path d="M104 430 C200 452, 312 452, 408 430 L392 484 C304 496, 208 496, 120 484 Z" fill="#6366F1" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+    <circle cx="144" cy="458" r="8" fill="#B99AFF"/>
+    <circle cx="368" cy="458" r="8" fill="#B99AFF"/>
+  </g>
+</svg>

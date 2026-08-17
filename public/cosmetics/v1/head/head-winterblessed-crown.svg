@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="head-winter-crown">
+      <path d="M265 80 L210 10 L180 25 M210 10 L220 -25 M265 80 L250 20 L270 -10" stroke="#38BDF8" stroke-width="10" stroke-linecap="round" fill="none"/>
+      <path d="M365 80 L420 10 L450 25 M420 10 L410 -25 M365 80 L380 20 L360 -10" stroke="#38BDF8" stroke-width="10" stroke-linecap="round" fill="none"/>
+      <polygon points="315,20 326,38 344,44 326,50 315,68 304,50 286,44 304,38" fill="#A7F3D0" stroke="#1B132B" stroke-width="4"/>
+      <circle cx="315" cy="44" r="4" fill="#FFFDF4"/>
+    </g>
+</svg>

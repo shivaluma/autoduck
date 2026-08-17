@@ -217,6 +217,120 @@ function generateHead(item: CosmeticDefinition, primary: string, secondary: stri
     </g>`
   }
 
+  // REDDIT & LOL HEADWEAR
+  if (id === 'head-snoo-antenna-glow') {
+    return `<g id="head-snoo-antenna">
+      <defs>
+        <filter id="snoo-glow-512" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <path d="M330 84 C330 30, 310 -8, 345 -14" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}" stroke-linecap="round" fill="none"/>
+      <path d="M330 84 C330 30, 310 -8, 345 -14" stroke="#FFFDF4" stroke-width="${OUTLINE_MINOR}" stroke-linecap="round" fill="none"/>
+      <circle cx="348" cy="-16" r="14" fill="#FF4500" stroke="${COLOR}" stroke-width="${DETAIL}" filter="url(#snoo-glow-512)"/>
+      <circle cx="345" cy="-19" r="4" fill="#FFFDF4"/>
+    </g>`
+  }
+
+  if (id === 'head-spirit-blossom-kanzashi') {
+    return `<g id="head-spirit-kanzashi">
+      <path d="M365 75 C395 110, 420 150, 415 190" stroke="#38BDF8" stroke-width="${OUTLINE_MINOR}" fill="none" stroke-linecap="round"/>
+      <g transform="translate(365, 70)">
+        <path d="M0 0 C-10 -22, 10 -22, 0 0" fill="#FFC0D9" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+        <path d="M0 0 C-22 -10, -22 10, 0 0" fill="#FFC0D9" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+        <path d="M0 0 C10 22, -10 22, 0 0" fill="#FFC0D9" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+        <path d="M0 0 C22 10, 22 -10, 0 0" fill="#FFC0D9" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+        <path d="M0 0 C15 -18, 25 -5, 0 0" fill="#FFC0D9" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+        <circle cx="0" cy="0" r="7" fill="#FDE047" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+        <circle cx="0" cy="0" r="3" fill="#FFFDF4"/>
+      </g>
+      <circle cx="415" cy="195" r="8" fill="#FBBF24" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+    </g>`
+  }
+
+  if (id === 'head-star-guardian-wings-tiara') {
+    return `<g id="head-sg-tiara">
+      <path d="M260 88 C295 50, 365 50, 400 88" stroke="#FDE047" stroke-width="${OUTLINE_MAJOR}" stroke-linecap="round" fill="none"/>
+      <polygon points="260,88 230,40 275,65" fill="#FFFDF4" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}" stroke-linejoin="round"/>
+      <polygon points="400,88 430,40 385,65" fill="#FFFDF4" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}" stroke-linejoin="round"/>
+      <polygon points="330,30 336,46 352,52 336,58 330,74 324,58 308,52 324,46" fill="#FDE047" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <circle cx="330" cy="52" r="5" fill="#FF78A8"/>
+    </g>`
+  }
+
+  if (id === 'head-blood-moon-horns') {
+    return `<g id="head-blood-horns">
+      <path d="M265 80 C235 45, 195 -10, 215 -35 C235 -20, 260 25, 280 60 Z" fill="#991B1B" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}" stroke-linejoin="round"/>
+      <path d="M355 60 C375 25, 400 -20, 420 -35 C440 -10, 400 45, 370 80 Z" fill="#991B1B" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}" stroke-linejoin="round"/>
+      <path d="M230 -10 L255 15" stroke="#F59E0B" stroke-width="${OUTLINE_MINOR}" stroke-linecap="round"/>
+      <path d="M405 -10 L380 15" stroke="#F59E0B" stroke-width="${OUTLINE_MINOR}" stroke-linecap="round"/>
+      <path d="M255 90 C295 72, 345 72, 385 90" stroke="#991B1B" stroke-width="${OUTLINE_MINOR}" fill="none"/>
+    </g>`
+  }
+
+  if (id === 'head-reddit-cone-head-prime') {
+    return `<g id="head-cone-prime">
+      <defs>
+        <filter id="cone-halo-512" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <ellipse cx="330" cy="18" rx="55" ry="16" fill="none" stroke="#FDE047" stroke-width="${OUTLINE_MINOR}" filter="url(#cone-halo-512)"/>
+      <polygon points="265,96 330,8 395,96" fill="#FF5B00" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}" stroke-linejoin="round"/>
+      <polygon points="280,68 330,8 380,68" fill="#FFFDF4" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <polygon points="296,44 330,8 364,44" fill="#FF5B00"/>
+      <path d="M238 98 H422" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}" stroke-linecap="round"/>
+    </g>`
+  }
+
+  if (id === 'head-project-cyber-helm') {
+    return `<g id="head-project-helm">
+      <path d="M236 94 C240 38, 310 26, 376 36 C408 44, 420 68, 416 94 Z" fill="#0F172A" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}" stroke-linejoin="round"/>
+      <path d="M246 90 C280 60, 360 60, 400 90" stroke="#00F2FE" stroke-width="${OUTLINE_MINOR}" fill="none"/>
+      <polygon points="390,30 425,-5 415,40" fill="#00F2FE" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <rect x="230" y="80" width="20" height="30" rx="6" fill="#38BDF8" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <rect x="402" y="80" width="20" height="30" rx="6" fill="#38BDF8" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+    </g>`
+  }
+
+  if (id === 'head-coven-antler-crown') {
+    return `<g id="head-coven-antlers">
+      <path d="M270 75 C240 30, 200 10, 180 -25 M225 10 C210 -15, 190 -10, 185 -5 M270 75 C285 30, 275 -10, 260 -35" stroke="#18181B" stroke-width="12" stroke-linecap="round" fill="none"/>
+      <path d="M270 75 C240 30, 200 10, 180 -25 M225 10 C210 -15, 190 -10, 185 -5 M270 75 C285 30, 275 -10, 260 -35" stroke="#4C1D95" stroke-width="${DETAIL}" stroke-linecap="round" fill="none"/>
+      <path d="M360 75 C390 30, 430 10, 450 -25 M405 10 C420 -15, 440 -10, 445 -5 M360 75 C345 30, 355 -10, 370 -35" stroke="#18181B" stroke-width="12" stroke-linecap="round" fill="none"/>
+      <path d="M360 75 C390 30, 430 10, 450 -25 M405 10 C420 -15, 440 -10, 445 -5 M360 75 C345 30, 355 -10, 370 -35" stroke="#4C1D95" stroke-width="${DETAIL}" stroke-linecap="round" fill="none"/>
+      <circle cx="315" cy="55" r="9" fill="#7C3AED" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+    </g>`
+  }
+
+  if (id === 'head-winterblessed-crown') {
+    return `<g id="head-winter-crown">
+      <path d="M265 80 L210 10 L180 25 M210 10 L220 -25 M265 80 L250 20 L270 -10" stroke="#38BDF8" stroke-width="10" stroke-linecap="round" fill="none"/>
+      <path d="M365 80 L420 10 L450 25 M420 10 L410 -25 M365 80 L380 20 L360 -10" stroke="#38BDF8" stroke-width="10" stroke-linecap="round" fill="none"/>
+      <polygon points="315,20 326,38 344,44 326,50 315,68 304,50 286,44 304,38" fill="#A7F3D0" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <circle cx="315" cy="44" r="4" fill="#FFFDF4"/>
+    </g>`
+  }
+
+  if (id === 'head-high-noon-hellfire-hat') {
+    return `<g id="head-high-noon-hat">
+      <path d="M256 90 C260 38, 310 28, 370 34 C396 38, 406 62, 402 90 Z" fill="#18181B" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}" stroke-linejoin="round"/>
+      <path d="M200 96 C240 106, 290 82, 350 82 C410 82, 444 106, 466 96 C434 120, 230 120, 200 96 Z" fill="#271810" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}" stroke-linejoin="round"/>
+      <path d="M250 86 Q315 72 380 84" stroke="#EA580C" stroke-width="${OUTLINE_MINOR}" fill="none"/>
+      <polygon points="315,62 322,76 332,76 324,84 327,96 315,88 303,96 306,84 298,76 308,76" fill="#FBBF24"/>
+    </g>`
+  }
+
+  if (id === 'head-dark-star-singularity') {
+    return `<g id="head-dark-singularity">
+      <circle cx="330" cy="36" r="26" fill="#0F172A" stroke="#7C3AED" stroke-width="${OUTLINE_MAJOR}"/>
+      <circle cx="330" cy="36" r="14" fill="#020617"/>
+      <ellipse cx="330" cy="36" rx="42" ry="14" stroke="#C084FC" stroke-width="${DETAIL}" fill="none" transform="rotate(-15 330 36)"/>
+      <circle cx="368" cy="28" r="4" fill="#38BDF8"/>
+      <circle cx="292" cy="44" r="3" fill="#F43F5E"/>
+    </g>`
+  }
+
   // Fallback headwear
   return `<g id="head-custom-${seed}">
     <path d="M244 96 C248 44, 320 36, 380 40 C408 44, 416 68, 410 96 Z" fill="${primary}" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}" stroke-linejoin="round"/>
@@ -326,6 +440,124 @@ function generateOutfit(item: CosmeticDefinition, primary: string, secondary: st
     </g>`
   }
 
+  // REDDIT & LOL OUTFITS
+  if (id === 'outfit-spirit-blossom-haori') {
+    return `<g id="outfit-spirit-haori">
+      <path d="M84 326 c0 -54 44 -92 114 -104 l24 30 q38 34 86 -2 l34 6 c38 16 60 38 68 66 c14 66 -52 100 -166 96 c-106 -2 -160 -36 -160 -92 Z" fill="#FCE7F3" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}" stroke-linejoin="round"/>
+      <path d="M136 304 C164 284, 210 290, 240 324 C216 356, 160 364, 136 304 Z" fill="#E9D5FF" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}" stroke-linejoin="round"/>
+      <rect x="230" y="320" width="100" height="34" rx="6" fill="#06B6D4" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <circle cx="280" cy="337" r="8" fill="#FDE047" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <path d="M240 252 Q280 290 320 252" stroke="#F43F5E" stroke-width="${OUTLINE_MINOR}" fill="none"/>
+      <circle cx="200" cy="340" r="5" fill="#FF78A8"/>
+      <circle cx="340" cy="350" r="6" fill="#FF78A8"/>
+    </g>`
+  }
+
+  if (id === 'outfit-star-guardian-sailor-dress') {
+    return `<g id="outfit-sg-dress">
+      <path d="M84 326 c0 -54 44 -92 114 -104 l24 30 q38 34 86 -2 l34 6 c38 16 60 38 68 66 c14 66 -52 100 -166 96 c-106 -2 -160 -36 -160 -92 Z" fill="#FFFDF4" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}" stroke-linejoin="round"/>
+      <path d="M136 304 C164 284, 210 290, 240 324 C216 356, 160 364, 136 304 Z" fill="#BAE6FD" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}" stroke-linejoin="round"/>
+      <path d="M216 248 L250 290 L280 252 L310 290 L344 248" fill="#38BDF8" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <polygon points="280,285 288,300 304,300 292,310 296,325 280,315 264,325 268,310 256,300 272,300" fill="#FDE047" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <path d="M220 376 C250 394, 310 394, 340 376" stroke="#FF78A8" stroke-width="${OUTLINE_MINOR}" fill="none"/>
+    </g>`
+  }
+
+  if (id === 'outfit-kda-holographic-jacket') {
+    return `<g id="outfit-kda-jacket">
+      <path d="M84 326 c0 -54 44 -92 114 -104 l24 30 q38 34 86 -2 l34 6 c38 16 60 38 68 66 c14 66 -52 100 -166 96 c-106 -2 -160 -36 -160 -92 Z" fill="#0B0F19" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}" stroke-linejoin="round"/>
+      <path d="M136 304 C164 284, 210 290, 240 324 C216 356, 160 364, 136 304 Z" fill="#C084FC" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}" stroke-linejoin="round"/>
+      <path d="M220 248 L275 320 L275 398 L220 380 Z" fill="#00F2FE" opacity="0.8"/>
+      <path d="M330 248 L275 320 L275 398 L330 380 Z" fill="#FF007F" opacity="0.8"/>
+      <line x1="275" y1="250" x2="275" y2="400" stroke="#FFD84D" stroke-width="${OUTLINE_MINOR}"/>
+      <circle cx="310" cy="300" r="6" fill="#FFD84D"/>
+    </g>`
+  }
+
+  if (id === 'outfit-project-cyber-exosuit') {
+    return `<g id="outfit-project-exosuit">
+      <path d="M84 326 c0 -54 44 -92 114 -104 l24 30 q38 34 86 -2 l34 6 c38 16 60 38 68 66 c14 66 -52 100 -166 96 c-106 -2 -160 -36 -160 -92 Z" fill="#18181B" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}" stroke-linejoin="round"/>
+      <path d="M136 304 C164 284, 210 290, 240 324 C216 356, 160 364, 136 304 Z" fill="#27272A" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}" stroke-linejoin="round"/>
+      <polygon points="250,280 300,280 315,330 280,360 240,330" fill="#0F172A" stroke="#00F2FE" stroke-width="${OUTLINE_MINOR}"/>
+      <circle cx="278" cy="318" r="12" fill="#00F2FE" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <circle cx="278" cy="318" r="6" fill="#FFFDF4"/>
+      <line x1="230" y1="360" x2="330" y2="360" stroke="#00F2FE" stroke-width="${DETAIL}"/>
+    </g>`
+  }
+
+  if (id === 'outfit-blood-moon-assassin-garb') {
+    return `<g id="outfit-blood-garb">
+      <path d="M84 326 c0 -54 44 -92 114 -104 l24 30 q38 34 86 -2 l34 6 c38 16 60 38 68 66 c14 66 -52 100 -166 96 c-106 -2 -160 -36 -160 -92 Z" fill="#7F1D1D" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}" stroke-linejoin="round"/>
+      <path d="M136 304 C164 284, 210 290, 240 324 C216 356, 160 364, 136 304 Z" fill="#18181B" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}" stroke-linejoin="round"/>
+      <path d="M220 250 L280 330 L340 250" stroke="#F59E0B" stroke-width="${OUTLINE_MINOR}" fill="none"/>
+      <rect x="236" y="330" width="88" height="30" rx="4" fill="#991B1B" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <circle cx="280" cy="345" r="7" fill="#F59E0B"/>
+      <path d="M265 360 L260 400 L275 400 L280 360" fill="#991B1B" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+    </g>`
+  }
+
+  if (id === 'outfit-coven-witch-gown') {
+    return `<g id="outfit-coven-gown">
+      <path d="M84 326 c0 -54 44 -92 114 -104 l24 30 q38 34 86 -2 l34 6 c38 16 60 38 68 66 c14 66 -52 100 -166 96 c-106 -2 -160 -36 -160 -92 Z" fill="#2E1065" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}" stroke-linejoin="round"/>
+      <path d="M136 304 C164 284, 210 290, 240 324 C216 356, 160 364, 136 304 Z" fill="#18181B" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}" stroke-linejoin="round"/>
+      <path d="M226 248 C260 280, 300 280, 334 248" stroke="#A855F7" stroke-width="${OUTLINE_MINOR}" fill="none"/>
+      <line x1="260" y1="290" x2="300" y2="310" stroke="#C084FC" stroke-width="${DETAIL}"/>
+      <line x1="300" y1="290" x2="260" y2="310" stroke="#C084FC" stroke-width="${DETAIL}"/>
+      <line x1="260" y1="310" x2="300" y2="330" stroke="#C084FC" stroke-width="${DETAIL}"/>
+      <line x1="300" y1="310" x2="260" y2="330" stroke="#C084FC" stroke-width="${DETAIL}"/>
+      <polygon points="280,345 292,360 280,375 268,360" fill="#A855F7" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+    </g>`
+  }
+
+  if (id === 'outfit-high-noon-gunslinger-poncho') {
+    return `<g id="outfit-high-noon-poncho">
+      <path d="M84 326 c0 -54 44 -92 114 -104 l24 30 q38 34 86 -2 l34 6 c38 16 60 38 68 66 c14 66 -52 100 -166 96 c-106 -2 -160 -36 -160 -92 Z" fill="#78350F" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}" stroke-linejoin="round"/>
+      <path d="M136 304 C164 284, 210 290, 240 324 C216 356, 160 364, 136 304 Z" fill="#451A03" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}" stroke-linejoin="round"/>
+      <line x1="220" y1="255" x2="330" y2="385" stroke="#18181B" stroke-width="14" stroke-linecap="round"/>
+      <rect x="230" y="265" width="8" height="12" rx="2" fill="#FDE047" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <rect x="250" y="289" width="8" height="12" rx="2" fill="#FDE047" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <rect x="270" y="313" width="8" height="12" rx="2" fill="#FDE047" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <rect x="290" y="337" width="8" height="12" rx="2" fill="#FDE047" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <rect x="310" y="361" width="8" height="12" rx="2" fill="#FDE047" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <polygon points="260,330 264,340 274,340 266,346 269,356 260,350 251,356 254,346 246,340 256,340" fill="#FDE047" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+    </g>`
+  }
+
+  if (id === 'outfit-reddit-drip-squad-puffer') {
+    return `<g id="outfit-drip-puffer">
+      <path d="M84 326 c0 -54 44 -92 114 -104 l24 30 q38 34 86 -2 l34 6 c38 16 60 38 68 66 c14 66 -52 100 -166 96 c-106 -2 -160 -36 -160 -92 Z" fill="#06B6D4" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}" stroke-linejoin="round"/>
+      <path d="M136 304 C164 284, 210 290, 240 324 C216 356, 160 364, 136 304 Z" fill="#8B5CF6" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}" stroke-linejoin="round"/>
+      <path d="M190 280 C240 300, 310 300, 360 280" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}" fill="none"/>
+      <path d="M180 320 C240 340, 310 340, 370 320" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}" fill="none"/>
+      <path d="M190 360 C240 380, 310 380, 360 360" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}" fill="none"/>
+      <rect x="290" y="295" width="34" height="26" rx="6" fill="#FDE047" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <circle cx="307" cy="308" r="5" fill="#EF4444"/>
+    </g>`
+  }
+
+  if (id === 'outfit-porcelain-hanfu-robe') {
+    return `<g id="outfit-porcelain-robe">
+      <path d="M84 326 c0 -54 44 -92 114 -104 l24 30 q38 34 86 -2 l34 6 c38 16 60 38 68 66 c14 66 -52 100 -166 96 c-106 -2 -160 -36 -160 -92 Z" fill="#FFFDF4" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}" stroke-linejoin="round"/>
+      <path d="M136 304 C164 284, 210 290, 240 324 C216 356, 160 364, 136 304 Z" fill="#E2E8F0" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}" stroke-linejoin="round"/>
+      <path d="M220 250 L275 325 L330 250" stroke="#2563EB" stroke-width="${OUTLINE_MINOR}" fill="none"/>
+      <rect x="235" y="325" width="90" height="28" rx="4" fill="#2563EB" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <circle cx="280" cy="339" r="6" fill="#FDE047"/>
+      <path d="M260 360 C275 350, 285 350, 300 360" stroke="#2563EB" stroke-width="${OUTLINE_MINOR}" fill="none"/>
+    </g>`
+  }
+
+  if (id === 'outfit-winterblessed-regal-coat') {
+    return `<g id="outfit-winter-coat">
+      <path d="M84 326 c0 -54 44 -92 114 -104 l24 30 q38 34 86 -2 l34 6 c38 16 60 38 68 66 c14 66 -52 100 -166 96 c-106 -2 -160 -36 -160 -92 Z" fill="#0F172A" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}" stroke-linejoin="round"/>
+      <path d="M136 304 C164 284, 210 290, 240 324 C216 356, 160 364, 136 304 Z" fill="#0369A1" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}" stroke-linejoin="round"/>
+      <path d="M210 248 C250 285, 310 285, 350 248" stroke="#FFFDF4" stroke-width="20" stroke-linecap="round"/>
+      <path d="M210 248 C250 285, 310 285, 350 248" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}" stroke-linecap="round" fill="none"/>
+      <line x1="280" y1="275" x2="280" y2="395" stroke="#38BDF8" stroke-width="${OUTLINE_MINOR}"/>
+      <circle cx="280" cy="305" r="5" fill="#FDE047"/>
+      <circle cx="280" cy="345" r="5" fill="#FDE047"/>
+    </g>`
+  }
+
   // LEGENDARY OUTFITS (Paladin knight armor, coronation mantle)
   if (id === 'outfit-quack-knight' || id === 'outfit-diamond-armor' || id === 'outfit-royal-mantle' || rarity === 'legendary') {
     return `<g id="outfit-armor">
@@ -419,6 +651,113 @@ function generateBodySkin(item: CosmeticDefinition, primary: string, secondary: 
     </g>`
   }
 
+  // REDDIT & LOL BODY SKINS
+  if (id === 'bodySkin-spirit-inks') {
+    return `<g id="skin-spirit-inks" stroke="#C084FC" stroke-width="${DETAIL}" fill="none" opacity="0.8">
+      <path d="M280 75 C310 65, 330 85, 350 70" stroke-linecap="round"/>
+      <path d="M140 290 C175 270, 220 300, 260 280 C290 265, 320 295, 340 285" stroke-width="${OUTLINE_MINOR}" stroke-linecap="round"/>
+      <circle cx="160" cy="275" r="4" fill="#FDA4AF" stroke="none"/>
+      <circle cx="235" cy="305" r="5" fill="#FDA4AF" stroke="none"/>
+      <circle cx="310" cy="275" r="4" fill="#FDA4AF" stroke="none"/>
+    </g>`
+  }
+
+  if (id === 'bodySkin-hextech-runes') {
+    return `<g id="skin-hextech-runes" stroke="#38BDF8" stroke-width="${DETAIL}" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <polygon points="295,65 315,55 335,65 335,85 315,95 295,85" stroke="#FDE047"/>
+      <path d="M150 290 L180 290 L200 320 L250 320 L270 290 L310 290"/>
+      <polygon points="210,320 225,310 240,320 240,335 225,345 210,335" fill="#0284C7" stroke="#38BDF8"/>
+      <circle cx="180" cy="290" r="3" fill="#FDE047" stroke="none"/>
+      <circle cx="270" cy="290" r="3" fill="#FDE047" stroke="none"/>
+    </g>`
+  }
+
+  if (id === 'bodySkin-kda-iridescent') {
+    return `<g id="skin-kda-iridescent">
+      <polygon points="280,70 300,55 320,70 300,85" fill="#FF007F" opacity="0.6"/>
+      <polygon points="310,70 330,55 350,70 330,85" fill="#00F2FE" opacity="0.6"/>
+      <polygon points="150,290 180,270 210,290 180,310" fill="#00F2FE" opacity="0.6"/>
+      <polygon points="200,310 230,290 260,310 230,330" fill="#FF007F" opacity="0.6"/>
+      <polygon points="250,290 280,270 310,290 280,310" fill="#C084FC" opacity="0.6"/>
+      <polygon points="290,320 315,305 340,320 315,335" fill="#FDE047" opacity="0.6"/>
+    </g>`
+  }
+
+  if (id === 'bodySkin-blood-moon-markings') {
+    return `<g id="skin-blood-moon" fill="#991B1B" opacity="0.85">
+      <circle cx="315" cy="75" r="7"/>
+      <path d="M305 85 L325 85 L315 105 Z"/>
+      <path d="M145 295 Q180 270 215 300 Q180 310 145 295 Z"/>
+      <path d="M225 315 Q260 285 295 320 Q260 330 225 315 Z"/>
+      <circle cx="180" cy="335" r="6"/>
+      <circle cx="260" cy="345" r="6"/>
+    </g>`
+  }
+
+  if (id === 'bodySkin-star-constellations') {
+    return `<g id="skin-star-constellations" stroke="#FDE047" stroke-width="${DETAIL}" fill="none">
+      <line x1="285" y1="75" x2="315" y2="60"/>
+      <line x1="315" y1="60" x2="345" y2="80"/>
+      <line x1="160" y1="290" x2="200" y2="275"/>
+      <line x1="200" y1="275" x2="245" y2="310"/>
+      <line x1="245" y1="310" x2="290" y2="285"/>
+      <line x1="290" y1="285" x2="325" y2="315"/>
+      <polygon points="285,75 287,79 291,79 288,81 289,85 285,83 281,85 282,81 279,79 283,79" fill="#FFFDF4" stroke="none"/>
+      <polygon points="315,60 317,64 321,64 318,66 319,70 315,68 311,70 312,66 309,64 313,64" fill="#FFFDF4" stroke="none"/>
+      <polygon points="200,275 203,280 208,280 204,283 205,288 200,285 195,288 196,283 192,280 197,280" fill="#FFFDF4" stroke="none"/>
+      <polygon points="290,285 293,290 298,290 294,293 295,298 290,295 285,298 286,293 282,290 287,290" fill="#FFFDF4" stroke="none"/>
+    </g>`
+  }
+
+  if (id === 'bodySkin-snoo-wireframe') {
+    return `<g id="skin-snoo-wireframe" stroke="#00F2FE" stroke-width="${DETAIL}" stroke-linecap="round" fill="none" opacity="0.75">
+      <ellipse cx="320" cy="80" rx="35" ry="20" stroke-dasharray="6 6"/>
+      <line x1="285" y1="80" x2="355" y2="80"/>
+      <ellipse cx="230" cy="320" rx="90" ry="55" stroke-dasharray="8 8"/>
+      <line x1="140" y1="320" x2="320" y2="320"/>
+      <line x1="230" y1="265" x2="230" y2="375"/>
+    </g>`
+  }
+
+  if (id === 'bodySkin-coven-bramble') {
+    return `<g id="skin-coven-bramble" stroke="#18181B" stroke-width="${OUTLINE_MINOR}" stroke-linecap="round" fill="none">
+      <path d="M280 70 Q310 90 340 70 M305 80 L315 65"/>
+      <path d="M140 290 Q180 320 220 290 Q260 270 300 310 M175 305 L165 320 M265 280 L275 265 M280 300 L295 315" stroke="#4C1D95"/>
+      <circle cx="220" cy="290" r="4" fill="#A855F7" stroke="none"/>
+      <circle cx="300" cy="310" r="4" fill="#A855F7" stroke="none"/>
+    </g>`
+  }
+
+  if (id === 'bodySkin-diamond-facets') {
+    return `<g id="skin-diamond-facets" stroke="#67E8F9" stroke-width="${DETAIL}" fill="none">
+      <polygon points="300,60 320,60 330,75 310,85 290,75" fill="#A5F3FC" fill-opacity="0.5"/>
+      <polygon points="160,285 190,285 205,305 175,320 145,305" fill="#A5F3FC" fill-opacity="0.5"/>
+      <polygon points="220,295 250,295 265,315 235,330 205,315" fill="#A5F3FC" fill-opacity="0.5"/>
+      <polygon points="275,280 305,280 320,300 290,315 260,300" fill="#A5F3FC" fill-opacity="0.5"/>
+      <circle cx="190" cy="285" r="3" fill="#FFFDF4" stroke="none"/>
+      <circle cx="250" cy="295" r="3" fill="#FFFDF4" stroke="none"/>
+    </g>`
+  }
+
+  if (id === 'bodySkin-porcelain-glaze') {
+    return `<g id="skin-porcelain-glaze" stroke="#2563EB" stroke-width="${DETAIL}" fill="none" opacity="0.85">
+      <path d="M285 75 C295 65, 310 65, 320 75 C330 65, 345 65, 355 75" stroke-linecap="round"/>
+      <path d="M145 290 C165 270, 195 270, 215 290 C235 270, 265 270, 285 290 C305 270, 335 270, 350 290" stroke-width="${OUTLINE_MINOR}" stroke-linecap="round"/>
+      <circle cx="180" cy="285" r="5" fill="#1D4ED8" stroke="none"/>
+      <circle cx="250" cy="285" r="5" fill="#1D4ED8" stroke="none"/>
+      <circle cx="320" cy="285" r="5" fill="#1D4ED8" stroke="none"/>
+    </g>`
+  }
+
+  if (id === 'bodySkin-high-noon-brands') {
+    return `<g id="skin-high-noon-brands" stroke="#EA580C" stroke-width="${OUTLINE_MINOR}" stroke-linecap="round" fill="none">
+      <path d="M290 70 L315 85 L340 70"/>
+      <path d="M150 295 L190 275 L230 315 L270 280 L310 310"/>
+      <circle cx="190" cy="275" r="4" fill="#FDE047" stroke="none"/>
+      <circle cx="270" cy="280" r="4" fill="#FDE047" stroke="none"/>
+    </g>`
+  }
+
   // Subtle freckles fallback
   return `<g id="skin-organic" fill="${primary}" opacity="0.6">
     <circle cx="270" cy="116" r="6"/>
@@ -495,6 +834,112 @@ function generateFace(item: CosmeticDefinition, primary: string) {
       <rect x="388" y="144" width="14" height="14"/>
       <rect x="306" y="132" width="4" height="4" fill="#FFFDF4"/>
       <rect x="376" y="136" width="4" height="4" fill="#FFFDF4"/>
+    </g>`
+  }
+
+  // REDDIT & LOL FACE ITEMS
+  if (id === 'face-spirit-fox-mask') {
+    return `<g id="face-fox-mask">
+      <g transform="translate(260, 95) rotate(-15)">
+        <path d="M0 40 C-10 10, 30 -5, 50 15 C70 -5, 110 10, 100 40 C95 65, 50 75, 50 75 C50 75, 5 65, 0 40 Z" fill="#FFFDF4" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+        <polygon points="5,15 15,-15 35,5" fill="#DC2626" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+        <polygon points="65,5 85,-15 95,15" fill="#DC2626" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+        <path d="M20 35 Q35 25 45 40" stroke="#DC2626" stroke-width="${DETAIL}" fill="none"/>
+        <path d="M55 40 Q65 25 80 35" stroke="#DC2626" stroke-width="${DETAIL}" fill="none"/>
+        <circle cx="50" cy="55" r="4" fill="#18181B"/>
+      </g>
+    </g>`
+  }
+
+  if (id === 'face-kda-neon-demon-visor') {
+    return `<g id="face-kda-mask">
+      <path d="M330 180 C360 170, 410 170, 440 185 L430 225 C390 235, 350 230, 320 215 Z" fill="#0B0F19" stroke="#FF007F" stroke-width="${OUTLINE_MINOR}"/>
+      <g fill="#00F2FE">
+        <polygon points="345,188 355,188 350,202"/>
+        <polygon points="365,188 375,188 370,205"/>
+        <polygon points="385,188 395,188 390,205"/>
+        <polygon points="405,188 415,188 410,202"/>
+        <polygon points="350,220 360,220 355,206"/>
+        <polygon points="370,220 380,220 375,208"/>
+        <polygon points="390,220 400,220 395,208"/>
+        <polygon points="410,220 420,220 415,206"/>
+      </g>
+    </g>`
+  }
+
+  if (id === 'face-star-guardian-gem') {
+    return `<g id="face-sg-gem">
+      <polygon points="352,105 356,118 369,122 356,126 352,139 348,126 335,122 348,118" fill="#FDE047" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <circle cx="352" cy="122" r="4" fill="#FF78A8"/>
+      <circle cx="305" cy="188" r="10" fill="#FF78A8" opacity="0.6"/>
+      <circle cx="395" cy="192" r="9" fill="#FF78A8" opacity="0.6"/>
+      <polygon points="295,175 297,178 300,178 298,180 299,183 295,181 291,183 292,180 290,178 293,178" fill="#FFFDF4"/>
+      <polygon points="405,180 407,183 410,183 408,185 409,188 405,186 401,188 402,185 400,183 403,183" fill="#FFFDF4"/>
+    </g>`
+  }
+
+  if (id === 'face-blood-moon-oni-half-mask') {
+    return `<g id="face-oni-mask">
+      <path d="M330 185 C370 170, 420 175, 450 195 L440 235 C390 245, 340 235, 320 215 Z" fill="#991B1B" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <polygon points="360,190 372,190 366,215" fill="#FDE047" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <polygon points="410,190 422,190 416,215" fill="#FDE047" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <line x1="340" y1="210" x2="430" y2="210" stroke="#18181B" stroke-width="${OUTLINE_MINOR}"/>
+    </g>`
+  }
+
+  if (id === 'face-rojom-abyss-eyes') {
+    return `<g id="face-rojom-eyes">
+      <circle cx="320" cy="138" r="28" fill="none" stroke="#7C3AED" stroke-width="${DETAIL}" opacity="0.8"/>
+      <circle cx="320" cy="138" r="18" fill="none" stroke="#C084FC" stroke-width="${DETAIL}" opacity="0.9"/>
+      <circle cx="382" cy="144" r="22" fill="none" stroke="#7C3AED" stroke-width="${DETAIL}" opacity="0.8"/>
+      <circle cx="382" cy="144" r="14" fill="none" stroke="#C084FC" stroke-width="${DETAIL}" opacity="0.9"/>
+      <circle cx="352" cy="115" r="4" fill="#38BDF8"/>
+    </g>`
+  }
+
+  if (id === 'face-arcane-hextech-monocle') {
+    return `<g id="face-hextech-monocle">
+      <circle cx="382" cy="144" r="22" fill="#0284C7" fill-opacity="0.35" stroke="#F59E0B" stroke-width="${OUTLINE_MINOR}"/>
+      <circle cx="382" cy="144" r="12" fill="none" stroke="#38BDF8" stroke-width="${DETAIL}"/>
+      <path d="M360 144 L340 135" stroke="#F59E0B" stroke-width="${OUTLINE_MINOR}"/>
+      <circle cx="386" cy="138" r="3" fill="#FFFDF4"/>
+    </g>`
+  }
+
+  if (id === 'face-snoo-heart-blush') {
+    return `<g id="face-snoo-blush">
+      <path d="M304 184 C298 174, 288 180, 298 194 L304 200 L310 194 C320 180, 310 174, 304 184 Z" fill="#FF4500" opacity="0.75"/>
+      <path d="M394 188 C388 178, 378 184, 388 198 L394 204 L400 198 C410 184, 400 178, 394 188 Z" fill="#FF4500" opacity="0.75"/>
+      <circle cx="320" cy="132" r="3" fill="#FFFDF4"/>
+      <circle cx="382" cy="138" r="3" fill="#FFFDF4"/>
+    </g>`
+  }
+
+  if (id === 'face-high-noon-smolder') {
+    return `<g id="face-high-noon-cigar">
+      <path d="M410 216 L445 224" stroke="#78350F" stroke-width="10" stroke-linecap="round"/>
+      <circle cx="446" cy="224" r="4" fill="#EA580C"/>
+      <circle cx="447" cy="224" r="2" fill="#FDE047"/>
+      <path d="M450 220 C465 205, 455 185, 470 170" stroke="#CBD5E1" stroke-width="${DETAIL}" fill="none" opacity="0.7" stroke-linecap="round"/>
+    </g>`
+  }
+
+  if (id === 'face-coven-occult-veil') {
+    return `<g id="face-coven-veil">
+      <path d="M280 120 C320 100, 380 100, 420 125 L415 160 C380 145, 320 145, 285 160 Z" fill="#18181B" fill-opacity="0.45" stroke="#7C3AED" stroke-width="${DETAIL}"/>
+      <polygon points="352,100 357,112 352,124 347,112" fill="#A855F7" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <circle cx="352" cy="112" r="3" fill="#FFFDF4"/>
+    </g>`
+  }
+
+  if (id === 'face-project-hud-reticle') {
+    return `<g id="face-project-hud">
+      <circle cx="382" cy="144" r="24" fill="none" stroke="#00F2FE" stroke-width="${DETAIL}" stroke-dasharray="10 8"/>
+      <line x1="382" y1="116" x2="382" y2="124" stroke="#00F2FE" stroke-width="${DETAIL}"/>
+      <line x1="382" y1="164" x2="382" y2="172" stroke="#00F2FE" stroke-width="${DETAIL}"/>
+      <line x1="354" y1="144" x2="362" y2="144" stroke="#00F2FE" stroke-width="${DETAIL}"/>
+      <line x1="402" y1="144" x2="410" y2="144" stroke="#00F2FE" stroke-width="${DETAIL}"/>
+      <circle cx="382" cy="144" r="4" fill="#FF007F"/>
     </g>`
   }
 
@@ -606,6 +1051,126 @@ function generatePet(item: CosmeticDefinition, primary: string, secondary: strin
       <circle cx="406" cy="360" r="5" fill="#EF4444" opacity="0.8"/>`)
   }
 
+  // REDDIT & LOL PETS
+  if (id === 'pet-spirit-fox-kiko') {
+    return wrapper(`<!-- Spirit Fox Kiko -->
+      <ellipse cx="432" cy="380" rx="30" ry="24" fill="#FFFDF4" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <path d="M455 375 C475 355, 485 330, 470 320 C455 330, 450 355, 448 370" fill="#FFC0D9" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <circle cx="426" cy="352" r="22" fill="#FFFDF4" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <polygon points="408,340 404,315 422,330" fill="#FFFDF4" stroke="${COLOR}" stroke-width="${DETAIL}" stroke-linejoin="round"/>
+      <polygon points="410,336 408,322 418,332" fill="#FF78A8"/>
+      <polygon points="436,330 448,315 446,340" fill="#FFFDF4" stroke="${COLOR}" stroke-width="${DETAIL}" stroke-linejoin="round"/>
+      <polygon points="438,332 445,322 443,336" fill="#FF78A8"/>
+      <circle cx="416" cy="352" r="4" fill="#0284C7"/>
+      <circle cx="436" cy="352" r="4" fill="#0284C7"/>
+      <polygon points="426,358 423,355 429,355" fill="#18181B"/>
+      <circle cx="410" cy="360" r="3" fill="#FF78A8" opacity="0.6"/>
+      <circle cx="442" cy="360" r="3" fill="#FF78A8" opacity="0.6"/>`)
+  }
+
+  if (id === 'pet-star-guardian-dango') {
+    return wrapper(`<!-- Star Guardian Dango -->
+      <ellipse cx="432" cy="370" rx="28" ry="26" fill="#FEF08A" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <polygon points="402,365 390,350 406,355" fill="#FFFDF4" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <polygon points="462,365 474,350 458,355" fill="#FFFDF4" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <polygon points="432,330 435,338 444,340 435,342 432,350 429,342 420,340 429,338" fill="#FDE047" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <circle cx="422" cy="368" r="4" fill="#18181B"/>
+      <circle cx="442" cy="368" r="4" fill="#18181B"/>
+      <circle cx="416" cy="374" r="4" fill="#FF78A8"/>
+      <circle cx="448" cy="374" r="4" fill="#FF78A8"/>`)
+  }
+
+  if (id === 'pet-reddit-snoo-mini-bot') {
+    return wrapper(`<!-- Reddit Snoo Mini Bot -->
+      <ellipse cx="432" cy="390" rx="26" ry="10" fill="#00F2FE" opacity="0.75"/>
+      <circle cx="432" cy="360" r="24" fill="#FFFDF4" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <path d="M432 336 L432 322 L442 320" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}" stroke-linecap="round" fill="none"/>
+      <circle cx="444" cy="318" r="5" fill="#FF4500" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <ellipse cx="432" cy="360" rx="16" ry="10" fill="#0F172A"/>
+      <circle cx="426" cy="360" r="3" fill="#00F2FE"/>
+      <circle cx="438" cy="360" r="3" fill="#00F2FE"/>`)
+  }
+
+  if (id === 'pet-blood-moon-little-crow') {
+    return wrapper(`<!-- Blood Moon Little Crow -->
+      <polygon points="415,360 455,360 445,395 425,395" fill="#18181B" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <polygon points="410,360 430,335 445,360" fill="#991B1B" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <polygon points="445,345 465,350 445,355" fill="#F59E0B" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <circle cx="435" cy="348" r="3" fill="#EF4444"/>
+      <rect x="428" y="365" width="8" height="18" rx="2" fill="#FFFDF4" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <line x1="432" y1="368" x2="432" y2="380" stroke="#DC2626" stroke-width="${DETAIL}"/>`)
+  }
+
+  if (id === 'pet-porofessor-poro') {
+    return wrapper(`<!-- Porofessor Poro -->
+      <circle cx="432" cy="370" r="28" fill="#FFFDF4" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <!-- Curved horns -->
+      <path d="M412 350 C400 340, 400 325, 412 325 C416 335, 418 345, 418 350" fill="#78350F" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <path d="M452 350 C464 340, 464 325, 452 325 C448 335, 446 345, 446 350" fill="#78350F" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <circle cx="424" cy="366" r="4" fill="#18181B"/>
+      <circle cx="440" cy="366" r="4" fill="#18181B"/>
+      <circle cx="440" cy="366" r="8" fill="none" stroke="#F59E0B" stroke-width="${DETAIL}"/>
+      <!-- Pink tongue -->
+      <path d="M428 376 C428 390, 436 390, 436 376 Z" fill="#FF78A8" stroke="${COLOR}" stroke-width="${DETAIL}"/>`)
+  }
+
+  if (id === 'pet-little-legend-pengu') {
+    return wrapper(`<!-- Little Legend Pengu -->
+      <ellipse cx="432" cy="375" rx="24" ry="28" fill="#0F172A" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <ellipse cx="432" cy="380" rx="16" ry="18" fill="#FFFDF4"/>
+      <polygon points="426,368 438,368 432,376" fill="#F59E0B" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <circle cx="425" cy="362" r="3" fill="#18181B"/>
+      <circle cx="439" cy="362" r="3" fill="#18181B"/>
+      <!-- Tiny knight cap & wooden sword -->
+      <polygon points="420,350 444,350 432,335" fill="#3B82F6" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <line x1="452" y1="365" x2="462" y2="390" stroke="#78350F" stroke-width="4" stroke-linecap="round"/>`)
+  }
+
+  if (id === 'pet-project-cyber-drone') {
+    return wrapper(`<!-- PROJECT Cyber Drone -->
+      <polygon points="432,340 460,365 448,390 416,390 404,365" fill="#18181B" stroke="#00F2FE" stroke-width="${OUTLINE_MINOR}"/>
+      <circle cx="432" cy="365" r="10" fill="#00F2FE" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <circle cx="432" cy="365" r="4" fill="#FFFDF4"/>
+      <line x1="410" y1="390" x2="400" y2="405" stroke="#00F2FE" stroke-width="${DETAIL}"/>
+      <line x1="454" y1="390" x2="464" y2="405" stroke="#00F2FE" stroke-width="${DETAIL}"/>`)
+  }
+
+  if (id === 'pet-coven-shadow-familiar') {
+    return wrapper(`<!-- Coven Shadow Familiar -->
+      <ellipse cx="432" cy="380" rx="26" ry="24" fill="#18181B" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <circle cx="432" cy="355" r="20" fill="#18181B" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <polygon points="416,345 412,325 426,340" fill="#18181B" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <polygon points="448,345 452,325 438,340" fill="#18181B" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <circle cx="424" cy="355" r="3" fill="#A855F7"/>
+      <circle cx="440" cy="355" r="3" fill="#A855F7"/>
+      <circle cx="432" cy="344" r="3" fill="#C084FC"/>
+      <path d="M452 385 C468 375, 475 355, 465 345" stroke="#4C1D95" stroke-width="${OUTLINE_MINOR}" fill="none" stroke-linecap="round"/>`)
+  }
+
+  if (id === 'pet-cafe-cutie-pastry-pup') {
+    return wrapper(`<!-- Cafe Cutie Pastry Pup -->
+      <ellipse cx="432" cy="380" rx="28" ry="24" fill="#FDE68A" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <circle cx="432" cy="355" r="22" fill="#FDE68A" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <!-- Cream swirl hat with cherry -->
+      <path d="M418 340 C418 320, 446 320, 446 340 Z" fill="#FFFDF4" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <circle cx="432" cy="320" r="5" fill="#EF4444"/>
+      <circle cx="424" cy="355" r="4" fill="#78350F"/>
+      <circle cx="440" cy="355" r="4" fill="#78350F"/>
+      <circle cx="418" cy="362" r="3" fill="#FF78A8"/>
+      <circle cx="446" cy="362" r="3" fill="#FF78A8"/>`)
+  }
+
+  if (id === 'pet-arcane-firelight-beetle') {
+    return wrapper(`<!-- Arcane Firelight Beetle -->
+      <ellipse cx="432" cy="370" rx="22" ry="26" fill="#047857" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <ellipse cx="432" cy="380" rx="14" ry="14" fill="#34D399" opacity="0.9"/>
+      <ellipse cx="432" cy="350" rx="14" ry="10" fill="#065F46" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <circle cx="426" cy="348" r="3" fill="#FDE047"/>
+      <circle cx="438" cy="348" r="3" fill="#FDE047"/>
+      <path d="M414 365 C395 350, 400 330, 415 345" stroke="#A7F3D0" stroke-width="${DETAIL}" fill="none"/>
+      <path d="M450 365 C469 350, 464 330, 449 345" stroke="#A7F3D0" stroke-width="${DETAIL}" fill="none"/>`)
+  }
+
   // Fallback companion creature
   return wrapper(`<!-- Creature Companion -->
     <ellipse cx="432" cy="378" rx="32" ry="26" fill="${primary}" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
@@ -661,6 +1226,148 @@ function generateTrail(item: CosmeticDefinition, primary: string) {
     </g>`
   }
 
+  // REDDIT & LOL TRAILS
+  if (id === 'trail-spirit-sakura-drifts') {
+    return `<g id="trail-spirit-sakura">
+      <defs>
+        <style>@keyframes sakura-drift { 0% { transform: translate(0, 0) rotate(0deg); opacity: 0; } 50% { opacity: 0.9; } 100% { transform: translate(-80px, 30px) rotate(180deg); opacity: 0; } }</style>
+      </defs>
+      <g stroke="#FFC0D9" stroke-width="${OUTLINE_MINOR}" stroke-linecap="round" fill="none" opacity="0.8">
+        <path d="M20 400 Q80 370 160 410" stroke-dasharray="24 16"/>
+        <path d="M10 430 Q70 410 180 440" stroke-dasharray="30 20"/>
+      </g>
+      ${[
+        { x: 50, y: 390, r: 8, fill: '#FF78A8', d: '0s' },
+        { x: 90, y: 370, r: 10, fill: '#FFC0D9', d: '0.4s' },
+        { x: 130, y: 420, r: 7, fill: '#FF78A8', d: '0.8s' },
+        { x: 30, y: 440, r: 9, fill: '#FFD1E3', d: '1.2s' }
+      ].map(p => `<g transform="translate(${p.x}, ${p.y})" style="animation: sakura-drift 2s ease-in-out infinite ${p.d}">
+        <ellipse cx="0" cy="0" rx="${p.r}" ry="${p.r * 0.6}" fill="${p.fill}" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      </g>`).join('')}
+    </g>`
+  }
+
+  if (id === 'trail-star-guardian-stardust') {
+    return `<g id="trail-sg-stardust">
+      <defs>
+        <style>@keyframes star-twinkle-trail { 0%, 100% { transform: scale(0.6) rotate(0deg); opacity: 0.3; } 50% { transform: scale(1.1) rotate(90deg); opacity: 1; } }</style>
+      </defs>
+      <path d="M16 410 Q90 380 180 415" stroke="#FDE047" stroke-width="${OUTLINE_MINOR}" stroke-dasharray="20 15" stroke-linecap="round" fill="none"/>
+      <path d="M30 435 Q100 410 190 445" stroke="#FF78A8" stroke-width="${OUTLINE_MINOR}" stroke-dasharray="25 20" stroke-linecap="round" fill="none"/>
+      ${[
+        { x: 40, y: 390, fill: '#FDE047', d: '0s' },
+        { x: 85, y: 370, fill: '#BAE6FD', d: '0.3s' },
+        { x: 120, y: 430, fill: '#FFC0D9', d: '0.6s' },
+        { x: 160, y: 400, fill: '#FDE047', d: '0.9s' }
+      ].map(s => `<g transform="translate(${s.x}, ${s.y})" style="animation: star-twinkle-trail 1.4s ease-in-out infinite ${s.d}">
+        <polygon points="0,-9 3,-3 9,0 3,3 0,9 -3,3 -9,0 -3,-3" fill="${s.fill}" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      </g>`).join('')}
+    </g>`
+  }
+
+  if (id === 'trail-kda-neon-laser-steps') {
+    return `<g id="trail-kda-laser">
+      <path d="M20 395 L180 395" stroke="#00F2FE" stroke-width="${OUTLINE_MINOR}" stroke-dasharray="24 16" stroke-linecap="round"/>
+      <path d="M10 425 L190 425" stroke="#FF007F" stroke-width="${OUTLINE_MAJOR}" stroke-dasharray="32 18" stroke-linecap="round"/>
+      <path d="M25 450 L170 450" stroke="#FFD84D" stroke-width="${OUTLINE_MINOR}" stroke-dasharray="16 12" stroke-linecap="round"/>
+      <polygon points="60,420 70,405 80,420 70,435" fill="#00F2FE" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <polygon points="120,415 132,398 144,415 132,432" fill="#FF007F" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+    </g>`
+  }
+
+  if (id === 'trail-project-digital-grid') {
+    return `<g id="trail-project-grid">
+      <g stroke="#00F2FE" stroke-width="${DETAIL}" opacity="0.85">
+        <line x1="20" y1="410" x2="180" y2="410"/>
+        <line x1="10" y1="435" x2="190" y2="435"/>
+        <line x1="20" y1="460" x2="180" y2="460"/>
+        <line x1="40" y1="390" x2="20" y2="470"/>
+        <line x1="80" y1="390" x2="60" y2="470"/>
+        <line x1="120" y1="390" x2="100" y2="470"/>
+        <line x1="160" y1="390" x2="140" y2="470"/>
+      </g>
+      <rect x="50" y="425" width="10" height="10" fill="#00F2FE"/>
+      <rect x="110" y="400" width="8" height="8" fill="#FFFDF4"/>
+    </g>`
+  }
+
+  if (id === 'trail-blood-moon-crimson-petals') {
+    return `<g id="trail-blood-petals">
+      <path d="M15 410 Q90 375 180 415" stroke="#991B1B" stroke-width="${OUTLINE_MAJOR}" stroke-linecap="round" fill="none"/>
+      <path d="M30 435 Q100 405 170 445" stroke="#EF4444" stroke-width="${OUTLINE_MINOR}" stroke-linecap="round" fill="none"/>
+      <circle cx="45" cy="385" r="7" fill="#7F1D1D" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <circle cx="95" cy="370" r="5" fill="#DC2626"/>
+      <circle cx="135" cy="425" r="6" fill="#F59E0B"/>
+      <circle cx="60" cy="445" r="4" fill="#EF4444"/>
+    </g>`
+  }
+
+  if (id === 'trail-coven-dark-feathers') {
+    return `<g id="trail-coven-feathers">
+      <ellipse cx="100" cy="420" rx="90" ry="25" fill="#2E1065" opacity="0.3"/>
+      <g fill="#18181B" stroke="${COLOR}" stroke-width="${DETAIL}">
+        <path d="M40 400 C60 380, 80 410, 50 425 Z"/>
+        <path d="M85 375 C105 355, 125 385, 95 400 Z"/>
+        <path d="M125 415 C145 395, 165 425, 135 440 Z"/>
+      </g>
+      <circle cx="70" cy="390" r="3" fill="#A855F7"/>
+      <circle cx="110" cy="430" r="4" fill="#C084FC"/>
+    </g>`
+  }
+
+  if (id === 'trail-arcane-chemtech-fumes') {
+    return `<g id="trail-arcane-fumes">
+      <ellipse cx="90" cy="420" rx="80" ry="22" fill="#047857" opacity="0.45"/>
+      <circle cx="40" cy="405" r="14" fill="#10B981" opacity="0.7"/>
+      <circle cx="80" cy="385" r="18" fill="#34D399" opacity="0.6"/>
+      <circle cx="130" cy="415" r="16" fill="#A7F3D0" opacity="0.7"/>
+      <circle cx="70" cy="390" r="6" fill="#FDE047"/>
+      <circle cx="115" cy="420" r="5" fill="#FDE047"/>
+    </g>`
+  }
+
+  if (id === 'trail-cafe-cutie-sparkle-sprinkles') {
+    return `<g id="trail-cafe-sprinkles">
+      <path d="M20 410 Q90 380 180 415" stroke="#FBCFE8" stroke-width="${OUTLINE_MAJOR}" stroke-linecap="round" fill="none"/>
+      ${[
+        { x: 35, y: 395, color: '#EF4444', rot: 25 },
+        { x: 65, y: 375, color: '#3B82F6', rot: -40 },
+        { x: 95, y: 415, color: '#F59E0B', rot: 15 },
+        { x: 130, y: 385, color: '#10B981', rot: 60 },
+        { x: 155, y: 425, color: '#A855F7', rot: -10 }
+      ].map(s => `<rect x="${s.x}" y="${s.y}" width="10" height="4" rx="2" fill="${s.color}" transform="rotate(${s.rot} ${s.x} ${s.y})" stroke="${COLOR}" stroke-width="${DETAIL}"/>`).join('')}
+    </g>`
+  }
+
+  if (id === 'trail-reddit-upvote-arrows') {
+    return `<g id="trail-reddit-arrows">
+      <defs>
+        <style>@keyframes upvote-rise { 0% { transform: translateY(0); opacity: 0; } 50% { opacity: 1; } 100% { transform: translateY(-40px); opacity: 0; } }</style>
+      </defs>
+      <path d="M20 420 Q90 395 180 425" stroke="#FF4500" stroke-width="${OUTLINE_MINOR}" stroke-dasharray="24 16" stroke-linecap="round" fill="none"/>
+      ${[
+        { x: 40, y: 410, scale: 0.9, d: '0s' },
+        { x: 80, y: 385, scale: 1.2, d: '0.4s' },
+        { x: 120, y: 425, scale: 0.8, d: '0.8s' },
+        { x: 155, y: 395, scale: 1.0, d: '1.2s' }
+      ].map(a => `<g transform="translate(${a.x}, ${a.y}) scale(${a.scale})" style="animation: upvote-rise 1.6s ease-out infinite ${a.d}">
+        <polygon points="0,-12 9,0 4,0 4,10 -4,10 -4,0 -9,0" fill="#FF4500" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      </g>`).join('')}
+    </g>`
+  }
+
+  if (id === 'trail-arcade-pixel-coins') {
+    return `<g id="trail-arcade-coins">
+      <path d="M15 410 L180 410" stroke="#F59E0B" stroke-width="${OUTLINE_MINOR}" stroke-dasharray="16 16"/>
+      ${[
+        { x: 40, y: 395 }, { x: 85, y: 375 }, { x: 130, y: 420 }, { x: 165, y: 390 }
+      ].map(c => `<g transform="translate(${c.x}, ${c.y})">
+        <circle cx="0" cy="0" r="8" fill="#FDE047" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+        <rect x="-2" y="-5" width="4" height="10" fill="#F59E0B"/>
+      </g>`).join('')}
+    </g>`
+  }
+
   return `<g id="trail-flow">
     <defs>
       <style>@keyframes stream-flow-dyn-512 { 0% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -64; } }</style>
@@ -695,6 +1402,105 @@ function generateNeck(item: CosmeticDefinition, primary: string) {
     </g>`
   }
 
+  // REDDIT & LOL NECK ITEMS
+  if (id === 'neck-spirit-prayer-beads') {
+    return `<g id="neck-spirit-beads">
+      <path d="M212 244 Q276 286 332 244" stroke="#78350F" stroke-width="8" stroke-linecap="round" fill="none"/>
+      ${[
+        { cx: 220, cy: 246 }, { cx: 236, cy: 258 }, { cx: 254, cy: 268 },
+        { cx: 274, cy: 272, r: 9, fill: '#06B6D4' },
+        { cx: 294, cy: 268 }, { cx: 312, cy: 258 }, { cx: 328, cy: 246 }
+      ].map(b => `<circle cx="${b.cx}" cy="${b.cy}" r="${b.r || 7}" fill="${b.fill || '#FDE047'}" stroke="${COLOR}" stroke-width="${DETAIL}"/>`).join('')}
+      <!-- Silk tassel hanging -->
+      <path d="M274 281 L270 315 L278 315 Z" fill="#F43F5E" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+    </g>`
+  }
+
+  if (id === 'neck-star-guardian-choker') {
+    return `<g id="neck-sg-choker">
+      <path d="M214 246 Q276 276 330 246" stroke="#FFFDF4" stroke-width="12" stroke-linecap="round" fill="none"/>
+      <path d="M214 246 Q276 276 330 246" stroke="${COLOR}" stroke-width="${DETAIL}" stroke-linecap="round" fill="none"/>
+      <!-- Star brooch -->
+      <polygon points="274,256 277,266 287,268 278,274 281,284 274,277 267,284 270,274 261,268 271,266" fill="#FDE047" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <circle cx="274" cy="270" r="3" fill="#FF78A8"/>
+    </g>`
+  }
+
+  if (id === 'neck-kda-diamond-pendant') {
+    return `<g id="neck-kda-pendant">
+      <path d="M214 246 Q276 276 330 246" stroke="#18181B" stroke-width="10" stroke-linecap="round" fill="none"/>
+      <path d="M214 246 Q276 276 330 246" stroke="#FFD84D" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <!-- Iridescent diamond -->
+      <polygon points="274,265 286,277 274,295 262,277" fill="#00F2FE" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <polygon points="274,265 286,277 274,285" fill="#FF007F" opacity="0.6"/>
+    </g>`
+  }
+
+  if (id === 'neck-project-energy-collar') {
+    return `<g id="neck-project-collar">
+      <path d="M212 244 Q276 276 332 244" stroke="#18181B" stroke-width="14" stroke-linecap="round" fill="none"/>
+      <path d="M216 246 Q276 276 328 246" stroke="#00F2FE" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <rect x="264" y="264" width="20" height="12" rx="3" fill="#0F172A" stroke="#00F2FE" stroke-width="${DETAIL}"/>
+      <circle cx="274" cy="270" r="3" fill="#00F2FE"/>
+    </g>`
+  }
+
+  if (id === 'neck-blood-moon-tassel') {
+    return `<g id="neck-blood-tassel">
+      <path d="M212 244 Q276 280 332 244" stroke="#991B1B" stroke-width="10" stroke-linecap="round" fill="none"/>
+      <!-- Gold Magatama bead -->
+      <path d="M274 265 C282 265, 286 272, 280 280 C274 286, 268 280, 274 265 Z" fill="#F59E0B" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <!-- Crimson silk tassel -->
+      <line x1="274" y1="282" x2="274" y2="315" stroke="#DC2626" stroke-width="6" stroke-linecap="round"/>
+      <line x1="274" y1="282" x2="274" y2="315" stroke="${COLOR}" stroke-width="${DETAIL}" stroke-linecap="round"/>
+    </g>`
+  }
+
+  if (id === 'neck-coven-obsidian-amulet') {
+    return `<g id="neck-coven-amulet">
+      <path d="M214 246 Q276 276 330 246" stroke="#2E1065" stroke-width="10" stroke-linecap="round" fill="none"/>
+      <polygon points="274,265 284,277 274,295 264,277" fill="#18181B" stroke="#A855F7" stroke-width="${DETAIL}"/>
+      <circle cx="274" cy="278" r="3" fill="#C084FC"/>
+    </g>`
+  }
+
+  if (id === 'neck-arcane-hextech-gem-pendant') {
+    return `<g id="neck-hextech-pendant">
+      <path d="M212 244 Q276 278 332 244" stroke="#D97706" stroke-width="8" stroke-linecap="round" fill="none"/>
+      <!-- Hextech crystal in brass cog -->
+      <circle cx="274" cy="276" r="12" fill="#78350F" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <polygon points="274,266 282,276 274,286 266,276" fill="#00F2FE" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+    </g>`
+  }
+
+  if (id === 'neck-cafe-cutie-ruffle-collar') {
+    return `<g id="neck-cafe-ruffle">
+      <path d="M210 244 C240 280, 305 280, 334 244 L326 266 C295 296, 245 296, 218 266 Z" fill="#FFFDF4" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}" stroke-linejoin="round"/>
+      <!-- Pink ribbon bow & cherry heart -->
+      <polygon points="262,268 274,276 262,284" fill="#FF78A8" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <polygon points="286,268 274,276 286,284" fill="#FF78A8" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <circle cx="274" cy="276" r="5" fill="#EF4444" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+    </g>`
+  }
+
+  if (id === 'neck-reddit-gold-award-medal') {
+    return `<g id="neck-reddit-gold">
+      <path d="M214 244 L274 276 L330 244" stroke="#FF4500" stroke-width="10" stroke-linecap="round" fill="none"/>
+      <!-- Shiny gold medallion with star -->
+      <circle cx="274" cy="285" r="14" fill="#FDE047" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <polygon points="274,275 277,282 284,283 278,288 280,295 274,291 268,295 270,288 264,283 271,282" fill="#F59E0B"/>
+    </g>`
+  }
+
+  if (id === 'neck-arcade-pixel-bandana') {
+    return `<g id="neck-arcade-bandana">
+      <polygon points="214,244 332,244 274,294" fill="#FF007F" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}" stroke-linejoin="round"/>
+      <rect x="254" y="254" width="8" height="8" fill="#00F2FE"/>
+      <rect x="286" y="254" width="8" height="8" fill="#00F2FE"/>
+      <rect x="270" y="270" width="8" height="8" fill="#FFD84D"/>
+    </g>`
+  }
+
   return `<g id="neck-custom">
     <path d="M212 244 Q276 280 332 244" stroke="${primary}" stroke-width="14" stroke-linecap="round"/>
     <path d="M212 244 Q276 280 332 244" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}" stroke-linecap="round" fill="none"/>
@@ -719,6 +1525,112 @@ function generateBack(item: CosmeticDefinition, primary: string) {
       <rect x="96" y="250" width="44" height="84" rx="12" fill="#CBD5E1" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
       <path d="M104 334 L92 376 L144 376 L132 334 Z" fill="#FF5B00" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
       <polygon points="104,376 118,404 132,376" fill="#FFD84D"/>
+    </g>`
+  }
+
+  // REDDIT & LOL BACK ITEMS
+  if (id === 'back-spirit-blossom-sacred-ribbons') {
+    return `<g id="back-spirit-ribbons">
+      <!-- Ceremonial huge silk bow and flowing ribbons -->
+      <path d="M140 270 C80 200, 30 220, 20 280 C60 290, 100 290, 130 280 Z" fill="#FFC0D9" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <path d="M140 280 C90 320, 40 370, 30 430 C60 410, 100 380, 135 310 Z" fill="#06B6D4" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <circle cx="138" cy="276" r="14" fill="#FDE047" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <circle cx="138" cy="276" r="6" fill="#FF78A8"/>
+    </g>`
+  }
+
+  if (id === 'back-star-guardian-celestial-wings') {
+    return `<g id="back-sg-wings">
+      <!-- Pair of magical pastel wings with gold feathers -->
+      <path d="M150 280 C100 180, 30 190, 15 250 C45 265, 85 270, 95 300 C60 300, 35 325, 40 350 C80 345, 120 325, 150 290 Z" fill="#FFFDF4" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}" stroke-linejoin="round"/>
+      <path d="M140 270 C95 200, 40 210, 30 250" stroke="#FDE047" stroke-width="${OUTLINE_MINOR}" fill="none"/>
+      <polygon points="85,270 92,284 106,286 96,295 98,308 85,302 72,308 74,295 64,286 78,284" fill="#FF78A8" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+    </g>`
+  }
+
+  if (id === 'back-kda-crystalline-fox-tails') {
+    return `<g id="back-kda-tails">
+      <!-- Holographic prismatic fox tails fanning out -->
+      <path d="M140 300 C90 200, 20 230, 10 310 C30 350, 90 360, 130 320 Z" fill="#00F2FE" opacity="0.8" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <path d="M130 310 C80 250, 10 300, 5 380 C35 410, 90 395, 125 335 Z" fill="#FF007F" opacity="0.8" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <path d="M135 290 C95 230, 45 250, 40 300" stroke="#FFFDF4" stroke-width="${OUTLINE_MINOR}" fill="none"/>
+    </g>`
+  }
+
+  if (id === 'back-project-cyber-wing-booster') {
+    return `<g id="back-project-wings">
+      <!-- Cyber mechanical wings & thrusters -->
+      <polygon points="145,260 70,220 50,250 110,290 145,285" fill="#18181B" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <line x1="75" y1="230" x2="135" y2="265" stroke="#00F2FE" stroke-width="4"/>
+      <polygon points="135,285 55,275 40,310 95,335 130,310" fill="#27272A" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <line x1="60" y1="285" x2="120" y2="310" stroke="#00F2FE" stroke-width="4"/>
+      <!-- Thruster jet glow -->
+      <polygon points="45,255 15,265 40,280" fill="#00F2FE"/>
+    </g>`
+  }
+
+  if (id === 'back-blood-moon-demon-banner') {
+    return `<g id="back-blood-banner">
+      <!-- Sashimono samurai banner on back -->
+      <line x1="145" y1="360" x2="105" y2="160" stroke="#78350F" stroke-width="8" stroke-linecap="round"/>
+      <line x1="105" y1="165" x2="55" y2="175" stroke="#78350F" stroke-width="6" stroke-linecap="round"/>
+      <polygon points="105,170 55,180 65,330 118,315" fill="#991B1B" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <circle cx="85" cy="240" r="16" fill="#18181B"/>
+      <circle cx="85" cy="240" r="12" fill="#DC2626"/>
+    </g>`
+  }
+
+  if (id === 'back-coven-raven-feather-cape') {
+    return `<g id="back-coven-cape">
+      <path d="M150 270 C100 230, 40 270, 25 340 C35 390, 70 420, 110 430 C125 390, 135 330, 150 270 Z" fill="#18181B" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}" stroke-linejoin="round"/>
+      <path d="M130 285 C90 260, 50 300, 40 360 C65 385, 95 395, 120 375 Z" fill="#2E1065" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <circle cx="70" cy="350" r="4" fill="#A855F7"/>
+    </g>`
+  }
+
+  if (id === 'back-arcane-hextech-rocket-harness') {
+    return `<g id="back-hextech-harness">
+      <!-- Dual brass tubes with glowing pressure dials -->
+      <rect x="100" y="240" width="30" height="90" rx="8" fill="#78350F" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <rect x="75" y="260" width="28" height="75" rx="8" fill="#D97706" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <circle cx="115" cy="265" r="8" fill="#00F2FE" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <circle cx="89" cy="285" r="7" fill="#00F2FE" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <!-- Copper pipes -->
+      <path d="M100 290 Q85 300 75 290" stroke="#F59E0B" stroke-width="4" fill="none"/>
+    </g>`
+  }
+
+  if (id === 'back-cafe-cutie-giant-teacup') {
+    return `<g id="back-cafe-teacup">
+      <ellipse cx="100" cy="290" rx="42" ry="34" fill="#FFFDF4" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <path d="M60 290 C60 330, 140 330, 140 290 Z" fill="#FFC0D9" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <!-- Teacup handle -->
+      <path d="M60 290 C40 290, 40 320, 62 320" stroke="${COLOR}" stroke-width="6" fill="none"/>
+      <!-- Tea steam -->
+      <path d="M90 260 Q100 240 90 220" stroke="#BAE6FD" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <path d="M110 260 Q120 240 110 220" stroke="#BAE6FD" stroke-width="4" stroke-linecap="round" fill="none"/>
+    </g>`
+  }
+
+  if (id === 'back-reddit-snoo-jetpack') {
+    return `<g id="back-snoo-jetpack">
+      <!-- White capsule jetpack with upvote icons -->
+      <rect x="90" y="250" width="46" height="88" rx="16" fill="#FFFDF4" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <rect x="100" y="265" width="26" height="36" rx="6" fill="#0F172A"/>
+      <polygon points="113,272 120,282 116,282 116,292 110,292 110,282 106,282" fill="#FF4500"/>
+      <!-- Orange exhaust thruster -->
+      <polygon points="98,338 105,365 121,365 128,338" fill="#FF4500" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <polygon points="104,365 113,388 122,365" fill="#FDE047"/>
+    </g>`
+  }
+
+  if (id === 'back-arcade-pixel-sword-shield') {
+    return `<g id="back-arcade-sword">
+      <!-- Crossed 8-bit sword and shield -->
+      <line x1="60" y1="210" x2="140" y2="350" stroke="#3B82F6" stroke-width="12" stroke-linecap="square"/>
+      <line x1="60" y1="210" x2="140" y2="350" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <polygon points="110,260 145,275 130,325 95,310" fill="#F59E0B" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <rect x="110" y="280" width="12" height="12" fill="#DC2626"/>
     </g>`
   }
 
@@ -966,27 +1878,303 @@ function generateAura(id: string, primary: string, secondary: string) {
   }
 
   // 12. ENCHANTED FIREFLIES / BUBBLES
-  return `<g id="aura-fairy-fireflies">
-    <defs>
-      <style>@keyframes firefly-bob-1 { 0%, 100% { transform: translate(0, 0); opacity: 0.4; } 50% { transform: translate(8px, -14px); opacity: 0.9; } }</style>
-    </defs>
-    <ellipse cx="256" cy="274" rx="190" ry="155" fill="#059669" opacity="0.18"/>
-    ${[
-      { x: 90, y: 160, r: 8 }, { x: 140, y: 100, r: 10 }, { x: 370, y: 90, r: 9 },
-      { x: 430, y: 170, r: 10 }, { x: 440, y: 310, r: 9 },
-    ].map((f, i) => `
-      <g transform="translate(${f.x}, ${f.y})" style="animation: firefly-bob-1 2.2s ease-in-out infinite ${i * 0.3}s">
-        <circle cx="0" cy="0" r="${f.r}" fill="#FDE047" stroke="#34D399" stroke-width="${DETAIL}"/>
-        <circle cx="0" cy="0" r="${f.r / 2}" fill="#FFFDF4"/>
+  if (id === 'aura-bubbles' || id === 'aura-fairy-lights') {
+    return `<g id="aura-fairy-fireflies">
+      <defs>
+        <style>@keyframes firefly-bob-1 { 0%, 100% { transform: translate(0, 0); opacity: 0.4; } 50% { transform: translate(8px, -14px); opacity: 0.9; } }</style>
+      </defs>
+      <ellipse cx="256" cy="274" rx="190" ry="155" fill="#059669" opacity="0.18"/>
+      ${[
+        { x: 90, y: 160, r: 8 }, { x: 140, y: 100, r: 10 }, { x: 370, y: 90, r: 9 },
+        { x: 430, y: 170, r: 10 }, { x: 440, y: 310, r: 9 },
+      ].map((f, i) => `
+        <g transform="translate(${f.x}, ${f.y})" style="animation: firefly-bob-1 2.2s ease-in-out infinite ${i * 0.3}s">
+          <circle cx="0" cy="0" r="${f.r}" fill="#FDE047" stroke="#34D399" stroke-width="${DETAIL}"/>
+          <circle cx="0" cy="0" r="${f.r / 2}" fill="#FFFDF4"/>
+        </g>
+      `).join('')}
+    </g>`
+  }
+
+  // REDDIT & LOL AURAS
+  if (id === 'aura-spirit-lotus-sanctuary') {
+    return `<g id="aura-spirit-sanctuary">
+      <defs>
+        <style>@keyframes lotus-rot { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
+      </defs>
+      <ellipse cx="256" cy="274" rx="200" ry="160" fill="#FCE7F3" opacity="0.25"/>
+      <g style="animation: lotus-rot 24s linear infinite" transform-origin="256 274">
+        <circle cx="256" cy="274" r="175" stroke="#06B6D4" stroke-width="${DETAIL}" stroke-dasharray="24 16" fill="none" opacity="0.8"/>
+        ${[0, 72, 144, 216, 288].map((deg) => {
+          const rad = (deg * Math.PI) / 180
+          const cx = 256 + Math.cos(rad) * 175
+          const cy = 274 + Math.sin(rad) * 140
+          return `<g transform="translate(${cx}, ${cy})">
+            <ellipse cx="0" cy="0" rx="14" ry="8" fill="#FFC0D9" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+            <circle cx="0" cy="0" r="4" fill="#FDE047"/>
+          </g>`
+        }).join('')}
       </g>
-    `).join('')}
+    </g>`
+  }
+
+  if (id === 'aura-star-guardian-constellation') {
+    return `<g id="aura-sg-constellation">
+      <defs>
+        <style>@keyframes zodiac-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
+      </defs>
+      <ellipse cx="256" cy="274" rx="200" ry="160" fill="#FEF08A" opacity="0.2"/>
+      <g style="animation: zodiac-spin 20s linear infinite" transform-origin="256 274">
+        <circle cx="256" cy="274" r="180" stroke="#FDE047" stroke-width="${DETAIL}" stroke-dasharray="16 12" fill="none"/>
+        <circle cx="256" cy="274" r="150" stroke="#38BDF8" stroke-width="${DETAIL}" stroke-dasharray="8 8" fill="none"/>
+        ${[0, 60, 120, 180, 240, 300].map((deg, i) => {
+          const rad = (deg * Math.PI) / 180
+          const cx = 256 + Math.cos(rad) * 180
+          const cy = 274 + Math.sin(rad) * 145
+          return `<polygon points="${cx},${cy - 10} ${cx + 3},${cy - 3} ${cx + 10},${cy} ${cx + 3},${cy + 3} ${cx},${cy + 10} ${cx - 3},${cy + 3} ${cx - 10},${cy} ${cx - 3},${cy - 3}" fill="${i % 2 === 0 ? '#FDE047' : '#FF78A8'}" stroke="${COLOR}" stroke-width="${DETAIL}"/>`
+        }).join('')}
+      </g>
+    </g>`
+  }
+
+  if (id === 'aura-kda-all-out-stage-lights') {
+    return `<g id="aura-kda-stage">
+      <polygon points="60,0 20,440 180,440" fill="#00F2FE" opacity="0.22"/>
+      <polygon points="450,0 330,440 490,440" fill="#FF007F" opacity="0.22"/>
+      <ellipse cx="256" cy="400" rx="180" ry="50" fill="#0B0F19" opacity="0.3"/>
+      <!-- Prismatic crystals -->
+      <polygon points="100,160 120,180 100,210 80,180" fill="#00F2FE" stroke="${COLOR}" stroke-width="${DETAIL}" opacity="0.9"/>
+      <polygon points="410,150 430,175 410,205 390,175" fill="#FF007F" stroke="${COLOR}" stroke-width="${DETAIL}" opacity="0.9"/>
+    </g>`
+  }
+
+  if (id === 'aura-project-cyber-overdrive') {
+    return `<g id="aura-project-overdrive">
+      <defs>
+        <style>@keyframes hex-pulse { 0%, 100% { opacity: 0.5; transform: scale(0.98); } 50% { opacity: 0.9; transform: scale(1.02); } }</style>
+      </defs>
+      <g style="animation: hex-pulse 2s ease-in-out infinite" transform-origin="256 274">
+        <polygon points="256,90 396,160 396,380 256,450 116,380 116,160" stroke="#00F2FE" stroke-width="${OUTLINE_MINOR}" fill="none" opacity="0.7" stroke-dasharray="24 16"/>
+        <polygon points="256,110 376,170 376,360 256,430 136,360 136,170" stroke="#F59E0B" stroke-width="${DETAIL}" fill="none" opacity="0.8"/>
+      </g>
+      <line x1="80" y1="274" x2="130" y2="274" stroke="#00F2FE" stroke-width="4"/>
+      <line x1="382" y1="274" x2="432" y2="274" stroke="#00F2FE" stroke-width="4"/>
+    </g>`
+  }
+
+  if (id === 'aura-blood-moon-eclipse') {
+    return `<g id="aura-blood-eclipse">
+      <!-- Big crimson moon backdrop -->
+      <circle cx="256" cy="220" r="150" fill="#7F1D1D" opacity="0.4"/>
+      <circle cx="256" cy="220" r="146" fill="#18181B"/>
+      <circle cx="270" cy="210" r="130" fill="#991B1B" opacity="0.85"/>
+      <circle cx="285" cy="200" r="115" fill="#DC2626" opacity="0.6"/>
+      <!-- Drifting blood clouds -->
+      <ellipse cx="140" cy="340" rx="70" ry="20" fill="#7F1D1D" opacity="0.5"/>
+      <ellipse cx="370" cy="330" rx="80" ry="24" fill="#7F1D1D" opacity="0.5"/>
+    </g>`
+  }
+
+  if (id === 'aura-coven-eldritch-eclipse') {
+    return `<g id="aura-coven-eclipse">
+      <circle cx="256" cy="240" r="160" fill="#18181B" stroke="#A855F7" stroke-width="${OUTLINE_MINOR}" opacity="0.75"/>
+      <circle cx="256" cy="240" r="145" stroke="#4C1D95" stroke-width="${DETAIL}" stroke-dasharray="14 10" fill="none"/>
+      <!-- Thorny brambles -->
+      <path d="M100 240 C110 160, 180 110, 256 110" stroke="#7E22CE" stroke-width="${OUTLINE_MINOR}" fill="none"/>
+      <path d="M412 240 C402 160, 332 110, 256 110" stroke="#7E22CE" stroke-width="${OUTLINE_MINOR}" fill="none"/>
+      <circle cx="100" cy="240" r="6" fill="#EF4444"/>
+      <circle cx="412" cy="240" r="6" fill="#EF4444"/>
+    </g>`
+  }
+
+  if (id === 'aura-arcane-hexcore-surge') {
+    return `<g id="aura-hexcore-surge">
+      <defs>
+        <style>@keyframes hex-ring-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
+      </defs>
+      <ellipse cx="256" cy="274" rx="200" ry="160" fill="#0284C7" opacity="0.2"/>
+      <g style="animation: hex-ring-spin 16s linear infinite" transform-origin="256 274">
+        <circle cx="256" cy="274" r="180" stroke="#D97706" stroke-width="${OUTLINE_MINOR}" stroke-dasharray="30 18" fill="none"/>
+        <circle cx="256" cy="274" r="160" stroke="#00F2FE" stroke-width="${DETAIL}" stroke-dasharray="12 12" fill="none"/>
+        <polygon points="256,94 266,110 246,110" fill="#00F2FE"/>
+        <polygon points="436,274 420,284 420,264" fill="#00F2FE"/>
+        <polygon points="256,454 246,438 266,438" fill="#00F2FE"/>
+        <polygon points="76,274 92,264 92,284" fill="#00F2FE"/>
+      </g>
+    </g>`
+  }
+
+  if (id === 'aura-cafe-cutie-sugar-cloud') {
+    return `<g id="aura-cafe-cloud">
+      <ellipse cx="256" cy="274" rx="195" ry="155" fill="#FCE7F3" opacity="0.3"/>
+      <!-- Soft sugar aroma puffs -->
+      <circle cx="100" cy="220" r="32" fill="#FFFDF4" opacity="0.6"/>
+      <circle cx="130" cy="200" r="26" fill="#FFFDF4" opacity="0.6"/>
+      <circle cx="410" cy="220" r="32" fill="#FFFDF4" opacity="0.6"/>
+      <circle cx="380" cy="200" r="26" fill="#FFFDF4" opacity="0.6"/>
+      <!-- Floating sweet hearts -->
+      <circle cx="95" cy="160" r="8" fill="#FF78A8"/>
+      <circle cx="415" cy="160" r="8" fill="#FF78A8"/>
+      <circle cx="256" cy="80" r="10" fill="#FFC0D9"/>
+    </g>`
+  }
+
+  if (id === 'aura-reddit-karma-whirlwind') {
+    return `<g id="aura-reddit-karma">
+      <defs>
+        <style>@keyframes karma-rot { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
+      </defs>
+      <ellipse cx="256" cy="274" rx="200" ry="160" fill="#FF4500" opacity="0.18"/>
+      <g style="animation: karma-rot 18s linear infinite" transform-origin="256 274">
+        <circle cx="256" cy="274" r="180" stroke="#FF4500" stroke-width="${DETAIL}" stroke-dasharray="24 16" fill="none"/>
+        ${[0, 60, 120, 180, 240, 300].map((deg) => {
+          const rad = (deg * Math.PI) / 180
+          const cx = 256 + Math.cos(rad) * 180
+          const cy = 274 + Math.sin(rad) * 145
+          return `<g transform="translate(${cx}, ${cy}) rotate(${deg + 90})">
+            <polygon points="0,-8 6,0 3,0 3,7 -3,7 -3,0 -6,0" fill="#FF4500" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+          </g>`
+        }).join('')}
+      </g>
+    </g>`
+  }
+
+  if (id === 'aura-arcade-game-over-glitch') {
+    return `<g id="aura-arcade-glitch">
+      <rect x="66" y="94" width="380" height="360" rx="16" fill="none" stroke="#00F2FE" stroke-width="${OUTLINE_MINOR}" stroke-dasharray="30 20" opacity="0.8"/>
+      <rect x="80" y="110" width="352" height="328" rx="12" fill="none" stroke="#FF007F" stroke-width="${DETAIL}" stroke-dasharray="16 16" opacity="0.6"/>
+      <rect x="70" y="260" width="24" height="24" fill="#FFD84D" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <rect x="418" y="260" width="24" height="24" fill="#FF007F" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <rect x="244" y="80" width="24" height="24" fill="#00F2FE" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+    </g>`
+  }
+
+  return `<g id="aura-default">
+    <ellipse cx="256" cy="274" rx="190" ry="150" fill="${primary}" opacity="0.25"/>
+    <circle cx="256" cy="274" r="170" stroke="${secondary}" stroke-width="${OUTLINE_MINOR}" stroke-dasharray="24 16" fill="none"/>
   </g>`
 }
 
 // -------------------------------------------------------------
 // FINISH & NAMEPLATE
 // -------------------------------------------------------------
-function generateFinish(primary: string, secondary: string) {
+function generateFinish(item: CosmeticDefinition, primary: string, secondary: string) {
+  const { id } = item
+
+  if (id === 'finish-spirit-blossom-tree') {
+    return `<g id="finish-spirit-tree">
+      <!-- Spirit blossom burst & tree arch -->
+      <path d="M256 460 C256 340, 160 260, 100 200 C150 180, 220 220, 256 280 C292 220, 362 180, 412 200 C352 260, 256 340, 256 460 Z" fill="#78350F" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      ${[
+        { cx: 100, cy: 190, r: 24, fill: '#FFC0D9' },
+        { cx: 412, cy: 190, r: 24, fill: '#FFC0D9' },
+        { cx: 256, cy: 140, r: 32, fill: '#FF78A8' },
+        { cx: 180, cy: 160, r: 20, fill: '#06B6D4' },
+        { cx: 332, cy: 160, r: 20, fill: '#06B6D4' }
+      ].map(b => `<circle cx="${b.cx}" cy="${b.cy}" r="${b.r}" fill="${b.fill}" stroke="${COLOR}" stroke-width="${DETAIL}"/>`).join('')}
+    </g>`
+  }
+
+  if (id === 'finish-star-guardian-final-spark') {
+    return `<g id="finish-sg-spark">
+      <!-- Massive prismatic star beam blast -->
+      <polygon points="256,20 290,180 460,256 290,332 256,492 222,332 52,256 222,180" fill="#FEF08A" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <polygon points="256,80 278,200 398,256 278,312 256,432 234,312 114,256 234,200" fill="#FF78A8" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <circle cx="256" cy="256" r="36" fill="#FFFDF4" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+    </g>`
+  }
+
+  if (id === 'finish-kda-popstar-fireworks') {
+    return `<g id="finish-kda-fireworks">
+      <polygon points="256,40 310,200 472,256 310,312 256,472 202,312 40,256 202,200" fill="#00F2FE" opacity="0.8" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <polygon points="256,100 295,215 412,256 295,297 256,412 217,297 100,256 217,215" fill="#FF007F" opacity="0.8" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <circle cx="256" cy="256" r="40" fill="#FFD84D" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+    </g>`
+  }
+
+  if (id === 'finish-project-laser-grid-wipe') {
+    return `<g id="finish-project-wipe">
+      <rect x="56" y="56" width="400" height="400" fill="#0F172A" stroke="#00F2FE" stroke-width="${OUTLINE_MAJOR}" opacity="0.85"/>
+      <g stroke="#00F2FE" stroke-width="${DETAIL}">
+        ${[100, 150, 200, 250, 300, 350, 400].map(p => `
+          <line x1="${p}" y1="56" x2="${p}" y2="456"/>
+          <line x1="56" y1="${p}" x2="456" y2="${p}"/>
+        `).join('')}
+      </g>
+      <polygon points="256,160 352,256 256,352 160,256" fill="#00F2FE" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+    </g>`
+  }
+
+  if (id === 'finish-blood-moon-torii-gate') {
+    return `<g id="finish-blood-torii">
+      <!-- Torii gate arch -->
+      <path d="M120 180 L392 180 L412 150 L100 150 Z" fill="#991B1B" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <rect x="130" y="200" width="252" height="20" fill="#7F1D1D" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <rect x="160" y="200" width="30" height="260" fill="#991B1B" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <rect x="322" y="200" width="30" height="260" fill="#991B1B" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <!-- Eerie moon in center -->
+      <circle cx="256" cy="290" r="46" fill="#DC2626" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+    </g>`
+  }
+
+  if (id === 'finish-coven-crow-storm') {
+    return `<g id="finish-coven-storm">
+      <circle cx="256" cy="256" r="190" fill="#18181B" opacity="0.8" stroke="#A855F7" stroke-width="${OUTLINE_MAJOR}"/>
+      ${[
+        { cx: 160, cy: 150 }, { cx: 350, cy: 160 }, { cx: 140, cy: 340 }, { cx: 360, cy: 330 }, { cx: 256, cy: 100 }
+      ].map(c => `<g transform="translate(${c.cx}, ${c.cy})">
+        <path d="M-20,-10 Q0,-25 20,-10 Q0,-5 -20,-10 Z" fill="#2E1065" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+        <circle cx="0" cy="-12" r="4" fill="#EF4444"/>
+      </g>`).join('')}
+      <polygon points="256,180 290,256 256,332 222,256" fill="#A855F7" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+    </g>`
+  }
+
+  if (id === 'finish-arcane-super-mega-death-rocket') {
+    return `<g id="finish-arcane-rocket">
+      <circle cx="256" cy="256" r="180" fill="#EA580C" opacity="0.75" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <circle cx="256" cy="256" r="130" fill="#FDE047" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <!-- Shark Rocket Head in center -->
+      <polygon points="256,160 320,280 192,280" fill="#00F2FE" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <circle cx="236" cy="240" r="8" fill="#DC2626"/>
+      <circle cx="276" cy="240" r="8" fill="#DC2626"/>
+    </g>`
+  }
+
+  if (id === 'finish-cafe-cutie-giant-parfait') {
+    return `<g id="finish-cafe-parfait">
+      <ellipse cx="256" cy="420" rx="140" ry="40" fill="#FFFDF4" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <path d="M156 420 C156 280, 356 280, 356 420 Z" fill="#FCE7F3" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <!-- Ice cream scoops & cherries -->
+      <circle cx="216" cy="270" r="45" fill="#FFC0D9" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <circle cx="296" cy="270" r="45" fill="#BAE6FD" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <circle cx="256" cy="210" r="50" fill="#FFFDF4" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <circle cx="256" cy="145" r="16" fill="#EF4444" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+    </g>`
+  }
+
+  if (id === 'finish-reddit-platinum-shower') {
+    return `<g id="finish-reddit-platinum">
+      <polygon points="256,40 310,200 472,256 310,312 256,472 202,312 40,256 202,200" fill="#FF4500" opacity="0.8" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <circle cx="256" cy="256" r="60" fill="#00F2FE" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <circle cx="256" cy="256" r="40" fill="#FFFDF4" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <polygon points="256,226 268,250 294,254 275,273 280,298 256,286 232,298 237,273 218,254 244,250" fill="#FF4500"/>
+    </g>`
+  }
+
+  if (id === 'finish-arcade-victory-screen') {
+    return `<g id="finish-arcade-victory">
+      <rect x="56" y="100" width="400" height="312" rx="20" fill="#18181B" stroke="#00F2FE" stroke-width="${OUTLINE_MAJOR}"/>
+      <rect x="76" y="120" width="360" height="272" rx="12" fill="#0F172A" stroke="#FF007F" stroke-width="${OUTLINE_MINOR}"/>
+      <!-- "YOU WIN" pixel badge banner -->
+      <rect x="120" y="210" width="272" height="92" rx="10" fill="#FDE047" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <rect x="136" y="226" width="240" height="60" fill="#FF007F"/>
+      <circle cx="200" cy="256" r="12" fill="#00F2FE"/>
+      <circle cx="256" cy="256" r="12" fill="#FFFDF4"/>
+      <circle cx="312" cy="256" r="12" fill="#00F2FE"/>
+    </g>`
+  }
+
   return `<g id="finish-burst">
     ${[0, 1, 2, 3, 4, 5, 6, 7].map((i) => {
       const angle = (i * 45 * Math.PI) / 180
@@ -1000,7 +2188,107 @@ function generateFinish(primary: string, secondary: string) {
   </g>`
 }
 
-function generateNameplate(primary: string, secondary: string) {
+function generateNameplate(item: CosmeticDefinition, primary: string, secondary: string) {
+  const { id } = item
+
+  if (id === 'nameplate-spirit-blossom-scroll') {
+    return `<g id="nameplate-spirit-scroll">
+      <path d="M104 430 C200 445, 312 445, 408 430 L392 484 C304 496, 208 496, 120 484 Z" fill="#FFFDF4" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}" stroke-linejoin="round"/>
+      <path d="M120 440 L392 440" stroke="#FFC0D9" stroke-width="6"/>
+      <circle cx="140" cy="458" r="10" fill="#06B6D4" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <circle cx="372" cy="458" r="10" fill="#FF78A8" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+    </g>`
+  }
+
+  if (id === 'nameplate-star-guardian-ribbon') {
+    return `<g id="nameplate-sg-ribbon">
+      <path d="M96 430 C200 455, 312 455, 416 430 L400 484 C304 496, 208 496, 112 484 Z" fill="#FFFDF4" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}" stroke-linejoin="round"/>
+      <path d="M112 436 L400 436" stroke="#FDE047" stroke-width="6"/>
+      <polygon points="256,442 262,456 276,458 265,468 268,482 256,474 244,482 247,468 236,458 250,456" fill="#FDE047" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <circle cx="130" cy="458" r="8" fill="#FF78A8"/>
+      <circle cx="382" cy="458" r="8" fill="#38BDF8"/>
+    </g>`
+  }
+
+  if (id === 'nameplate-kda-neon-glass') {
+    return `<g id="nameplate-kda-glass">
+      <polygon points="104,430 408,430 388,484 124,484" fill="#0B0F19" stroke="#00F2FE" stroke-width="${OUTLINE_MAJOR}" stroke-linejoin="round"/>
+      <line x1="120" y1="440" x2="392" y2="440" stroke="#FF007F" stroke-width="4"/>
+      <rect x="140" y="450" width="16" height="16" fill="#00F2FE" transform="rotate(45 148 458)"/>
+      <rect x="364" y="450" width="16" height="16" fill="#FF007F" transform="rotate(45 372 458)"/>
+    </g>`
+  }
+
+  if (id === 'nameplate-project-holo-banner') {
+    return `<g id="nameplate-project-holo">
+      <polygon points="96,430 416,430 396,484 116,484" fill="#18181B" stroke="#00F2FE" stroke-width="${OUTLINE_MAJOR}"/>
+      <line x1="120" y1="457" x2="392" y2="457" stroke="#00F2FE" stroke-width="2" stroke-dasharray="8 6"/>
+      <rect x="130" y="450" width="14" height="14" fill="#00F2FE"/>
+      <rect x="368" y="450" width="14" height="14" fill="#F59E0B"/>
+    </g>`
+  }
+
+  if (id === 'nameplate-blood-moon-katana-plaque') {
+    return `<g id="nameplate-blood-katana">
+      <!-- Lacquered crimson plaque -->
+      <polygon points="104,430 408,430 392,484 120,484" fill="#7F1D1D" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <!-- Katana handle/scabbard underneath -->
+      <line x1="80" y1="457" x2="432" y2="457" stroke="#18181B" stroke-width="8" stroke-linecap="round"/>
+      <line x1="80" y1="457" x2="432" y2="457" stroke="#DC2626" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="256" cy="457" r="10" fill="#F59E0B" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+    </g>`
+  }
+
+  if (id === 'nameplate-coven-gothic-sigil') {
+    return `<g id="nameplate-coven-sigil">
+      <polygon points="100,430 412,430 392,484 120,484" fill="#18181B" stroke="#A855F7" stroke-width="${OUTLINE_MAJOR}"/>
+      <circle cx="256" cy="457" r="12" fill="#2E1065" stroke="#C084FC" stroke-width="${DETAIL}"/>
+      <polygon points="256,449 262,463 250,463" fill="#EF4444"/>
+      <circle cx="140" cy="457" r="6" fill="#A855F7"/>
+      <circle cx="372" cy="457" r="6" fill="#A855F7"/>
+    </g>`
+  }
+
+  if (id === 'nameplate-arcane-piltover-gold') {
+    return `<g id="nameplate-arcane-gold">
+      <polygon points="100,430 412,430 392,484 120,484" fill="#78350F" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <rect x="120" y="438" width="272" height="38" fill="#FDE047" stroke="${COLOR}" stroke-width="${OUTLINE_MINOR}"/>
+      <!-- Hextech blue crystal center -->
+      <polygon points="256,442 268,457 256,472 244,457" fill="#00F2FE" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <circle cx="150" cy="457" r="6" fill="#D97706"/>
+      <circle cx="362" cy="457" r="6" fill="#D97706"/>
+    </g>`
+  }
+
+  if (id === 'nameplate-cafe-cutie-menu-board') {
+    return `<g id="nameplate-cafe-board">
+      <rect x="104" y="430" width="304" height="54" rx="12" fill="#FCE7F3" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <rect x="120" y="438" width="272" height="38" rx="6" fill="#FFFDF4" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+      <circle cx="140" cy="457" r="8" fill="#FF78A8"/>
+      <circle cx="372" cy="457" r="8" fill="#FF78A8"/>
+      <circle cx="256" cy="457" r="6" fill="#EF4444"/>
+    </g>`
+  }
+
+  if (id === 'nameplate-reddit-front-page-badge') {
+    return `<g id="nameplate-reddit-badge">
+      <rect x="100" y="430" width="312" height="54" rx="14" fill="#0F172A" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}"/>
+      <rect x="114" y="438" width="284" height="38" rx="8" fill="#1E293B"/>
+      <!-- Upvote icon badge -->
+      <polygon points="142,444 148,452 145,452 145,464 139,464 139,452 136,452" fill="#FF4500"/>
+      <circle cx="368" cy="457" r="8" fill="#FDE047" stroke="${COLOR}" stroke-width="${DETAIL}"/>
+    </g>`
+  }
+
+  if (id === 'nameplate-arcade-high-score-board') {
+    return `<g id="nameplate-arcade-board">
+      <rect x="96" y="430" width="320" height="54" rx="6" fill="#18181B" stroke="#00F2FE" stroke-width="${OUTLINE_MAJOR}"/>
+      <rect x="110" y="438" width="292" height="38" fill="#0F172A" stroke="#FF007F" stroke-width="${DETAIL}"/>
+      <rect x="130" y="448" width="18" height="18" fill="#FFD84D"/>
+      <rect x="364" y="448" width="18" height="18" fill="#00F2FE"/>
+    </g>`
+  }
+
   return `<g id="nameplate-pedestal">
     <path d="M104 430 C200 452, 312 452, 408 430 L392 484 C304 496, 208 496, 120 484 Z" fill="${primary}" stroke="${COLOR}" stroke-width="${OUTLINE_MAJOR}" stroke-linejoin="round"/>
     <circle cx="144" cy="458" r="8" fill="${secondary}"/>
@@ -1030,8 +2318,8 @@ function assetFor(item: CosmeticDefinition): string {
   else if (slot === 'face') content = generateFace(item, primary)
   else if (slot === 'neck') content = generateNeck(item, primary)
   else if (slot === 'back') content = generateBack(item, primary)
-  else if (slot === 'finish') content = generateFinish(primary, secondary)
-  else if (slot === 'nameplate') content = generateNameplate(primary, secondary)
+  else if (slot === 'finish') content = generateFinish(item, primary, secondary)
+  else if (slot === 'nameplate') content = generateNameplate(item, primary, secondary)
   else throw new Error(`Unknown slot: ${slot}`)
 
   return frame(content)

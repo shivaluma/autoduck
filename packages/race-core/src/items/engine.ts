@@ -49,6 +49,12 @@ export interface DuckItemRuntime extends ItemDefenseState {
   activeSpeedItemId: RaceItemId | null
   queuedSpeedBoost: { multiplier: number; durationSeconds: number; itemId: RaceItemId } | null
   boostStartedAtTick: number
+  continuousBoostStartedAtTick?: number
+  nitroIgnitionTicks?: number
+  nitroOverdriveTicks?: number
+  nitroDecayTicks?: number
+  nitroStartProgress?: number
+  nitroStartRank?: number
   reactiveRocketVisibleSinceTick: number | null
   reactiveBananaVisibleSinceTick: number | null
 }
@@ -227,13 +233,17 @@ export function breakActiveSpeedBoost(
   breakSource: BoostBreakSource,
 ) {
   if (tick >= runtime.boostUntilTick || runtime.boostMultiplier <= 1) return
+  if ((breakSource === 'QUACK_HORN' || breakSource === 'WILD_HORN') && runtime.activeSpeedItemId === 'NITRO') {
+    return
+  }
   const ended = runtime.activeSpeedItemId
   const boostMultiplier = runtime.boostMultiplier
   const remainingBoostTicks = Math.max(0, runtime.boostUntilTick - tick)
   const originalBoostTicks = Math.max(1, runtime.boostUntilTick - runtime.boostStartedAtTick)
 
-  if (breakSource === 'MINI_ROCKET') {
-    const lostTicks = Math.round(remainingBoostTicks * 0.5)
+  if (breakSource === 'MINI_ROCKET' || breakSource === 'BANANA' || breakSource === 'WILD_BANANA') {
+    const breakRatio = breakSource === 'MINI_ROCKET' ? 0.50 : 0.30
+    const lostTicks = Math.round(remainingBoostTicks * breakRatio)
     runtime.boostUntilTick -= lostTicks
     const fractionDenied = lostTicks / originalBoostTicks
     const fullyEnded = runtime.boostUntilTick <= tick
@@ -243,6 +253,7 @@ export function breakActiveSpeedBoost(
       runtime.boostStartedAtTick = tick
       runtime.activeSpeedItemId = null
       runtime.queuedSpeedBoost = null
+      runtime.continuousBoostStartedAtTick = undefined
       if (ended && SPEED_END_EVENT[ended]) emit(SPEED_END_EVENT[ended]!, targetPlayerId, sourcePlayerId, { broken: true, consumedSeconds: remainingBoostTicks / tickRate })
     }
     emit('BOOST_BROKEN', targetPlayerId, sourcePlayerId, {
@@ -263,6 +274,7 @@ export function breakActiveSpeedBoost(
   runtime.boostStartedAtTick = tick
   runtime.activeSpeedItemId = null
   runtime.queuedSpeedBoost = null
+  runtime.continuousBoostStartedAtTick = undefined
   if (ended && SPEED_END_EVENT[ended]) emit(SPEED_END_EVENT[ended]!, targetPlayerId, sourcePlayerId, { broken: true, consumedSeconds: remainingBoostTicks / tickRate })
   emit('BOOST_BROKEN', targetPlayerId, sourcePlayerId, {
     endedItem: ended ?? null,
@@ -271,6 +283,7 @@ export function breakActiveSpeedBoost(
     boostMultiplier,
     fractionDenied,
     breakSource,
+    partial: false,
   })
 }
 
@@ -343,6 +356,14 @@ export function tryApplyPrepSpeedBoost(
     }
     return 'ignored'
   }
+  runtime.continuousBoostStartedAtTick = tick
+  if (itemId === 'NITRO') {
+    runtime.nitroIgnitionTicks = Math.round(ITEM_BALANCE.nitro.ignitionSeconds * tickRate)
+    runtime.nitroOverdriveTicks = Math.round(ITEM_BALANCE.nitro.overdriveSeconds * tickRate)
+    runtime.nitroDecayTicks = Math.round(ITEM_BALANCE.nitro.decaySeconds * tickRate)
+    if (metadata.startProgress !== undefined) runtime.nitroStartProgress = Number(metadata.startProgress)
+    if (metadata.startRank !== undefined) runtime.nitroStartRank = Number(metadata.startRank)
+  }
   applyItemBoost(runtime, multiplier, durationSeconds, tick, tickRate)
   runtime.activeSpeedItemId = itemId
   emit(startEvent, duckId, undefined, { untilTick: runtime.boostUntilTick, durationSeconds, multiplier, ...metadata })
@@ -355,18 +376,40 @@ function finishSpeedBoost(runtime: DuckItemRuntime, duckId: string, tick: number
   runtime.boostMultiplier = 1
   runtime.activeSpeedItemId = null
   if (ended && SPEED_END_EVENT[ended]) {
-    emit(SPEED_END_EVENT[ended]!, duckId, undefined, { consumedSeconds: consumedTicks / tickRate, natural: true })
+    emit(SPEED_END_EVENT[ended]!, duckId, undefined, {
+      consumedSeconds: consumedTicks / tickRate,
+      natural: true,
+      startProgress: runtime.nitroStartProgress,
+      startRank: runtime.nitroStartRank,
+    })
   }
   const queued = runtime.queuedSpeedBoost
-  if (!queued) return
+  if (!queued) {
+    runtime.continuousBoostStartedAtTick = undefined
+    return
+  }
   runtime.queuedSpeedBoost = null
-  applyItemBoost(runtime, queued.multiplier, queued.durationSeconds, tick, tickRate)
+
+  // Cap continuous speed boost window to prevent infinite boost trains
+  const continuousElapsedSeconds = runtime.continuousBoostStartedAtTick !== undefined
+    ? (tick - runtime.continuousBoostStartedAtTick) / tickRate
+    : 0
+  const maxAllowedSeconds = Math.max(0.3, ITEM_BALANCE.maxContinuousBoostSeconds - continuousElapsedSeconds)
+  const effectiveDurationSeconds = Math.min(queued.durationSeconds, maxAllowedSeconds)
+
+  if (queued.itemId === 'NITRO') {
+    runtime.nitroIgnitionTicks = Math.round(ITEM_BALANCE.nitro.ignitionSeconds * tickRate)
+    runtime.nitroOverdriveTicks = Math.round(ITEM_BALANCE.nitro.overdriveSeconds * tickRate)
+    runtime.nitroDecayTicks = Math.round(ITEM_BALANCE.nitro.decaySeconds * tickRate)
+  }
+
+  applyItemBoost(runtime, queued.multiplier, effectiveDurationSeconds, tick, tickRate)
   runtime.activeSpeedItemId = queued.itemId
   const startEvent = SPEED_START_EVENT[queued.itemId]
   if (startEvent) {
     emit(startEvent, duckId, undefined, {
       untilTick: runtime.boostUntilTick,
-      durationSeconds: queued.durationSeconds,
+      durationSeconds: effectiveDurationSeconds,
       multiplier: queued.multiplier,
       queued: true,
     })
@@ -682,7 +725,33 @@ export function tickItemSystem(
 }
 
 export function itemSpeedMultiplier(runtime: DuckItemRuntime, tick: number) {
-  const boost = tick < runtime.boostUntilTick ? runtime.boostMultiplier : 1
+  let boost = 1
+  if (tick < runtime.boostUntilTick && runtime.boostMultiplier > 1) {
+    if (runtime.activeSpeedItemId === 'NITRO') {
+      const elapsed = Math.max(0, tick - runtime.boostStartedAtTick)
+      const ignition = runtime.nitroIgnitionTicks ?? Math.round(ITEM_BALANCE.nitro.ignitionSeconds * 60)
+      const overdrive = runtime.nitroOverdriveTicks ?? Math.round(ITEM_BALANCE.nitro.overdriveSeconds * 60)
+      const decay = runtime.nitroDecayTicks ?? Math.round(ITEM_BALANCE.nitro.decaySeconds * 60)
+      const peak = runtime.boostMultiplier
+
+      if (elapsed < ignition && ignition > 0) {
+        // Phase 1: Ignition ramp up (1.0 -> peak)
+        const ratio = elapsed / ignition
+        boost = 1.0 + (peak - 1.0) * ratio
+      } else if (elapsed < ignition + overdrive) {
+        // Phase 2: Overdrive (hold peak)
+        boost = peak
+      } else {
+        // Phase 3: Decay ramp down (peak -> 1.0)
+        const decayElapsed = elapsed - (ignition + overdrive)
+        const ratio = decay > 0 ? Math.min(1.0, Math.max(0, decayElapsed / decay)) : 1.0
+        boost = 1.0 + (peak - 1.0) * (1.0 - ratio)
+      }
+    } else {
+      boost = runtime.boostMultiplier
+    }
+  }
+
   let slow = 1
   if (tick < runtime.slowUntilTick) {
     slow = runtime.slowMultiplier

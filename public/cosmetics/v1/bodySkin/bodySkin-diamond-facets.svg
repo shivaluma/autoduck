@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="skin-diamond-facets" stroke="#67E8F9" stroke-width="4" fill="none">
+      <polygon points="300,60 320,60 330,75 310,85 290,75" fill="#A5F3FC" fill-opacity="0.5"/>
+      <polygon points="160,285 190,285 205,305 175,320 145,305" fill="#A5F3FC" fill-opacity="0.5"/>
+      <polygon points="220,295 250,295 265,315 235,330 205,315" fill="#A5F3FC" fill-opacity="0.5"/>
+      <polygon points="275,280 305,280 320,300 290,315 260,300" fill="#A5F3FC" fill-opacity="0.5"/>
+      <circle cx="190" cy="285" r="3" fill="#FFFDF4" stroke="none"/>
+      <circle cx="250" cy="295" r="3" fill="#FFFDF4" stroke="none"/>
+    </g>
+</svg>

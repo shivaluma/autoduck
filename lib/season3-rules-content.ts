@@ -150,7 +150,7 @@ export const LOADOUT_CONFIG = {
       cost: 2,
       category: 'major' as const,
       itemClass: 'SPEED' as const,
-      description: 'Bứt tốc mạnh mẽ +25% trong 2.0s để xé gió vượt lên dẫn đầu (tự kích hoạt khi tụt lại phía sau).',
+      description: 'Bình tăng tốc 3 giai đoạn (Đề pa → Đỉnh điểm +25% → Hạ nhiệt) trong 1.7s giúp xé gió vượt lên (1 lần/trận, bị phá bởi Tên Lửa).',
     },
     {
       id: 'BUBBLE_SHIELD',

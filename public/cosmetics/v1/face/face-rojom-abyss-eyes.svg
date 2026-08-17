@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="face-rojom-eyes">
+      <circle cx="320" cy="138" r="28" fill="none" stroke="#7C3AED" stroke-width="4" opacity="0.8"/>
+      <circle cx="320" cy="138" r="18" fill="none" stroke="#C084FC" stroke-width="4" opacity="0.9"/>
+      <circle cx="382" cy="144" r="22" fill="none" stroke="#7C3AED" stroke-width="4" opacity="0.8"/>
+      <circle cx="382" cy="144" r="14" fill="none" stroke="#C084FC" stroke-width="4" opacity="0.9"/>
+      <circle cx="352" cy="115" r="4" fill="#38BDF8"/>
+    </g>
+</svg>

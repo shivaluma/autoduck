@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="head-cone-prime">
+      <defs>
+        <filter id="cone-halo-512" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <ellipse cx="330" cy="18" rx="55" ry="16" fill="none" stroke="#FDE047" stroke-width="8" filter="url(#cone-halo-512)"/>
+      <polygon points="265,96 330,8 395,96" fill="#FF5B00" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+      <polygon points="280,68 330,8 380,68" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
+      <polygon points="296,44 330,8 364,44" fill="#FF5B00"/>
+      <path d="M238 98 H422" stroke="#1B132B" stroke-width="14" stroke-linecap="round"/>
+    </g>
+</svg>

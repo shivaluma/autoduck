@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="skin-coven-bramble" stroke="#18181B" stroke-width="8" stroke-linecap="round" fill="none">
+      <path d="M280 70 Q310 90 340 70 M305 80 L315 65"/>
+      <path d="M140 290 Q180 320 220 290 Q260 270 300 310 M175 305 L165 320 M265 280 L275 265 M280 300 L295 315" stroke="#4C1D95"/>
+      <circle cx="220" cy="290" r="4" fill="#A855F7" stroke="none"/>
+      <circle cx="300" cy="310" r="4" fill="#A855F7" stroke="none"/>
+    </g>
+</svg>

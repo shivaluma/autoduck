@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="pet-companion">
+    <defs>
+      <style>
+        @keyframes pet-bob-512 {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-8px); }
+        }
+      </style>
+    </defs>
+    <g style="animation: pet-bob-512 2.4s ease-in-out infinite">
+      <!-- Spirit Fox Kiko -->
+      <ellipse cx="432" cy="380" rx="30" ry="24" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
+      <path d="M455 375 C475 355, 485 330, 470 320 C455 330, 450 355, 448 370" fill="#FFC0D9" stroke="#1B132B" stroke-width="4"/>
+      <circle cx="426" cy="352" r="22" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
+      <polygon points="408,340 404,315 422,330" fill="#FFFDF4" stroke="#1B132B" stroke-width="4" stroke-linejoin="round"/>
+      <polygon points="410,336 408,322 418,332" fill="#FF78A8"/>
+      <polygon points="436,330 448,315 446,340" fill="#FFFDF4" stroke="#1B132B" stroke-width="4" stroke-linejoin="round"/>
+      <polygon points="438,332 445,322 443,336" fill="#FF78A8"/>
+      <circle cx="416" cy="352" r="4" fill="#0284C7"/>
+      <circle cx="436" cy="352" r="4" fill="#0284C7"/>
+      <polygon points="426,358 423,355 429,355" fill="#18181B"/>
+      <circle cx="410" cy="360" r="3" fill="#FF78A8" opacity="0.6"/>
+      <circle cx="442" cy="360" r="3" fill="#FF78A8" opacity="0.6"/>
+    </g>
+  </g>
+</svg>

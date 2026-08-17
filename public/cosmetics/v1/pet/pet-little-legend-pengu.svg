@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="pet-companion">
+    <defs>
+      <style>
+        @keyframes pet-bob-512 {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-8px); }
+        }
+      </style>
+    </defs>
+    <g style="animation: pet-bob-512 2.4s ease-in-out infinite">
+      <!-- Little Legend Pengu -->
+      <ellipse cx="432" cy="375" rx="24" ry="28" fill="#0F172A" stroke="#1B132B" stroke-width="8"/>
+      <ellipse cx="432" cy="380" rx="16" ry="18" fill="#FFFDF4"/>
+      <polygon points="426,368 438,368 432,376" fill="#F59E0B" stroke="#1B132B" stroke-width="4"/>
+      <circle cx="425" cy="362" r="3" fill="#18181B"/>
+      <circle cx="439" cy="362" r="3" fill="#18181B"/>
+      <!-- Tiny knight cap & wooden sword -->
+      <polygon points="420,350 444,350 432,335" fill="#3B82F6" stroke="#1B132B" stroke-width="4"/>
+      <line x1="452" y1="365" x2="462" y2="390" stroke="#78350F" stroke-width="4" stroke-linecap="round"/>
+    </g>
+  </g>
+</svg>

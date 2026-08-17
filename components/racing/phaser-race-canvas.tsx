@@ -854,13 +854,34 @@ export function PhaserRaceCanvas({
 
           if (type === 'NITRO_STARTED' || (type === 'INSTANT_PICKUP_TRIGGERED' && raceEvent.metadata.itemId === 'MINI_NITRO')) {
             if (source) {
-              for (let index = 0; index < 3; index += 1) {
-                const wake = (this.ellipsePool.pop() ?? this.add.ellipse(0, 0, 80, 22, 0x9ff5ff, 0.65)).setPosition(source.root.x - 22 - index * 10, source.root.y + 8).setAlpha(0.65).setVisible(true).setDepth(85)
-                this.tweens.add({ targets: wake, scaleX: 2.2 + index * 0.2, alpha: 0, duration: reducedMotion ? 200 : 600 + index * 80, onComplete: () => { wake.setVisible(false); this.ellipsePool.push(wake) } })
+              if (!reducedMotion) {
+                const baseScale = source.avatarNode.scaleX || 1
+                this.tweens.add({
+                  targets: source.avatarNode,
+                  scaleX: baseScale * 1.16,
+                  scaleY: baseScale * 0.84,
+                  duration: 90,
+                  yoyo: true,
+                  ease: 'Quad.Out',
+                })
+              }
+              for (let index = 0; index < 4; index += 1) {
+                const wake = (this.ellipsePool.pop() ?? this.add.ellipse(0, 0, 85, 24, 0x9ff5ff, 0.7)).setPosition(source.root.x - 22 - index * 12, source.root.y + 8).setAlpha(0.7).setVisible(true).setDepth(85)
+                this.tweens.add({ targets: wake, scaleX: 2.3 + index * 0.25, alpha: 0, duration: reducedMotion ? 200 : 620 + index * 80, onComplete: () => { wake.setVisible(false); this.ellipsePool.push(wake) } })
               }
               this.floatEmoji(source.root.x, source.root.y - 16, '⚡', '26px', 520)
             }
             if (raceEvent.sourcePlayerId) this.focusCamera(raceEvent.sourcePlayerId, 420)
+            return
+          }
+
+          if (type === 'BOOST_BROKEN') {
+            const victim = source ?? target
+            if (victim) {
+              this.burstRing(victim.root.x, victim.root.y, 0xff4433, 0xffaa00, 0.22, 3.2)
+              this.floatEmoji(victim.root.x, victim.root.y - 16, '💥', '28px', 540)
+            }
+            if (raceEvent.sourcePlayerId) this.focusCamera(raceEvent.sourcePlayerId, 460)
             return
           }
 

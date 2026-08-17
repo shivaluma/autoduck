@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="skin-high-noon-brands" stroke="#EA580C" stroke-width="8" stroke-linecap="round" fill="none">
+      <path d="M290 70 L315 85 L340 70"/>
+      <path d="M150 295 L190 275 L230 315 L270 280 L310 310"/>
+      <circle cx="190" cy="275" r="4" fill="#FDE047" stroke="none"/>
+      <circle cx="270" cy="280" r="4" fill="#FDE047" stroke="none"/>
+    </g>
+</svg>

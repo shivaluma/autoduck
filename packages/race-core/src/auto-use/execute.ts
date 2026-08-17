@@ -34,7 +34,11 @@ export function executePrepAction(
   switch (candidate.itemId) {
     case 'NITRO': {
       if (!hasUnused(runtime, 'NITRO')) return false
-      const outcome = tryApplyPrepSpeedBoost(runtime, duck.playerId, 'NITRO', itemState.tuning.nitroSpeedMultiplier, ITEM_BALANCE.nitro.durationSeconds, tick, tickRate, emit, { autoReason: candidate.reason })
+      const outcome = tryApplyPrepSpeedBoost(runtime, duck.playerId, 'NITRO', itemState.tuning.nitroSpeedMultiplier, ITEM_BALANCE.nitro.durationSeconds, tick, tickRate, emit, {
+        autoReason: candidate.reason,
+        startRank: duck.currentRank,
+        startProgress: duck.progress,
+      })
       if (outcome === 'ignored') return false
       runtime.usedItems.add('NITRO')
       return true

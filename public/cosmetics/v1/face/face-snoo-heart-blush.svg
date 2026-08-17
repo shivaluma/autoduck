@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="face-snoo-blush">
+      <path d="M304 184 C298 174, 288 180, 298 194 L304 200 L310 194 C320 180, 310 174, 304 184 Z" fill="#FF4500" opacity="0.75"/>
+      <path d="M394 188 C388 178, 378 184, 388 198 L394 204 L400 198 C410 184, 400 178, 394 188 Z" fill="#FF4500" opacity="0.75"/>
+      <circle cx="320" cy="132" r="3" fill="#FFFDF4"/>
+      <circle cx="382" cy="138" r="3" fill="#FFFDF4"/>
+    </g>
+</svg>

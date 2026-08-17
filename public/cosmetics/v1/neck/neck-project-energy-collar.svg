@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="neck-project-collar">
+      <path d="M212 244 Q276 276 332 244" stroke="#18181B" stroke-width="14" stroke-linecap="round" fill="none"/>
+      <path d="M216 246 Q276 276 328 246" stroke="#00F2FE" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <rect x="264" y="264" width="20" height="12" rx="3" fill="#0F172A" stroke="#00F2FE" stroke-width="4"/>
+      <circle cx="274" cy="270" r="3" fill="#00F2FE"/>
+    </g>
+</svg>

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="pet-companion">
+    <defs>
+      <style>
+        @keyframes pet-bob-512 {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-8px); }
+        }
+      </style>
+    </defs>
+    <g style="animation: pet-bob-512 2.4s ease-in-out infinite">
+      <!-- Cafe Cutie Pastry Pup -->
+      <ellipse cx="432" cy="380" rx="28" ry="24" fill="#FDE68A" stroke="#1B132B" stroke-width="8"/>
+      <circle cx="432" cy="355" r="22" fill="#FDE68A" stroke="#1B132B" stroke-width="8"/>
+      <!-- Cream swirl hat with cherry -->
+      <path d="M418 340 C418 320, 446 320, 446 340 Z" fill="#FFFDF4" stroke="#1B132B" stroke-width="4"/>
+      <circle cx="432" cy="320" r="5" fill="#EF4444"/>
+      <circle cx="424" cy="355" r="4" fill="#78350F"/>
+      <circle cx="440" cy="355" r="4" fill="#78350F"/>
+      <circle cx="418" cy="362" r="3" fill="#FF78A8"/>
+      <circle cx="446" cy="362" r="3" fill="#FF78A8"/>
+    </g>
+  </g>
+</svg>

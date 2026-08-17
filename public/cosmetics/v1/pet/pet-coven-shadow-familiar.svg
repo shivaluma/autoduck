@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="pet-companion">
+    <defs>
+      <style>
+        @keyframes pet-bob-512 {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-8px); }
+        }
+      </style>
+    </defs>
+    <g style="animation: pet-bob-512 2.4s ease-in-out infinite">
+      <!-- Coven Shadow Familiar -->
+      <ellipse cx="432" cy="380" rx="26" ry="24" fill="#18181B" stroke="#1B132B" stroke-width="8"/>
+      <circle cx="432" cy="355" r="20" fill="#18181B" stroke="#1B132B" stroke-width="8"/>
+      <polygon points="416,345 412,325 426,340" fill="#18181B" stroke="#1B132B" stroke-width="4"/>
+      <polygon points="448,345 452,325 438,340" fill="#18181B" stroke="#1B132B" stroke-width="4"/>
+      <circle cx="424" cy="355" r="3" fill="#A855F7"/>
+      <circle cx="440" cy="355" r="3" fill="#A855F7"/>
+      <circle cx="432" cy="344" r="3" fill="#C084FC"/>
+      <path d="M452 385 C468 375, 475 355, 465 345" stroke="#4C1D95" stroke-width="8" fill="none" stroke-linecap="round"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="head-snoo-antenna">
+      <defs>
+        <filter id="snoo-glow-512" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <path d="M330 84 C330 30, 310 -8, 345 -14" stroke="#1B132B" stroke-width="14" stroke-linecap="round" fill="none"/>
+      <path d="M330 84 C330 30, 310 -8, 345 -14" stroke="#FFFDF4" stroke-width="8" stroke-linecap="round" fill="none"/>
+      <circle cx="348" cy="-16" r="14" fill="#FF4500" stroke="#1B132B" stroke-width="4" filter="url(#snoo-glow-512)"/>
+      <circle cx="345" cy="-19" r="4" fill="#FFFDF4"/>
+    </g>
+</svg>

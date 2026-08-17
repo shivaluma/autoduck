@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="face-kda-mask">
+      <path d="M330 180 C360 170, 410 170, 440 185 L430 225 C390 235, 350 230, 320 215 Z" fill="#0B0F19" stroke="#FF007F" stroke-width="8"/>
+      <g fill="#00F2FE">
+        <polygon points="345,188 355,188 350,202"/>
+        <polygon points="365,188 375,188 370,205"/>
+        <polygon points="385,188 395,188 390,205"/>
+        <polygon points="405,188 415,188 410,202"/>
+        <polygon points="350,220 360,220 355,206"/>
+        <polygon points="370,220 380,220 375,208"/>
+        <polygon points="390,220 400,220 395,208"/>
+        <polygon points="410,220 420,220 415,206"/>
+      </g>
+    </g>
+</svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="head-blood-horns">
+      <path d="M265 80 C235 45, 195 -10, 215 -35 C235 -20, 260 25, 280 60 Z" fill="#991B1B" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+      <path d="M355 60 C375 25, 400 -20, 420 -35 C440 -10, 400 45, 370 80 Z" fill="#991B1B" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+      <path d="M230 -10 L255 15" stroke="#F59E0B" stroke-width="8" stroke-linecap="round"/>
+      <path d="M405 -10 L380 15" stroke="#F59E0B" stroke-width="8" stroke-linecap="round"/>
+      <path d="M255 90 C295 72, 345 72, 385 90" stroke="#991B1B" stroke-width="8" fill="none"/>
+    </g>
+</svg>

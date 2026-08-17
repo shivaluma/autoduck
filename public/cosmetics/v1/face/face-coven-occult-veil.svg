@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="face-coven-veil">
+      <path d="M280 120 C320 100, 380 100, 420 125 L415 160 C380 145, 320 145, 285 160 Z" fill="#18181B" fill-opacity="0.45" stroke="#7C3AED" stroke-width="4"/>
+      <polygon points="352,100 357,112 352,124 347,112" fill="#A855F7" stroke="#1B132B" stroke-width="4"/>
+      <circle cx="352" cy="112" r="3" fill="#FFFDF4"/>
+    </g>
+</svg>

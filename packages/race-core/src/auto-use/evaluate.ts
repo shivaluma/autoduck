@@ -1,4 +1,4 @@
-import type { RaceItemId, WildItemId } from '../../../race-protocol/src'
+import type { RaceItemId } from '../../../race-protocol/src'
 import { CORE_BALANCE } from '../config'
 import { ITEM_BALANCE } from '../items/config'
 import { PICKUP_BALANCE } from '../pickups/config'
@@ -329,22 +329,114 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
   const pressure = inventoryPressure(ctx)
 
   if (hasUnusedPrep(runtime, 'NITRO') && duck.progress >= ITEM_BALANCE.nitro.armProgress) {
-    const ahead = activeDucks(ctx.ducks).find((candidate) => candidate.progress > duck.progress)
-    const gap = ahead ? ahead.progress - duck.progress : 1
-    const expectedGain = baseSpeed() * (ctx.itemState.tuning.nitroSpeedMultiplier - 1) * ITEM_BALANCE.nitro.durationSeconds
-    let score = 0
-    if (ctx.objective.isCurrentlyLosing(duck.playerId, duck.currentRank)) score += 35
-    if (expectedGain >= gap) score += 35
-    else if (expectedGain >= gap * 0.5) score += 15
-    if (duck.progress >= AUTO_USE_CONFIG.progressLate) score += 15
-    score += endGameBurnScore(duck.progress, 'PREP')
-    if (ctx.objective.mode === 'REVERSE') score -= 80
-    if (duck.currentRank >= 2 && duck.currentRank <= 4 && gap < 0.08) score += 22
-    if (duck.currentRank <= 2 && duck.progress < 0.7) score -= 12
-    if (ctx.tick < runtime.boostUntilTick && runtime.boostMultiplier > 1) score -= 100
-    if (gap > expectedGain * 2) score -= 20
-    score += pressure * 0.15
-    candidates.push({ itemKey: 'prep:NITRO', itemId: 'NITRO', source: 'PREP', action: 'USE', score, reason: 'OPPORTUNITY' })
+    if (ctx.objective.mode === 'REVERSE') {
+      // In Reverse mode, Nitro gives negative utility since advancing forward causes penalties
+    } else {
+      const expectedGain = baseSpeed() * (ctx.itemState.tuning.nitroSpeedMultiplier - 1) * ITEM_BALANCE.nitro.durationSeconds
+      const enemiesAhead = activeDucks(ctx.ducks)
+        .filter((candidate) => candidate.playerId !== duck.playerId && candidate.progress > duck.progress)
+        .sort((left, right) => left.progress - right.progress)
+
+      let possibleOvertakes = 0
+      let nearestAheadGap = 1.0
+      for (const ahead of enemiesAhead) {
+        const gap = ahead.progress - duck.progress
+        if (gap < nearestAheadGap) nearestAheadGap = gap
+        if (gap <= expectedGain * 1.05) {
+          possibleOvertakes += 1
+        }
+      }
+
+      let score = 0
+
+      // 1. Overtake Value: High reward for convertable position jumps
+      if (possibleOvertakes >= 2) {
+        score += 65
+      } else if (possibleOvertakes === 1) {
+        score += 42
+      } else if (nearestAheadGap <= expectedGain * 1.5) {
+        score += 20
+      } else if (nearestAheadGap > expectedGain * 2.2 && duck.progress < 0.82) {
+        score -= 25
+      }
+
+      // 2. Safety Value: Urgent burst to escape loser zone in standard/cutline chaos
+      const isLosing = ctx.objective.isCurrentlyLosing(duck.playerId, duck.currentRank)
+      if (isLosing) {
+        const ducksNeededToEscape = duck.currentRank - ctx.objective.loserCutoff + 1
+        if (possibleOvertakes >= ducksNeededToEscape) {
+          score += 55
+        } else {
+          score += 35
+        }
+      } else if (danger > 50) {
+        score += 18
+      }
+
+      // 3. Finish Conversion: Snatch 1st place or secure podium in late sprint
+      const isLate = duck.progress >= 0.82
+      if (isLate) {
+        if (duck.currentRank === 2 && enemiesAhead.length > 0 && nearestAheadGap <= expectedGain * 1.25) {
+          score += 60
+        } else if (duck.currentRank <= 3 && nearestAheadGap <= expectedGain * 1.3) {
+          score += 40
+        } else if (duck.progress >= 0.90) {
+          score += 25
+        }
+      }
+
+      // 4. Escape Value: Break away when closely pursued from behind
+      const closestBehind = activeDucks(ctx.ducks)
+        .filter((candidate) => candidate.playerId !== duck.playerId && candidate.progress <= duck.progress)
+        .sort((left, right) => right.progress - left.progress)[0]
+      if (closestBehind) {
+        const gapBehind = duck.progress - closestBehind.progress
+        if (gapBehind <= 0.025) {
+          score += 22
+        }
+      }
+
+      // 5. Rocket Threat Forecast: Hold Nitro if an incoming rocket will break it
+      const incomingRockets = ctx.itemState.rockets.filter(
+        (rocket) => rocket.targetPlayerId === duck.playerId && rocket.launchAtTick <= ctx.tick && ctx.tick < rocket.expiresAtTick,
+      )
+      if (incomingRockets.length > 0) {
+        const hasShield = runtime.bubbleAvailable || runtime.wildBubbleAvailable
+        if (!hasShield) {
+          let minTimeToImpact = Infinity
+          for (const rocket of incomingRockets) {
+            const distance = Math.max(0, duck.progress - rocket.progress)
+            const relSpeed = rocket.speedPerSecond - baseSpeed()
+            const tti = relSpeed > 0 ? distance / relSpeed : 2.0
+            if (tti < minTimeToImpact) minTimeToImpact = tti
+          }
+          if (minTimeToImpact < 1.0 && duck.progress < 0.96) {
+            score -= 80
+          } else if (minTimeToImpact >= 1.5 && possibleOvertakes > 0) {
+            score -= 15
+          }
+        }
+      }
+
+      // 6. Boost Stacking Check: Avoid overriding active speed effect
+      if (ctx.tick < runtime.boostUntilTick && runtime.boostMultiplier > 1) {
+        score -= 100
+      }
+
+      score += endGameBurnScore(duck.progress, 'PREP')
+      score += pressure * 0.15
+
+      if (score >= 30) {
+        candidates.push({
+          itemKey: 'prep:NITRO',
+          itemId: 'NITRO',
+          source: 'PREP',
+          action: 'USE',
+          score: clamp(score, 0, 100),
+          reason: isLate ? 'END_GAME_BURN' : isLosing ? 'OBJECTIVE' : 'OPPORTUNITY',
+        })
+      }
+    }
   }
 
   if (hasUnusedPrep(runtime, 'DRAFT_FIN') && duck.progress >= ITEM_BALANCE.draftFin.armProgress && slipstreamReady(runtime, ctx.tickRate, duck.progress)) {

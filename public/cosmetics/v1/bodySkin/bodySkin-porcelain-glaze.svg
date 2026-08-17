@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="skin-porcelain-glaze" stroke="#2563EB" stroke-width="4" fill="none" opacity="0.85">
+      <path d="M285 75 C295 65, 310 65, 320 75 C330 65, 345 65, 355 75" stroke-linecap="round"/>
+      <path d="M145 290 C165 270, 195 270, 215 290 C235 270, 265 270, 285 290 C305 270, 335 270, 350 290" stroke-width="8" stroke-linecap="round"/>
+      <circle cx="180" cy="285" r="5" fill="#1D4ED8" stroke="none"/>
+      <circle cx="250" cy="285" r="5" fill="#1D4ED8" stroke="none"/>
+      <circle cx="320" cy="285" r="5" fill="#1D4ED8" stroke="none"/>
+    </g>
+</svg>

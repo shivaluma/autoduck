@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="head-coven-antlers">
+      <path d="M270 75 C240 30, 200 10, 180 -25 M225 10 C210 -15, 190 -10, 185 -5 M270 75 C285 30, 275 -10, 260 -35" stroke="#18181B" stroke-width="12" stroke-linecap="round" fill="none"/>
+      <path d="M270 75 C240 30, 200 10, 180 -25 M225 10 C210 -15, 190 -10, 185 -5 M270 75 C285 30, 275 -10, 260 -35" stroke="#4C1D95" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <path d="M360 75 C390 30, 430 10, 450 -25 M405 10 C420 -15, 440 -10, 445 -5 M360 75 C345 30, 355 -10, 370 -35" stroke="#18181B" stroke-width="12" stroke-linecap="round" fill="none"/>
+      <path d="M360 75 C390 30, 430 10, 450 -25 M405 10 C420 -15, 440 -10, 445 -5 M360 75 C345 30, 355 -10, 370 -35" stroke="#4C1D95" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <circle cx="315" cy="55" r="9" fill="#7C3AED" stroke="#1B132B" stroke-width="4"/>
+    </g>
+</svg>

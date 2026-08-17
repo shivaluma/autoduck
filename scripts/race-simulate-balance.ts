@@ -157,6 +157,17 @@ function printWastedValueLayer(instrumentation: RaceInstrumentation) {
   const { nitro, draft, rocket, banana, horn } = instrumentation.value
   console.log('\n=== Wasted value layer (focus ducks · decompose rank delta) ===')
   console.log(`Nitro: granted ${nitro.boostSecondsGranted.toFixed(2)}s · consumed ${nitro.boostSecondsConsumed.toFixed(2)}s · queued ${nitro.boostSecondsQueued.toFixed(2)}s · broken ${nitro.boostSecondsBroken.toFixed(2)}s (rocket ${nitro.boostSecondsBrokenByRocket.toFixed(2)}s · banana ${nitro.boostSecondsBrokenByBanana.toFixed(2)}s) · distance +${nitro.boostDistanceGenerated.toFixed(4)} / denied ${nitro.boostDistanceDenied.toFixed(4)}`)
+  if (nitro.activationsCount > 0) {
+    const total = nitro.activationsCount
+    console.log(`Nitro conversion (${total} activations):`)
+    console.log(`  ├─ produced 0 overtakes: ${nitro.produced0Overtakes} (${((nitro.produced0Overtakes / total) * 100).toFixed(1)}%)`)
+    console.log(`  ├─ produced 1 overtake: ${nitro.produced1Overtake} (${((nitro.produced1Overtake / total) * 100).toFixed(1)}%)`)
+    console.log(`  ├─ produced 2+ overtakes: ${nitro.produced2PlusOvertakes} (${((nitro.produced2PlusOvertakes / total) * 100).toFixed(1)}%)`)
+    console.log(`  ├─ escaped loser zone: ${nitro.escapedLoserZone} (${((nitro.escapedLoserZone / total) * 100).toFixed(1)}%)`)
+    console.log(`  ├─ converted to #1: ${nitro.convertedToWin} (${((nitro.convertedToWin / total) * 100).toFixed(1)}%)`)
+    console.log(`  ├─ broken by Rocket: ${nitro.brokenByRocketCount} (${((nitro.brokenByRocketCount / total) * 100).toFixed(1)}%)`)
+    console.log(`  └─ boost value wasted: ${nitro.boostValueWastedCount} (${((nitro.boostValueWastedCount / total) * 100).toFixed(1)}%)`)
+  }
   console.log(`Draft: charge attempts ${draft.chargeAttempts} · procs ${draft.successfulProcs} · horn charge lost ${draft.chargeSecondsLostByHorn.toFixed(2)}s · collision charge lost ${draft.chargeSecondsLostByCollision.toFixed(2)}s · boost distance ${draft.boostDistanceGenerated.toFixed(4)}`)
   console.log(`Rocket: fired ${rocket.fired} · valid@decide ${rocket.validTargetAtDecision} · valid@execute ${rocket.validTargetAtExecution} · hit ${rocket.hit} · block ${rocket.block} · mitigate ${rocket.mitigate} · boost destroyed ${rocket.boostSecondsDestroyed.toFixed(2)}s · victim distance denied ${rocket.victimDistanceDenied.toFixed(4)}`)
   console.log(`Banana: drops ${banana.drops} · predicted intersection sum ${banana.predictedIntersectionSum.toFixed(1)} · collisions ${banana.actualCollisions} · boost breaks ${banana.boostBreaks} · distance denied ${banana.distanceDenied.toFixed(4)}`)

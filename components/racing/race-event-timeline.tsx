@@ -198,7 +198,7 @@ export function formatEventDetails(
       return {
         icon: '⚡',
         title: `${sourceName} bứt tốc Nitro! ⚡`,
-        description: 'Kích hoạt Bình Tăng Tốc Nitro +25% tốc độ trong 2.0s xé gió vượt lên!',
+        description: 'Kích hoạt Bình Tăng Tốc Nitro 3 giai đoạn (+25% đỉnh điểm) trong 1.7s xé gió vượt lên!',
         category: 'speed',
         tone: 'text-[var(--color-ggd-neon-green)] border-emerald-500/30 bg-emerald-500/10',
       }

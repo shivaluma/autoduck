@@ -220,33 +220,11 @@ test('Feather carries zero penalty for Rocket AI targeting', () => {
 
 test('Mini Rocket applies 50% partial boost duration break', () => {
   const state: DuckItemRuntime = {
-    itemIds: ['NITRO'],
-    usedItems: new Set(),
-    speedMultiplier: 1.25,
+    ...runtime(['NITRO']),
     boostMultiplier: 1.25,
-    slowMultiplier: 1,
-    slowUntilTick: 0,
     boostUntilTick: 160,
     boostStartedAtTick: 60,
     activeSpeedItemId: 'NITRO',
-    queuedSpeedBoost: null,
-    bubbleAvailable: false,
-    featherAvailable: false,
-    shockAbsorberAvailable: false,
-    itemImmunityUntilTick: 0,
-    rocketProtectionUntilTick: 0,
-    draftSlipstreamTicks: 0,
-    draftTargetPlayerId: null,
-    silencedUntilTick: 0,
-    lastItemUseTick: 0,
-    lastOffensiveUseTick: 0,
-    nextAutoDecisionTick: 0,
-    nextAutoActionTick: 0,
-    pendingAutoAction: null,
-    pendingAutoActionExecuteTick: 0,
-    reactiveRocketVisibleSinceTick: null,
-    reactiveBananaVisibleSinceTick: null,
-    loadoutCombo: null,
   }
   const emitted: Array<{ type: string; metadata: Record<string, unknown> }> = []
   const emit = (type: string, _source?: string, _target?: string, metadata: Record<string, unknown> = {}) => {

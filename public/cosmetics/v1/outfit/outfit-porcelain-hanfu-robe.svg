@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="outfit-porcelain-robe">
+      <path d="M84 326 c0 -54 44 -92 114 -104 l24 30 q38 34 86 -2 l34 6 c38 16 60 38 68 66 c14 66 -52 100 -166 96 c-106 -2 -160 -36 -160 -92 Z" fill="#FFFDF4" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+      <path d="M136 304 C164 284, 210 290, 240 324 C216 356, 160 364, 136 304 Z" fill="#E2E8F0" stroke="#1B132B" stroke-width="8" stroke-linejoin="round"/>
+      <path d="M220 250 L275 325 L330 250" stroke="#2563EB" stroke-width="8" fill="none"/>
+      <rect x="235" y="325" width="90" height="28" rx="4" fill="#2563EB" stroke="#1B132B" stroke-width="8"/>
+      <circle cx="280" cy="339" r="6" fill="#FDE047"/>
+      <path d="M260 360 C275 350, 285 350, 300 360" stroke="#2563EB" stroke-width="8" fill="none"/>
+    </g>
+</svg>

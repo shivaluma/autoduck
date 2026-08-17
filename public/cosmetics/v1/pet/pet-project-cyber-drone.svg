@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="pet-companion">
+    <defs>
+      <style>
+        @keyframes pet-bob-512 {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-8px); }
+        }
+      </style>
+    </defs>
+    <g style="animation: pet-bob-512 2.4s ease-in-out infinite">
+      <!-- PROJECT Cyber Drone -->
+      <polygon points="432,340 460,365 448,390 416,390 404,365" fill="#18181B" stroke="#00F2FE" stroke-width="8"/>
+      <circle cx="432" cy="365" r="10" fill="#00F2FE" stroke="#1B132B" stroke-width="4"/>
+      <circle cx="432" cy="365" r="4" fill="#FFFDF4"/>
+      <line x1="410" y1="390" x2="400" y2="405" stroke="#00F2FE" stroke-width="4"/>
+      <line x1="454" y1="390" x2="464" y2="405" stroke="#00F2FE" stroke-width="4"/>
+    </g>
+  </g>
+</svg>

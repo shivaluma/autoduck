@@ -166,6 +166,14 @@ export interface NitroValueInstrument {
   boostSecondsBrokenByBanana: number
   boostDistanceGenerated: number
   boostDistanceDenied: number
+  activationsCount: number
+  produced0Overtakes: number
+  produced1Overtake: number
+  produced2PlusOvertakes: number
+  escapedLoserZone: number
+  convertedToWin: number
+  brokenByRocketCount: number
+  boostValueWastedCount: number
 }
 
 export interface DraftValueInstrument {
@@ -221,6 +229,14 @@ function emptyNitroValue(): NitroValueInstrument {
     boostSecondsBrokenByBanana: 0,
     boostDistanceGenerated: 0,
     boostDistanceDenied: 0,
+    activationsCount: 0,
+    produced0Overtakes: 0,
+    produced1Overtake: 0,
+    produced2PlusOvertakes: 0,
+    escapedLoserZone: 0,
+    convertedToWin: 0,
+    brokenByRocketCount: 0,
+    boostValueWastedCount: 0,
   }
 }
 
@@ -595,6 +611,7 @@ export function trackRaceEvent(
       if (speedItem === 'NITRO') {
         instrumentation.value.nitro.boostSecondsGranted += durationSeconds
         instrumentation.value.nitro.boostDistanceGenerated += distance
+        instrumentation.value.nitro.activationsCount += 1
       } else if (speedItem === 'DRAFT_FIN') {
         instrumentation.value.draft.successfulProcs += 1
         instrumentation.value.draft.boostDistanceGenerated += distance
@@ -605,8 +622,20 @@ export function trackRaceEvent(
   const speedEndItem = speedItemFromEndEvent(event.type)
   if (speedEndItem && event.sourcePlayerId && focusPlayers.has(event.sourcePlayerId)) {
     const consumedSeconds = Number(event.metadata.consumedSeconds ?? 0)
-    if (event.metadata.natural && speedEndItem === 'NITRO' && consumedSeconds > 0) {
-      instrumentation.value.nitro.boostSecondsConsumed += consumedSeconds
+    if (speedEndItem === 'NITRO') {
+      if (event.metadata.natural && consumedSeconds > 0) {
+        instrumentation.value.nitro.boostSecondsConsumed += consumedSeconds
+      }
+      const sRank = Number(event.metadata.startRank ?? baselineRank.get(event.sourcePlayerId) ?? 4)
+      const fRank = finalRank.get(event.sourcePlayerId) ?? sRank
+      const overtakes = Math.max(0, sRank - fRank)
+      if (overtakes === 0) instrumentation.value.nitro.produced0Overtakes += 1
+      else if (overtakes === 1) instrumentation.value.nitro.produced1Overtake += 1
+      else instrumentation.value.nitro.produced2PlusOvertakes += 1
+
+      if (sRank >= 7 && fRank <= 6) instrumentation.value.nitro.escapedLoserZone += 1
+      if (sRank > 1 && fRank === 1) instrumentation.value.nitro.convertedToWin += 1
+      if (overtakes === 0 && fRank > 3) instrumentation.value.nitro.boostValueWastedCount += 1
     }
   }
 
@@ -649,6 +678,9 @@ export function trackRaceEvent(
     recordBoostBrokenValue(instrumentation, instrumentation.counters, victimId, focusPlayers, event.metadata, tickRate)
     if (focusPlayers.has(victimId)) {
       instrumentation.counters.boostOwnerPositionsDeniedSum += Math.max(0, finalRank.get(victimId)! - baselineRank.get(victimId)!)
+      if (event.metadata.breakSource === 'ROCKET' || event.metadata.breakSource === 'MINI_ROCKET') {
+        instrumentation.value.nitro.brokenByRocketCount += 1
+      }
     }
     boostedPlayers.delete(victimId)
   }

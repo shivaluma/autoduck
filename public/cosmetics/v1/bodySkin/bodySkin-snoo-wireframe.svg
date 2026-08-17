@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="skin-snoo-wireframe" stroke="#00F2FE" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.75">
+      <ellipse cx="320" cy="80" rx="35" ry="20" stroke-dasharray="6 6"/>
+      <line x1="285" y1="80" x2="355" y2="80"/>
+      <ellipse cx="230" cy="320" rx="90" ry="55" stroke-dasharray="8 8"/>
+      <line x1="140" y1="320" x2="320" y2="320"/>
+      <line x1="230" y1="265" x2="230" y2="375"/>
+    </g>
+</svg>

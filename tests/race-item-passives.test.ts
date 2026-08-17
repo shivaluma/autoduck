@@ -62,6 +62,7 @@ test('Paddle Burst is unlocked during endgame burn even if rank is 1', () => {
 
   const candidateAsAction = {
     ...pbCandidate,
+    playerId: ducks[0]!.playerId,
     executionDelayTicks: 0,
     itemKey: pbCandidate.itemKey,
     action: pbCandidate.action,
@@ -155,7 +156,7 @@ test('Menace reduces arm progress for offensive items', () => {
   assert.ok(!candidates2.some((c) => c.itemId === 'HOMING_ROCKET'), 'Mixed should NOT be armed at progress 0.23')
 })
 
-test('Quack Horn dispels active speed boost and silences victims for 3.0 seconds', () => {
+test('Quack Horn dispels active speed boost (Draft/Paddle) and silences victims for 2.5 seconds', () => {
   const cfg = dummyConfig([
     { playerId: 'duck-1', itemIds: ['HOMING_ROCKET', 'QUACK_HORN'], source: 'PLAYER' },
     { playerId: 'duck-2', itemIds: ['NITRO', 'DRAFT_FIN'], source: 'PLAYER' },
@@ -164,9 +165,9 @@ test('Quack Horn dispels active speed boost and silences victims for 3.0 seconds
   const runtime1 = itemState.byPlayer.get('duck-1')!
   const runtime2 = itemState.byPlayer.get('duck-2')!
 
-  // duck-2 has an active Nitro boost
-  tryApplyPrepSpeedBoost(runtime2, 'duck-2', 'NITRO', 1.15, 1.5, 10, 60, () => undefined)
-  assert.equal(runtime2.activeSpeedItemId, 'NITRO')
+  // duck-2 has an active Draft Fin boost
+  tryApplyPrepSpeedBoost(runtime2, 'duck-2', 'DRAFT_FIN', 1.15, 1.5, 10, 60, () => undefined)
+  assert.equal(runtime2.activeSpeedItemId, 'DRAFT_FIN')
   assert.ok(runtime2.boostMultiplier > 1)
 
   const ducks = [
@@ -192,7 +193,7 @@ test('Quack Horn dispels active speed boost and silences victims for 3.0 seconds
   const executed = executePrepAction(candidate, itemState, ducks[0]!, ducks, 20, 60, emit as never, {}, cfg)
   assert.equal(executed, true)
 
-  // duck-2's boost should be broken (dispelled)
+  // duck-2's Draft Fin boost should be broken (dispelled)
   assert.equal(runtime2.activeSpeedItemId, null)
   assert.equal(runtime2.boostMultiplier, 1)
 

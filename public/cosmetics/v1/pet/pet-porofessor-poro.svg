@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="pet-companion">
+    <defs>
+      <style>
+        @keyframes pet-bob-512 {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-8px); }
+        }
+      </style>
+    </defs>
+    <g style="animation: pet-bob-512 2.4s ease-in-out infinite">
+      <!-- Porofessor Poro -->
+      <circle cx="432" cy="370" r="28" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
+      <!-- Curved horns -->
+      <path d="M412 350 C400 340, 400 325, 412 325 C416 335, 418 345, 418 350" fill="#78350F" stroke="#1B132B" stroke-width="4"/>
+      <path d="M452 350 C464 340, 464 325, 452 325 C448 335, 446 345, 446 350" fill="#78350F" stroke="#1B132B" stroke-width="4"/>
+      <circle cx="424" cy="366" r="4" fill="#18181B"/>
+      <circle cx="440" cy="366" r="4" fill="#18181B"/>
+      <circle cx="440" cy="366" r="8" fill="none" stroke="#F59E0B" stroke-width="4"/>
+      <!-- Pink tongue -->
+      <path d="M428 376 C428 390, 436 390, 436 376 Z" fill="#FF78A8" stroke="#1B132B" stroke-width="4"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="pet-companion">
+    <defs>
+      <style>
+        @keyframes pet-bob-512 {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-8px); }
+        }
+      </style>
+    </defs>
+    <g style="animation: pet-bob-512 2.4s ease-in-out infinite">
+      <!-- Star Guardian Dango -->
+      <ellipse cx="432" cy="370" rx="28" ry="26" fill="#FEF08A" stroke="#1B132B" stroke-width="8"/>
+      <polygon points="402,365 390,350 406,355" fill="#FFFDF4" stroke="#1B132B" stroke-width="4"/>
+      <polygon points="462,365 474,350 458,355" fill="#FFFDF4" stroke="#1B132B" stroke-width="4"/>
+      <polygon points="432,330 435,338 444,340 435,342 432,350 429,342 420,340 429,338" fill="#FDE047" stroke="#1B132B" stroke-width="4"/>
+      <circle cx="422" cy="368" r="4" fill="#18181B"/>
+      <circle cx="442" cy="368" r="4" fill="#18181B"/>
+      <circle cx="416" cy="374" r="4" fill="#FF78A8"/>
+      <circle cx="448" cy="374" r="4" fill="#FF78A8"/>
+    </g>
+  </g>
+</svg>

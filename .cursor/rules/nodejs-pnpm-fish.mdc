@@ -1,0 +1,71 @@
+---
+description: Enforce pnpm package manager and Fish shell syntax for Node.js commands
+alwaysApply: true
+---
+
+# Node.js, pnpm & Fish Shell Standards
+
+This project uses **Node.js** with **pnpm** and runs in a **Fish shell** environment.
+
+## 1. Package Manager: pnpm Only
+
+Always use `pnpm` for all dependency and script operations. Never use `npm`, `yarn`, or `bun`.
+
+- **Install dependencies**: `pnpm install`
+- **Add package**: `pnpm add <package>` / `pnpm add -D <package>`
+- **Run scripts**: `pnpm <script>` or `pnpm run <script>` (e.g., `pnpm dev`, `pnpm build`, `pnpm test`)
+- **Execute binaries**: `pnpm exec <command>` or `pnpm dlx <package>`
+- **Monorepo / Workspaces**: `pnpm --filter <package-name> <command>`
+
+```fish
+# ✅ GOOD
+pnpm install
+pnpm add -D tsx
+pnpm dev
+pnpm --filter race-core test
+
+# ❌ BAD
+npm install
+yarn add tsx
+npm run dev
+bun test
+```
+
+## 2. Shell Syntax: Fish Shell Compatibility
+
+All terminal commands and instructions must be compatible with **Fish shell**.
+
+### Environment Variables
+
+Fish does not use `export KEY=value` or inline `KEY=value command` (POSIX style).
+
+- **One-off command with env vars**: Use `env KEY=value <command>`
+- **Set variable for session/scope**: Use `set -x KEY value` or `set -gx KEY value`
+- **Erase variable**: `set -e KEY`
+
+```fish
+# ✅ GOOD
+env NODE_ENV=development pnpm dev
+set -x PORT 3000; and pnpm start
+
+# ❌ BAD (POSIX / Bash syntax)
+export NODE_ENV=development
+NODE_ENV=development pnpm dev
+PORT=3000 pnpm start
+```
+
+### Sourcing & Scripting
+
+- **Sourcing files**: Use `source path/to/file.fish` (do NOT use `. path/to/file`)
+- **Command substitution**: `(command)` or `$(command)`
+- **Conditions & Chaining**: `command1; and command2` or `command1 && command2`
+
+```fish
+# ✅ GOOD
+source .env.fish
+pnpm build; and pnpm start
+
+# ❌ BAD
+. .env
+export $(cat .env | xargs)
+```

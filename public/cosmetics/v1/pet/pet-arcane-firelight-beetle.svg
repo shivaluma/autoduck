@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
+<g id="pet-companion">
+    <defs>
+      <style>
+        @keyframes pet-bob-512 {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-8px); }
+        }
+      </style>
+    </defs>
+    <g style="animation: pet-bob-512 2.4s ease-in-out infinite">
+      <!-- Arcane Firelight Beetle -->
+      <ellipse cx="432" cy="370" rx="22" ry="26" fill="#047857" stroke="#1B132B" stroke-width="8"/>
+      <ellipse cx="432" cy="380" rx="14" ry="14" fill="#34D399" opacity="0.9"/>
+      <ellipse cx="432" cy="350" rx="14" ry="10" fill="#065F46" stroke="#1B132B" stroke-width="4"/>
+      <circle cx="426" cy="348" r="3" fill="#FDE047"/>
+      <circle cx="438" cy="348" r="3" fill="#FDE047"/>
+      <path d="M414 365 C395 350, 400 330, 415 345" stroke="#A7F3D0" stroke-width="4" fill="none"/>
+      <path d="M450 365 C469 350, 464 330, 449 345" stroke="#A7F3D0" stroke-width="4" fill="none"/>
+    </g>
+  </g>
+</svg>
