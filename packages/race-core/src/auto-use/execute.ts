@@ -67,6 +67,7 @@ export function executePrepAction(
     }
     case 'HOMING_ROCKET': {
       if (!hasUnused(runtime, 'HOMING_ROCKET')) return false
+      let targetId = candidate.targetPlayerId
       if (raceConfig) {
         const objective = buildRaceObjectiveContext(raceConfig)
         const evalCtx = {
@@ -84,17 +85,29 @@ export function executePrepAction(
         }
         const resolvedTarget = resolveRocketTarget(evalCtx, 'PREP', candidate.targetPlayerId)
         if (!resolvedTarget) return false
+        if (objective.isTeammate(duck.playerId, resolvedTarget)) return false
+        targetId = resolvedTarget
         candidate.targetPlayerId = resolvedTarget
-      } else if (!candidate.targetPlayerId) {
+      } else if (!targetId) {
         return false
       }
-      const target = ducks.find((entry) => entry.playerId === candidate.targetPlayerId)
+      if (itemState.teammatesByPlayer?.get(duck.playerId)?.has(targetId)) return false
+      const target = ducks.find((entry) => entry.playerId === targetId)
       if (!target || target.finished) return false
       const fired = firePrepRocket(itemState, duck, target.playerId, tick, tickRate, emit, candidate.reason, executeMetadata)
       return fired
     }
     case 'BANANA': {
       if (!hasUnused(runtime, 'BANANA')) return false
+      const teammates = itemState.teammatesByPlayer?.get(duck.playerId)
+      if (teammates && teammates.size > 0) {
+        const teammateAtRisk = ducks.some((candidateDuck) =>
+          !candidateDuck.finished && candidateDuck.playerId !== duck.playerId && teammates.has(candidateDuck.playerId)
+          && candidateDuck.progress < duck.progress
+          && (duck.progress - candidateDuck.progress < 0.08 && Math.abs(candidateDuck.lateralOffset - duck.lateralOffset) <= ITEM_BALANCE.banana.hitLateralRadius * 1.5),
+        )
+        if (teammateAtRisk) return false
+      }
       const progress = Math.max(0, duck.progress - ITEM_BALANCE.banana.dropBehindProgress)
       if (itemState.bananas.some((banana) => Math.abs(banana.progress - progress) < ITEM_BALANCE.banana.minimumTrapSpacing && Math.abs(banana.lateralOffset - duck.lateralOffset) < ITEM_BALANCE.banana.hitLateralRadius)) return false
       runtime.usedItems.add('BANANA')
@@ -121,6 +134,10 @@ export function executePrepAction(
         && Math.abs(target.progress - duck.progress) <= ITEM_BALANCE.horn.progressRadius * 1.5
         && Math.abs(target.lateralOffset - duck.lateralOffset) <= ITEM_BALANCE.horn.lateralRadius * 1.5)
       if (nearby.length === 0) return false
+      const teammates = itemState.teammatesByPlayer?.get(duck.playerId)
+      if (teammates && teammates.size > 0 && nearby.some((target) => teammates.has(target.playerId))) {
+        return false
+      }
       runtime.usedItems.add('QUACK_HORN')
       let slipstreamChargeDestroyedTicks = 0
       for (const target of nearby.sort((left, right) => left.playerId.localeCompare(right.playerId))) {

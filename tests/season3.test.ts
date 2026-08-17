@@ -101,7 +101,7 @@ test('Reverse turns raw Top 2 into losers without changing raw ranks', () => {
 })
 
 test('Duo and Constructors eliminate the worst group, including Shield protection', () => {
-  const duo = resolveSeason3Race(ranking, { type: 'DUO', targetUserId: null, targetUserId2: null, groups: [[1, 5], [2, 3], [4]] })
+  const duo = resolveSeason3Race(ranking, { type: 'DUO', targetUserId: null, targetUserId2: null, groups: [[1, 5], [2, 3, 4]] })
   assert.deepEqual(duo.scarVictims.map((entry) => entry.userId), [1, 5])
 
   const constructors = resolveSeason3Race(ranking, { type: 'CONSTRUCTORS', targetUserId: null, targetUserId2: null, groups: [[1, 2, 3], [4, 5]] })

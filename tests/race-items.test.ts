@@ -4,6 +4,7 @@ import {
   ITEM_BALANCE,
   ITEM_INTERACTION_MATRIX,
   applyItemSlow,
+  applyStagedSlow,
   createItemRaceState,
   itemActiveEffects,
   itemSpeedMultiplier,
@@ -267,9 +268,63 @@ test('Rocket hits the duck ahead and applies the configured slow', () => {
   assert.ok(events.includes('ROCKET_FIRED'))
   assert.ok(events.includes('ROCKET_HIT'))
   const target = state.byPlayer.get('1')!
-  assert.equal(target.slowMultiplier, ITEM_BALANCE.rocket.slowMultiplier)
+  assert.equal(target.slowMultiplier, ITEM_BALANCE.rocket.staggerMultiplier)
   assert.ok(target.slowUntilTick > firedAt)
-  assert.equal(itemSpeedMultiplier(target, firedAt + 3), ITEM_BALANCE.rocket.slowMultiplier)
+  assert.equal(itemSpeedMultiplier(target, firedAt + 3), ITEM_BALANCE.rocket.staggerMultiplier)
+})
+
+test('Rocket applies two-stage stagger then recovery slow', () => {
+  const runtime: DuckItemRuntime = {
+    itemIds: ['FEATHER'],
+    usedItems: new Set(),
+    speedMultiplier: 1,
+    boostMultiplier: 1,
+    slowMultiplier: 1,
+    slowUntilTick: 0,
+    boostUntilTick: 0,
+    boostStartedAtTick: 0,
+    activeSpeedItemId: null,
+    queuedSpeedBoost: null,
+    bubbleAvailable: false,
+    featherAvailable: false,
+    shockAbsorberAvailable: false,
+    itemImmunityUntilTick: 0,
+    rocketProtectionUntilTick: 0,
+    draftSlipstreamTicks: 0,
+    draftTargetPlayerId: null,
+    silencedUntilTick: 0,
+    lastItemUseTick: 0,
+    lastOffensiveUseTick: 0,
+    nextAutoDecisionTick: 0,
+    nextAutoActionTick: 0,
+    pendingAutoAction: null,
+    pendingAutoActionExecuteTick: 0,
+    reactiveRocketVisibleSinceTick: null,
+    reactiveBananaVisibleSinceTick: null,
+    loadoutCombo: null,
+  }
+
+  // Hit at tick 100 with tickRate 60
+  applyStagedSlow(
+    runtime,
+    ITEM_BALANCE.rocket.staggerMultiplier,
+    ITEM_BALANCE.rocket.staggerDurationSeconds,
+    ITEM_BALANCE.rocket.recoverySlowMultiplier,
+    ITEM_BALANCE.rocket.recoveryDurationSeconds,
+    100,
+    60,
+  )
+
+  // Stage 1: Stagger (0.35s = 21 ticks, from tick 100 to 121)
+  assert.equal(runtime.slowMultiplier, ITEM_BALANCE.rocket.staggerMultiplier)
+  assert.equal(runtime.slowUntilTick, 121)
+  assert.equal(itemSpeedMultiplier(runtime, 110), ITEM_BALANCE.rocket.staggerMultiplier)
+
+  // Stage 2: Recovery slow (0.85s = 51 ticks, from tick 121 to 172)
+  assert.equal(itemSpeedMultiplier(runtime, 130), ITEM_BALANCE.rocket.recoverySlowMultiplier)
+
+  // Stage 3: Fully recovered after tick 172
+  assert.equal(itemSpeedMultiplier(runtime, 175), 1.0)
 })
 
 test('Rocket breaks active speed boost before applying slow', () => {
@@ -292,10 +347,10 @@ test('Rocket breaks active speed boost before applying slow', () => {
   }
   assert.ok(events.includes('BOOST_BROKEN'))
   assert.equal(target.activeSpeedItemId, null)
-  assert.equal(target.slowMultiplier, ITEM_BALANCE.rocket.slowMultiplier)
+  assert.equal(target.slowMultiplier, ITEM_BALANCE.rocket.staggerMultiplier)
 })
 
-test('Shock Absorber mitigates the first Rocket hit', () => {
+test('Shock Absorber mitigates the first Rocket hit with lighter stagger and recovery', () => {
   const raceConfig = config([
     { playerId: '1', itemIds: ['SHOCK_ABSORBER', 'FEATHER'] },
     { playerId: '2', itemIds: ['HOMING_ROCKET', 'BANANA'] },
@@ -312,7 +367,7 @@ test('Shock Absorber mitigates the first Rocket hit', () => {
   const target = state.byPlayer.get('1')!
   assert.ok(events.includes('SHOCK_ABSORBER_PROC'))
   assert.equal(target.shockAbsorberAvailable, false)
-  assert.equal(target.slowMultiplier, ITEM_BALANCE.shockAbsorber.slowMultiplier)
+  assert.equal(target.slowMultiplier, ITEM_BALANCE.shockAbsorber.staggerMultiplier)
 })
 
 test('Banana stays in-lane and knocks the chasing duck backward', () => {

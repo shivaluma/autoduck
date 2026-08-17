@@ -55,8 +55,8 @@ export function buildRaceObjectiveContext(config: RaceConfig): RaceObjectiveCont
       const late = progress > 0.75 ? 10 : 0
       return Math.min(100, base + squeeze + late)
     },
-    opponentThreat(_sourceId, targetId) {
-      void targetId
+    opponentThreat(sourceId, targetId) {
+      if (teammateMap.get(sourceId)?.has(targetId)) return 0
       return 1
     },
     positionImprovementValue(_playerId, fromRank, toRank) {
@@ -65,9 +65,9 @@ export function buildRaceObjectiveContext(config: RaceConfig): RaceObjectiveCont
     },
     offensiveTargetRankBonus(_sourceId, targetRank) {
       if (mode === 'REVERSE') {
-        if (targetRank <= 2) return 20
-        if (targetRank >= playerCount - 1) return -15
-        return 0
+        if (targetRank <= 2) return -30
+        if (targetRank >= playerCount - 1) return 10
+        return -10
       }
       if (targetRank <= 2) return 8
       if (targetRank >= playerCount - 1) return -8

@@ -94,6 +94,15 @@ function bananaIntersectionScore(source: ItemDuckState, target: ItemDuckState, h
   return clamp((1 - lateralGap / (radius * 1.25)) * 100 * onPath, 0, 100)
 }
 
+export interface RocketImpactForecast {
+  timeToImpact: number
+  hitConfidence: number
+  damageProbability: number
+  boostRemainingSeconds: number
+  defenseMitigation: number
+  expectedImpactValue: number
+}
+
 function rocketTargets(ctx: EvaluationContext, kind: 'PREP' | 'WILD') {
   const source = duckById(ctx.ducks, ctx.playerId)
   const maxDistance = kind === 'PREP'
@@ -106,35 +115,129 @@ function rocketTargets(ctx: EvaluationContext, kind: 'PREP' | 'WILD') {
         ? PICKUP_BALANCE.miniRocket.maximumTargetDistance * PICKUP_BALANCE.miniRocket.endGameTargetDistanceMultiplier
         : PICKUP_BALANCE.miniRocket.maximumTargetDistance)
 
+  const projectileSpeed = kind === 'PREP'
+    ? ITEM_BALANCE.rocket.projectileSpeed
+    : PICKUP_BALANCE.miniRocket.projectileSpeed
+
+  const lifetimeSeconds = kind === 'PREP'
+    ? ITEM_BALANCE.rocket.lifetimeSeconds
+    : PICKUP_BALANCE.miniRocket.lifetimeSeconds
+
+  const maxAcceptableTTI = kind === 'PREP'
+    ? (source.progress >= ITEM_BALANCE.autoUse.endGameBurnProgress ? 2.5 : 1.6)
+    : (source.progress >= PICKUP_BALANCE.autoUse.forceBurnProgress ? 2.2 : (source.progress >= PICKUP_BALANCE.autoUse.endGameBurnProgress ? 1.8 : 1.2))
+
   return activeDucks(ctx.ducks)
     .filter((candidate) => candidate.playerId !== source.playerId && candidate.progress > source.progress)
     .filter((candidate) => !ctx.ghostPlayerIds?.has(candidate.playerId))
+    .filter((candidate) => !ctx.objective.isTeammate(source.playerId, candidate.playerId))
     .filter((candidate) => candidate.progress - source.progress <= maxDistance)
     .filter((candidate) => ctx.tick >= ctx.itemState.byPlayer.get(candidate.playerId)!.rocketProtectionUntilTick)
     .map((target) => {
       const targetRuntime = ctx.itemState.byPlayer.get(target.playerId)!
-      let score = 0
       const penalty = ctx.objective.offensiveTargetPenalty(source.playerId, target.playerId)
       if (!Number.isFinite(penalty)) return null
-      score += ctx.objective.opponentThreat(source.playerId, target.playerId) * 10
-      score += clamp((maxDistance - (target.progress - source.progress)) / maxDistance * 14, 0, 14)
+
+      // Kinematics & Time-To-Impact (TTI) Forecast
       const gap = target.progress - source.progress
-      if (gap > 0.02 && gap < maxDistance * 0.75) score += 12
-      if (ctx.objective.isCurrentlyLosing(source.playerId, source.currentRank) && target.currentRank === source.currentRank - 1) score += 35
-      score += ctx.objective.offensiveTargetRankBonus(source.playerId, target.currentRank)
-      if (source.progress >= AUTO_USE_CONFIG.progressLate) score += 15
-      if ((targetRuntime.bubbleAvailable && ctx.tick < targetRuntime.bubbleUntilTick) || (targetRuntime.wildBubbleAvailable && ctx.tick < targetRuntime.wildBubbleUntilTick)) score -= 25
-      else if (hasUnusedPrep(targetRuntime, 'BUBBLE_SHIELD')) score -= 10
-      if (targetRuntime.shockAbsorberAvailable) score -= 12
-      if (targetRuntime.featherAvailable) score -= 5
-      if (ctx.tick < targetRuntime.boostUntilTick && targetRuntime.boostMultiplier > 1) score += 18
-      score -= penalty
-      if (source.progress >= ITEM_BALANCE.autoUse.endGameBurnProgress) {
-        score = Math.max(score, 20 + clamp((maxDistance - gap) / maxDistance * 10, 0, 10))
+      const targetCurrentSpeedMult = ctx.tick < targetRuntime.boostUntilTick && targetRuntime.boostMultiplier > 1
+        ? targetRuntime.boostMultiplier
+        : (ctx.tick < targetRuntime.slowUntilTick && targetRuntime.slowMultiplier < 1 ? targetRuntime.slowMultiplier : 1.0)
+      const targetEstimatedSpeed = baseSpeed() * targetCurrentSpeedMult
+      const relativeSpeed = Math.max(0.02, projectileSpeed - targetEstimatedSpeed)
+      const tti = gap / relativeSpeed
+
+      // Gate: Reject if projectile cannot reach target in lifetime or acceptable window
+      if (tti > lifetimeSeconds || tti > maxAcceptableTTI) return null
+
+      // Gate: Reject if target is projected to finish race before projectile arrives
+      const projectedTargetProgressAtImpact = target.progress + targetEstimatedSpeed * tti
+      if (projectedTargetProgressAtImpact >= 1.0) return null
+
+      // Hit confidence degrades gracefully with flight duration
+      const hitConfidence = clamp(1 - (tti / lifetimeSeconds) * 0.6, 0.25, 1.0)
+
+      // Defense analysis:
+      // Active bubble or unspent prep bubble provides hard block (damage probability = 0)
+      const hasActiveBubble = (targetRuntime.bubbleAvailable && (targetRuntime.bubbleUntilTick === undefined || ctx.tick < targetRuntime.bubbleUntilTick))
+        || (targetRuntime.wildBubbleAvailable && ctx.tick < (targetRuntime.wildBubbleUntilTick ?? 0))
+      const hasPrepBubbleInInventory = hasUnusedPrep(targetRuntime, 'BUBBLE_SHIELD')
+      const hasBubbleProtection = hasActiveBubble || hasPrepBubbleInInventory
+
+      const damageProbability = hasBubbleProtection ? 0 : 1.0
+      const defenseMitigation = targetRuntime.shockAbsorberAvailable ? 0.45 : 1.0
+      // Feather does NOT block Rocket (0 penalty)
+
+      // Expected Damage Value
+      const rawImpact = 34
+      const expectedDamageValue = rawImpact * hitConfidence * damageProbability * defenseMitigation
+
+      // Expected Boost Break Value at Impact
+      const impactTick = ctx.tick + Math.round(tti * ctx.tickRate)
+      const boostRemainingTicks = Math.max(0, targetRuntime.boostUntilTick - impactTick)
+      let expectedBoostBreakValue = 0
+      if (boostRemainingTicks > 0 && targetRuntime.boostMultiplier > 1) {
+        const boostSecondsRemaining = boostRemainingTicks / ctx.tickRate
+        const breakEfficiency = kind === 'PREP' ? 1.0 : 0.5
+        expectedBoostBreakValue = clamp(boostSecondsRemaining * 14 * (targetRuntime.boostMultiplier - 1) * 35 * breakEfficiency, 0, 24) * damageProbability * hitConfidence
       }
-      return { target, score }
+
+      // Shield Strip Value (valuable when under inventory pressure, endgame, or no other unprotected targets ahead)
+      let shieldStripValue = 0
+      if (hasBubbleProtection) {
+        const pressure = inventoryPressure(ctx)
+        const isEndGame = source.progress >= ITEM_BALANCE.autoUse.endGameBurnProgress
+        const otherTargetsAheadCount = activeDucks(ctx.ducks).filter(
+          (d) => d.playerId !== source.playerId && d.progress > source.progress && !ctx.objective.isTeammate(source.playerId, d.playerId) && !ctx.ghostPlayerIds?.has(d.playerId),
+        ).length
+        const isOnlyTargetAhead = otherTargetsAheadCount <= 1
+        const isLosing = ctx.objective.isCurrentlyLosing(source.playerId, source.currentRank)
+
+        let rawStrip = 6
+        if (pressure > 0 || isEndGame) {
+          rawStrip = 24
+        } else if (isOnlyTargetAhead && isLosing) {
+          rawStrip = 26
+        } else if (isOnlyTargetAhead) {
+          rawStrip = 16
+        }
+        shieldStripValue = rawStrip * hitConfidence
+      }
+
+      // Objective Value
+      let objectiveValue = 0
+      objectiveValue += ctx.objective.opponentThreat(source.playerId, target.playerId) * 8
+      objectiveValue += clamp((maxDistance - gap) / maxDistance * 12, 0, 12)
+      if (gap > 0.02 && gap < maxDistance * 0.75) objectiveValue += 10
+
+      // Only award rank advancement bonus if not REVERSE mode
+      if (ctx.objective.mode !== 'REVERSE' && ctx.objective.isCurrentlyLosing(source.playerId, source.currentRank) && target.currentRank === source.currentRank - 1) {
+        objectiveValue += 32 * damageProbability
+      }
+      objectiveValue += ctx.objective.offensiveTargetRankBonus(source.playerId, target.currentRank)
+
+      if (source.progress >= AUTO_USE_CONFIG.progressLate) objectiveValue += 12
+
+      let totalScore = objectiveValue + expectedDamageValue + expectedBoostBreakValue + shieldStripValue - penalty
+
+      if (source.progress >= ITEM_BALANCE.autoUse.endGameBurnProgress) {
+        totalScore = Math.max(totalScore, 20 + clamp((maxDistance - gap) / maxDistance * 10, 0, 10))
+      }
+
+      return {
+        target,
+        score: totalScore,
+        forecast: {
+          timeToImpact: tti,
+          hitConfidence,
+          damageProbability,
+          boostRemainingSeconds: boostRemainingTicks / ctx.tickRate,
+          defenseMitigation,
+          expectedImpactValue: expectedDamageValue + expectedBoostBreakValue,
+        },
+      }
     })
-    .filter((entry): entry is { target: ItemDuckState; score: number } => entry !== null && entry.score > 0)
+    .filter((entry): entry is { target: ItemDuckState; score: number; forecast: RocketImpactForecast } => entry !== null && entry.score > 0)
     .sort((left, right) => right.score - left.score || left.target.playerId.localeCompare(right.target.playerId))
 }
 
@@ -311,26 +414,44 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
   if (hasUnusedPrep(runtime, 'BANANA') && duck.progress >= bananaArmProgress) {
     let score = 0
     let bestIntersection = 0
-    for (const target of activeDucks(ctx.ducks)) {
-      if (target.playerId === duck.playerId || target.progress >= duck.progress) continue
+    const enemies = activeDucks(ctx.ducks).filter(
+      (target) => target.playerId !== duck.playerId
+        && !ctx.objective.isTeammate(duck.playerId, target.playerId)
+        && !ctx.ghostPlayerIds?.has(target.playerId),
+    )
+    for (const target of enemies) {
+      if (target.progress >= duck.progress) continue
       bestIntersection = Math.max(bestIntersection, bananaIntersectionScore(duck, target, AUTO_USE_CONFIG.bananaPredictionHorizonSeconds))
     }
-    score += bestIntersection * 0.55
-    if (danger > 50) score += 20
-    if (bestIntersection > 20) score += 18
-    if (bestIntersection > 50) score += 20
-    if (duck.progress >= AUTO_USE_CONFIG.progressLate) score += 15
-    score += endGameBurnScore(duck.progress, 'PREP')
-    score += pressure * 0.1
-    const chaser = activeDucks(ctx.ducks)
-      .filter((target) => target.playerId !== duck.playerId && target.progress < duck.progress)
-      .sort((left, right) => right.progress - left.progress)[0]
-    if (chaser && duck.progress - chaser.progress <= ITEM_BALANCE.banana.closeBehindDistance) score += 24
-    if (hasUnusedOffensiveMajor(runtime) && bestIntersection > 12) score += 22
-    if (hasUnusedOffensiveMajor(runtime) && chaser) score += 28
-    if (hasUnusedOffensiveMajor(runtime) && duck.currentRank >= 4 && chaser) score += 20
-    if (bestIntersection > 20 || score >= 24) {
-      candidates.push({ itemKey: 'prep:BANANA', itemId: 'BANANA', source: 'PREP', action: 'USE', score, reason: 'OPPORTUNITY' })
+
+    const teammateAtRisk = activeDucks(ctx.ducks).some(
+      (target) => target.playerId !== duck.playerId
+        && ctx.objective.isTeammate(duck.playerId, target.playerId)
+        && target.progress < duck.progress
+        && (
+          bananaIntersectionScore(duck, target, AUTO_USE_CONFIG.bananaPredictionHorizonSeconds) > 0
+          || (duck.progress - target.progress < 0.08 && Math.abs(target.lateralOffset - duck.lateralOffset) <= ITEM_BALANCE.banana.hitLateralRadius * 1.5)
+        ),
+    )
+
+    if (!teammateAtRisk) {
+      score += bestIntersection * 0.55
+      if (danger > 50) score += 20
+      if (bestIntersection > 20) score += 18
+      if (bestIntersection > 50) score += 20
+      if (duck.progress >= AUTO_USE_CONFIG.progressLate) score += 15
+      score += endGameBurnScore(duck.progress, 'PREP')
+      score += pressure * 0.1
+      const chaser = enemies
+        .filter((target) => target.progress < duck.progress)
+        .sort((left, right) => right.progress - left.progress)[0]
+      if (chaser && duck.progress - chaser.progress <= ITEM_BALANCE.banana.closeBehindDistance) score += 24
+      if (hasUnusedOffensiveMajor(runtime) && bestIntersection > 12) score += 22
+      if (hasUnusedOffensiveMajor(runtime) && chaser) score += 28
+      if (hasUnusedOffensiveMajor(runtime) && duck.currentRank >= 4 && chaser) score += 20
+      if (bestIntersection > 20 || score >= 24) {
+        candidates.push({ itemKey: 'prep:BANANA', itemId: 'BANANA', source: 'PREP', action: 'USE', score, reason: 'OPPORTUNITY' })
+      }
     }
   }
 
@@ -340,6 +461,8 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
   if (hasUnusedPrep(runtime, 'QUACK_HORN') && duck.progress >= hornArmProgress) {
     let netValue = 0
     let targetsCount = 0
+    let hasTeammateInRadius = false
+
     for (const target of activeDucks(ctx.ducks)) {
       if (target.playerId === duck.playerId || ctx.ghostPlayerIds?.has(target.playerId)) continue
       if (Math.abs(target.progress - duck.progress) > ITEM_BALANCE.horn.progressRadius * 1.5) continue
@@ -347,8 +470,8 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
       
       const isTeammate = ctx.objective.isTeammate(duck.playerId, target.playerId)
       if (isTeammate) {
-        netValue -= ITEM_BALANCE.horn.lateralPush * 30
-        continue
+        hasTeammateInRadius = true
+        break
       }
 
       targetsCount += 1
@@ -378,32 +501,34 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
       }
     }
 
-    // Multi-target pack disruption bonus
-    if (targetsCount >= 2) {
-      netValue += 12 * (targetsCount - 1)
-    }
+    if (!hasTeammateInRadius) {
+      // Multi-target pack disruption bonus
+      if (targetsCount >= 2) {
+        netValue += 12 * (targetsCount - 1)
+      }
 
-    // MENACE Synergy: grants Predator Rush (+10% speed for 2.2s) when hitting any target
-    if (runtime.loadoutCombo === 'MENACE' && targetsCount > 0) {
-      netValue += 14
-      if (duck.currentRank >= 2) netValue += 6
-    }
+      // MENACE Synergy: grants Predator Rush (+10% speed for 2.2s) when hitting any target
+      if (runtime.loadoutCombo === 'MENACE' && targetsCount > 0) {
+        netValue += 14
+        if (duck.currentRank >= 2) netValue += 6
+      }
 
-    if (hasUnusedOffensiveMajor(runtime) && netValue > 0) netValue += 6
-    if (duck.currentRank >= 3 && netValue > 0) netValue += 3
+      if (hasUnusedOffensiveMajor(runtime) && netValue > 0) netValue += 6
+      if (duck.currentRank >= 3 && netValue > 0) netValue += 3
 
-    const isLateSprint = duck.progress >= ITEM_BALANCE.autoUse.endGameBurnProgress
-    const minThreshold = isLateSprint ? 4 : (duck.progress >= ITEM_BALANCE.horn.fallbackProgress ? 5 : 7)
+      const isLateSprint = duck.progress >= ITEM_BALANCE.autoUse.endGameBurnProgress
+      const minThreshold = isLateSprint ? 4 : (duck.progress >= ITEM_BALANCE.horn.fallbackProgress ? 5 : 7)
 
-    if (targetsCount > 0 && netValue >= minThreshold) {
-      candidates.push({
-        itemKey: 'prep:QUACK_HORN',
-        itemId: 'QUACK_HORN',
-        source: 'PREP',
-        action: 'USE',
-        score: clamp(netValue, 0, 100) + endGameBurnScore(duck.progress, 'PREP') + pressure * 0.05,
-        reason: 'OPPORTUNITY',
-      })
+      if (targetsCount > 0 && netValue >= minThreshold) {
+        candidates.push({
+          itemKey: 'prep:QUACK_HORN',
+          itemId: 'QUACK_HORN',
+          source: 'PREP',
+          action: 'USE',
+          score: clamp(netValue, 0, 100) + endGameBurnScore(duck.progress, 'PREP') + pressure * 0.05,
+          reason: 'OPPORTUNITY',
+        })
+      }
     }
   }
 
@@ -461,7 +586,7 @@ export function evaluateWildCandidates(ctx: EvaluationContext): AutoUseCandidate
         reason: pressure > 0 ? 'INVENTORY_PRESSURE' : 'OBJECTIVE',
         wildItemInstanceId: wild.instanceId,
       })
-    } else if (duck.currentRank === 1 && duck.progress >= PICKUP_BALANCE.autoUse.forceBurnProgress) {
+    } else if (duck.progress >= PICKUP_BALANCE.autoUse.forceBurnProgress || pressure >= 20 || duck.currentRank === 1) {
       candidates.push({
         itemKey: `wild:${wild.instanceId}`,
         itemId,
@@ -478,21 +603,50 @@ export function evaluateWildCandidates(ctx: EvaluationContext): AutoUseCandidate
   if (itemId === 'BANANA') {
     let score = endGameBurnScore(duck.progress, 'WILD')
     let bestIntersection = 0
-    for (const target of activeDucks(ctx.ducks)) {
-      if (target.playerId === duck.playerId || target.progress >= duck.progress) continue
+    const enemies = activeDucks(ctx.ducks).filter(
+      (target) => target.playerId !== duck.playerId
+        && !ctx.objective.isTeammate(duck.playerId, target.playerId)
+        && !ctx.ghostPlayerIds?.has(target.playerId),
+    )
+    for (const target of enemies) {
+      if (target.progress >= duck.progress) continue
       bestIntersection = Math.max(bestIntersection, bananaIntersectionScore(duck, target, AUTO_USE_CONFIG.bananaPredictionHorizonSeconds))
     }
-    score += bestIntersection * 0.4 + pressure * 0.35
-    if (danger > 45) score += 15
-    if (duck.progress >= AUTO_USE_CONFIG.progressLate) score += 12
-    if (score >= 30) {
+
+    const teammateAtRisk = activeDucks(ctx.ducks).some(
+      (target) => target.playerId !== duck.playerId
+        && ctx.objective.isTeammate(duck.playerId, target.playerId)
+        && target.progress < duck.progress
+        && (
+          bananaIntersectionScore(duck, target, AUTO_USE_CONFIG.bananaPredictionHorizonSeconds) > 0
+          || (duck.progress - target.progress < 0.08 && Math.abs(target.lateralOffset - duck.lateralOffset) <= PICKUP_BALANCE.banana.hitLateralRadius * 1.5)
+        ),
+    )
+
+    if (!teammateAtRisk && (bestIntersection > 0 || duck.progress >= AUTO_USE_CONFIG.progressLate || danger > 45)) {
+      score += bestIntersection * 0.4 + pressure * 0.35
+      if (danger > 45) score += 15
+      if (duck.progress >= AUTO_USE_CONFIG.progressLate) score += 12
+      if (score >= 30) {
+        candidates.push({
+          itemKey: `wild:${wild.instanceId}`,
+          itemId,
+          source: 'WILD',
+          action: 'USE',
+          score,
+          reason: pressure > 0 ? 'INVENTORY_PRESSURE' : 'OPPORTUNITY',
+          wildItemInstanceId: wild.instanceId,
+        })
+      }
+    } else if (teammateAtRisk && (pressure >= 20 || duck.progress >= PICKUP_BALANCE.autoUse.forceBurnProgress)) {
       candidates.push({
-        itemKey: `wild:${wild.instanceId}`,
+        itemKey: `wild:${wild.instanceId}:discard`,
         itemId,
         source: 'WILD',
-        action: 'USE',
-        score,
-        reason: pressure > 0 ? 'INVENTORY_PRESSURE' : 'OPPORTUNITY',
+        action: 'DISCARD',
+        score: 60 + pressure,
+        reason: 'DISCARD',
+        bypassThreshold: true,
         wildItemInstanceId: wild.instanceId,
       })
     }
@@ -542,6 +696,8 @@ export function evaluateWildCandidates(ctx: EvaluationContext): AutoUseCandidate
   if (itemId === 'QUACK_HORN') {
     let netValue = 0
     let targetsCount = 0
+    let hasTeammateInRadius = false
+
     for (const target of activeDucks(ctx.ducks)) {
       if (target.playerId === duck.playerId || ctx.ghostPlayerIds?.has(target.playerId)) continue
       if (Math.abs(target.progress - duck.progress) > PICKUP_BALANCE.horn.progressRadius * 1.4) continue
@@ -549,8 +705,8 @@ export function evaluateWildCandidates(ctx: EvaluationContext): AutoUseCandidate
       
       const isTeammate = ctx.objective.isTeammate(duck.playerId, target.playerId)
       if (isTeammate) {
-        netValue -= PICKUP_BALANCE.horn.lateralPush * 35
-        continue
+        hasTeammateInRadius = true
+        break
       }
 
       targetsCount += 1
@@ -572,18 +728,31 @@ export function evaluateWildCandidates(ctx: EvaluationContext): AutoUseCandidate
       }
     }
 
-    if (targetsCount >= 2) {
-      netValue += 10 * (targetsCount - 1)
-    }
+    if (!hasTeammateInRadius) {
+      if (targetsCount >= 2) {
+        netValue += 10 * (targetsCount - 1)
+      }
 
-    if (targetsCount > 0 && netValue + pressure * 0.1 >= 8) {
+      if (targetsCount > 0 && netValue + pressure * 0.1 >= 8) {
+        candidates.push({
+          itemKey: `wild:${wild.instanceId}`,
+          itemId,
+          source: 'WILD',
+          action: 'USE',
+          score: clamp(netValue, 0, 100) + endGameBurnScore(duck.progress, 'WILD') + pressure * 0.1,
+          reason: 'OPPORTUNITY',
+          wildItemInstanceId: wild.instanceId,
+        })
+      }
+    } else if (hasTeammateInRadius && (pressure >= 20 || duck.progress >= PICKUP_BALANCE.autoUse.forceBurnProgress)) {
       candidates.push({
-        itemKey: `wild:${wild.instanceId}`,
+        itemKey: `wild:${wild.instanceId}:discard`,
         itemId,
         source: 'WILD',
-        action: 'USE',
-        score: clamp(netValue, 0, 100) + endGameBurnScore(duck.progress, 'WILD') + pressure * 0.1,
-        reason: 'OPPORTUNITY',
+        action: 'DISCARD',
+        score: 60 + pressure,
+        reason: 'DISCARD',
+        bypassThreshold: true,
         wildItemInstanceId: wild.instanceId,
       })
     }
@@ -643,6 +812,7 @@ export function revalidatePendingAction(ctx: EvaluationContext, pending: AutoUse
     const kind = pending.itemId === 'HOMING_ROCKET' ? 'PREP' : 'WILD'
     const resolvedTarget = resolveRocketTarget(ctx, kind, pending.targetPlayerId)
     if (!resolvedTarget) return false
+    if (ctx.objective.isTeammate(ctx.playerId, resolvedTarget)) return false
     pending.targetPlayerId = resolvedTarget
   }
   const threshold = dynamicThreshold(ctx)

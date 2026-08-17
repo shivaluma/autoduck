@@ -55,9 +55,9 @@ export const CHAOS_CARDS = [
     id: 'DUO',
     icon: '🤝',
     name: 'DUO',
-    headline: 'Ghép đôi sinh tử: Cặp có tổng thứ hạng tệ nhất cùng thua',
-    summary: 'Trước race, hệ thống bốc thăm ngẫu nhiên thành từng cặp (nếu lẻ người sẽ có một nhóm 3). Cặp nào có tổng thứ hạng lớn nhất (chậm nhất) sẽ cùng dính đòn.',
-    tip: 'Nếu đồng đội bơi chậm, hãy cố gắng về top thật cao để gánh tổng điểm cho cả cặp.',
+    headline: 'Ghép đôi sinh tử: Nhóm có thứ hạng trung bình tệ nhất cùng thua',
+    summary: 'Trước race, hệ thống bốc thăm ngẫu nhiên thành từng cặp (nếu lẻ người sẽ có một nhóm 3). Cặp/nhóm nào có thứ hạng trung bình lớn nhất (chậm nhất) sẽ cùng dính đòn (nếu hòa tính vị trí bét nhất).',
+    tip: 'Nếu đồng đội bơi chậm, hãy cố gắng về top thật cao để gánh điểm trung bình cho cả cặp/nhóm.',
   },
   {
     id: 'TRIPLE_ELIMINATION',
@@ -79,8 +79,8 @@ export const CHAOS_CARDS = [
     id: 'CONSTRUCTORS',
     icon: '🏎️',
     name: 'CONSTRUCTORS',
-    headline: 'Đại chiến 2 Đội: Toàn bộ đội có tổng hạng tệ hơn cùng thua',
-    summary: 'Tất cả đấu thủ được chia ngẫu nhiên thành 2 đội. Đội có tổng thứ hạng lớn hơn (tệ hơn) sẽ thua cả đội. Nếu hòa điểm, cả 2 đội cùng dính phạt!',
+    headline: 'Đại chiến 2 Đội: Toàn bộ đội có thứ hạng trung bình tệ hơn cùng thua',
+    summary: 'Tất cả đấu thủ được chia ngẫu nhiên thành 2 đội. Đội có thứ hạng trung bình lớn hơn (tệ hơn) sẽ thua cả đội. Nếu hòa điểm, cả 2 đội cùng dính phạt!',
     tip: 'Tinh thần đồng đội quyết định tất cả — mỗi bậc thứ hạng của bạn đều giúp cứu cả team.',
   },
   {

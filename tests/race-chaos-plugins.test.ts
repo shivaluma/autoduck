@@ -22,7 +22,7 @@ test('Normal, Reverse, Triple, and Cut Line resolve from the immutable raw ranki
   assert.deepEqual(losers('CUT_LINE'), ['p5', 'p6', 'p7', 'p8'])
 })
 
-test('Duo uses total rank then deterministic persisted group order as the final tie-break', () => {
+test('Duo uses average rank then deterministic tie-breaks', () => {
   const result = resolveChaosRule('DUO', raw, {
     groups: [['p1', 'p8'], ['p3', 'p6'], ['p2', 'p4'], ['p5', 'p7']],
   })
@@ -34,9 +34,15 @@ test('Duo uses total rank then deterministic persisted group order as the final 
     groups: [['p1', 'p4'], ['p2', 'p3']],
   })
   assert.deepEqual(tied.loserPlayerIds, ['p1', 'p4'])
+
+  // Odd lobby (trio vs pair): Trio with better average is safe despite higher total sum
+  const trioTest = resolveChaosRule('DUO', raw.slice(0, 5), {
+    groups: [['p1', 'p2', 'p5'], ['p3', 'p4']], // Group 0 avg = (1+2+5)/3 = 2.67, Group 1 avg = (3+4)/2 = 3.5
+  })
+  assert.deepEqual(trioTest.loserPlayerIds, ['p3', 'p4'])
 })
 
-test('Constructors makes every duck on the worse team lose and keeps tie behavior explicit', () => {
+test('Constructors makes every duck on the worse team lose and handles odd lobbies fairly', () => {
   assert.deepEqual(
     losers('CONSTRUCTORS', { groups: [['p1', 'p2', 'p3', 'p8'], ['p4', 'p5', 'p6', 'p7']] }),
     ['p4', 'p5', 'p6', 'p7'],
@@ -47,6 +53,20 @@ test('Constructors makes every duck on the worse team lose and keeps tie behavio
   })
   assert.deepEqual(tie.loserPlayerIds, ['p1', 'p2', 'p3', 'p4'])
   assert.equal(tie.metadata.tie, true)
+
+  // 7-player odd lobby test (4 vs 3):
+  // Team A (p2, p3, p4, p7) avg = 4.0; Team B (p1, p5, p6) avg = 4.0 -> Exact tie
+  const oddTie = resolveChaosRule('CONSTRUCTORS', raw.slice(0, 7), {
+    groups: [['p2', 'p3', 'p4', 'p7'], ['p1', 'p5', 'p6']],
+  })
+  assert.deepEqual(oddTie.loserPlayerIds, ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7'])
+  assert.equal(oddTie.metadata.tie, true)
+
+  // Team A (p1, p2, p3, p7: avg 3.25) vs Team B (p4, p5, p6: avg 5.0) -> Team B loses
+  const oddDecisive = resolveChaosRule('CONSTRUCTORS', raw.slice(0, 7), {
+    groups: [['p1', 'p2', 'p3', 'p7'], ['p4', 'p5', 'p6']],
+  })
+  assert.deepEqual(oddDecisive.loserPlayerIds, ['p4', 'p5', 'p6'])
 })
 
 test('Bounty Hunt falls back to raw Bottom 2 when Wanted escapes Top 50%', () => {

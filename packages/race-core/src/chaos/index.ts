@@ -83,10 +83,12 @@ const duo: ChaosRule = {
     const scored = groups.map((group, tieOrder) => {
       const ranks = group.map((playerId) => rankByPlayer.get(playerId)).filter((rank): rank is number => typeof rank === 'number')
       if (ranks.length !== group.length) throw new Error('Duo contains a player outside the ranking')
-      return { group, total: ranks.reduce((sum, rank) => sum + rank, 0), worst: Math.max(...ranks), best: Math.min(...ranks), tieOrder }
-    }).sort((left, right) => right.total - left.total || right.worst - left.worst || right.best - left.best || left.tieOrder - right.tieOrder)
+      const total = ranks.reduce((sum, rank) => sum + rank, 0)
+      const average = total / group.length
+      return { group, total, average, worst: Math.max(...ranks), best: Math.min(...ranks), tieOrder }
+    }).sort((left, right) => right.average - left.average || right.worst - left.worst || right.best - left.best || left.tieOrder - right.tieOrder)
     const losers = scored[0].group
-    return { loserPlayerIds: losers, metadata: { scores: scored, reasonByPlayer: reasonMap(losers, 'Duo had the worst placement total') } }
+    return { loserPlayerIds: losers, metadata: { scores: scored, reasonByPlayer: reasonMap(losers, 'Duo had the worst placement average') } }
   },
 }
 
@@ -121,14 +123,19 @@ const constructors: ChaosRule = {
     const groups = prepared.groups ?? []
     if (groups.length !== 2) throw new Error('Constructors requires two persisted teams')
     const rankByPlayer = new Map(ranking.map((entry) => [entry.playerId, entry.rank]))
-    const totals = groups.map((group) => group.reduce((sum, playerId) => {
-      const rank = rankByPlayer.get(playerId)
-      if (typeof rank !== 'number') throw new Error('Constructors contains a player outside the ranking')
-      return sum + rank
-    }, 0))
-    const losingIndexes = totals[0] === totals[1] ? [0, 1] : [totals[0] > totals[1] ? 0 : 1]
+    const scored = groups.map((group, index) => {
+      const ranks = group.map((playerId) => rankByPlayer.get(playerId)).filter((rank): rank is number => typeof rank === 'number')
+      if (ranks.length !== group.length) throw new Error('Constructors contains a player outside the ranking')
+      const total = ranks.reduce((sum, rank) => sum + rank, 0)
+      const average = total / group.length
+      return { index, group, total, average, worst: Math.max(...ranks), best: Math.min(...ranks) }
+    })
+    const totals = scored.map((item) => item.total)
+    const averages = scored.map((item) => item.average)
+    const tie = averages[0] === averages[1]
+    const losingIndexes = tie ? [0, 1] : [averages[0] > averages[1] ? 0 : 1]
     const losers = ranking.filter((entry) => losingIndexes.some((index) => groups[index].includes(entry.playerId))).map((entry) => entry.playerId)
-    return { loserPlayerIds: losers, metadata: { totals, tie: totals[0] === totals[1], reasonByPlayer: reasonMap(losers, 'Constructors team had the worse placement total') } }
+    return { loserPlayerIds: losers, metadata: { totals, averages, tie, scores: scored, reasonByPlayer: reasonMap(losers, 'Constructors team had the worse placement average') } }
   },
 }
 

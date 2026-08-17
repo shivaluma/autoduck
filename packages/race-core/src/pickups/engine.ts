@@ -230,9 +230,10 @@ function weightedCategory(rng: DeterministicRng, bucket: 'front' | 'middle' | 'b
   return entries.at(-1)![0]
 }
 
-function nearestAhead(duck: ItemDuckState, ducks: ItemDuckState[], maximumDistance: number, itemState?: ItemRaceState, tick?: number) {
+function nearestAhead(duck: ItemDuckState, ducks: ItemDuckState[], maximumDistance: number, itemState?: ItemRaceState, tick?: number, excludedPlayerIds?: Set<string>) {
   return ducks.filter((candidate) => !candidate.finished && candidate.playerId !== duck.playerId && candidate.progress > duck.progress)
     .filter((candidate) => !itemState?.ghostPlayerIds.has(candidate.playerId))
+    .filter((candidate) => !excludedPlayerIds?.has(candidate.playerId))
     .filter((candidate) => candidate.progress - duck.progress <= maximumDistance)
     .filter((candidate) => !itemState || tick === undefined || tick >= itemState.byPlayer.get(candidate.playerId)!.rocketProtectionUntilTick)
     .sort((left, right) => left.progress - right.progress || left.playerId.localeCompare(right.playerId))[0]
@@ -404,10 +405,11 @@ const HELD_HANDLERS: Record<Exclude<WildItemId, 'MINI_NITRO' | 'TAILWIND' | 'SLI
       : duck.progress >= PICKUP_BALANCE.autoUse.endGameBurnProgress
         ? PICKUP_BALANCE.miniRocket.maximumTargetDistance * PICKUP_BALANCE.miniRocket.endGameTargetDistanceMultiplier
         : PICKUP_BALANCE.miniRocket.maximumTargetDistance
+    const teammates = itemState.teammatesByPlayer?.get(duck.playerId)
     const preferred = targetPlayerId
-      ? ducks.find((candidate) => candidate.playerId === targetPlayerId && !candidate.finished && candidate.progress > duck.progress && candidate.progress - duck.progress <= maximumDistance && !itemState.ghostPlayerIds.has(candidate.playerId))
+      ? ducks.find((candidate) => candidate.playerId === targetPlayerId && !candidate.finished && candidate.progress > duck.progress && candidate.progress - duck.progress <= maximumDistance && !itemState.ghostPlayerIds.has(candidate.playerId) && !teammates?.has(candidate.playerId))
       : undefined
-    const target = preferred ?? nearestAhead(duck, ducks, maximumDistance, itemState, tick)
+    const target = preferred ?? nearestAhead(duck, ducks, maximumDistance, itemState, tick, teammates)
     if (!target) return { ok: false, reason: 'NO_TARGET' }
     itemState.rockets.push(createWildRocket(itemState, duck, target, tick, tickRate))
     emit('MINI_ROCKET_FIRED', duck.playerId, target.playerId, {})

@@ -177,3 +177,158 @@ test('rocket target revalidation prefers still-valid target at execute time', ()
 test('reactive defense requires minimum visibility window', () => {
   assert.equal(Math.round(AUTO_USE_CONFIG.reactiveThreatMinVisibleSeconds * 60), 9)
 })
+
+test('Feather carries zero penalty for Rocket AI targeting', () => {
+  const config: RaceConfig = {
+    raceId: 'feather-rocket-test',
+    seed: 'cc'.repeat(32),
+    protocolVersion: '1.0.0',
+    engineVersion: '1.2.0',
+    balanceVersion: 'S3.11',
+    trackVersion: 'river-01-v2',
+    tickRate: 60,
+    players: [{ playerId: 'duck-1', name: 'A' }, { playerId: 'duck-2', name: 'B' }],
+    loadouts: [],
+  }
+  const itemState = createItemRaceState(config)
+  const ducks: ItemDuckState[] = [
+    { playerId: 'duck-1', progress: 0.5, lateralOffset: 0, lateralVelocity: 0, currentRank: 2, finished: false },
+    { playerId: 'duck-2', progress: 0.55, lateralOffset: 0, lateralVelocity: 0, currentRank: 1, finished: false },
+  ]
+  const ctx = {
+    tick: 1000,
+    tickRate: 60,
+    objective: buildRaceObjectiveContext(config),
+    itemState,
+    pickupState: { hazards: [] } as never,
+    ducks,
+    playerId: 'duck-1',
+    secondsUntilNextPickupZone: 999,
+    ghostPlayerIds: new Set<string>(),
+    prepAutoUseEnabled: true,
+    wildAutoUseEnabled: false,
+  }
+
+  const targetWithoutFeather = resolveRocketTarget(ctx, 'PREP')
+  assert.equal(targetWithoutFeather, 'duck-2')
+
+  // Give duck-2 a feather
+  itemState.byPlayer.get('duck-2')!.featherAvailable = true
+  const targetWithFeather = resolveRocketTarget(ctx, 'PREP')
+  assert.equal(targetWithFeather, 'duck-2')
+})
+
+test('Mini Rocket applies 50% partial boost duration break', () => {
+  const state: DuckItemRuntime = {
+    itemIds: ['NITRO'],
+    usedItems: new Set(),
+    speedMultiplier: 1.25,
+    boostMultiplier: 1.25,
+    slowMultiplier: 1,
+    slowUntilTick: 0,
+    boostUntilTick: 160,
+    boostStartedAtTick: 60,
+    activeSpeedItemId: 'NITRO',
+    queuedSpeedBoost: null,
+    bubbleAvailable: false,
+    featherAvailable: false,
+    shockAbsorberAvailable: false,
+    itemImmunityUntilTick: 0,
+    rocketProtectionUntilTick: 0,
+    draftSlipstreamTicks: 0,
+    draftTargetPlayerId: null,
+    silencedUntilTick: 0,
+    lastItemUseTick: 0,
+    lastOffensiveUseTick: 0,
+    nextAutoDecisionTick: 0,
+    nextAutoActionTick: 0,
+    pendingAutoAction: null,
+    pendingAutoActionExecuteTick: 0,
+    reactiveRocketVisibleSinceTick: null,
+    reactiveBananaVisibleSinceTick: null,
+    loadoutCombo: null,
+  }
+  const emitted: Array<{ type: string; metadata: Record<string, unknown> }> = []
+  const emit = (type: string, _source?: string, _target?: string, metadata: Record<string, unknown> = {}) => {
+    emitted.push({ type, metadata })
+  }
+
+  // At tick 100, remaining boost ticks = 160 - 100 = 60 ticks (1.0 second)
+  breakActiveSpeedBoost(state, 100, 60, emit as never, 'attacker', 'victim', 'MINI_ROCKET')
+
+  // Should have lost 50% = 30 ticks -> new boostUntilTick = 160 - 30 = 130
+  assert.equal(state.boostUntilTick, 130)
+  assert.equal(state.boostMultiplier, 1.25, 'Boost multiplier remains active after partial interrupt')
+  const brokenEvent = emitted.find((e) => e.type === 'BOOST_BROKEN')
+  assert.ok(brokenEvent)
+  assert.equal(brokenEvent.metadata.breakSource, 'MINI_ROCKET')
+  assert.equal(brokenEvent.metadata.partial, true)
+})
+
+test('Reverse mode applies negative utility to Top 2 targets for Rocket', () => {
+  const normalConfig: RaceConfig = {
+    raceId: 'normal-rocket',
+    seed: 'dd'.repeat(32),
+    protocolVersion: '1.0.0',
+    engineVersion: '1.2.0',
+    balanceVersion: 'S3.11',
+    trackVersion: 'river-01-v2',
+    tickRate: 60,
+    players: [{ playerId: 'duck-1', name: 'A' }, { playerId: 'duck-2', name: 'B' }],
+    loadouts: [],
+    chaosConfig: { type: 'NORMAL', groups: [] },
+  }
+  const reverseConfig: RaceConfig = {
+    ...normalConfig,
+    raceId: 'reverse-rocket',
+    chaosConfig: { type: 'REVERSE', groups: [] },
+  }
+
+  const normalObj = buildRaceObjectiveContext(normalConfig)
+  const reverseObj = buildRaceObjectiveContext(reverseConfig)
+
+  // Target rank 1
+  assert.ok(normalObj.offensiveTargetRankBonus('duck-1', 1) > 0)
+  assert.ok(reverseObj.offensiveTargetRankBonus('duck-1', 1) < 0)
+})
+
+test('Rocket AI rejects targets projected to cross finish line before impact', () => {
+  const config: RaceConfig = {
+    raceId: 'finish-line-test',
+    seed: 'ee'.repeat(32),
+    protocolVersion: '1.0.0',
+    engineVersion: '1.2.0',
+    balanceVersion: 'S3.11',
+    trackVersion: 'river-01-v2',
+    tickRate: 60,
+    players: [{ playerId: 'duck-1', name: 'A' }, { playerId: 'duck-2', name: 'B' }],
+    loadouts: [],
+  }
+  const itemState = createItemRaceState(config)
+  // Target is at progress 0.99 with boost (will cross finish line in 0.1s while rocket takes 0.5s)
+  const ducks: ItemDuckState[] = [
+    { playerId: 'duck-1', progress: 0.88, lateralOffset: 0, lateralVelocity: 0, currentRank: 2, finished: false },
+    { playerId: 'duck-2', progress: 0.99, lateralOffset: 0, lateralVelocity: 0, currentRank: 1, finished: false },
+  ]
+  const targetRuntime = itemState.byPlayer.get('duck-2')!
+  targetRuntime.boostMultiplier = 1.3
+  targetRuntime.boostUntilTick = 2000
+
+  const ctx = {
+    tick: 1000,
+    tickRate: 60,
+    objective: buildRaceObjectiveContext(config),
+    itemState,
+    pickupState: { hazards: [] } as never,
+    ducks,
+    playerId: 'duck-1',
+    secondsUntilNextPickupZone: 999,
+    ghostPlayerIds: new Set<string>(),
+    prepAutoUseEnabled: true,
+    wildAutoUseEnabled: false,
+  }
+
+  const target = resolveRocketTarget(ctx, 'PREP')
+  assert.equal(target, null, 'Should reject target that will finish before impact')
+})
+
