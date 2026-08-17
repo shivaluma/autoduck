@@ -141,10 +141,10 @@ export function extractCombatEncounters(
         mitigatedByShockAbsorber: isMitigated,
         resultTitle: isMitigated ? 'Trúng đích (Giảm sát thương) 🦺' : 'Trúng đích! 💥',
         resultDetail: isMitigated
-          ? `Bắn trúng ${targetName}! Áo Chống Sốc (Shock Absorber 🦺) của ${targetName} hấp thụ lực đòn, hãm còn 65% trong 0.9s.`
+          ? `Bắn trúng ${targetName}! Áo Chống Sốc (Shock Absorber 🦺) của ${targetName} hấp thụ lực đòn, giảm 50% thời gian/mức hãm tốc!`
           : isMini
-            ? `Bắn trúng ${targetName}! Hãm tốc độ còn 35% trong 2.0 giây.`
-            : `Bắn trúng ${targetName}! Hãm tốc độ còn 25% trong 2.5 giây.`,
+            ? `Bắn trúng ${targetName}! Phá tăng tốc và hãm tốc độ còn 50% trong 0.8 giây.`
+            : `Bắn trúng ${targetName}! Triệt tiêu tăng tốc và hãm tốc độ còn 30% trong 1.2 giây.`,
       })
     }
 
@@ -379,7 +379,7 @@ export function extractCombatEncounters(
           success: true,
           defense: 'NONE',
           resultTitle: 'Trúng sóng âm EMP! 🔊',
-          resultDetail: `${attackerName} thổi còi Quack Horn làm Câm Lặng (Silenced 🔇) ${targetName}, khóa dùng item và đẩy dạt vị trí!`,
+          resultDetail: `${attackerName} thổi còi Quack Horn làm Câm Lặng (Silenced 🔇) ${targetName}, khóa dùng item trong 2.5s và đẩy dạt vị trí!`,
         })
       }
     }

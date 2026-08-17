@@ -35,7 +35,7 @@ const HAZARD_NAME_MAP: Record<string, string> = {
   ANCHOR: 'Mỏ Neo ⚓',
   WHIRLPOOL: 'Xoáy Nước 🌀',
   ICE_PATCH: 'Băng Trơn 🧊',
-  STICKY_GOO: 'Chất Nhầy 🧪',
+  STICKY_GOO: 'Vũng Keo 🟢',
 }
 
 function formatRaceTime(ms: number): string {
@@ -65,37 +65,45 @@ export function formatEventDetails(
       return {
         icon: '🚩',
         title: 'Xuất phát!',
-        description: 'Tất cả các chú vịt lao vào dòng nước!',
+        description: 'Tất cả các chú vịt lao vào dòng nước tranh tài!',
         category: 'speed',
         tone: 'text-[var(--color-ggd-gold)] border-amber-500/30 bg-amber-500/10',
       }
 
     case 'ROCKET_FIRED':
-    case 'MINI_ROCKET_FIRED':
+    case 'MINI_ROCKET_FIRED': {
+      const isMini = event.type === 'MINI_ROCKET_FIRED'
       return {
         icon: '🚀',
-        title: `${sourceName} phóng Tên Lửa 🚀`,
-        description: targetName ? `Khóa mục tiêu bắn thẳng vào ${targetName}!` : 'Phóng tên lửa tầm nhiệt về phía trước!',
+        title: `${sourceName} phóng ${isMini ? 'Mini Rocket' : 'Tên Lửa Tầm Nhiệt'} 🚀`,
+        description: targetName
+          ? `Khóa mục tiêu bắn thẳng vào ${targetName} phía trước!`
+          : `Phóng ${isMini ? 'tên lửa mini' : 'tên lửa tầm nhiệt'} truy đuổi nhóm dẫn đầu!`,
         category: 'combat',
         tone: 'text-rose-400 border-rose-500/30 bg-rose-500/10',
       }
+    }
 
     case 'ROCKET_HIT':
-    case 'MINI_ROCKET_HIT':
+    case 'MINI_ROCKET_HIT': {
+      const isMini = event.type === 'MINI_ROCKET_HIT'
       return {
         icon: '💥',
         title: `${sourceName} 🚀 bắn trúng ${targetName || 'mục tiêu'}! (Thành công ✅)`,
-        description: `${targetName || 'Mục tiêu'} trúng đòn tên lửa của ${sourceName}, tốc độ bị hãm mạnh!`,
+        description: isMini
+          ? `${targetName || 'Mục tiêu'} trúng đòn Mini Rocket của ${sourceName}, bị phá tăng tốc và hãm tốc độ 50%!`
+          : `${targetName || 'Mục tiêu'} trúng Tên Lửa của ${sourceName}, bị triệt tiêu tăng tốc và hãm tốc độ mạnh!`,
         category: 'combat',
         tone: 'text-rose-500 border-rose-500/40 bg-rose-500/20',
       }
+    }
 
     case 'ROCKET_BLOCKED':
     case 'MINI_ROCKET_BLOCKED': {
       const defense = String(event.metadata.defense ?? 'BUBBLE_SHIELD')
       let reasonText = `dùng Khiên Bong Bóng (Bubble Shield 🫧) chặn đứng`
       if (defense === 'MINI_BUBBLE') reasonText = `dùng Mini Bubble 🫧 chặn đứng`
-      else if (defense === 'IMMUNITY') reasonText = `đang Miễn nhiễm đòn đánh (Immunity 🛡️), vô hiệu hóa`
+      else if (defense === 'IMMUNITY') reasonText = `đang trong thời gian Miễn Nhiễm (Immunity 🛡️), vô hiệu hóa`
 
       return {
         icon: '🛡️',
@@ -111,20 +119,22 @@ export function formatEventDetails(
       return {
         icon: '⏱️',
         title: `Tên lửa của ${sourceName} hết tầm ⏱️`,
-        description: targetName ? `Tên lửa nhắm vào ${targetName} hết thời gian hoặc mục tiêu đã về đích.` : 'Tên lửa không tìm thấy mục tiêu và tự hủy.',
+        description: targetName ? `Tên lửa nhắm vào ${targetName} hết tầm bay hoặc mục tiêu đã về đích.` : 'Tên lửa không tìm thấy mục tiêu và tự hủy.',
         category: 'combat',
         tone: 'text-zinc-400 border-zinc-500/30 bg-zinc-500/10',
       }
 
     case 'BANANA_DROPPED':
-    case 'WILD_BANANA_DROPPED':
+    case 'WILD_BANANA_DROPPED': {
+      const isWild = event.type === 'WILD_BANANA_DROPPED'
       return {
         icon: '🍌',
-        title: `${sourceName} thả Vỏ Chuối 🍌`,
-        description: 'Để lại bẫy chuối trơn trượt ngáng đường đối thủ phía sau.',
+        title: `${sourceName} thả ${isWild ? 'Wild Banana' : 'Vỏ Chuối Bẫy'} 🍌`,
+        description: 'Đặt bẫy chuối trơn trượt trên làn bơi ngáng đường đối thủ phía sau.',
         category: 'combat',
         tone: 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10',
       }
+    }
 
     case 'BANANA_HIT':
     case 'WILD_BANANA_HIT':
@@ -143,7 +153,7 @@ export function formatEventDetails(
       if (defense === 'WILD_FEATHER') reasonText = `dùng Wild Feather 🪽 lướt né trọn vẹn`
       else if (defense === 'BUBBLE_SHIELD') reasonText = `có Khiên Bong Bóng (Bubble Shield 🫧) đỡ văng`
       else if (defense === 'MINI_BUBBLE') reasonText = `có Mini Bubble 🫧 đỡ văng`
-      else if (defense === 'IMMUNITY') reasonText = `đang Miễn nhiễm đòn đánh 🛡️, miễn nhiễm`
+      else if (defense === 'IMMUNITY') reasonText = `đang Miễn Nhiễm đòn đánh 🛡️, miễn nhiễm`
 
       return {
         icon: '🪽',
@@ -160,47 +170,114 @@ export function formatEventDetails(
         icon: '🪽',
         title: `${sourceName} né đòn bằng Lông Vũ! 🪽`,
         description: targetName
-          ? `${sourceName} lướt nhẹ Lông Vũ né cú trượt vỏ chuối của ${targetName} ngoạn mục!`
-          : `${sourceName} lướt nhẹ Lông Vũ né trọn chướng ngại vật trên đường đua!`,
+          ? `${sourceName} dùng Lông Vũ hộ thân nhảy né trọn vỏ chuối của ${targetName}!`
+          : `${sourceName} dùng Lông Vũ lướt nhẹ né chướng ngại vật an toàn!`,
+        category: 'combat',
+        tone: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10',
+      }
+
+    case 'WILD_FEATHER_USED':
+      return {
+        icon: '🪽',
+        title: `${sourceName} bật Feather Hop 🪽`,
+        description: 'Kích hoạt trạng thái nhảy né trong 5 giây, sẵn sàng vượt qua bẫy chuối hoặc chướng ngại vật!',
+        category: 'combat',
+        tone: 'text-emerald-300 border-emerald-500/30 bg-emerald-500/10',
+      }
+
+    case 'HAZARD_DODGED':
+      return {
+        icon: '🪽',
+        title: `${sourceName} nhảy né chướng ngại vật! 🪽`,
+        description: 'Dùng Lông Vũ lướt nhẹ qua bẫy môi trường trên mặt nước an toàn!',
         category: 'combat',
         tone: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10',
       }
 
     case 'NITRO_STARTED':
-    case 'PADDLE_BURST_STARTED':
-    case 'TAILWIND_STARTED':
       return {
         icon: '⚡',
-        title: `${sourceName} bứt tốc cực mạnh!`,
-        description: `Kích hoạt ${itemName || 'Nitro boost'} xé gió vượt lên phía trước!`,
+        title: `${sourceName} bứt tốc Nitro! ⚡`,
+        description: 'Kích hoạt Bình Tăng Tốc Nitro +25% tốc độ trong 2.0s xé gió vượt lên!',
         category: 'speed',
         tone: 'text-[var(--color-ggd-neon-green)] border-emerald-500/30 bg-emerald-500/10',
+      }
+
+    case 'MINI_NITRO_STARTED':
+      return {
+        icon: '⚡',
+        title: `${sourceName} xả Mini Nitro! ⚡`,
+        description: 'Bứt tốc tức thì +30% tốc độ trong 2.5s vút lên dẫn đầu!',
+        category: 'speed',
+        tone: 'text-[var(--color-ggd-neon-green)] border-emerald-500/30 bg-emerald-500/10',
+      }
+
+    case 'PADDLE_BURST_STARTED':
+      return {
+        icon: '🛶',
+        title: `${sourceName} quạt nước Paddle Burst! 🛶`,
+        description: 'Quạt nước tăng tốc +18% trong 1.8s ở chặng cuối lội ngược dòng ngoạn mục!',
+        category: 'speed',
+        tone: 'text-lime-400 border-lime-500/30 bg-lime-500/10',
       }
 
     case 'DRAFT_FIN_STARTED':
       return {
         icon: '🦈',
-        title: `${sourceName} bám đuôi Draft Fin!`,
-        description: 'Lướt sóng bám sát đuôi đối thủ phía trước để tăng tốc!',
+        title: `${sourceName} bám đuôi Draft Fin! 🦈`,
+        description: 'Bám sát đuôi đối thủ phía trước, đón luồng lướt gió tăng tốc +20% trong 1.6s!',
         category: 'speed',
         tone: 'text-cyan-400 border-cyan-500/30 bg-cyan-500/10',
+      }
+
+    case 'TAILWIND_STARTED':
+      return {
+        icon: '🌊',
+        title: `${sourceName} đón gió Thuận Gió (Tailwind)! 🌊`,
+        description: 'Gió xuôi trợ lực +20% tốc độ và bơi ổn định giữ làn trong 3.0s!',
+        category: 'speed',
+        tone: 'text-teal-300 border-teal-500/30 bg-teal-500/10',
+      }
+
+    case 'MAGNET_STARTED':
+      return {
+        icon: '🧲',
+        title: `${sourceName} kích hoạt Nam Châm Hút Tốc! 🧲`,
+        description: 'Nam châm hút vịt bám sát luồng bơi của đối thủ gần nhất phía trước (+18% tốc độ trong 1.6s)!',
+        category: 'speed',
+        tone: 'text-indigo-300 border-indigo-500/30 bg-indigo-500/10',
       }
 
     case 'PREDATOR_RUSH_STARTED':
       return {
         icon: '🔥',
-        title: `${sourceName} kích hoạt Predator Rush!`,
-        description: 'Tấn công trúng đích kích hoạt đòn bứt tốc hung hãn!',
+        title: `${sourceName} kích hoạt Predator Rush! 🔥`,
+        description: 'Nội tại Menace trỗi dậy! Tấn công trúng đích kích hoạt đợt tăng tốc +20% hung hãn!',
         category: 'combat',
         tone: 'text-orange-400 border-orange-500/30 bg-orange-500/10',
       }
+
+    case 'BOOST_BROKEN': {
+      const breakSource = String(event.metadata.source ?? 'ROCKET')
+      let causeText = 'trúng đòn Tên Lửa'
+      if (breakSource.includes('BANANA')) causeText = 'giẫm phải Vỏ Chuối'
+      else if (breakSource.includes('HORN')) causeText = 'trúng sóng âm Quack Horn'
+
+      return {
+        icon: '💥',
+        title: `${sourceName} bị bẻ gãy đợt tăng tốc!`,
+        description: `${sourceName} bị ngắt ngay đợt bứt tốc do ${causeText}${targetName ? ` từ ${targetName}` : ''}!`,
+        category: 'combat',
+        tone: 'text-rose-400 border-rose-500/40 bg-rose-500/15',
+      }
+    }
 
     case 'HORN_USED':
     case 'WILD_HORN_USED':
       return {
         icon: '🔊',
-        title: `${sourceName} thổi Còi Quack Horn!`,
-        description: 'Sóng âm EMP cực lớn phát ra làm câm lặng (Silence) đối thủ xung quanh!',
+        title: `${sourceName} thổi Còi Quack Horn! 🔊`,
+        description: 'Sóng xung kích cực mạnh húc dạt các vịt bơi sát cạnh và khóa trang bị (Câm Lặng 2.5s)!',
         category: 'combat',
         tone: 'text-purple-400 border-purple-500/30 bg-purple-500/10',
       }
@@ -208,27 +285,31 @@ export function formatEventDetails(
     case 'ITEM_SILENCED':
       return {
         icon: '🔇',
-        title: `${sourceName} bị Câm Lặng (Silenced)!`,
-        description: 'Bị sóng âm khóa trang bị, không thể dùng item trong giây lát!',
+        title: `${sourceName} bị Câm Lặng (Silenced)! 🔇`,
+        description: 'Bị sóng âm khóa trang bị, không thể sử dụng item trong 2.5 giây!',
         category: 'combat',
         tone: 'text-purple-300 border-purple-500/30 bg-purple-500/15',
       }
 
     case 'BUBBLE_SHIELD_ACTIVATED':
-    case 'MINI_BUBBLE_ACTIVATED':
+    case 'MINI_BUBBLE_ACTIVATED': {
+      const isMini = event.type === 'MINI_BUBBLE_ACTIVATED'
       return {
         icon: '🫧',
-        title: `${sourceName} bật Khiên Bong Bóng`,
-        description: 'Lớp màng bảo vệ kích hoạt, miễn nhiễm đòn tấn công tiếp theo.',
+        title: `${sourceName} bật ${isMini ? 'Mini Bubble' : 'Khiên Bong Bóng'} 🫧`,
+        description: isMini
+          ? 'Lớp màng bảo vệ cầm tay kích hoạt, chặn 1 đòn tấn công hoặc bẫy trong 6 giây.'
+          : 'Lớp màng phòng hộ kích hoạt, chặn đứng hoàn toàn 1 đòn tấn công hoặc bẫy.',
         category: 'combat',
         tone: 'text-sky-300 border-sky-500/30 bg-sky-500/10',
       }
+    }
 
     case 'BUBBLE_POPPED':
       return {
         icon: '💥',
-        title: `Khiên của ${sourceName} vỡ tan!`,
-        description: 'Khiên bảo vệ đã hoàn thành nhiệm vụ và biến mất.',
+        title: `Khiên của ${sourceName} vỡ nổ đẩy tốc! 🫧`,
+        description: 'Khiên bảo vệ đã hoàn thành nhiệm vụ đỡ đòn và tạo luồng đẩy bứt tốc +8%!',
         category: 'combat',
         tone: 'text-sky-200 border-sky-500/20 bg-sky-500/10',
       }
@@ -236,43 +317,81 @@ export function formatEventDetails(
     case 'SHOCK_ABSORBER_PROC':
       return {
         icon: '🦺',
-        title: `${sourceName} hấp thụ lực va chạm!`,
-        description: 'Áo chống sốc giảm thiểu độ giật lùi sau va chạm.',
+        title: `${sourceName} kích hoạt Áo Chống Sốc! 🦺`,
+        description: 'Áo giáp giảm chấn hấp thụ lực va chạm, giảm 50% thời gian hãm tốc và 60% lực húc!',
         category: 'combat',
         tone: 'text-indigo-400 border-indigo-500/30 bg-indigo-500/10',
       }
 
     case 'GOLDEN_BOX_COLLECTED':
       return {
-        icon: '👑',
-        title: `${sourceName} nhặt Hộp Quà Vàng!`,
-        description: 'Nhận được vật phẩm tối thượng từ Hộp Vàng!',
+        icon: '🪙',
+        title: `${sourceName} nhặt được Hộp Vàng! 🪙`,
+        description: 'Nhanh tay chạm vào Hộp Vàng bí ẩn trên dòng nước, nhận ngay +1 Quack Point (QP)!',
         category: 'pickup',
-        tone: 'text-[var(--color-ggd-gold)] border-amber-500/40 bg-amber-500/20',
+        tone: 'text-[var(--color-ggd-gold)] border-amber-500/40 bg-amber-500/20 font-black',
       }
 
     case 'PICKUP_COLLECTED':
     case 'WILD_ITEM_GRANTED':
       return {
         icon: '🎁',
-        title: `${sourceName} nhặt Hộp Quà`,
-        description: itemName ? `Nhận được ${itemName}!` : 'Nhận thêm một vật phẩm đường đua!',
+        title: `${sourceName} mở Hộp Quà 🎁`,
+        description: itemName ? `Nhận được ${itemName} vào túi đồ Wild Item!` : 'Mở hộp nhận thêm một vật phẩm đường đua!',
         category: 'pickup',
         tone: 'text-teal-400 border-teal-500/30 bg-teal-500/10',
       }
 
-    case 'HAZARD_HIT':
+    case 'INSTANT_PICKUP_TRIGGERED':
+      return {
+        icon: '⚡',
+        title: `${sourceName} kích hoạt ${itemName} ⚡`,
+        description: `Nhặt được vật phẩm Kích Hoạt Ngay (${itemName}) và phát huy tác dụng tức thì!`,
+        category: 'speed',
+        tone: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10',
+      }
+
+    case 'WILD_ITEM_MANUAL_INPUT':
+      return {
+        icon: '🎯',
+        title: `${sourceName} chủ động dùng ${itemName} 🎯`,
+        description: `${sourceName} canh thời điểm chuẩn xác và tự tay bấm nút kích hoạt vật phẩm!`,
+        category: 'combat',
+        tone: 'text-violet-400 border-violet-500/30 bg-violet-500/10',
+      }
+
+    case 'WILD_ITEM_USED':
+    case 'WILD_ITEM_AUTO_USED':
+      return {
+        icon: '🎒',
+        title: `${sourceName} sử dụng ${itemName}`,
+        description: `${sourceName} kích hoạt vật phẩm Wild Item mang theo!`,
+        category: 'combat',
+        tone: 'text-cyan-400 border-cyan-500/30 bg-cyan-500/10',
+      }
+
+    case 'PICKUP_SKIPPED_SLOT_FULL':
+      return {
+        icon: '🎒',
+        title: `${sourceName} bỏ qua Hộp Quà`,
+        description: 'Túi đồ Wild Item đã đầy (đang giữ item khác), nhường hộp cho đối thủ.',
+        category: 'pickup',
+        tone: 'text-zinc-400 border-zinc-500/20 bg-zinc-500/10',
+      }
+
+    case 'HAZARD_HIT': {
       const hazardType = String(event.metadata.hazardType ?? '')
       const hazardName = HAZARD_NAME_MAP[hazardType] || 'Chướng ngại vật'
       return {
         icon: '⚠️',
         title: `${sourceName} va phải ${hazardName}!`,
-        description: `Bị cản trở trên dòng nước bởi ${hazardName}!`,
+        description: `Bị cản trở và giảm tốc độ trên dòng nước bởi ${hazardName}!`,
         category: 'pickup',
         tone: 'text-rose-400 border-rose-500/30 bg-rose-500/10',
       }
+    }
 
-    case 'DUCK_FINISHED':
+    case 'DUCK_FINISHED': {
       const rank = Number(event.metadata.rank ?? 1)
       const finishTime = typeof event.metadata.finishTimeMs === 'number' ? (event.metadata.finishTimeMs / 1000).toFixed(2) : ''
       return {
@@ -284,20 +403,21 @@ export function formatEventDetails(
           ? 'text-[var(--color-ggd-gold)] border-amber-500/50 bg-amber-500/25 font-black'
           : 'text-white border-white/20 bg-black/30',
       }
+    }
 
     case 'CHAOS_RESOLVED':
       return {
-        icon: '🎴',
-        title: 'Hiệu ứng Chaos phân định kết quả!',
-        description: String(event.metadata.summary ?? 'Đã xác định người chịu phạt và người chiến thắng.'),
+        icon: '🃏',
+        title: 'Phán quyết lá bài Chaos!',
+        description: String(event.metadata.summary ?? 'Đã xác định người chịu phạt sẹo và người an toàn theo luật Chaos tuần này.'),
         category: 'finish',
-        tone: 'text-[var(--color-ggd-orange)] border-[var(--color-ggd-orange)]/40 bg-[var(--color-ggd-orange)]/15',
+        tone: 'text-[var(--color-ggd-orange)] border-[var(--color-ggd-orange)]/40 bg-[var(--color-ggd-orange)]/15 font-black',
       }
 
     default:
       return {
         icon: '📌',
-        title: `${sourceName}: ${event.type}`,
+        title: `${sourceName}: ${event.type.replaceAll('_', ' ')}`,
         description: Object.keys(event.metadata).length > 0 ? JSON.stringify(event.metadata) : '',
         category: 'all',
         tone: 'text-white/70 border-white/10 bg-black/20',

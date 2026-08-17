@@ -12,15 +12,15 @@ export interface RaceItemDefinition {
 }
 
 export const RACE_ITEM_CATALOG: readonly RaceItemDefinition[] = [
-  { id: 'NITRO', name: 'Nitro', icon: '⚡', cost: 2, category: 'major', itemClass: 'SPEED', description: 'Bứt tốc mạnh mẽ +25% trong 2.0s để xé gió vượt lên dẫn đầu.' },
-  { id: 'DRAFT_FIN', name: 'Draft Fin', icon: '🦈', cost: 1, category: 'minor', itemClass: 'SPEED', description: 'Bám sát đuôi đối thủ phía trước để lướt gió tăng tốc +20% trong 1.6s (1 lần/trận).' },
-  { id: 'PADDLE_BURST', name: 'Paddle Burst', icon: '🛶', cost: 1, category: 'minor', itemClass: 'SPEED', description: 'Quạt nước tăng tốc +18% trong 1.8s lội ngược dòng ở chặng cuối (1 lần/trận).' },
-  { id: 'BUBBLE_SHIELD', name: 'Bubble Shield', icon: '🫧', cost: 2, category: 'major', itemClass: 'DEFENSE', description: 'Bật bong bóng phòng hộ 4.5s, chặn hoàn toàn 1 đòn tấn công/bẫy và tạo lực đẩy +12% khi nổ.' },
-  { id: 'FEATHER', name: 'Feather', icon: '🪶', cost: 1, category: 'minor', itemClass: 'DEFENSE', description: 'Lông vũ hộ thân, tự động nhảy né 1 lần dẫm phải vỏ chuối hoặc bẫy nước.' },
-  { id: 'SHOCK_ABSORBER', name: 'Shock Absorber', icon: '🦺', cost: 1, category: 'minor', itemClass: 'DEFENSE', description: 'Áo giảm chấn, giảm hãm tên lửa còn 65% trong 0.9s và giảm 60% lực đẩy Còi.' },
-  { id: 'HOMING_ROCKET', name: 'Homing Rocket', icon: '🚀', cost: 2, category: 'major', itemClass: 'ATTACK', description: 'Bắn tên lửa tầm nhiệt hãm đối thủ còn 25% tốc độ trong 2.5s và ngắt ngay trạng thái tăng tốc.' },
-  { id: 'BANANA', name: 'Banana', icon: '🍌', cost: 1, category: 'minor', itemClass: 'ATTACK', description: 'Thả vỏ chuối bẫy phía sau, khiến đối thủ giẫm phải bị trượt văng làn và giật lùi quãng đường.' },
-  { id: 'QUACK_HORN', name: 'Quack Horn', icon: '🔊', cost: 1, category: 'minor', itemClass: 'ATTACK', description: 'Bấm còi sóng xung kích húc dạt mạnh đối thủ bơi sát, triệt tiêu tăng tốc và khóa item trong 2.5s.' },
+  { id: 'NITRO', name: 'Nitro', icon: '⚡', cost: 2, category: 'major', itemClass: 'SPEED', description: 'Bứt tốc mạnh mẽ +25% trong 2.0s để xé gió vượt lên dẫn đầu (tự kích hoạt khi tụt lại phía sau).' },
+  { id: 'DRAFT_FIN', name: 'Draft Fin', icon: '🦈', cost: 1, category: 'minor', itemClass: 'SPEED', description: 'Bám sát đuôi đối thủ phía trước trong 0.75s để đón luồng lướt gió tăng tốc +20% trong 1.6s (1 lần/trận).' },
+  { id: 'PADDLE_BURST', name: 'Paddle Burst', icon: '🛶', cost: 1, category: 'minor', itemClass: 'SPEED', description: 'Quạt nước bứt tốc +18% trong 1.8s ở chặng cuối (từ 65% quãng đường) để lội ngược dòng (1 lần/trận).' },
+  { id: 'BUBBLE_SHIELD', name: 'Bubble Shield', icon: '🫧', cost: 2, category: 'major', itemClass: 'DEFENSE', description: 'Bật bong bóng phòng hộ 4.5s khi gặp nguy hiểm, chặn hoàn toàn 1 đòn Tên Lửa hoặc bẫy Chuối; khi vỡ tạo luồng đẩy +8% trong 1.2s.' },
+  { id: 'FEATHER', name: 'Feather', icon: '🪶', cost: 1, category: 'minor', itemClass: 'DEFENSE', description: 'Lông vũ hộ thân (Nội tại), tự động nhảy né 1 lần khi dẫm phải Vỏ Chuối hoặc chướng ngại vật (không chặn Tên Lửa).' },
+  { id: 'SHOCK_ABSORBER', name: 'Shock Absorber', icon: '🦺', cost: 1, category: 'minor', itemClass: 'DEFENSE', description: 'Áo giáp chống sốc (Nội tại), giảm 50% thời gian/mức hãm tốc từ Tên Lửa và giảm 60% lực đẩy từ Còi Quack Horn.' },
+  { id: 'HOMING_ROCKET', name: 'Homing Rocket', icon: '🚀', cost: 2, category: 'major', itemClass: 'ATTACK', description: 'Bắn tên lửa tầm nhiệt nhắm đối thủ phía trước, triệt tiêu ngay tăng tốc và hãm tốc độ còn 30% trong 1.2s.' },
+  { id: 'BANANA', name: 'Banana', icon: '🍌', cost: 1, category: 'minor', itemClass: 'ATTACK', description: 'Thả vỏ chuối bẫy trên làn bơi phía sau (10s), đối thủ dẫm phải bị trượt văng làn và giật lùi 5% quãng đường.' },
+  { id: 'QUACK_HORN', name: 'Quack Horn', icon: '🔊', cost: 1, category: 'minor', itemClass: 'ATTACK', description: 'Thổi còi xung kích húc dạt mạnh đối thủ bơi sát cạnh, triệt tiêu tăng tốc và khóa dùng item (Câm Lặng) trong 2.5s.' },
 ] as const
 
 export const AUTO_LOADOUT_PRESETS: readonly RaceItemId[][] = [
