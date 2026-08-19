@@ -811,10 +811,27 @@ export function PhaserRaceCanvas({
           if (type === 'ROCKET_HIT' || type === 'MINI_ROCKET_HIT') {
             const hitView = target ?? source
             if (hitView) {
-              this.burstRing(hitView.root.x, hitView.root.y, 0xff5a4a, 0xff5a4a, 0.18, 3.2)
-              this.floatEmoji(hitView.root.x, hitView.root.y - 12, '💥', '26px', 420)
+              this.burstRing(hitView.root.x, hitView.root.y, 0xff4422, 0xffaa00, 0.24, 3.8)
+              this.floatEmoji(hitView.root.x, hitView.root.y - 14, '💥', '30px', 520)
+              if (!reducedMotion && hitView.avatarNode) {
+                const origScale = hitView.avatarNode.scaleX || 1
+                this.tweens.add({
+                  targets: hitView.avatarNode,
+                  angle: 360,
+                  scaleX: origScale * 1.25,
+                  scaleY: origScale * 0.75,
+                  duration: 420,
+                  ease: 'Cubic.easeOut',
+                  yoyo: true,
+                  onComplete: () => {
+                    hitView.avatarNode.setAngle(0)
+                    hitView.avatarNode.setScale(origScale)
+                  },
+                })
+              }
+              this.cameras.main.shake(reducedMotion ? 60 : 140, 0.005)
             }
-            if (raceEvent.targetPlayerId) this.focusCamera(raceEvent.targetPlayerId, 520)
+            if (raceEvent.targetPlayerId) this.focusCamera(raceEvent.targetPlayerId, 560)
             return
           }
 

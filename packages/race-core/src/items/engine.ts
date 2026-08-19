@@ -553,6 +553,19 @@ function updateRockets(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
 
       breakActiveSpeedBoost(defense, tick, tickRate, emit, rocket.sourcePlayerId, target.playerId, breakSource)
 
+      // Explosive blast knockback & lateral displacement
+      const rawKnockback = rocket.kind === 'PREP' ? ITEM_BALANCE.rocket.progressKnockback : PICKUP_BALANCE.miniRocket.progressKnockback
+      const knockback = isShockAbsorbed ? rawKnockback * ITEM_BALANCE.shockAbsorber.knockbackReduction : rawKnockback
+      target.progress = Math.max(0, target.progress - knockback)
+      if (target.previousProgress !== undefined) {
+        target.previousProgress = Math.min(target.previousProgress, target.progress)
+      }
+
+      const rawLateral = rocket.kind === 'PREP' ? ITEM_BALANCE.rocket.lateralKnockback : PICKUP_BALANCE.miniRocket.lateralKnockback
+      const lateralJolt = isShockAbsorbed ? rawLateral * 0.4 : rawLateral
+      const dir = target.lateralOffset >= 0 ? 1 : -1
+      target.lateralVelocity += dir * lateralJolt
+
       if (isShockAbsorbed) {
         applyStagedSlow(
           defense,
@@ -585,7 +598,11 @@ function updateRockets(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
         )
       }
 
-      emit(hitType, rocket.sourcePlayerId, target.playerId, { shockAbsorbed: isShockAbsorbed })
+      emit(hitType, rocket.sourcePlayerId, target.playerId, { shockAbsorbed: isShockAbsorbed, knockback })
+
+      if (rocket.kind === 'PREP' && rocket.sourcePlayerId) {
+        triggerMenacePredatorRush(itemState, rocket.sourcePlayerId, tick, tickRate, emit, 'ROCKET')
+      }
     } else if (outcome === 'BLOCKED_MINI_BUBBLE') {
       emit('MINI_BUBBLE_BLOCKED', target.playerId, rocket.sourcePlayerId, { blocked: incoming })
       emit(blockedType, rocket.sourcePlayerId, target.playerId, { defense: 'MINI_BUBBLE' })

@@ -287,16 +287,16 @@ test('Rocket applies two-stage stagger then recovery slow', () => {
     60,
   )
 
-  // Stage 1: Stagger (0.35s = 21 ticks, from tick 100 to 121)
+  // Stage 1: Stagger (0.55s = 33 ticks, from tick 100 to 133)
   assert.equal(runtime.slowMultiplier, ITEM_BALANCE.rocket.staggerMultiplier)
-  assert.equal(runtime.slowUntilTick, 121)
+  assert.equal(runtime.slowUntilTick, 133)
   assert.equal(itemSpeedMultiplier(runtime, 110), ITEM_BALANCE.rocket.staggerMultiplier)
 
-  // Stage 2: Recovery slow (0.85s = 51 ticks, from tick 121 to 172)
-  assert.equal(itemSpeedMultiplier(runtime, 130), ITEM_BALANCE.rocket.recoverySlowMultiplier)
+  // Stage 2: Recovery slow (0.85s = 51 ticks, from tick 133 to 184)
+  assert.equal(itemSpeedMultiplier(runtime, 140), ITEM_BALANCE.rocket.recoverySlowMultiplier)
 
-  // Stage 3: Fully recovered after tick 172
-  assert.equal(itemSpeedMultiplier(runtime, 175), 1.0)
+  // Stage 3: Fully recovered after tick 184
+  assert.equal(itemSpeedMultiplier(runtime, 190), 1.0)
 })
 
 test('Rocket breaks active speed boost before applying slow', () => {
@@ -340,6 +340,31 @@ test('Shock Absorber mitigates the first Rocket hit with lighter stagger and rec
   assert.ok(events.includes('SHOCK_ABSORBER_PROC'))
   assert.equal(target.shockAbsorberAvailable, false)
   assert.equal(target.slowMultiplier, ITEM_BALANCE.shockAbsorber.staggerMultiplier)
+})
+
+test('Rocket applies explosive progress knockback and triggers MENACE predator rush', () => {
+  const raceConfig = config([
+    { playerId: '1', itemIds: ['FEATHER', 'DRAFT_FIN'] },
+    { playerId: '2', itemIds: ['HOMING_ROCKET', 'BANANA'] }, // MENACE combo
+  ])
+  const state = createItemRaceState(raceConfig)
+  const ducks = [duck('1', 0.48, 1), duck('2', 0.40, 2)]
+  ducks[0].previousProgress = 0.48
+  const initialTargetProgress = ducks[0].progress
+  const events: RaceEventType[] = []
+  for (let tick = 1; tick <= 260; tick += 1) {
+    tickItemsWithAutoAI(raceConfig, state, ducks, tick, 60, (type) => events.push(type))
+    ducks[0].progress += 0.0001
+    ducks[1].progress += 0.0001
+    if (events.includes('ROCKET_HIT')) break
+  }
+  assert.ok(events.includes('ROCKET_HIT'))
+  // Target should be knocked back by ITEM_BALANCE.rocket.progressKnockback (0.040)
+  assert.ok(ducks[0].progress < initialTargetProgress - 0.02)
+  // Shooter with MENACE should trigger PREDATOR_RUSH_STARTED
+  assert.ok(events.includes('PREDATOR_RUSH_STARTED'))
+  const shooterRuntime = state.byPlayer.get('2')!
+  assert.equal(shooterRuntime.boostMultiplier, ITEM_BALANCE.menace.predatorRushMultiplier)
 })
 
 test('Banana stays in-lane and knocks the chasing duck backward', () => {
