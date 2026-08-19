@@ -91,8 +91,8 @@ export function formatEventDetails(
         icon: '💥',
         title: `${sourceName} 🚀 bắn trúng ${targetName || 'mục tiêu'}! (Thành công ✅)`,
         description: isMini
-          ? `${targetName || 'Mục tiêu'} trúng đòn Mini Rocket của ${sourceName}, bị phá tăng tốc, nổ giật lùi và hãm tốc độ!`
-          : `${targetName || 'Mục tiêu'} trúng Tên Lửa của ${sourceName}, bị triệt tiêu tăng tốc, nổ giật lùi 4% quãng đường và hãm xoay vòng mạnh!`,
+          ? `${targetName || 'Mục tiêu'} trúng đòn Mini Rocket của ${sourceName}, bị phá tăng tốc và khựng hãm tốc độ!`
+          : `${targetName || 'Mục tiêu'} trúng Tên Lửa của ${sourceName}, bị triệt tiêu tăng tốc và khựng đứng bánh xoay vòng mạnh!`,
         category: 'combat',
         tone: 'text-rose-500 border-rose-500/40 bg-rose-500/20',
       }

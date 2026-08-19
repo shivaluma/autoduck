@@ -553,16 +553,8 @@ function updateRockets(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
 
       breakActiveSpeedBoost(defense, tick, tickRate, emit, rocket.sourcePlayerId, target.playerId, breakSource)
 
-      // Explosive blast knockback & lateral displacement
-      const rawKnockback = rocket.kind === 'PREP' ? ITEM_BALANCE.rocket.progressKnockback : PICKUP_BALANCE.miniRocket.progressKnockback
-      const knockback = isShockAbsorbed ? rawKnockback * ITEM_BALANCE.shockAbsorber.knockbackReduction : rawKnockback
-      target.progress = Math.max(0, target.progress - knockback)
-      if (target.previousProgress !== undefined) {
-        target.previousProgress = Math.min(target.previousProgress, target.progress)
-      }
-
-      const rawLateral = rocket.kind === 'PREP' ? ITEM_BALANCE.rocket.lateralKnockback : PICKUP_BALANCE.miniRocket.lateralKnockback
-      const lateralJolt = isShockAbsorbed ? rawLateral * 0.4 : rawLateral
+      // Slight lateral wobble on impact without backward coordinate teleport
+      const lateralJolt = isShockAbsorbed ? 0.08 : 0.18
       const dir = target.lateralOffset >= 0 ? 1 : -1
       target.lateralVelocity += dir * lateralJolt
 
@@ -598,7 +590,7 @@ function updateRockets(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
         )
       }
 
-      emit(hitType, rocket.sourcePlayerId, target.playerId, { shockAbsorbed: isShockAbsorbed, knockback })
+      emit(hitType, rocket.sourcePlayerId, target.playerId, { shockAbsorbed: isShockAbsorbed })
 
       if (rocket.kind === 'PREP' && rocket.sourcePlayerId) {
         triggerMenacePredatorRush(itemState, rocket.sourcePlayerId, tick, tickRate, emit, 'ROCKET')

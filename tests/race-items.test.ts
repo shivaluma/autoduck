@@ -287,16 +287,16 @@ test('Rocket applies two-stage stagger then recovery slow', () => {
     60,
   )
 
-  // Stage 1: Stagger (0.55s = 33 ticks, from tick 100 to 133)
+  // Stage 1: Stagger (0.85s = 51 ticks, from tick 100 to 151)
   assert.equal(runtime.slowMultiplier, ITEM_BALANCE.rocket.staggerMultiplier)
-  assert.equal(runtime.slowUntilTick, 133)
+  assert.equal(runtime.slowUntilTick, 151)
   assert.equal(itemSpeedMultiplier(runtime, 110), ITEM_BALANCE.rocket.staggerMultiplier)
 
-  // Stage 2: Recovery slow (0.85s = 51 ticks, from tick 133 to 184)
-  assert.equal(itemSpeedMultiplier(runtime, 140), ITEM_BALANCE.rocket.recoverySlowMultiplier)
+  // Stage 2: Recovery slow (0.75s = 45 ticks, from tick 151 to 196)
+  assert.equal(itemSpeedMultiplier(runtime, 160), ITEM_BALANCE.rocket.recoverySlowMultiplier)
 
-  // Stage 3: Fully recovered after tick 184
-  assert.equal(itemSpeedMultiplier(runtime, 190), 1.0)
+  // Stage 3: Fully recovered after tick 196
+  assert.equal(itemSpeedMultiplier(runtime, 200), 1.0)
 })
 
 test('Rocket breaks active speed boost before applying slow', () => {
@@ -342,7 +342,7 @@ test('Shock Absorber mitigates the first Rocket hit with lighter stagger and rec
   assert.equal(target.slowMultiplier, ITEM_BALANCE.shockAbsorber.staggerMultiplier)
 })
 
-test('Rocket applies explosive progress knockback and triggers MENACE predator rush', () => {
+test('Rocket applies spinout stall and triggers MENACE predator rush', () => {
   const raceConfig = config([
     { playerId: '1', itemIds: ['FEATHER', 'DRAFT_FIN'] },
     { playerId: '2', itemIds: ['HOMING_ROCKET', 'BANANA'] }, // MENACE combo
@@ -359,8 +359,11 @@ test('Rocket applies explosive progress knockback and triggers MENACE predator r
     if (events.includes('ROCKET_HIT')) break
   }
   assert.ok(events.includes('ROCKET_HIT'))
-  // Target should be knocked back by ITEM_BALANCE.rocket.progressKnockback (0.040)
-  assert.ok(ducks[0].progress < initialTargetProgress - 0.02)
+  // Target does not teleport backward, progress moves continuously
+  assert.ok(ducks[0].progress >= initialTargetProgress)
+  // Target speed is heavily stalled
+  const targetRuntime = state.byPlayer.get('1')!
+  assert.equal(targetRuntime.slowMultiplier, ITEM_BALANCE.rocket.staggerMultiplier)
   // Shooter with MENACE should trigger PREDATOR_RUSH_STARTED
   assert.ok(events.includes('PREDATOR_RUSH_STARTED'))
   const shooterRuntime = state.byPlayer.get('2')!

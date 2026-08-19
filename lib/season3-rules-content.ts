@@ -168,7 +168,7 @@ export const LOADOUT_CONFIG = {
       cost: 2,
       category: 'major' as const,
       itemClass: 'ATTACK' as const,
-      description: 'Bắn tên lửa tầm nhiệt nhắm đối thủ phía trước, triệt tiêu tăng tốc, nổ tung giật lùi 4% quãng đường và hãm xoay vòng trong 1.4s (1 lần/trận).',
+      description: 'Bắn tên lửa tầm nhiệt nhắm đối thủ phía trước, triệt tiêu tăng tốc và làm khựng đứng bánh xoay vòng trong 1.6s (1 lần/trận).',
     },
     {
       id: 'DRAFT_FIN',
@@ -204,7 +204,7 @@ export const LOADOUT_CONFIG = {
       cost: 1,
       category: 'minor' as const,
       itemClass: 'DEFENSE' as const,
-      description: 'Áo giáp chống sốc (Nội tại), giảm 60% phản lực nổ giật lùi và 50% thời gian hãm tốc từ Tên Lửa, giảm 60% lực đẩy từ Còi Quack Horn.',
+      description: 'Áo giáp chống sốc (Nội tại), giảm hơn 50% mức độ và thời gian khựng tốc từ Tên Lửa, giảm 60% lực đẩy từ Còi Quack Horn.',
     },
     {
       id: 'BANANA',
