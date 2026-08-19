@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, use } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { RaceLiveView } from './race-live-view'
@@ -88,6 +89,7 @@ export default function RaceDetailPage({
 }) {
   const resolvedParams = use(params)
   const raceId = resolvedParams.id
+  const router = useRouter()
   const [race, setRace] = useState<RaceStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [polling, setPolling] = useState(true)
@@ -97,6 +99,10 @@ export default function RaceDetailPage({
       try {
         const res = await fetch(`/api/races/${raceId}`)
         const data = await res.json()
+        if (data.engine || data.protocolVersion) {
+          router.replace(`/season-3/race/${raceId}`)
+          return
+        }
         setRace(data)
         setLoading(false)
         if (data.status === 'finished' || data.status === 'failed') setPolling(false)
@@ -105,7 +111,7 @@ export default function RaceDetailPage({
     fetchRace()
     const interval = setInterval(() => { if (polling) fetchRace() }, 3000)
     return () => clearInterval(interval)
-  }, [raceId, polling])
+  }, [raceId, polling, router])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)

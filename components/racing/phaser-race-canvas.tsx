@@ -250,7 +250,7 @@ export function PhaserRaceCanvas({
 
     void import('phaser').then((module) => {
       if (!active) return
-      const Phaser = module.default
+      const Phaser = module.default ?? module
       const parsedLiveConfig = serializedLiveConfig !== 'null' ? JSON.parse(serializedLiveConfig) as RaceConfig : null
       const parsedReplayConfig = serializedReplayConfig !== 'null' ? JSON.parse(serializedReplayConfig) as RaceConfig : null
       const clientSimConfig = parsedReplayConfig ?? parsedLiveConfig
@@ -297,6 +297,10 @@ export function PhaserRaceCanvas({
         constructor() { super('duck-race') }
 
         preload() {
+          this.load.on('loaderror', (file: { key?: string; src?: string }) => {
+            console.warn('Phaser asset load error:', file?.key, file?.src)
+          })
+
           for (const [key, path] of Object.entries(PICKUP_TEXTURES)) {
             this.load.svg(key, path, { width: 128, height: 128 })
           }
@@ -315,7 +319,6 @@ export function PhaserRaceCanvas({
           }
 
           for (const [index, player] of scenePlayers.entries()) {
-            if (player.avatarUrl) this.load.image(`avatar-${player.playerId}`, player.avatarUrl)
             const app = resolveDuckAppearance(player, index)
             for (const slot of COSMETIC_LAYER_ORDER) {
               const id = app[`${slot}Id` as keyof DuckAppearance]
@@ -542,7 +545,7 @@ export function PhaserRaceCanvas({
           const loadoutSpacing = 22
           const loadoutStartX = loadoutItemIds.length > 1 ? -loadoutSpacing / 2 : 0
           const loadoutNodes = loadoutItemIds.map((itemId, itemIndex) => {
-            const icon = this.add.text(loadoutStartX + itemIndex * loadoutSpacing, -55, ITEM_ICONS[itemId], {
+            const icon = this.add.text(loadoutStartX + itemIndex * loadoutSpacing, -55, ITEM_ICONS[itemId] ?? '🎒', {
               color: '#ffffff',
               fontFamily: 'sans-serif',
               fontSize: '19px',
