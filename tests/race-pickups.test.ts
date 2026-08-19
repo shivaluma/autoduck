@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   ITEM_BALANCE,
+  PICKUP_BALANCE,
   POSITION_CATEGORY_WEIGHTS,
   createSimulation,
   rollWildItem,
@@ -210,7 +211,10 @@ test('Wild Banana drops in-lane behind the holder so the chaser can hit it', () 
     tickItemSystem(state.itemState, state.ducks, tick, 60, (type) => events.push(type))
   }
   assert.ok(events.includes('WILD_BANANA_HIT'))
-  assert.ok(chaser.progress < before)
+  assert.equal(chaser.progress, before)
+  assert.notEqual(chaser.lateralVelocity, 0)
+  const victimRuntime = state.itemState.byPlayer.get(chaser.playerId)!
+  assert.equal(victimRuntime.slowMultiplier, PICKUP_BALANCE.banana.staggerMultiplier)
 })
 
 test('manual Wild input is persisted in event stream and replay deterministic', () => {

@@ -93,7 +93,7 @@ export interface BananaRuntime {
   kind: 'PREP' | 'WILD'
   hitProgressRadius: number
   hitLateralRadius: number
-  progressKnockback: number
+  progressKnockback?: number
   lateralSlip: number
 }
 
@@ -637,12 +637,32 @@ function updateBananas(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
     const blockedType = banana.kind === 'WILD' ? 'WILD_BANANA_BLOCKED' : 'BANANA_BLOCKED'
     if (outcome === 'HIT') {
       breakActiveSpeedBoost(defense, tick, tickRate, emit, banana.sourcePlayerId, target.playerId, banana.kind === 'WILD' ? 'WILD_BANANA' : 'BANANA')
-      const knockback = banana.progressKnockback
-      target.progress = Math.max(0, target.progress - knockback)
-      if (target.previousProgress !== undefined) target.previousProgress = Math.min(target.previousProgress, target.progress)
       const direction = target.lateralOffset >= banana.lateralOffset ? 1 : -1
       target.lateralVelocity += direction * banana.lateralSlip
-      emit(hitType, banana.sourcePlayerId, target.playerId, { knockback })
+
+      if (banana.kind === 'PREP') {
+        applyStagedSlow(
+          defense,
+          ITEM_BALANCE.banana.staggerMultiplier,
+          ITEM_BALANCE.banana.staggerDurationSeconds,
+          ITEM_BALANCE.banana.recoverySlowMultiplier,
+          ITEM_BALANCE.banana.recoveryDurationSeconds,
+          tick,
+          tickRate,
+        )
+      } else {
+        applyStagedSlow(
+          defense,
+          PICKUP_BALANCE.banana.staggerMultiplier,
+          PICKUP_BALANCE.banana.staggerDurationSeconds,
+          PICKUP_BALANCE.banana.recoverySlowMultiplier,
+          PICKUP_BALANCE.banana.recoveryDurationSeconds,
+          tick,
+          tickRate,
+        )
+      }
+
+      emit(hitType, banana.sourcePlayerId, target.playerId, { lateralSlip: banana.lateralSlip })
       if (banana.kind === 'PREP' && banana.sourcePlayerId) {
         triggerMenacePredatorRush(itemState, banana.sourcePlayerId, tick, tickRate, emit, 'BANANA')
       }

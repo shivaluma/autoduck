@@ -168,7 +168,7 @@ export const LOADOUT_CONFIG = {
       cost: 2,
       category: 'major' as const,
       itemClass: 'ATTACK' as const,
-      description: 'Bắn tên lửa tầm nhiệt nhắm đối thủ phía trước, triệt tiêu tăng tốc và làm khựng đứng bánh xoay vòng trong 1.6s (1 lần/trận).',
+      description: 'Bắn tên lửa tầm nhiệt nhắm đối thủ phía trước, triệt tiêu tăng tốc và khựng cứng xoay vòng tại chỗ trong 2.1s (1 lần/trận).',
     },
     {
       id: 'DRAFT_FIN',
@@ -213,7 +213,7 @@ export const LOADOUT_CONFIG = {
       cost: 1,
       category: 'minor' as const,
       itemClass: 'ATTACK' as const,
-      description: 'Thả vỏ chuối bẫy trên làn bơi phía sau (10s), đối thủ dẫm phải bị trượt văng làn và giật lùi 5% quãng đường.',
+      description: 'Thả vỏ chuối bẫy trên làn bơi phía sau (10s), đối thủ dẫm phải bị trượt văng làn và hãm trượt bánh trong 1.2s.',
     },
     {
       id: 'QUACK_HORN',

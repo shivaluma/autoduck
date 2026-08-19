@@ -18,8 +18,8 @@ export const RACE_ITEM_CATALOG: readonly RaceItemDefinition[] = [
   { id: 'BUBBLE_SHIELD', name: 'Bubble Shield', icon: '🫧', cost: 2, category: 'major', itemClass: 'DEFENSE', description: 'Bật bong bóng phòng hộ 4.5s khi gặp nguy hiểm, chặn hoàn toàn 1 đòn Tên Lửa hoặc bẫy Chuối; khi vỡ tạo luồng đẩy +8% trong 1.2s.' },
   { id: 'FEATHER', name: 'Feather', icon: '🪶', cost: 1, category: 'minor', itemClass: 'DEFENSE', description: 'Lông vũ hộ thân (Nội tại), tự động nhảy né 1 lần khi dẫm phải Vỏ Chuối hoặc chướng ngại vật (không chặn Tên Lửa).' },
   { id: 'SHOCK_ABSORBER', name: 'Shock Absorber', icon: '🦺', cost: 1, category: 'minor', itemClass: 'DEFENSE', description: 'Áo giáp chống sốc (Nội tại), giảm hơn 50% mức độ và thời gian khựng tốc từ Tên Lửa, giảm 60% lực đẩy từ Còi Quack Horn.' },
-  { id: 'HOMING_ROCKET', name: 'Homing Rocket', icon: '🚀', cost: 2, category: 'major', itemClass: 'ATTACK', description: 'Bắn tên lửa tầm nhiệt nhắm đối thủ phía trước, triệt tiêu tăng tốc và làm khựng đứng bánh xoay vòng trong 1.6s (1 lần/trận).' },
-  { id: 'BANANA', name: 'Banana', icon: '🍌', cost: 1, category: 'minor', itemClass: 'ATTACK', description: 'Thả vỏ chuối bẫy trên làn bơi phía sau (10s), đối thủ dẫm phải bị trượt văng làn và giật lùi 5% quãng đường.' },
+  { id: 'HOMING_ROCKET', name: 'Homing Rocket', icon: '🚀', cost: 2, category: 'major', itemClass: 'ATTACK', description: 'Bắn tên lửa tầm nhiệt nhắm đối thủ phía trước, triệt tiêu tăng tốc và khựng cứng xoay vòng tại chỗ trong 2.1s (1 lần/trận).' },
+  { id: 'BANANA', name: 'Banana', icon: '🍌', cost: 1, category: 'minor', itemClass: 'ATTACK', description: 'Thả vỏ chuối bẫy trên làn bơi phía sau (10s), đối thủ dẫm phải bị trượt văng làn và hãm trượt bánh trong 1.2s.' },
   { id: 'QUACK_HORN', name: 'Quack Horn', icon: '🔊', cost: 1, category: 'minor', itemClass: 'ATTACK', description: 'Thổi còi xung kích húc dạt mạnh đối thủ bơi sát cạnh, phá luồng Lướt Gió và khóa dùng item (Câm Lặng) trong 2.5s.' },
 ] as const
 

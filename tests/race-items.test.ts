@@ -287,16 +287,16 @@ test('Rocket applies two-stage stagger then recovery slow', () => {
     60,
   )
 
-  // Stage 1: Stagger (0.85s = 51 ticks, from tick 100 to 151)
+  // Stage 1: Stagger (1.25s = 75 ticks, from tick 100 to 175)
   assert.equal(runtime.slowMultiplier, ITEM_BALANCE.rocket.staggerMultiplier)
-  assert.equal(runtime.slowUntilTick, 151)
+  assert.equal(runtime.slowUntilTick, 175)
   assert.equal(itemSpeedMultiplier(runtime, 110), ITEM_BALANCE.rocket.staggerMultiplier)
 
-  // Stage 2: Recovery slow (0.75s = 45 ticks, from tick 151 to 196)
-  assert.equal(itemSpeedMultiplier(runtime, 160), ITEM_BALANCE.rocket.recoverySlowMultiplier)
+  // Stage 2: Recovery slow (0.85s = 51 ticks, from tick 175 to 226)
+  assert.equal(itemSpeedMultiplier(runtime, 180), ITEM_BALANCE.rocket.recoverySlowMultiplier)
 
-  // Stage 3: Fully recovered after tick 196
-  assert.equal(itemSpeedMultiplier(runtime, 200), 1.0)
+  // Stage 3: Fully recovered after tick 226
+  assert.equal(itemSpeedMultiplier(runtime, 230), 1.0)
 })
 
 test('Rocket breaks active speed boost before applying slow', () => {
@@ -370,7 +370,7 @@ test('Rocket applies spinout stall and triggers MENACE predator rush', () => {
   assert.equal(shooterRuntime.boostMultiplier, ITEM_BALANCE.menace.predatorRushMultiplier)
 })
 
-test('Banana stays in-lane and knocks the chasing duck backward', () => {
+test('Banana stays in-lane and applies slipout and slow without backward teleport', () => {
   const raceConfig = config([{ playerId: '2', itemIds: ['NITRO', 'BANANA'] }])
   const state = createItemRaceState(raceConfig)
   const ducks = [duck('1', 0.74, 2, 0), duck('2', 0.78, 1, 0)]
@@ -386,18 +386,22 @@ test('Banana stays in-lane and knocks the chasing duck backward', () => {
   assert.equal(banana.lateralOffset, 0)
   assert.ok(ducks[1].progress - banana.progress >= ITEM_BALANCE.banana.dropBehindProgress - 0.001)
 
-  const before = ducks[0].progress
   ducks[0].previousProgress = banana.progress - 0.02
   ducks[0].progress = banana.progress + 0.002
   ducks[0].lateralOffset = banana.lateralOffset
+  const progressBeforeHit = ducks[0].progress
   for (let tick = banana.armedAtTick; tick <= banana.armedAtTick + 2; tick += 1) {
     tickItemSystem(state, ducks, tick, 60, (type) => events.push(type))
     if (events.includes('BANANA_HIT')) break
   }
   assert.ok(events.includes('BANANA_HIT'))
-  assert.ok(ducks[0].progress < before)
-  assert.ok(ducks[0].progress <= banana.progress + 0.002 - ITEM_BALANCE.banana.progressKnockback + 0.0001)
+  // No backward teleport: progress is not knocked back
+  assert.equal(ducks[0].progress, progressBeforeHit)
+  // Lateral slipout is applied
   assert.notEqual(ducks[0].lateralVelocity, 0)
+  // Staged slow is applied
+  const victimRuntime = state.byPlayer.get('1')!
+  assert.equal(victimRuntime.slowMultiplier, ITEM_BALANCE.banana.staggerMultiplier)
 })
 
 test('prep items auto-burn near the finish line instead of staying unused', () => {

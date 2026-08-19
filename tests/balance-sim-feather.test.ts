@@ -109,7 +109,6 @@ test('deterministic banana collision dodges Feather end-to-end', () => {
     kind: 'PREP',
     hitProgressRadius: ITEM_BALANCE.banana.hitProgressRadius,
     hitLateralRadius: ITEM_BALANCE.banana.hitLateralRadius,
-    progressKnockback: ITEM_BALANCE.banana.progressKnockback,
     lateralSlip: ITEM_BALANCE.banana.lateralSlip,
   }
   state.bananas.push(banana)
@@ -151,7 +150,6 @@ test('consumed Feather + second Banana records exposure without proc', () => {
     kind: 'PREP',
     hitProgressRadius: ITEM_BALANCE.banana.hitProgressRadius,
     hitLateralRadius: ITEM_BALANCE.banana.hitLateralRadius,
-    progressKnockback: ITEM_BALANCE.banana.progressKnockback,
     lateralSlip: ITEM_BALANCE.banana.lateralSlip,
   })
 

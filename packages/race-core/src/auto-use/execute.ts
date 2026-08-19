@@ -125,7 +125,6 @@ export function executePrepAction(
         kind: 'PREP',
         hitProgressRadius: ITEM_BALANCE.banana.hitProgressRadius,
         hitLateralRadius: ITEM_BALANCE.banana.hitLateralRadius,
-        progressKnockback: itemState.tuning.bananaKnockbackMultiplier * ITEM_BALANCE.banana.progressKnockback,
         lateralSlip: ITEM_BALANCE.banana.lateralSlip,
       })
       emit('BANANA_DROPPED', duck.playerId, undefined, { progress, lateralOffset: duck.lateralOffset, autoReason: candidate.reason })

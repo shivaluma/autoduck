@@ -141,7 +141,7 @@ export function formatEventDetails(
       return {
         icon: '💫',
         title: `${targetName || 'Vịt'} đạp trúng Chuối của ${sourceName}! (Thành công ✅)`,
-        description: `${targetName || 'Vịt'} giẫm phải bẫy của ${sourceName}, bị trượt xoay vòng và giật lùi quãng đường!`,
+        description: `${targetName || 'Vịt'} giẫm phải bẫy của ${sourceName}, bị trượt văng làn và hãm tốc độ!`,
         category: 'combat',
         tone: 'text-amber-400 border-amber-500/40 bg-amber-500/15',
       }

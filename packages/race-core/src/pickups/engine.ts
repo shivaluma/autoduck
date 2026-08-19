@@ -385,7 +385,6 @@ function createWildBanana(itemState: ItemRaceState, duck: ItemDuckState, tick: n
     armedAtTick: tick + Math.round(PICKUP_BALANCE.banana.armingSeconds * tickRate),
     expiresAtTick: tick + Math.round(PICKUP_BALANCE.banana.lifetimeSeconds * tickRate), kind: 'WILD',
     hitProgressRadius: PICKUP_BALANCE.banana.hitProgressRadius, hitLateralRadius: PICKUP_BALANCE.banana.hitLateralRadius,
-    progressKnockback: PICKUP_BALANCE.banana.progressKnockback,
     lateralSlip: PICKUP_BALANCE.banana.lateralSlip,
   }
 }
