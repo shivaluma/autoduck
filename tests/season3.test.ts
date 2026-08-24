@@ -178,3 +178,15 @@ test('Duck News includes the S3 reveal facts', () => {
   assert.match(news, /BOUNTY HUNT — Thanh/)
   assert.match(news, /Khoa prediction chính xác/)
 })
+
+test('manual pick Chaos supports all 7 chaos cards and specific bounty targets', () => {
+  const chaosCards = ['NORMAL', 'REVERSE', 'DUO', 'TRIPLE_ELIMINATION', 'CUT_LINE', 'CONSTRUCTORS', 'BOUNTY_HUNT'] as const
+  for (const cardType of chaosCards) {
+    const card = prepareChaosCard(cardType, ranking, () => 0.5)
+    assert.equal(card.type, cardType)
+  }
+
+  // Manual Bounty Hunt targeting specific user
+  const manualBounty = resolveSeason3Race(ranking, { type: 'BOUNTY_HUNT', targetUserId: 5, targetUserId2: null })
+  assert.deepEqual(manualBounty.scarVictims.map((entry) => entry.userId), [5])
+})

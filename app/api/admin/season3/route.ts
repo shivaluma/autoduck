@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import {
+  CHAOS_CARDS,
   DEFAULT_SEASON3_REWARDS,
   prepareChaosCard,
   selectChampion,
@@ -190,6 +191,9 @@ export async function POST(request: Request) {
     championUserId?: number
     userId?: number
     test?: boolean
+    chaosType?: string
+    targetUserId?: number | null
+    groups?: number[][]
   }
 
   try {
@@ -259,11 +263,113 @@ export async function POST(request: Request) {
       if (latest && latest.status !== 'resolved') return fail('Tuần hiện tại chưa resolve', 409)
       const nextWeekNumber = (latest?.weekNumber ?? 0) + 1
       if (nextWeekNumber > season.weeks) return fail('Season đã đủ số tuần')
+
+      const activePlayers = season.players
       const chaosSeed = createRaceSeed()
       const chaosRng = createRaceRng(chaosSeed, `chaos:week:${nextWeekNumber}`)
-      const chaos = selectChaosCard(season.players.map((player: { userId: number; user: { name: string } }) => ({ userId: player.userId, name: player.user.name })), () => chaosRng.next())
-      const week = await prisma.seasonWeek.create({ data: { seasonId: season.id, weekNumber: nextWeekNumber, chaosType: chaos.type, chaosTargetUserId: chaos.targetUserId, chaosTargetUserId2: chaos.targetUserId2, chaosPayload: chaosPayload(chaos.groups), chaosSeed } })
+
+      let chaosType: ChaosType
+      let targetUserId: number | null = null
+      let groups: number[][] | undefined = undefined
+
+      if (body.chaosType && body.chaosType !== 'RANDOM' && CHAOS_CARDS.includes(body.chaosType as ChaosType)) {
+        chaosType = body.chaosType as ChaosType
+        if (chaosType === 'BOUNTY_HUNT' && typeof body.targetUserId === 'number' && body.targetUserId > 0) {
+          if (!activePlayers.some((p: { userId: number }) => p.userId === body.targetUserId)) {
+            return fail('Mục tiêu Truy nã phải là một tuyển thủ trong Season')
+          }
+          targetUserId = body.targetUserId
+        } else if ((chaosType === 'DUO' || chaosType === 'CONSTRUCTORS') && Array.isArray(body.groups) && body.groups.length > 0) {
+          groups = body.groups
+        } else {
+          const prepared = prepareChaosCard(chaosType, activePlayers.map((p: { userId: number; user: { name: string } }) => ({ userId: p.userId, name: p.user.name })), () => chaosRng.next())
+          targetUserId = prepared.targetUserId
+          groups = prepared.groups
+        }
+      } else {
+        const chaos = selectChaosCard(season.players.map((player: { userId: number; user: { name: string } }) => ({ userId: player.userId, name: player.user.name })), () => chaosRng.next())
+        chaosType = chaos.type
+        targetUserId = chaos.targetUserId
+        groups = chaos.groups
+      }
+
+      const week = await prisma.seasonWeek.create({
+        data: {
+          seasonId: season.id,
+          weekNumber: nextWeekNumber,
+          chaosType,
+          chaosTargetUserId: targetUserId,
+          chaosTargetUserId2: null,
+          chaosPayload: chaosPayload(groups),
+          chaosSeed,
+        },
+      })
       return NextResponse.json({ ok: true, week })
+    }
+
+    if (body.action === 'set-chaos') {
+      if (!body.weekId) return fail('weekId là bắt buộc')
+      const week = await prisma.seasonWeek.findUnique({ where: { id: body.weekId } })
+      if (!week) return fail('Tuần không tồn tại', 404)
+      if (week.status !== 'open' && week.status !== 'locked') {
+        return fail('Chỉ có thể đổi lá bài Chaos khi tuần chưa bắt đầu đua', 409)
+      }
+
+      const skipped = new Set(parseSkippedPlayerIds(week.skippedPlayerIdsJson))
+      const activePlayers = season.players.filter((player: { userId: number }) => !skipped.has(player.userId))
+      if (activePlayers.length < 2 || activePlayers.length > 16) return fail('Race cần 2–16 dzịt active')
+
+      const chaosSeed = createRaceSeed()
+      const rng = createRaceRng(chaosSeed, `chaos:manual:${week.weekNumber}:${Date.now()}`)
+
+      let chaosType: ChaosType
+      let targetUserId: number | null = null
+      let groups: number[][] | undefined = undefined
+
+      if (!body.chaosType || body.chaosType === 'RANDOM') {
+        const rolled = selectChaosCard(activePlayers.map((p: { userId: number; user: { name: string } }) => ({ userId: p.userId, name: p.user.name })), () => rng.next())
+        chaosType = rolled.type
+        targetUserId = rolled.targetUserId
+        groups = rolled.groups
+      } else {
+        if (!CHAOS_CARDS.includes(body.chaosType as ChaosType)) {
+          return fail('Lá bài Chaos không hợp lệ')
+        }
+        chaosType = body.chaosType as ChaosType
+
+        if (chaosType === 'BOUNTY_HUNT') {
+          if (typeof body.targetUserId === 'number' && body.targetUserId > 0) {
+            if (!activePlayers.some((p: { userId: number }) => p.userId === body.targetUserId)) {
+              return fail('Mục tiêu Truy nã phải là một tuyển thủ đang tham gia tuần này')
+            }
+            targetUserId = body.targetUserId
+          } else {
+            const prepared = prepareChaosCard('BOUNTY_HUNT', activePlayers.map((p: { userId: number; user: { name: string } }) => ({ userId: p.userId, name: p.user.name })), () => rng.next())
+            targetUserId = prepared.targetUserId
+          }
+        } else if (chaosType === 'DUO' || chaosType === 'CONSTRUCTORS') {
+          if (Array.isArray(body.groups) && body.groups.length > 0) {
+            groups = body.groups
+          } else {
+            const prepared = prepareChaosCard(chaosType, activePlayers.map((p: { userId: number; user: { name: string } }) => ({ userId: p.userId, name: p.user.name })), () => rng.next())
+            groups = prepared.groups
+          }
+        }
+      }
+
+      const updatedWeek = await prisma.seasonWeek.update({
+        where: { id: week.id },
+        data: {
+          chaosType,
+          chaosTargetUserId: targetUserId,
+          chaosTargetUserId2: null,
+          chaosPayload: chaosPayload(groups),
+          chaosSeed,
+          chaosRevealedAt: new Date(),
+        },
+      })
+
+      return NextResponse.json({ ok: true, week: updatedWeek })
     }
 
     if (body.action === 'toggle-skip') {

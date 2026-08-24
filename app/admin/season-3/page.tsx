@@ -7,6 +7,51 @@ import { Season3Avatar } from '@/components/season3-avatar'
 import { Season3PointTooltip } from '@/components/season3-point-tooltip'
 import { canStartSeason3TestRace } from '@/lib/season3-test-mode'
 
+const CHAOS_OPTIONS = [
+  {
+    type: 'NORMAL',
+    name: 'NORMAL',
+    icon: '🏁',
+    desc: '2 vịt về chậm nhất (Bottom 2) bị làm dzịt.',
+  },
+  {
+    type: 'REVERSE',
+    name: 'REVERSE',
+    icon: '🔄',
+    desc: 'Đảo ngược: 2 vịt về ĐẦU TIÊN (Top 2) bị làm dzịt.',
+  },
+  {
+    type: 'DUO',
+    name: 'DUO',
+    icon: '🤝',
+    desc: 'Cặp đôi/Nhóm có thứ hạng trung bình tệ nhất cùng bị làm dzịt.',
+  },
+  {
+    type: 'TRIPLE_ELIMINATION',
+    name: 'TRIPLE ELIMINATION',
+    icon: '💀',
+    desc: '3 vịt về chậm nhất (Bottom 3) bị làm dzịt.',
+  },
+  {
+    type: 'CUT_LINE',
+    name: 'CUT LINE',
+    icon: '🚧',
+    desc: 'Top 50% an toàn. Toàn bộ nửa sau đoàn đua cùng bị làm dzịt.',
+  },
+  {
+    type: 'CONSTRUCTORS',
+    name: 'CONSTRUCTORS',
+    icon: '🏎️',
+    desc: 'Chia 2 đội: Đội có thứ hạng trung bình tệ hơn cùng bị làm dzịt.',
+  },
+  {
+    type: 'BOUNTY_HUNT',
+    name: 'BOUNTY HUNT',
+    icon: '🎯',
+    desc: 'Truy nã 1 Vịt: Vịt đó không vào Top 50% thì Vịt đó và tất cả vịt xếp sau cùng bị làm dzịt.',
+  },
+] as const
+
 type AdminState = {
   season: { id: number; name: string; year: number; weeks: number; status: string } | null
   players: Array<{ id: number; name: string; avatarUrl?: string | null; personalLink: string; scars: number; shields: number; predictionPoints: number; isKing: boolean; kingStreak: number }>
@@ -55,9 +100,21 @@ export default function AdminSeason3Page() {
   const [message, setMessage] = useState('')
   const [testRaceId, setTestRaceId] = useState<number | null>(null)
 
+  const [customChaosType, setCustomChaosType] = useState<string | null>(null)
+  const [customTargetUserId, setCustomTargetUserId] = useState<number | '' | null>(null)
+  const [showChaosPicker, setShowChaosPicker] = useState(false)
+
+  const [openWeekMode, setOpenWeekMode] = useState<'random' | 'manual'>('random')
+  const [openWeekChaosType, setOpenWeekChaosType] = useState<string>('NORMAL')
+  const [openWeekTargetUserId, setOpenWeekTargetUserId] = useState<number | ''>('')
+
   const currentWeek = useMemo(() => (data?.weeks ?? []).find((week) => week.status !== 'resolved') ?? null, [data])
   const nameById = useMemo(() => new Map((data?.players ?? []).map((player) => [player.id, player.name])), [data])
+  const activePlayers = useMemo(() => (data?.players ?? []).filter((p) => !currentWeek?.skippedPlayerIds.includes(p.id)), [data?.players, currentWeek?.skippedPlayerIds])
   const activePlayerCount = (data?.players?.length ?? 0) - (currentWeek?.skippedPlayerIds.length ?? 0)
+
+  const selectedChaosType = customChaosType ?? currentWeek?.chaosType ?? 'NORMAL'
+  const selectedTargetUserId = customTargetUserId !== null ? customTargetUserId : (currentWeek?.chaosTargetUserId ?? '')
 
   async function refresh() {
     if (!secret) return
@@ -156,6 +213,141 @@ export default function AdminSeason3Page() {
 
       {currentWeek && <Season3ChaosCard compact type={currentWeek.chaosType} weekNumber={currentWeek.weekNumber} targetName={nameById.get(currentWeek.chaosTargetUserId ?? -1)} groups={currentWeek.chaosGroups?.map((group) => group.map((id) => nameById.get(id) ?? String(id)))} predictionCount={currentWeek.predictionCount} playerCount={activePlayerCount} />}
 
+      {currentWeek && (
+        <section className="rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-surface-2)] p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-gold)]">ADMIN CHAOS CONTROL · QUẢN LÝ LÁ BÀI</div>
+              <h2 className="mt-1 font-display text-2xl">🃏 Điều Chỉnh / Đổi Lá Bài Chaos Tuần {currentWeek.weekNumber}</h2>
+              <p className="mt-1 text-sm text-white/60">
+                Lá bài hiện tại: <span className="font-bold text-[var(--color-ggd-gold)]">{currentWeek.chaosType}</span>
+                {currentWeek.chaosTargetUserId ? ` (🎯 Mục tiêu: ${nameById.get(currentWeek.chaosTargetUserId) ?? currentWeek.chaosTargetUserId})` : ''}
+                {currentWeek.chaosGroups ? ` (${currentWeek.chaosGroups.length} nhóm)` : ''}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setShowChaosPicker((prev) => !prev)}
+                className="rounded-xl border-2 border-white/20 bg-white/10 px-4 py-2.5 text-sm font-black hover:bg-white/20"
+              >
+                {showChaosPicker ? '▲ ĐÓNG BẢNG CHỌN' : '⚙️ CHỌN LÁ BÀI THỦ CÔNG (MANUAL PICK)'}
+              </button>
+              {(currentWeek.chaosType === 'DUO' || currentWeek.chaosType === 'CONSTRUCTORS' || currentWeek.chaosType === 'BOUNTY_HUNT') && (
+                <button
+                  type="button"
+                  onClick={() => void act({ action: 'set-chaos', weekId: currentWeek.id, chaosType: currentWeek.chaosType })}
+                  className="rounded-xl border-2 border-[var(--color-ggd-lavender)]/60 bg-[var(--color-ggd-lavender)]/20 px-4 py-2.5 text-sm font-black text-[var(--color-ggd-lavender)] transition-transform hover:scale-105"
+                  title="Xáo trộn lại cặp đôi/đội/mục tiêu của lá bài hiện tại"
+                >
+                  🔀 XÁO TRỘN LẠI {currentWeek.chaosType === 'BOUNTY_HUNT' ? 'MỤC TIÊU' : 'NHÓM/CẶP'}
+                </button>
+              )}
+              {canStartSeason3TestRace(currentWeek.status) && (
+                <button
+                  type="button"
+                  onClick={() => void act({ action: 'set-chaos', weekId: currentWeek.id, chaosType: 'RANDOM' })}
+                  className="rounded-xl bg-[var(--color-ggd-orange)] px-4 py-2.5 text-sm font-black text-white transition-transform hover:scale-105"
+                  title="Bốc ngẫu nhiên lá bài Chaos hoàn toàn mới"
+                >
+                  🎲 BỐC LẠI NGẪU NHIÊN (FORCE REROLL)
+                </button>
+              )}
+            </div>
+          </div>
+
+          {showChaosPicker && (
+            <div className="mt-5 space-y-4 rounded-2xl border-2 border-white/15 bg-black/30 p-4">
+              <div className="text-xs font-black uppercase tracking-wider text-white/50">1. Chọn loại lá bài Chaos:</div>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {CHAOS_OPTIONS.map((opt) => {
+                  const isSelected = selectedChaosType === opt.type
+                  return (
+                    <button
+                      key={opt.type}
+                      type="button"
+                      onClick={() => {
+                        setCustomChaosType(opt.type)
+                        if (opt.type !== 'BOUNTY_HUNT') setCustomTargetUserId('')
+                      }}
+                      className={`flex flex-col items-start rounded-xl border-2 p-3 text-left transition-all ${
+                        isSelected
+                          ? 'border-[var(--color-ggd-gold)] bg-[var(--color-ggd-gold)]/15 shadow-[0_0_12px_rgba(255,215,0,0.25)]'
+                          : 'border-white/10 bg-white/5 hover:border-white/25 hover:bg-white/10'
+                      }`}
+                    >
+                      <div className="flex w-full items-center justify-between">
+                        <span className="text-xl">{opt.icon}</span>
+                        {isSelected && <span className="rounded bg-[var(--color-ggd-gold)] px-2 py-0.5 text-[10px] font-black text-black">ĐANG CHỌN</span>}
+                      </div>
+                      <div className="mt-2 font-display text-base text-white">{opt.name}</div>
+                      <div className="mt-1 text-xs text-white/70">{opt.desc}</div>
+                    </button>
+                  )
+                })}
+              </div>
+
+              {selectedChaosType === 'BOUNTY_HUNT' && (
+                <div className="rounded-xl border-2 border-fuchsia-500/40 bg-fuchsia-950/20 p-3.5">
+                  <label className="block text-xs font-black text-fuchsia-300">
+                    🎯 2. Chọn Vịt Mục Tiêu Bị Truy Nã (Wanted Duck):
+                  </label>
+                  <div className="mt-2 flex flex-wrap items-center gap-3">
+                    <select
+                      value={selectedTargetUserId}
+                      onChange={(e) => setCustomTargetUserId(e.target.value ? Number(e.target.value) : '')}
+                      className="rounded-lg border-2 border-white/20 bg-black/60 px-3 py-2 text-sm text-white focus:border-[var(--color-ggd-gold)] focus:outline-none"
+                    >
+                      <option value="">🎲 Ngẫu nhiên một vịt (Random target)</option>
+                      {activePlayers.map((player) => (
+                        <option key={player.id} value={player.id}>
+                          🦆 {player.name} {player.isKing ? '(👑 Vua Ao)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                    {selectedTargetUserId && (
+                      <span className="text-xs font-bold text-fuchsia-200">
+                        Đã chọn mục tiêu: {nameById.get(Number(selectedTargetUserId)) ?? selectedTargetUserId}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {(selectedChaosType === 'DUO' || selectedChaosType === 'CONSTRUCTORS') && (
+                <div className="rounded-xl border-2 border-purple-500/40 bg-purple-950/20 p-3.5 text-xs text-purple-200">
+                  ℹ️ Khi áp dụng <span className="font-black">{selectedChaosType}</span>, hệ thống sẽ tự động ghép nhóm/cặp ngẫu nhiên từ danh sách {activePlayerCount} tuyển thủ active.
+                </div>
+              )}
+
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                <span className="text-xs text-white/60">
+                  Sau khi áp dụng, luật Chaos của Tuần {currentWeek.weekNumber} sẽ được cập nhật ngay lập tức cho toàn bộ tuyển thủ.
+                </span>
+                <button
+                  type="button"
+                  disabled={!canStartSeason3TestRace(currentWeek.status)}
+                  onClick={() => {
+                    void act({
+                      action: 'set-chaos',
+                      weekId: currentWeek.id,
+                      chaosType: selectedChaosType,
+                      targetUserId: selectedChaosType === 'BOUNTY_HUNT' && selectedTargetUserId ? Number(selectedTargetUserId) : undefined,
+                    })
+                    setShowChaosPicker(false)
+                    setCustomChaosType(null)
+                    setCustomTargetUserId(null)
+                  }}
+                  className="rounded-xl bg-[var(--color-ggd-neon-green)] px-6 py-3 font-black text-[var(--color-ggd-outline)] transition-transform hover:scale-105 disabled:opacity-50"
+                >
+                  ✓ LƯU & ÁP DỤNG LÁ BÀI CHAOS
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
       {currentWeek && canStartSeason3TestRace(currentWeek.status) && <section className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border-4 border-[var(--color-ggd-gold)] bg-[var(--color-ggd-surface-2)] p-5">
         <div>
           <div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-gold)]">CHẾ ĐỘ ĐUA THỬ · TEST MODE</div>
@@ -241,9 +433,107 @@ export default function AdminSeason3Page() {
       </section>}
 
       {!currentWeek && <section className="rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-5">
-        <h2 className="font-display text-2xl">Đã hoàn thành chặng tuần</h2>
-        <p className="mt-1 text-sm text-white/60">Mở lá bài Chaos để bước vào tuần thi đấu kế tiếp.</p>
-        {data.weeks.length < (data.season?.weeks ?? 12) && <button onClick={() => void act({ action: 'open-week' })} className="mt-4 rounded-xl bg-[var(--color-ggd-neon-green)] px-5 py-3 font-black text-[var(--color-ggd-outline)] transition-transform hover:scale-105">🎴 BỐC LÁ BÀI CHAOS TUẦN TIẾP THEO</button>}
+        <div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-gold)]">KẾT THÚC CHẶNG CŨ · CHUẨN BỊ CHẶNG MỚI</div>
+        <h2 className="mt-1 font-display text-2xl">Mở Tuần Thi Đấu Kế Tiếp</h2>
+        <p className="mt-1 text-sm text-white/60">Bốc ngẫu nhiên hoặc chọn thủ công lá bài Chaos cho tuần tiếp theo.</p>
+
+        {data.weeks.length < (data.season?.weeks ?? 12) && (
+          <div className="mt-5 space-y-4">
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => setOpenWeekMode('random')}
+                className={`rounded-xl border-2 px-4 py-2.5 text-sm font-black transition-all ${
+                  openWeekMode === 'random'
+                    ? 'border-[var(--color-ggd-neon-green)] bg-[var(--color-ggd-neon-green)]/20 text-[var(--color-ggd-neon-green)]'
+                    : 'border-white/20 bg-white/5 text-white/70 hover:bg-white/10'
+                }`}
+              >
+                🎲 Bốc Ngẫu Nhiên (Random)
+              </button>
+              <button
+                type="button"
+                onClick={() => setOpenWeekMode('manual')}
+                className={`rounded-xl border-2 px-4 py-2.5 text-sm font-black transition-all ${
+                  openWeekMode === 'manual'
+                    ? 'border-[var(--color-ggd-gold)] bg-[var(--color-ggd-gold)]/20 text-[var(--color-ggd-gold)]'
+                    : 'border-white/20 bg-white/5 text-white/70 hover:bg-white/10'
+                }`}
+              >
+                🎯 Chọn Thủ Công (Manual Pick)
+              </button>
+            </div>
+
+            {openWeekMode === 'manual' && (
+              <div className="space-y-4 rounded-2xl border-2 border-white/15 bg-black/30 p-4">
+                <div className="text-xs font-black uppercase tracking-wider text-white/50">Chọn loại lá bài Chaos:</div>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {CHAOS_OPTIONS.map((opt) => {
+                    const isSelected = openWeekChaosType === opt.type
+                    return (
+                      <button
+                        key={opt.type}
+                        type="button"
+                        onClick={() => setOpenWeekChaosType(opt.type)}
+                        className={`flex flex-col items-start rounded-xl border-2 p-3 text-left transition-all ${
+                          isSelected
+                            ? 'border-[var(--color-ggd-gold)] bg-[var(--color-ggd-gold)]/15 shadow-[0_0_12px_rgba(255,215,0,0.25)]'
+                            : 'border-white/10 bg-white/5 hover:border-white/25 hover:bg-white/10'
+                        }`}
+                      >
+                        <div className="flex w-full items-center justify-between">
+                          <span className="text-xl">{opt.icon}</span>
+                          {isSelected && <span className="rounded bg-[var(--color-ggd-gold)] px-2 py-0.5 text-[10px] font-black text-black">ĐANG CHỌN</span>}
+                        </div>
+                        <div className="mt-2 font-display text-base text-white">{opt.name}</div>
+                        <div className="mt-1 text-xs text-white/70">{opt.desc}</div>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {openWeekChaosType === 'BOUNTY_HUNT' && (
+                  <div className="rounded-xl border-2 border-fuchsia-500/40 bg-fuchsia-950/20 p-3.5">
+                    <label className="block text-xs font-black text-fuchsia-300">
+                      🎯 Chọn Vịt Mục Tiêu Bị Truy Nã (Wanted Duck):
+                    </label>
+                    <div className="mt-2 flex flex-wrap items-center gap-3">
+                      <select
+                        value={openWeekTargetUserId}
+                        onChange={(e) => setOpenWeekTargetUserId(e.target.value ? Number(e.target.value) : '')}
+                        className="rounded-lg border-2 border-white/20 bg-black/60 px-3 py-2 text-sm text-white focus:border-[var(--color-ggd-gold)] focus:outline-none"
+                      >
+                        <option value="">🎲 Ngẫu nhiên một vịt (Random target)</option>
+                        {data.players.map((player) => (
+                          <option key={player.id} value={player.id}>
+                            🦆 {player.name} {player.isKing ? '(👑 Vua Ao)' : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() =>
+                void act({
+                  action: 'open-week',
+                  chaosType: openWeekMode === 'manual' ? openWeekChaosType : undefined,
+                  targetUserId:
+                    openWeekMode === 'manual' && openWeekChaosType === 'BOUNTY_HUNT' && openWeekTargetUserId
+                      ? Number(openWeekTargetUserId)
+                      : undefined,
+                })
+              }
+              className="mt-4 rounded-xl bg-[var(--color-ggd-neon-green)] px-6 py-3 font-black text-[var(--color-ggd-outline)] transition-transform hover:scale-105"
+            >
+              {openWeekMode === 'manual' ? '🎴 MỞ TUẦN MỚI VỚI LÁ BÀI ĐÃ CHỌN' : '🎴 BỐC LÁ BÀI CHAOS TUẦN TIẾP THEO'}
+            </button>
+          </div>
+        )}
       </section>}
 
       <section className="rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-surface-2)] p-5">
