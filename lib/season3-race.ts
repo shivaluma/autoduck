@@ -113,18 +113,21 @@ export async function startSeason3Race(weekId: number, options: { allowOffSchedu
   const loadoutByPlayer = new Map<number, { seasonPlayerId: number; itemIdsJson: string; status: string }>(week.loadouts.map((loadout: { seasonPlayerId: number; itemIdsJson: string; status: string }) => [loadout.seasonPlayerId, loadout] as const))
   const immutableLoadouts: Array<{ player: Season3RacePlayer; itemIds: RaceItemId[]; source: 'PLAYER' | 'AUTO' }> = activePlayers.map((player) => {
     const selected = loadoutByPlayer.get(player.id)
+    const isReady = selected?.status === 'ready'
     return {
       player,
-      itemIds: selected ? parseItemIds(selected.itemIdsJson) : selectAutoLoadout(raceSeed, String(player.userId)),
-      source: selected?.status === 'ready' ? 'PLAYER' as const : 'AUTO' as const,
+      itemIds: isReady ? parseItemIds(selected.itemIdsJson) : selectAutoLoadout(raceSeed, String(player.userId)),
+      source: isReady ? ('PLAYER' as const) : ('AUTO' as const),
     }
   })
   const claim = await prisma.$transaction(async (tx: typeof prisma) => {
     if (raceMode.mutatesSeason) {
       for (const loadout of immutableLoadouts) {
-        if (loadoutByPlayer.has(loadout.player.id)) continue
-        await tx.seasonLoadout.create({
-          data: { weekId: week.id, seasonPlayerId: loadout.player.id, userId: loadout.player.userId, itemIdsJson: serializeItemIds(loadout.itemIds), status: 'auto', lockedAt: new Date() },
+        if (loadout.source === 'PLAYER') continue
+        await tx.seasonLoadout.upsert({
+          where: { weekId_seasonPlayerId: { weekId: week.id, seasonPlayerId: loadout.player.id } },
+          create: { weekId: week.id, seasonPlayerId: loadout.player.id, userId: loadout.player.userId, itemIdsJson: serializeItemIds(loadout.itemIds), status: 'auto', lockedAt: new Date() },
+          update: { itemIdsJson: serializeItemIds(loadout.itemIds), status: 'auto', lockedAt: new Date() },
         })
       }
     }
