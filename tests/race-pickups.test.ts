@@ -334,3 +334,15 @@ test('fuzzed pickup races finish with finite state, no duplicate collection, and
     assert.ok(collected.filter((pickup) => pickup.type === 'GOLDEN_BOX').length <= 1)
   }
 })
+
+test('manual held items obey EMP silence and become usable at its expiry', () => {
+  const state = createSimulation(config())
+  const runtime = state.itemState.byPlayer.get('duck-1')!
+  runtime.wildItem = { instanceId: 'silenced-bubble', itemId: 'MINI_BUBBLE', acquiredAtTick: 1 }
+  runtime.silencedUntilTick = 130
+  const input = { playerId: 'duck-1', wildItemInstanceId: 'silenced-bubble' }
+  assert.deepEqual(activateWildItem(state.itemState, state.ducks, input, 129, 60, 'MANUAL', () => undefined), { ok: false, reason: 'SILENCED' })
+  assert.ok(runtime.wildItem)
+  assert.equal(activateWildItem(state.itemState, state.ducks, input, 130, 60, 'MANUAL', () => undefined).ok, true)
+  assert.equal(runtime.wildItem, null)
+})

@@ -92,7 +92,7 @@ export function formatEventDetails(
         title: `${sourceName} 🚀 bắn trúng ${targetName || 'mục tiêu'}! (Thành công ✅)`,
         description: isMini
           ? `${targetName || 'Mục tiêu'} trúng đòn Mini Rocket của ${sourceName}, bị phá tăng tốc và khựng hãm tốc độ!`
-          : `${targetName || 'Mục tiêu'} trúng Tên Lửa của ${sourceName}, bị triệt tiêu tăng tốc và khựng đứng bánh xoay vòng mạnh!`,
+          : `${targetName || 'Mục tiêu'} trúng Tên Lửa của ${sourceName}, bị triệt tiêu tăng tốc và hãm tốc trong 1.5s!`,
         category: 'combat',
         tone: 'text-rose-500 border-rose-500/40 bg-rose-500/20',
       }
@@ -243,7 +243,7 @@ export function formatEventDetails(
       return {
         icon: '🔥',
         title: `${sourceName} kích hoạt Predator Rush! 🔥`,
-        description: 'Nội tại Menace trỗi dậy! Tấn công trúng đích kích hoạt đợt tăng tốc +20% hung hãn!',
+        description: 'Nội tại Menace trỗi dậy! Tấn công trúng đích kích hoạt đợt tăng tốc +20% trong 2.0s!',
         category: 'combat',
         tone: 'text-orange-400 border-orange-500/30 bg-orange-500/10',
       }
@@ -268,7 +268,9 @@ export function formatEventDetails(
       return {
         icon: '🔊',
         title: `${sourceName} thổi Còi Quack Horn! 🔊`,
-        description: 'Sóng xung kích cực mạnh húc dạt các vịt bơi sát cạnh và khóa trang bị (Câm Lặng 2.5s)!',
+        description: event.type === 'WILD_HORN_USED'
+          ? 'Sóng xung kích húc dạt các vịt bơi sát cạnh!'
+          : 'Sóng xung kích húc dạt các vịt bơi sát cạnh; câm lặng 0.5s nếu mục tiêu chưa miễn câm lặng!',
         category: 'combat',
         tone: 'text-purple-400 border-purple-500/30 bg-purple-500/10',
       }
@@ -277,7 +279,7 @@ export function formatEventDetails(
       return {
         icon: '🔇',
         title: `${sourceName} bị Câm Lặng (Silenced)! 🔇`,
-        description: 'Bị sóng âm khóa trang bị, không thể sử dụng item trong 2.5 giây!',
+        description: `Bị sóng âm khóa trang bị trong ${event.metadata.durationSeconds ?? 0.5} giây!`,
         category: 'combat',
         tone: 'text-purple-300 border-purple-500/30 bg-purple-500/15',
       }
@@ -309,7 +311,7 @@ export function formatEventDetails(
       return {
         icon: '🦺',
         title: `${sourceName} kích hoạt Áo Chống Sốc! 🦺`,
-        description: 'Áo giáp giảm chấn hấp thụ lực va chạm, giảm 50% thời gian hãm tốc và 60% lực húc!',
+        description: 'Áo giáp giảm chấn hấp thụ lực va chạm, rút ngắn hãm tốc còn 0.55s và giảm 60% lực húc!',
         category: 'combat',
         tone: 'text-indigo-400 border-indigo-500/30 bg-indigo-500/10',
       }

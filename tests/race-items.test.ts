@@ -287,16 +287,16 @@ test('Rocket applies two-stage stagger then recovery slow', () => {
     60,
   )
 
-  // Stage 1: Stagger (1.25s = 75 ticks, from tick 100 to 175)
+  // Stage 1: Stagger (0.85s = 51 ticks, from tick 100 to 151)
   assert.equal(runtime.slowMultiplier, ITEM_BALANCE.rocket.staggerMultiplier)
-  assert.equal(runtime.slowUntilTick, 175)
+  assert.equal(runtime.slowUntilTick, 151)
   assert.equal(itemSpeedMultiplier(runtime, 110), ITEM_BALANCE.rocket.staggerMultiplier)
 
-  // Stage 2: Recovery slow (0.85s = 51 ticks, from tick 175 to 226)
-  assert.equal(itemSpeedMultiplier(runtime, 180), ITEM_BALANCE.rocket.recoverySlowMultiplier)
+  // Stage 2: Recovery slow (0.65s = 39 ticks, from tick 151 to 190)
+  assert.equal(itemSpeedMultiplier(runtime, 151), ITEM_BALANCE.rocket.recoverySlowMultiplier)
 
-  // Stage 3: Fully recovered after tick 226
-  assert.equal(itemSpeedMultiplier(runtime, 230), 1.0)
+  // Stage 3: Fully recovered at tick 190
+  assert.equal(itemSpeedMultiplier(runtime, 190), 1.0)
 })
 
 test('Rocket breaks active speed boost before applying slow', () => {

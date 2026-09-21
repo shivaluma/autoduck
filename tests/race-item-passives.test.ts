@@ -156,7 +156,7 @@ test('Menace reduces arm progress for offensive items', () => {
   assert.ok(!candidates2.some((c) => c.itemId === 'HOMING_ROCKET'), 'Mixed should NOT be armed at progress 0.23')
 })
 
-test('Quack Horn dispels active speed boost (Draft/Paddle) and silences victims for 2.5 seconds', () => {
+test('Quack Horn dispels active speed boost (Draft/Paddle) and silences victims for 0.5 seconds', () => {
   const cfg = dummyConfig([
     { playerId: 'duck-1', itemIds: ['HOMING_ROCKET', 'QUACK_HORN'], source: 'PLAYER' },
     { playerId: 'duck-2', itemIds: ['NITRO', 'DRAFT_FIN'], source: 'PLAYER' },
@@ -266,7 +266,7 @@ test('Silenced ducks cannot evaluate or execute prep items or reactive defense',
   assert.equal(executePrepAction(candidate, itemState, ducks[0]!, ducks, 100, 60, () => undefined), false)
 })
 
-test('Horn AI prioritizes dispelling boosting targets and benefits from expanded radius', () => {
+test('Horn AI values removable boosts within configured radius', () => {
   const cfg = dummyConfig([
     { playerId: 'duck-1', itemIds: ['HOMING_ROCKET', 'QUACK_HORN'], source: 'PLAYER' }, // Menace
     { playerId: 'duck-2', itemIds: ['NITRO', 'DRAFT_FIN'], source: 'PLAYER' },
@@ -275,9 +275,7 @@ test('Horn AI prioritizes dispelling boosting targets and benefits from expanded
   const itemState = createItemRaceState(cfg)
   const runtime2 = itemState.byPlayer.get('duck-2')!
 
-  // Position duck-2 at expanded progress distance (0.05) and lateral offset (0.45)
-  // Base progressRadius * 1.5 = 0.040 * 1.5 = 0.060
-  // Base lateralRadius * 1.5 = 0.48 * 1.5 = 0.72
+  // Position duck-2 within the configured progress and lateral radius.
   const ducks = [
     { playerId: 'duck-1', progress: 0.50, lateralOffset: 0.0, lateralVelocity: 0, currentRank: 2, finished: false },
     { playerId: 'duck-2', progress: 0.54, lateralOffset: 0.45, lateralVelocity: 0, currentRank: 1, finished: false },
@@ -302,12 +300,50 @@ test('Horn AI prioritizes dispelling boosting targets and benefits from expanded
   // Without boost on duck-2
   const candidatesWithoutBoost = evaluatePrepCandidates(evalCtxNormal)
   const hornCand1 = candidatesWithoutBoost.find((c) => c.itemId === 'QUACK_HORN')
-  assert.ok(hornCand1, 'Horn should detect duck-2 in expanded radius')
+  assert.ok(hornCand1, 'Horn should detect duck-2 in configured radius')
 
-  // With active Nitro boost on duck-2
-  tryApplyPrepSpeedBoost(runtime2, 'duck-2', 'NITRO', 1.15, 1.5, 90, 60, () => undefined)
+  // With a removable Draft Fin boost on duck-2
+  tryApplyPrepSpeedBoost(runtime2, 'duck-2', 'DRAFT_FIN', 1.15, 1.5, 90, 60, () => undefined)
   const candidatesWithBoost = evaluatePrepCandidates(evalCtxNormal)
   const hornCand2 = candidatesWithBoost.find((c) => c.itemId === 'QUACK_HORN')
   assert.ok(hornCand2, 'Horn should detect boosting duck-2')
   assert.ok(hornCand2.score > hornCand1.score, 'Horn score should be significantly higher when target is actively boosting')
+})
+
+
+test('EMP cannot refresh silence and guarantees two seconds of recovery', () => {
+  const cfg = dummyConfig(cfgLoadouts())
+  const state = createItemRaceState(cfg)
+  const ducks = cfg.players.map((p, i) => ({ playerId: p.playerId, progress: 0.5 + i * 0.001, lateralOffset: 0, lateralVelocity: 0, currentRank: 4 - i, finished: false }))
+  const victim = state.byPlayer.get('duck-4')!
+  const events: number[] = []
+  const use = (id: string, tick: number) => {
+    // Reset geometry so only silence protection determines the outcome.
+    ducks.forEach(d => { d.lateralOffset = 0 })
+    return executePrepAction({ playerId: id, itemKey: 'prep:QUACK_HORN', itemId: 'QUACK_HORN', source: 'PREP', action: 'USE', score: 100, reason: 'OPPORTUNITY' }, state, ducks.find(d => d.playerId === id)!, ducks, tick, 60,
+      (type, source) => { if (type === 'ITEM_SILENCED' && source === 'duck-4') events.push(tick) })
+  }
+  assert.equal(use('duck-1', 100), true)
+  assert.equal(victim.silencedUntilTick, 130)
+  assert.equal(victim.silenceImmuneUntilTick, 250)
+  assert.equal(use('duck-2', 130), true)
+  assert.equal(victim.silencedUntilTick, 130)
+  assert.equal(use('duck-3', 250), true)
+  assert.equal(victim.silencedUntilTick, 280)
+  assert.deepEqual(events, [100, 250])
+})
+
+function cfgLoadouts(): RaceConfig['loadouts'] {
+  return ['duck-1', 'duck-2', 'duck-3'].map(playerId => ({ playerId, itemIds: ['QUACK_HORN'], source: 'PLAYER' }))
+}
+
+test('EMP execution rejects targets outside the configured radius', () => {
+  const cfg = dummyConfig(cfgLoadouts())
+  const state = createItemRaceState(cfg)
+  const ducks = [
+    { playerId: 'duck-1', progress: 0.5, lateralOffset: 0, lateralVelocity: 0, currentRank: 2, finished: false },
+    { playerId: 'duck-4', progress: 0.56, lateralOffset: 0, lateralVelocity: 0, currentRank: 1, finished: false },
+  ]
+  assert.equal(executePrepAction({ playerId: 'duck-1', itemKey: 'prep:QUACK_HORN', itemId: 'QUACK_HORN', source: 'PREP', action: 'USE', score: 100, reason: 'OPPORTUNITY' }, state, ducks[0]!, ducks, 100, 60, () => undefined), false)
+  assert.equal(state.byPlayer.get('duck-1')!.usedItems.has('QUACK_HORN'), false)
 })

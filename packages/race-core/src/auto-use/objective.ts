@@ -43,14 +43,13 @@ export function buildRaceObjectiveContext(config: RaceConfig): RaceObjectiveCont
       const base = mode === 'REVERSE'
         ? Math.max(0, 100 - ((rank - 1) / Math.max(1, playerCount - 1)) * 100)
         : ((rank - 1) / Math.max(1, playerCount - 1)) * 100
-      const duckAhead = ducks
-        .filter((candidate) => !candidate.finished && candidate.currentRank < rank)
-        .sort((left, right) => right.progress - left.progress)[0]
-      const gapAhead = duckAhead ? Math.max(0, duckAhead.progress - progress) : 1
-      const duckBehind = ducks
-        .filter((candidate) => !candidate.finished && candidate.currentRank > rank)
-        .sort((left, right) => left.progress - right.progress)[0]
-      const gapBehind = duckBehind ? Math.max(0, progress - duckBehind.progress) : 1
+      let gapAhead = Infinity
+      let gapBehind = Infinity
+      for (const candidate of ducks) {
+        if (candidate.finished) continue
+        if (candidate.currentRank < rank) gapAhead = Math.min(gapAhead, Math.max(0, candidate.progress - progress))
+        if (candidate.currentRank > rank) gapBehind = Math.min(gapBehind, Math.max(0, progress - candidate.progress))
+      }
       const squeeze = gapAhead < 0.008 && gapBehind < 0.008 ? 25 : gapAhead < 0.015 ? 12 : 0
       const late = progress > 0.75 ? 10 : 0
       return Math.min(100, base + squeeze + late)
@@ -60,8 +59,8 @@ export function buildRaceObjectiveContext(config: RaceConfig): RaceObjectiveCont
       return 1
     },
     positionImprovementValue(_playerId, fromRank, toRank) {
-      if (mode === 'REVERSE') return Math.max(0, fromRank - toRank) * 12
-      return Math.max(0, toRank - fromRank) * 12
+      if (mode === 'REVERSE') return Math.max(0, toRank - fromRank) * 12
+      return Math.max(0, fromRank - toRank) * 12
     },
     offensiveTargetRankBonus(_sourceId, targetRank) {
       if (mode === 'REVERSE') {

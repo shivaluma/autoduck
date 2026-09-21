@@ -1,0 +1,14 @@
+{
+  "root": "/tmp/autoduck-before.X7EvjW",
+  "scenario": "16 players, shield-heavy pack",
+  "callsPerTrial": 100000,
+  "milliseconds": [
+    2029.078125,
+    1752.4294579999996,
+    1740.0277079999996,
+    1765.7592089999998,
+    1722.7754170000007
+  ],
+  "medianMs": 1752.4294579999996,
+  "result": "duck-15"
+}

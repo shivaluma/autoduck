@@ -60,7 +60,7 @@ export type EmitPickupEvent = (type: RaceEventType, sourcePlayerId?: string, tar
 
 export interface WildUseResult {
   ok: boolean
-  reason?: 'NO_ITEM' | 'ITEM_CHANGED' | 'NO_TARGET' | 'NOT_USEABLE'
+  reason?: 'NO_ITEM' | 'ITEM_CHANGED' | 'NO_TARGET' | 'NOT_USEABLE' | 'SILENCED'
   targetPlayerId?: string
 }
 
@@ -454,6 +454,7 @@ export function activateWildItem(itemState: ItemRaceState, ducks: ItemDuckState[
   const runtime = itemState.byPlayer.get(input.playerId)
   if (!duck || !runtime?.wildItem) return { ok: false, reason: 'NO_ITEM' }
   if (runtime.wildItem.instanceId !== input.wildItemInstanceId) return { ok: false, reason: 'ITEM_CHANGED' }
+  if (tick < runtime.silencedUntilTick) return { ok: false, reason: 'SILENCED' }
   const definition = getWildItem(runtime.wildItem.itemId)
   if (definition.behavior !== 'HELD') return { ok: false, reason: 'NOT_USEABLE' }
   const handler = HELD_HANDLERS[runtime.wildItem.itemId as keyof typeof HELD_HANDLERS]

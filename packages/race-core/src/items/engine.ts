@@ -29,6 +29,7 @@ export interface DuckItemRuntime extends ItemDefenseState {
   boostUntilTick: number
   bubbleUntilTick: number
   silencedUntilTick: number
+  silenceImmuneUntilTick?: number
   wildItem: { instanceId: string; itemId: WildItemId; acquiredAtTick: number } | null
   regularPickupCount: number
   wildBubbleAvailable: boolean
@@ -129,6 +130,7 @@ export function createItemRaceState(config: RaceConfig): ItemRaceState {
         bubbleAvailable: false,
         bubbleUntilTick: 0,
         silencedUntilTick: 0,
+        silenceImmuneUntilTick: 0,
         featherAvailable: itemIds.includes('FEATHER'),
         shockAbsorberAvailable: itemIds.includes('SHOCK_ABSORBER'),
         itemImmunityUntilTick: 0,

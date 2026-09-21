@@ -1041,7 +1041,7 @@ export function PhaserRaceCanvas({
             BOOST_BROKEN: `💥 ${source} BỊ BẺ GÃY TĂNG TỐC!`,
             SHOCK_ABSORBER_PROC: `🦺 ${target || source} kích hoạt Áo Chống Sốc`,
             HORN_USED: `🔊 ${source} THỔI CÒI! Khóa item đối thủ`,
-            ITEM_SILENCED: `🔇 ${source} bị Câm Lặng (2.5s)`,
+            ITEM_SILENCED: `🔇 ${source} bị Câm Lặng (${raceEvent.metadata.durationSeconds ?? 0.5}s)`,
             PREDATOR_RUSH_STARTED: `🔥 ${source} PREDATOR RUSH (+20% tốc độ)!`,
             FEATHER_DODGED: `🪶 ${source} NÉ ĐÒN BẰNG LÔNG VŨ!`,
             BUBBLE_SHIELD_ACTIVATED: `🫧 ${source} bật Khiên Bong Bóng`,

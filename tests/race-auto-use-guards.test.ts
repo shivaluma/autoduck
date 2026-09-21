@@ -283,10 +283,10 @@ test('Rocket AI rejects targets projected to cross finish line before impact', (
     loadouts: [],
   }
   const itemState = createItemRaceState(config)
-  // Target is at progress 0.99 with boost (will cross finish line in 0.1s while rocket takes 0.5s)
+  // Target finishes in ~0.22s; rocket needs ~0.41s including its hit radius.
   const ducks: ItemDuckState[] = [
     { playerId: 'duck-1', progress: 0.88, lateralOffset: 0, lateralVelocity: 0, currentRank: 2, finished: false },
-    { playerId: 'duck-2', progress: 0.99, lateralOffset: 0, lateralVelocity: 0, currentRank: 1, finished: false },
+    { playerId: 'duck-2', progress: 0.995, lateralOffset: 0, lateralVelocity: 0, currentRank: 1, finished: false },
   ]
   const targetRuntime = itemState.byPlayer.get('duck-2')!
   targetRuntime.boostMultiplier = 1.3
@@ -310,3 +310,52 @@ test('Rocket AI rejects targets projected to cross finish line before impact', (
   assert.equal(target, null, 'Should reject target that will finish before impact')
 })
 
+
+function targetContext() {
+  const config: RaceConfig = {
+    raceId: 'target-regression', seed: 'ab'.repeat(32), protocolVersion: '1.0.0', engineVersion: '1.2.0', balanceVersion: 'S3.12', trackVersion: 'river-01-v2', tickRate: 60,
+    players: [1, 2, 3].map(i => ({ playerId: `duck-${i}`, name: `${i}` })), loadouts: [],
+  }
+  return {
+    tick: 100, tickRate: 60, objective: buildRaceObjectiveContext(config), itemState: createItemRaceState(config),
+    pickupState: { hazards: [] } as never,
+    ducks: [
+      { playerId: 'duck-1', progress: 0.5, lateralOffset: 0, lateralVelocity: 0, currentRank: 3, finished: false },
+      { playerId: 'duck-2', progress: 0.55, lateralOffset: 0, lateralVelocity: 0, currentRank: 2, finished: false },
+      { playerId: 'duck-3', progress: 0.57, lateralOffset: 0, lateralVelocity: 0, currentRank: 1, finished: false },
+    ],
+    playerId: 'duck-1', secondsUntilNextPickupZone: 999, ghostPlayerIds: new Set<string>(), prepAutoUseEnabled: true, wildAutoUseEnabled: false,
+  }
+}
+
+test('rocket abandons a preferred target when a fresh shield makes another target materially better', () => {
+  const ctx = targetContext()
+  assert.equal(resolveRocketTarget(ctx, 'PREP'), 'duck-2')
+  const target = ctx.itemState.byPlayer.get('duck-2')!
+  target.bubbleAvailable = true
+  target.bubbleUntilTick = 1000
+  assert.equal(resolveRocketTarget(ctx, 'PREP', 'duck-2'), 'duck-3')
+})
+
+test('rocket treats a shield expiring before impact as unprotected', () => {
+  const ctx = targetContext()
+  const target = ctx.itemState.byPlayer.get('duck-2')!
+  target.bubbleAvailable = true
+  target.bubbleUntilTick = 101
+  assert.equal(resolveRocketTarget(ctx, 'PREP'), 'duck-2')
+})
+
+test('danger uses adjacent rivals rather than the leader and last place', () => {
+  const ctx = targetContext()
+  const ducks = [
+    { ...ctx.ducks[0]!, progress: 0.5, currentRank: 3 },
+    { ...ctx.ducks[1]!, progress: 0.505, currentRank: 2 },
+    { ...ctx.ducks[2]!, progress: 0.8, currentRank: 1 },
+    { ...ctx.ducks[0]!, playerId: 'duck-4', progress: 0.495, currentRank: 4 },
+    { ...ctx.ducks[0]!, playerId: 'duck-5', progress: 0.2, currentRank: 5 },
+  ]
+  const config: RaceConfig = { raceId: 'danger', seed: 'ab'.repeat(32), protocolVersion: '1', engineVersion: '1', balanceVersion: '1', trackVersion: 'river-01-v2', tickRate: 60, players: ducks.map(d => ({ playerId: d.playerId, name: d.playerId })), loadouts: [] }
+  const objective = buildRaceObjectiveContext(config)
+  assert.equal(objective.dangerScore('duck-1', 3, 0.5, ducks), 75)
+  assert.equal(objective.positionImprovementValue('duck-1', 5, 3), 24)
+})

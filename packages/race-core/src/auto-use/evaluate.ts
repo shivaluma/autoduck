@@ -3,7 +3,7 @@ import { CORE_BALANCE } from '../config'
 import { ITEM_BALANCE } from '../items/config'
 import { PICKUP_BALANCE } from '../pickups/config'
 import type { ItemDuckState, ItemRaceState } from '../items/engine'
-import { slipstreamReady } from '../items/engine'
+import { itemSpeedMultiplier, slipstreamReady } from '../items/engine'
 import type { PickupRaceState } from '../pickups/engine'
 import { AUTO_USE_CONFIG } from './config'
 import type { AutoUseCandidate, AutoUseCandidateDraft, RaceObjectiveContext } from './types'
@@ -103,7 +103,7 @@ export interface RocketImpactForecast {
   expectedImpactValue: number
 }
 
-function rocketTargets(ctx: EvaluationContext, kind: 'PREP' | 'WILD') {
+function rocketTargets(ctx: EvaluationContext, kind: 'PREP' | 'WILD', preferredTargetId?: string) {
   const source = duckById(ctx.ducks, ctx.playerId)
   const maxDistance = kind === 'PREP'
     ? (source.progress >= ITEM_BALANCE.autoUse.endGameBurnProgress
@@ -127,127 +127,132 @@ function rocketTargets(ctx: EvaluationContext, kind: 'PREP' | 'WILD') {
     ? (source.progress >= ITEM_BALANCE.autoUse.endGameBurnProgress ? 2.5 : 1.6)
     : (source.progress >= PICKUP_BALANCE.autoUse.forceBurnProgress ? 2.2 : (source.progress >= PICKUP_BALANCE.autoUse.endGameBurnProgress ? 1.8 : 1.2))
 
-  return activeDucks(ctx.ducks)
-    .filter((candidate) => candidate.playerId !== source.playerId && candidate.progress > source.progress)
-    .filter((candidate) => !ctx.ghostPlayerIds?.has(candidate.playerId))
-    .filter((candidate) => !ctx.objective.isTeammate(source.playerId, candidate.playerId))
-    .filter((candidate) => candidate.progress - source.progress <= maxDistance)
-    .filter((candidate) => ctx.tick >= ctx.itemState.byPlayer.get(candidate.playerId)!.rocketProtectionUntilTick)
-    .map((target) => {
-      const targetRuntime = ctx.itemState.byPlayer.get(target.playerId)!
-      const penalty = ctx.objective.offensiveTargetPenalty(source.playerId, target.playerId)
-      if (!Number.isFinite(penalty)) return null
+  const impactConfig = kind === 'PREP' ? ITEM_BALANCE.rocket : PICKUP_BALANCE.miniRocket
+  const slowCost = (c: typeof impactConfig | typeof ITEM_BALANCE.shockAbsorber) =>
+    (1 - c.staggerMultiplier) * c.staggerDurationSeconds + (1 - c.recoverySlowMultiplier) * c.recoveryDurationSeconds
+  const mitigatedCostRatio = Math.min(1, slowCost(ITEM_BALANCE.shockAbsorber) / slowCost(impactConfig))
 
-      // Kinematics & Time-To-Impact (TTI) Forecast
-      const gap = target.progress - source.progress
-      const targetCurrentSpeedMult = ctx.tick < targetRuntime.boostUntilTick && targetRuntime.boostMultiplier > 1
-        ? targetRuntime.boostMultiplier
-        : (ctx.tick < targetRuntime.slowUntilTick && targetRuntime.slowMultiplier < 1 ? targetRuntime.slowMultiplier : 1.0)
-      const targetEstimatedSpeed = baseSpeed() * targetCurrentSpeedMult
-      const relativeSpeed = Math.max(0.02, projectileSpeed - targetEstimatedSpeed)
-      const tti = gap / relativeSpeed
+  const eligible = ctx.ducks.filter(target => !target.finished && target.playerId !== source.playerId
+    && target.progress > source.progress && !ctx.ghostPlayerIds.has(target.playerId)
+    && !ctx.objective.isTeammate(source.playerId, target.playerId))
+  type ScoredTarget = { target: ItemDuckState; score: number; forecast: RocketImpactForecast }
+  let best: ScoredTarget | undefined
+  let preferred: ScoredTarget | undefined
+  for (const target of eligible) {
+    if (target.progress - source.progress > maxDistance) continue
+    const targetRuntime = ctx.itemState.byPlayer.get(target.playerId)!
+    const penalty = ctx.objective.offensiveTargetPenalty(source.playerId, target.playerId)
+    if (!Number.isFinite(penalty)) continue
 
-      // Gate: Reject if projectile cannot reach target in lifetime or acceptable window
-      if (tti > lifetimeSeconds || tti > maxAcceptableTTI) return null
+    if (ctx.tick < targetRuntime.rocketProtectionUntilTick) continue
 
-      // Gate: Reject if target is projected to finish race before projectile arrives
-      const projectedTargetProgressAtImpact = target.progress + targetEstimatedSpeed * tti
-      if (projectedTargetProgressAtImpact >= 1.0) return null
+    // Kinematics & Time-To-Impact (TTI) Forecast
+    const gap = target.progress - source.progress
+    const targetEstimatedSpeed = baseSpeed() * itemSpeedMultiplier(targetRuntime, ctx.tick)
+    const relativeSpeed = projectileSpeed - targetEstimatedSpeed
+    if (relativeSpeed <= 0) continue
+    const hitRadius = kind === 'PREP' ? ITEM_BALANCE.rocket.hitRadius : PICKUP_BALANCE.miniRocket.hitRadius
+    const tti = Math.max(ITEM_BALANCE.rocket.armingTicks / ctx.tickRate, (gap - hitRadius) / relativeSpeed)
+    const impactTick = ctx.tick + Math.ceil(tti * ctx.tickRate)
 
-      // Hit confidence degrades gracefully with flight duration
-      const hitConfidence = clamp(1 - (tti / lifetimeSeconds) * 0.6, 0.25, 1.0)
+    // Gate: Reject if projectile cannot reach target in lifetime or acceptable window
+    if (tti > lifetimeSeconds || tti > maxAcceptableTTI) continue
 
-      // Defense analysis:
-      // Active bubble or unspent prep bubble provides hard block (damage probability = 0)
-      const hasActiveBubble = (targetRuntime.bubbleAvailable && (targetRuntime.bubbleUntilTick === undefined || ctx.tick < targetRuntime.bubbleUntilTick))
-        || (targetRuntime.wildBubbleAvailable && ctx.tick < (targetRuntime.wildBubbleUntilTick ?? 0))
-      const hasPrepBubbleInInventory = hasUnusedPrep(targetRuntime, 'BUBBLE_SHIELD')
-      const hasBubbleProtection = hasActiveBubble || hasPrepBubbleInInventory
+    // Gate: Reject if target is projected to finish race before projectile arrives
+    const projectedTargetProgressAtImpact = target.progress + targetEstimatedSpeed * tti
+    if (projectedTargetProgressAtImpact >= 1.0) continue
 
-      const damageProbability = hasBubbleProtection ? 0 : 1.0
-      const defenseMitigation = targetRuntime.shockAbsorberAvailable ? 0.45 : 1.0
-      // Feather does NOT block Rocket (0 penalty)
+    // Hit confidence degrades gracefully with flight duration
+    const hitConfidence = clamp(1 - (tti / lifetimeSeconds) * 0.6, 0.25, 1.0)
 
-      // Expected Damage Value
-      const rawImpact = 34
-      const expectedDamageValue = rawImpact * hitConfidence * damageProbability * defenseMitigation
+    // Defense analysis:
+    // Active bubble or unspent prep bubble provides hard block (damage probability = 0)
+    const hasActiveBubble = (targetRuntime.bubbleAvailable && (targetRuntime.bubbleUntilTick === undefined || impactTick < targetRuntime.bubbleUntilTick))
+      || (targetRuntime.wildBubbleAvailable && impactTick < (targetRuntime.wildBubbleUntilTick ?? 0))
+    const hasPrepBubbleInInventory = hasUnusedPrep(targetRuntime, 'BUBBLE_SHIELD')
+      && Math.max(ctx.tick, targetRuntime.silencedUntilTick) + Math.ceil(AUTO_USE_CONFIG.reactionDelayMaxSeconds * ctx.tickRate) < impactTick
+    const hasBubbleProtection = hasActiveBubble || hasPrepBubbleInInventory
 
-      // Expected Boost Break Value at Impact
-      const impactTick = ctx.tick + Math.round(tti * ctx.tickRate)
-      const boostRemainingTicks = Math.max(0, targetRuntime.boostUntilTick - impactTick)
-      let expectedBoostBreakValue = 0
-      if (boostRemainingTicks > 0 && targetRuntime.boostMultiplier > 1) {
-        const boostSecondsRemaining = boostRemainingTicks / ctx.tickRate
-        const breakEfficiency = kind === 'PREP' ? 1.0 : 0.5
-        expectedBoostBreakValue = clamp(boostSecondsRemaining * 14 * (targetRuntime.boostMultiplier - 1) * 35 * breakEfficiency, 0, 24) * damageProbability * hitConfidence
+    const damageProbability = hasBubbleProtection || impactTick < targetRuntime.itemImmunityUntilTick ? 0 : 1.0
+    const defenseMitigation = targetRuntime.shockAbsorberAvailable
+      ? mitigatedCostRatio : 1
+    // Feather does NOT block Rocket (0 penalty)
+
+    // Expected Damage Value
+    const rawImpact = 34
+    const expectedDamageValue = rawImpact * hitConfidence * damageProbability * defenseMitigation
+
+    // Expected Boost Break Value at Impact
+    const boostRemainingTicks = Math.max(0, targetRuntime.boostUntilTick - impactTick)
+    let expectedBoostBreakValue = 0
+    if (boostRemainingTicks > 0 && targetRuntime.boostMultiplier > 1) {
+      const boostSecondsRemaining = boostRemainingTicks / ctx.tickRate
+      const breakEfficiency = kind === 'PREP' ? 1.0 : 0.5
+      expectedBoostBreakValue = clamp(boostSecondsRemaining * 14 * (targetRuntime.boostMultiplier - 1) * 35 * breakEfficiency, 0, 24) * damageProbability * hitConfidence
+    }
+
+    // Shield Strip Value (valuable when under inventory pressure, endgame, or no other unprotected targets ahead)
+    let shieldStripValue = 0
+    if (hasBubbleProtection) {
+      const pressure = inventoryPressure(ctx)
+      const isEndGame = source.progress >= ITEM_BALANCE.autoUse.endGameBurnProgress
+      const isOnlyTargetAhead = eligible.length <= 1
+      const isLosing = ctx.objective.isCurrentlyLosing(source.playerId, source.currentRank)
+
+      let rawStrip = 6
+      if (pressure > 0 || isEndGame) {
+        rawStrip = 24
+      } else if (isOnlyTargetAhead && isLosing) {
+        rawStrip = 26
+      } else if (isOnlyTargetAhead) {
+        rawStrip = 16
       }
+      shieldStripValue = rawStrip * hitConfidence
+    }
 
-      // Shield Strip Value (valuable when under inventory pressure, endgame, or no other unprotected targets ahead)
-      let shieldStripValue = 0
-      if (hasBubbleProtection) {
-        const pressure = inventoryPressure(ctx)
-        const isEndGame = source.progress >= ITEM_BALANCE.autoUse.endGameBurnProgress
-        const otherTargetsAheadCount = activeDucks(ctx.ducks).filter(
-          (d) => d.playerId !== source.playerId && d.progress > source.progress && !ctx.objective.isTeammate(source.playerId, d.playerId) && !ctx.ghostPlayerIds?.has(d.playerId),
-        ).length
-        const isOnlyTargetAhead = otherTargetsAheadCount <= 1
-        const isLosing = ctx.objective.isCurrentlyLosing(source.playerId, source.currentRank)
+    // Objective Value
+    let objectiveValue = 0
+    objectiveValue += ctx.objective.opponentThreat(source.playerId, target.playerId) * 8
+    objectiveValue += clamp((maxDistance - gap) / maxDistance * 12, 0, 12)
+    if (gap > 0.02 && gap < maxDistance * 0.75) objectiveValue += 10
 
-        let rawStrip = 6
-        if (pressure > 0 || isEndGame) {
-          rawStrip = 24
-        } else if (isOnlyTargetAhead && isLosing) {
-          rawStrip = 26
-        } else if (isOnlyTargetAhead) {
-          rawStrip = 16
-        }
-        shieldStripValue = rawStrip * hitConfidence
-      }
+    // Only award rank advancement bonus if not REVERSE mode
+    if (ctx.objective.mode !== 'REVERSE' && ctx.objective.isCurrentlyLosing(source.playerId, source.currentRank) && target.currentRank === source.currentRank - 1) {
+      objectiveValue += 32 * damageProbability
+    }
+    objectiveValue += ctx.objective.offensiveTargetRankBonus(source.playerId, target.currentRank)
 
-      // Objective Value
-      let objectiveValue = 0
-      objectiveValue += ctx.objective.opponentThreat(source.playerId, target.playerId) * 8
-      objectiveValue += clamp((maxDistance - gap) / maxDistance * 12, 0, 12)
-      if (gap > 0.02 && gap < maxDistance * 0.75) objectiveValue += 10
+    if (source.progress >= AUTO_USE_CONFIG.progressLate) objectiveValue += 12
 
-      // Only award rank advancement bonus if not REVERSE mode
-      if (ctx.objective.mode !== 'REVERSE' && ctx.objective.isCurrentlyLosing(source.playerId, source.currentRank) && target.currentRank === source.currentRank - 1) {
-        objectiveValue += 32 * damageProbability
-      }
-      objectiveValue += ctx.objective.offensiveTargetRankBonus(source.playerId, target.currentRank)
+    let totalScore = objectiveValue + expectedDamageValue + expectedBoostBreakValue + shieldStripValue - penalty
 
-      if (source.progress >= AUTO_USE_CONFIG.progressLate) objectiveValue += 12
+    if (source.progress >= ITEM_BALANCE.autoUse.endGameBurnProgress) {
+      totalScore = Math.max(totalScore, 20 + clamp((maxDistance - gap) / maxDistance * 10, 0, 10))
+    }
 
-      let totalScore = objectiveValue + expectedDamageValue + expectedBoostBreakValue + shieldStripValue - penalty
-
-      if (source.progress >= ITEM_BALANCE.autoUse.endGameBurnProgress) {
-        totalScore = Math.max(totalScore, 20 + clamp((maxDistance - gap) / maxDistance * 10, 0, 10))
-      }
-
-      return {
-        target,
-        score: totalScore,
-        forecast: {
-          timeToImpact: tti,
-          hitConfidence,
-          damageProbability,
-          boostRemainingSeconds: boostRemainingTicks / ctx.tickRate,
-          defenseMitigation,
-          expectedImpactValue: expectedDamageValue + expectedBoostBreakValue,
-        },
-      }
-    })
-    .filter((entry): entry is { target: ItemDuckState; score: number; forecast: RocketImpactForecast } => entry !== null && entry.score > 0)
-    .sort((left, right) => right.score - left.score || left.target.playerId.localeCompare(right.target.playerId))
+    const entry: ScoredTarget = {
+      target,
+      score: totalScore,
+      forecast: {
+        timeToImpact: tti,
+        hitConfidence,
+        damageProbability,
+        boostRemainingSeconds: boostRemainingTicks / ctx.tickRate,
+        defenseMitigation,
+        expectedImpactValue: expectedDamageValue + expectedBoostBreakValue,
+      },
+    }
+    if (entry.score <= 0) continue
+    if (!best || entry.score > best.score || (entry.score === best.score && entry.target.playerId.localeCompare(best.target.playerId) < 0)) best = entry
+    if (target.playerId === preferredTargetId) preferred = entry
+  }
+  // Hysteresis prevents pointless switching while allowing materially better targets.
+  if (preferred && best && preferred.score >= best.score - 5) return [preferred]
+  return best ? [best] : []
 }
 
 export function resolveRocketTarget(ctx: EvaluationContext, kind: 'PREP' | 'WILD', preferredTargetId?: string) {
-  const targets = rocketTargets(ctx, kind)
-  if (preferredTargetId) {
-    const preferred = targets.find((entry) => entry.target.playerId === preferredTargetId)
-    if (preferred) return preferred.target.playerId
-  }
-  return targets[0]?.target.playerId ?? null
+  return rocketTargets(ctx, kind, preferredTargetId)[0]?.target.playerId ?? null
 }
 
 const OFFENSIVE_AUTO_ITEMS = new Set(['HOMING_ROCKET', 'BANANA', 'MINI_ROCKET', 'QUACK_HORN'])
@@ -557,8 +562,8 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
 
     for (const target of activeDucks(ctx.ducks)) {
       if (target.playerId === duck.playerId || ctx.ghostPlayerIds?.has(target.playerId)) continue
-      if (Math.abs(target.progress - duck.progress) > ITEM_BALANCE.horn.progressRadius * 1.5) continue
-      if (Math.abs(target.lateralOffset - duck.lateralOffset) > ITEM_BALANCE.horn.lateralRadius * 1.5) continue
+      if (Math.abs(target.progress - duck.progress) > ITEM_BALANCE.horn.progressRadius) continue
+      if (Math.abs(target.lateralOffset - duck.lateralOffset) > ITEM_BALANCE.horn.lateralRadius) continue
       
       const isTeammate = ctx.objective.isTeammate(duck.playerId, target.playerId)
       if (isTeammate) {
@@ -577,8 +582,8 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
       }
       netValue += ctx.objective.offensiveTargetRankBonus(duck.playerId, target.currentRank) * 0.25
 
-      // Dispel active speed boosts (Nitro, Tailwind, Paddle, Draft) -> EMP Dispel
-      if (targetRuntime && (targetRuntime.boostMultiplier > 1 || targetRuntime.activeSpeedItemId !== null)) {
+      // Horn breaks active non-Nitro boosts only.
+      if (targetRuntime && ctx.tick < targetRuntime.boostUntilTick && targetRuntime.boostMultiplier > 1 && targetRuntime.activeSpeedItemId !== 'NITRO') {
         netValue += 20
       }
 
@@ -588,8 +593,8 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
       }
 
       // Silence lockout value: suppress enemies with unspent prep items
-      if (targetRuntime && targetRuntime.itemIds.some((id) => !targetRuntime.usedItems.has(id))) {
-        netValue += 8
+      if (targetRuntime && ctx.tick >= (targetRuntime.silenceImmuneUntilTick ?? 0) && ctx.tick >= targetRuntime.silencedUntilTick && targetRuntime.itemIds.some((id) => !targetRuntime.usedItems.has(id))) {
+        netValue += 8 * ITEM_BALANCE.horn.silenceDurationSeconds / 2.5
       }
     }
 
@@ -599,7 +604,7 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
         netValue += 12 * (targetsCount - 1)
       }
 
-      // MENACE Synergy: grants Predator Rush (+10% speed for 2.2s) when hitting any target
+      // MENACE synergy rewards hitting a target with Predator Rush.
       if (runtime.loadoutCombo === 'MENACE' && targetsCount > 0) {
         netValue += 14
         if (duck.currentRank >= 2) netValue += 6
@@ -812,7 +817,7 @@ export function evaluateWildCandidates(ctx: EvaluationContext): AutoUseCandidate
       }
       netValue += ctx.objective.offensiveTargetRankBonus(duck.playerId, target.currentRank) * 0.22
 
-      if (targetRuntime && (targetRuntime.boostMultiplier > 1 || targetRuntime.activeSpeedItemId !== null)) {
+      if (targetRuntime && ctx.tick < targetRuntime.boostUntilTick && targetRuntime.boostMultiplier > 1 && targetRuntime.activeSpeedItemId !== 'NITRO') {
         netValue += 16
       }
       if (targetRuntime && targetRuntime.draftSlipstreamTicks > 10) {

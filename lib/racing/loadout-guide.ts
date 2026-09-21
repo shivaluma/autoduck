@@ -6,7 +6,7 @@ export type LoadoutPairingTier = 'recommended' | 'solid' | 'niche' | 'hybrid'
 const PURE_COMBO_NOTES: Record<'SPEED' | 'DEFENSE' | 'ATTACK', string> = {
   SPEED: 'SPEED DEMON — Lối chơi bứt tốc áp đảo: tối ưu hóa bám đuôi lướt gió và bứt phá về đích. Nhược điểm: không có phòng thủ, dễ bị Tên Lửa ngắt đà.',
   DEFENSE: 'FORTRESS — Lối chơi bo thủ kiên cố: kích hoạt Fortress Surge (+8% tốc độ khi thoát hiểm, giảm 30% lực va chạm) và vô hiệu hóa cạm bẫy. Nhược điểm: tốc độ cơ bản không quá nổi trội.',
-  ATTACK: 'MENACE — Lối chơi áp đảo khống chế: phát sóng EMP khóa item, triệt tiêu tăng tốc đối thủ và nhận Predator Rush (+20% tốc độ trong 2.2s) khi đánh trúng mục tiêu.',
+  ATTACK: 'MENACE — Lối chơi áp đảo khống chế: phát sóng EMP khóa item 0.5s, phá boost Draft/Paddle của đối thủ và nhận Predator Rush (+20% tốc độ trong 2.0s) khi đánh trúng mục tiêu.',
 }
 
 const HYBRID_NOTES: ReadonlyArray<{ classes: readonly [string, string]; message: string }> = [

@@ -168,7 +168,7 @@ export const LOADOUT_CONFIG = {
       cost: 2,
       category: 'major' as const,
       itemClass: 'ATTACK' as const,
-      description: 'Bắn tên lửa tầm nhiệt nhắm đối thủ phía trước, triệt tiêu tăng tốc và khựng cứng xoay vòng tại chỗ trong 2.1s (1 lần/trận).',
+      description: 'Bắn tên lửa tầm nhiệt nhắm đối thủ phía trước, triệt tiêu tăng tốc và hãm tốc còn 15% trong 0.85s rồi hồi phục ở 50% trong 0.65s (1 lần/trận).',
     },
     {
       id: 'DRAFT_FIN',
@@ -204,7 +204,7 @@ export const LOADOUT_CONFIG = {
       cost: 1,
       category: 'minor' as const,
       itemClass: 'DEFENSE' as const,
-      description: 'Áo giáp chống sốc (Nội tại), giảm hơn 50% mức độ và thời gian khựng tốc từ Tên Lửa, giảm 60% lực đẩy từ Còi Quack Horn.',
+      description: 'Áo giáp chống sốc (Nội tại), giảm quãng đường mất do hãm tốc của Tên Lửa; còn 50% tốc độ trong 0.25s rồi 80% trong 0.3s, giảm 60% lực đẩy từ Còi Quack Horn.',
     },
     {
       id: 'BANANA',
@@ -222,7 +222,7 @@ export const LOADOUT_CONFIG = {
       cost: 1,
       category: 'minor' as const,
       itemClass: 'ATTACK' as const,
-      description: 'Thổi còi xung kích húc dạt mạnh đối thủ bơi sát cạnh, triệt tiêu tăng tốc và khóa dùng item (Câm Lặng) trong 2.5s.',
+      description: 'Thổi còi xung kích húc dạt mạnh đối thủ bơi sát cạnh, phá boost (trừ Nitro) và khóa dùng item (Câm Lặng) trong 0.5s; sau đó mục tiêu miễn câm lặng 2s.',
     },
   ],
 }
@@ -278,7 +278,7 @@ export const WILD_ITEMS_LIST = [
     displayName: 'Mini Rocket',
     icon: '🚀',
     typeText: 'Tự dùng khi có mục tiêu',
-    description: 'Bắn tên lửa mini phá tăng tốc và hãm tốc độ đối thủ phía trước còn 50% trong 0.8 giây.',
+    description: 'Tên lửa mini cắt 50% thời gian boost còn lại, hãm tốc còn 35% trong 0.4s rồi 80% trong 0.35s.',
   },
   {
     id: 'BANANA',

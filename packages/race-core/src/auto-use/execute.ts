@@ -134,8 +134,8 @@ export function executePrepAction(
       if (!hasUnused(runtime, 'QUACK_HORN')) return false
       const nearby = ducks.filter((target) => target.playerId !== duck.playerId && !target.finished
         && !itemState.ghostPlayerIds.has(target.playerId)
-        && Math.abs(target.progress - duck.progress) <= ITEM_BALANCE.horn.progressRadius * 1.5
-        && Math.abs(target.lateralOffset - duck.lateralOffset) <= ITEM_BALANCE.horn.lateralRadius * 1.5)
+        && Math.abs(target.progress - duck.progress) <= ITEM_BALANCE.horn.progressRadius
+        && Math.abs(target.lateralOffset - duck.lateralOffset) <= ITEM_BALANCE.horn.lateralRadius)
       if (nearby.length === 0) return false
       const teammates = itemState.teammatesByPlayer?.get(duck.playerId)
       if (teammates && teammates.size > 0 && nearby.some((target) => teammates.has(target.playerId))) {
@@ -161,14 +161,17 @@ export function executePrepAction(
         defense.draftSlipstreamTicks = 0
         defense.draftTargetPlayerId = null
 
-        // EMP: Dispel active speed boosts and silence item usage for 3.0s
+        // A short interrupt followed by guaranteed recovery; repeated horns cannot refresh it.
         breakActiveSpeedBoost(defense, tick, tickRate, emit, duck.playerId, target.playerId, 'QUACK_HORN')
-        defense.silencedUntilTick = Math.max(defense.silencedUntilTick, tick + Math.round(ITEM_BALANCE.horn.silenceDurationSeconds * tickRate))
-        emit('ITEM_SILENCED', target.playerId, duck.playerId, {
-          durationSeconds: ITEM_BALANCE.horn.silenceDurationSeconds,
-          untilTick: defense.silencedUntilTick,
-          source: 'QUACK_HORN',
-        })
+        if (tick >= Math.max(defense.silencedUntilTick, defense.silenceImmuneUntilTick ?? 0)) {
+          defense.silencedUntilTick = tick + Math.round(ITEM_BALANCE.horn.silenceDurationSeconds * tickRate)
+          defense.silenceImmuneUntilTick = defense.silencedUntilTick + Math.round(ITEM_BALANCE.horn.silenceRecoverySeconds * tickRate)
+          emit('ITEM_SILENCED', target.playerId, duck.playerId, {
+            durationSeconds: ITEM_BALANCE.horn.silenceDurationSeconds,
+            untilTick: defense.silencedUntilTick,
+            source: 'QUACK_HORN',
+          })
+        }
 
         const direction = target.lateralOffset === duck.lateralOffset
           ? (target.playerId.localeCompare(duck.playerId) < 0 ? -1 : 1)

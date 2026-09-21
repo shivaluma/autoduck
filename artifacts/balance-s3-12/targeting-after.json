@@ -1,0 +1,14 @@
+{
+  "root": ".",
+  "scenario": "16 players, shield-heavy pack",
+  "callsPerTrial": 100000,
+  "milliseconds": [
+    490.81545900000003,
+    539.5385840000001,
+    473.0958750000002,
+    531.130917,
+    474.77599999999984
+  ],
+  "medianMs": 490.81545900000003,
+  "result": "duck-15"
+}
