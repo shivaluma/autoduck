@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-24 -56 560 560" width="100%" height="100%" fill="none">
+<g transform="translate(84 430) scale(1.35) translate(-84 -430)"><g id="ripples"><ellipse cx="70" cy="432" rx="60" ry="10.799999999999999" fill="none" stroke="#BAE6FD" stroke-width="5" opacity="0.8"/>
+<ellipse cx="-4" cy="438" rx="40" ry="7.199999999999999" fill="none" stroke="#BAE6FD" stroke-width="5" opacity="0.6"/>
+<ellipse cx="150" cy="444" rx="34" ry="6.12" fill="none" stroke="#BAE6FD" stroke-width="5" opacity="0.5"/>
+<path d="M20 420 C34 414 48 414 60 420" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/></g></g>
+</svg>

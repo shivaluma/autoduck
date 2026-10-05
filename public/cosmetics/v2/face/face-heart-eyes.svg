@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-24 -56 560 560" width="100%" height="100%" fill="none">
+<g id="heart-eyes"><path d="M330 169.8 C299.2 147.8 312.4 123.6 330 140.1 C347.6 123.6 360.8 147.8 330 169.8 Z" fill="#FF3D7F" stroke="#1B132B" stroke-width="4" stroke-linejoin="round"></path>
+<path d="M390 170.4 C367.6 154.4 377.2 136.8 390 148.8 C402.8 136.8 412.4 154.4 390 170.4 Z" fill="#FF3D7F" stroke="#1B132B" stroke-width="4" stroke-linejoin="round"></path>
+<path d="M318 136 c4 -6 10 -6 12 -2 Z M382 146 c3 -4 7 -4 9 -1 Z" fill="#FFFFFF" opacity="0.9"/>
+<g><path d="M444 90.1 C431.4 81.1 436.8 71.2 444 77.95 C451.2 71.2 456.6 81.1 444 90.1 Z" fill="#FF78A8" stroke="#1B132B" stroke-width="4" stroke-linejoin="round"></path><animateTransform attribute-name="transform" type="translate" values="0 6; 0 -10; 0 6" dur="2.6s" repeat-count="indefinite" additive="sum"/><animate attribute-name="opacity" values="0;1;0" dur="2.6s" repeat-count="indefinite" calc-mode="spline" key-splines="0.45 0 0.55 1;0.45 0 0.55 1"/></g>
+<g><path d="M468 121.4 C459.6 115.4 463.2 108.8 468 113.3 C472.8 108.8 476.4 115.4 468 121.4 Z" fill="#FF78A8" stroke="#1B132B" stroke-width="4" stroke-linejoin="round"></path><animateTransform attribute-name="transform" type="translate" values="0 6; 0 -10; 0 6" dur="2.6s" repeat-count="indefinite" additive="sum" begin="1.3s"/><animate attribute-name="opacity" values="0;1;0" dur="2.6s" repeat-count="indefinite" calc-mode="spline" key-splines="0.45 0 0.55 1;0.45 0 0.55 1" begin="1.3s"/></g></g>
+</svg>

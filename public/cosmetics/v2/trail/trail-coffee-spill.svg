@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-24 -56 560 560" width="100%" height="100%" fill="none">
+<g transform="translate(84 430) scale(1.35) translate(-84 -430)"><g id="coffee-spill"><path d="M120 436 C90 420 40 424 10 430 C-20 436 -20 452 4 454 C40 458 100 456 126 448 C134 444 132 440 120 436 Z" fill="#7A4A26" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M20 436 C50 430 90 428 110 434 C80 436 50 438 20 436 Z" fill="#C79A6B" opacity="0.8"/>
+<circle cx="-14" cy="418" r="6" fill="#7A4A26" stroke="#1B132B" stroke-width="3"/>
+<circle cx="40" cy="408" r="4" fill="#7A4A26" stroke="#1B132B" stroke-width="3"/>
+<ellipse cx="70" cy="440" rx="10" ry="4" fill="#FFFFFF" opacity="0.6"/></g></g>
+</svg>

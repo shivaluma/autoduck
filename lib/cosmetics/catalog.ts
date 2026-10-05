@@ -1,188 +1,181 @@
 import type { CosmeticDefinition } from './types'
 
+/**
+ * Duck Closet v2 catalog — every item is hand-designed and its rarity is set by its art budget
+ * (see docs/cosmetics-v2-redesign.md). Art lives in scripts/cosmetics/art/<slot>.ts; run
+ * `pnpm cosmetics:generate` after editing either side and `pnpm cosmetics:validate` to check them.
+ */
+
+type Options = Partial<Pick<CosmeticDefinition, 'color' | 'animation' | 'tags' | 'shopEligible' | 'gachaEligible'>>
+
+const ANCHORS: Record<CosmeticDefinition['slot'], CosmeticDefinition['anchor']> = {
+  bodyColor: 'body', bodySkin: 'body', face: 'face', head: 'head', neck: 'neck', outfit: 'body',
+  back: 'back', pet: 'petRight', aura: 'auraCenter', trail: 'tail', finish: 'auraCenter', nameplate: 'body',
+}
+
 const cosmetic = (
   id: string,
   name: string,
   slot: CosmeticDefinition['slot'],
   rarity: CosmeticDefinition['rarity'],
-  anchor: CosmeticDefinition['anchor'],
-  options: Partial<CosmeticDefinition> = {},
+  collection: string,
+  options: Options = {},
 ): CosmeticDefinition => ({
   id,
   name,
   slot,
   rarity,
-  anchor,
-  asset: `/cosmetics/v1/${slot}/${id}.svg`,
-  previewAsset: `/cosmetics/previews/v1/${id}.svg`,
+  collection,
+  anchor: ANCHORS[slot],
+  asset: `/cosmetics/v2/${slot}/${id}.svg`,
+  previewAsset: `/cosmetics/v2/previews/${id}.svg`,
   shopEligible: true,
   gachaEligible: true,
-  tags: ['starter-proof'],
-  version: 1,
+  tags: [collection.toLowerCase().replace(/[^a-z0-9]+/g, '-'), slot],
+  version: 2,
+  animation: rarity === 'epic' || rarity === 'legendary' ? 'idle' : undefined,
   ...options,
 })
 
-const CORE_CATALOG: CosmeticDefinition[] = [
-  cosmetic('body-sunshine', 'Sunshine', 'bodyColor', 'common', 'body', { color: '#FFD84D', collection: 'Pond Basics' }),
-  cosmetic('body-tangerine', 'Tangerine', 'bodyColor', 'common', 'body', { color: '#FF9B42', collection: 'Pond Basics' }),
-  cosmetic('body-mint', 'Mint Splash', 'bodyColor', 'common', 'body', { color: '#58E6B0', collection: 'Pond Basics' }),
-  cosmetic('body-sky', 'Sky Puddle', 'bodyColor', 'common', 'body', { color: '#61C9FF', collection: 'Pond Basics' }),
-  cosmetic('body-lavender', 'Lavender Quack', 'bodyColor', 'common', 'body', { color: '#B99AFF', collection: 'Pond Basics' }),
-  cosmetic('body-rose', 'Rose Pop', 'bodyColor', 'common', 'body', { color: '#FF78A8', collection: 'Pond Basics' }),
-  cosmetic('body-cream', 'Cream Puff', 'bodyColor', 'common', 'body', { color: '#FFF0BD', collection: 'Pond Basics' }),
-  cosmetic('body-midnight', 'Midnight Pond', 'bodyColor', 'uncommon', 'body', { color: '#5965A8', collection: 'Pond Basics' }),
-  cosmetic('head-cap-red', 'Red Race Cap', 'head', 'common', 'head', { collection: 'Street Duck' }),
-  cosmetic('head-bucket-blue', 'Blue Bucket Hat', 'head', 'common', 'head', { collection: 'Street Duck' }),
-  cosmetic('head-tiny-crown', 'Tiny Crown', 'head', 'uncommon', 'head', { collection: 'River Royalty' }),
-  cosmetic('outfit-tee-white', 'Clean White Tee', 'outfit', 'common', 'body', { collection: 'Pond Basics' }),
-  cosmetic('outfit-office-tie', 'Monday Tie', 'outfit', 'common', 'body', { collection: 'Office Survivors' }),
-  cosmetic('outfit-raincoat', 'Pond Raincoat', 'outfit', 'uncommon', 'body', { collection: 'Pond Basics' }),
-  cosmetic('face-happy', 'Happy Beak', 'face', 'common', 'face', { collection: 'Pond Basics' }),
-  cosmetic('face-shades', 'Pond Shades', 'face', 'uncommon', 'face', { collection: 'Street Duck' }),
-  cosmetic('trail-ripples', 'Fresh Ripples', 'trail', 'common', 'tail', { collection: 'Pond Basics' }),
-  cosmetic('skin-dots', 'Confetti Spots', 'bodySkin', 'rare', 'body', { collection: 'Food Fight' }),
-  cosmetic('pet-origami-frog', 'Origami Frog', 'pet', 'rare', 'petRight', { collection: 'Pond Basics', animation: 'hop' }),
-  cosmetic('aura-fireflies', 'Pond Fireflies', 'aura', 'epic', 'auraCenter', { collection: 'River Royalty', animation: 'orbit' }),
+export const COSMETIC_CATALOG: CosmeticDefinition[] = [
+  // Màu
+  cosmetic('body-sunshine', 'Sunshine', 'bodyColor', 'common', 'Pond Basics', { color: '#FFD84D' }),
+  cosmetic('body-tangerine', 'Tangerine', 'bodyColor', 'common', 'Pond Basics', { color: '#FF9B42' }),
+  cosmetic('body-mint', 'Mint Splash', 'bodyColor', 'common', 'Pond Basics', { color: '#58E6B0' }),
+  cosmetic('body-sky', 'Sky Puddle', 'bodyColor', 'common', 'Pond Basics', { color: '#61C9FF' }),
+  cosmetic('body-rose', 'Rose Pop', 'bodyColor', 'common', 'Pond Basics', { color: '#FF78A8' }),
+  cosmetic('body-cream', 'Cream Puff', 'bodyColor', 'common', 'Pond Basics', { color: '#FFF0BD' }),
+  cosmetic('body-lavender', 'Lavender Quack', 'bodyColor', 'uncommon', 'Pond Basics', { color: '#B99AFF' }),
+  cosmetic('body-midnight', 'Midnight Pond', 'bodyColor', 'uncommon', 'Cosmic Pond', { color: '#4A5490' }),
+  cosmetic('body-matcha', 'Matcha Latte', 'bodyColor', 'uncommon', 'Food Fight', { color: '#9CC46A' }),
+  cosmetic('body-coral', 'Coral Reef', 'bodyColor', 'uncommon', 'Pond Basics', { color: '#FF7A6B' }),
+  cosmetic('body-mallard', 'Mallard', 'bodyColor', 'rare', 'Pond Basics', { color: '#1F8F5F' }),
+  cosmetic('body-pearl', 'Pearl', 'bodyColor', 'rare', 'Pond Royalty', { color: '#F3EEF7' }),
+  cosmetic('body-ink', 'Ink Duck', 'bodyColor', 'rare', 'Street Duck', { color: '#2A2638' }),
+  cosmetic('body-sunset', 'Sunset Ombre', 'bodyColor', 'epic', 'Viet Duck', { color: '#FF7A59' }),
+  cosmetic('body-chrome', 'Cyber Chrome', 'bodyColor', 'epic', 'Cyber Quack', { color: '#B8C4D6' }),
+  cosmetic('body-golden', 'Golden Duck', 'bodyColor', 'legendary', 'Pond Royalty', { color: '#F2B627' }),
+
+  // Skin
+  cosmetic('bodySkin-cheek-freckles', 'Cheek Freckles', 'bodySkin', 'common', 'Pond Basics'),
+  cosmetic('bodySkin-racing-stripes', 'Racing Stripes', 'bodySkin', 'common', 'Street Duck'),
+  cosmetic('bodySkin-polka-pond', 'Polka Pond', 'bodySkin', 'common', 'Pond Basics'),
+  cosmetic('bodySkin-band-aid-hero', 'Band-Aid Hero', 'bodySkin', 'common', 'Office Survivors'),
+  cosmetic('bodySkin-tiger-quack', 'Tiger Quack', 'bodySkin', 'uncommon', 'Street Duck'),
+  cosmetic('bodySkin-cow-spots', 'Cow Spots', 'bodySkin', 'uncommon', 'Food Fight'),
+  cosmetic('bodySkin-koi-patches', 'Koi Patches', 'bodySkin', 'uncommon', 'Viet Duck'),
+  cosmetic('bodySkin-street-camo', 'Street Camo', 'bodySkin', 'uncommon', 'Street Duck'),
+  cosmetic('bodySkin-me-tattoo', '"MẸ" Sailor Tattoo', 'bodySkin', 'rare', 'Viet Duck'),
+  cosmetic('bodySkin-circuit-feathers', 'Circuit Feathers', 'bodySkin', 'rare', 'Cyber Quack'),
+  cosmetic('bodySkin-star-constellations', 'Star Constellations', 'bodySkin', 'rare', 'Cosmic Pond'),
+  cosmetic('bodySkin-dragon-scale', 'Dragon Scale', 'bodySkin', 'epic', 'Pond Royalty'),
+  cosmetic('bodySkin-gold-veins', 'Kintsugi Porcelain', 'bodySkin', 'epic', 'Spirit Lotus'),
+  cosmetic('bodySkin-galaxy-dust', 'Galaxy Body', 'bodySkin', 'legendary', 'Cosmic Pond'),
+
+  // Mặt
+  cosmetic('face-happy', 'Happy Beak', 'face', 'common', 'Pond Basics'),
+  cosmetic('face-sleepy-eyes', 'Sleepy Eyes', 'face', 'common', 'Office Survivors'),
+  cosmetic('face-angry-brows', 'Angry Brows', 'face', 'common', 'Street Duck'),
+  cosmetic('face-tiny-moustache', 'Tiny Moustache', 'face', 'common', 'Office Survivors'),
+  cosmetic('face-monday-face', 'Monday Face', 'face', 'common', 'Office Survivors'),
+  cosmetic('face-shades', 'Pond Shades', 'face', 'uncommon', 'Street Duck'),
+  cosmetic('face-nerd-glasses', 'Nerd Glasses', 'face', 'uncommon', 'Office Survivors'),
+  cosmetic('face-heart-eyes', 'Heart Eyes', 'face', 'uncommon', 'Pond Basics'),
+  cosmetic('face-bandit-mask', 'Bandit Mask', 'face', 'uncommon', 'Street Duck'),
+  cosmetic('face-swimming-goggles', 'Swim Goggles', 'face', 'uncommon', 'Pond Basics'),
+  cosmetic('face-monocle', 'Monocle', 'face', 'rare', 'Pond Royalty'),
+  cosmetic('face-aviators', 'Aviators', 'face', 'rare', 'Street Duck'),
+  cosmetic('face-pixel-eyes', 'Pixel Shades', 'face', 'rare', 'Cyber Quack'),
+  cosmetic('face-laser-visor', 'Laser Visor', 'face', 'epic', 'Cyber Quack'),
+  cosmetic('face-kitsune-mask', 'Kitsune Half Mask', 'face', 'epic', 'Spirit Lotus'),
+  cosmetic('face-cosmic-eyes', 'Cosmic Eyes', 'face', 'legendary', 'Cosmic Pond'),
+
+  // Nón
+  cosmetic('head-cap-red', 'Red Race Cap', 'head', 'common', 'Street Duck'),
+  cosmetic('head-bucket-blue', 'Blue Bucket Hat', 'head', 'common', 'Street Duck'),
+  cosmetic('head-beanie', 'Beanie', 'head', 'common', 'Pond Basics'),
+  cosmetic('head-party-cone', 'Party Cone', 'head', 'common', 'Office Survivors'),
+  cosmetic('head-traffic-cone', 'Traffic Cone', 'head', 'common', 'Street Duck'),
+  cosmetic('head-paper-boat', 'Newspaper Hat', 'head', 'common', 'Office Survivors'),
+  cosmetic('head-sweatband', 'Sweatband', 'head', 'common', 'Street Duck'),
+  cosmetic('head-tiny-crown', 'Tiny Crown', 'head', 'uncommon', 'Pond Royalty'),
+  cosmetic('head-chef-hat', 'Chef Hat', 'head', 'uncommon', 'Food Fight'),
+  cosmetic('head-office-headset', 'Office Headset', 'head', 'uncommon', 'Office Survivors'),
+  cosmetic('head-cat-ears', 'Cat Ears', 'head', 'uncommon', 'Pond Basics'),
+  cosmetic('head-bamboo-hat', 'Nón Lá', 'head', 'uncommon', 'Viet Duck'),
+  cosmetic('head-frog-hood', 'Frog Hood', 'head', 'uncommon', 'Pond Basics'),
+  cosmetic('head-cowboy-hat', 'Cowboy Hat', 'head', 'rare', 'Street Duck'),
+  cosmetic('head-wizard-hat', 'Wizard Hat', 'head', 'rare', 'Spirit Lotus'),
+  cosmetic('head-viking-horns', 'Viking Helm', 'head', 'rare', 'Pond Royalty'),
+  cosmetic('head-motorbike-helmet', 'Nón Bảo Hiểm', 'head', 'rare', 'Viet Duck'),
+  cosmetic('head-pho-bowl', 'Phở Bowl', 'head', 'rare', 'Food Fight'),
+  cosmetic('head-space-dome', 'Space Dome', 'head', 'epic', 'Cosmic Pond'),
+  cosmetic('head-cyber-mohawk', 'Cyber Mohawk', 'head', 'epic', 'Cyber Quack'),
+  cosmetic('head-dragon-horns', 'Dragon Horns', 'head', 'epic', 'Pond Royalty'),
+  cosmetic('head-dragon-emperor-crown', 'Dragon Emperor Crown', 'head', 'legendary', 'Pond Royalty'),
+
+  // Áo
+  cosmetic('outfit-tee-white', 'Clean White Tee', 'outfit', 'common', 'Pond Basics'),
+  cosmetic('outfit-office-tie', 'Monday Tie', 'outfit', 'common', 'Office Survivors'),
+  cosmetic('outfit-pajamas', 'Pajamas', 'outfit', 'common', 'Office Survivors'),
+  cosmetic('outfit-sailor-shirt', 'Sailor Shirt', 'outfit', 'common', 'Pond Basics'),
+  cosmetic('outfit-football-jersey', 'Football Jersey', 'outfit', 'common', 'Viet Duck'),
+  cosmetic('outfit-chef-apron', 'Chef Apron', 'outfit', 'common', 'Food Fight'),
+  cosmetic('outfit-raincoat', 'Pond Raincoat', 'outfit', 'uncommon', 'Pond Basics'),
+  cosmetic('outfit-dev-hoodie', 'Dev Hoodie', 'outfit', 'uncommon', 'Office Survivors'),
+  cosmetic('outfit-pond-lifeguard', 'Pond Lifeguard', 'outfit', 'uncommon', 'Pond Basics'),
+  cosmetic('outfit-biker-vest', 'Biker Vest', 'outfit', 'uncommon', 'Street Duck'),
+  cosmetic('outfit-detective-coat', 'Detective Coat', 'outfit', 'uncommon', 'Office Survivors'),
+  cosmetic('outfit-lucky-ao-dai', 'Lucky Áo Dài', 'outfit', 'rare', 'Viet Duck'),
+  cosmetic('outfit-racing-suit', 'Racing Suit', 'outfit', 'rare', 'Street Duck'),
+  cosmetic('outfit-boss-blazer', 'Boss Blazer', 'outfit', 'rare', 'Office Survivors'),
+  cosmetic('outfit-space-suit', 'Space Suit', 'outfit', 'rare', 'Cosmic Pond'),
+  cosmetic('outfit-wizard-robe', 'Wizard Robe', 'outfit', 'rare', 'Spirit Lotus'),
+  cosmetic('outfit-quack-knight', 'Quack Knight', 'outfit', 'epic', 'Pond Royalty'),
+  cosmetic('outfit-cyber-samurai', 'Cyber Samurai', 'outfit', 'epic', 'Cyber Quack'),
+  cosmetic('outfit-spirit-haori', 'Spirit Haori', 'outfit', 'epic', 'Spirit Lotus'),
+  cosmetic('outfit-dragon-robe', 'Dragon Robe', 'outfit', 'legendary', 'Pond Royalty'),
+
+  // Pet
+  cosmetic('pet-rubber-duckling', 'Rubber Duckling', 'pet', 'common', 'Pond Basics'),
+  cosmetic('pet-origami-frog', 'Origami Frog', 'pet', 'common', 'Office Survivors'),
+  cosmetic('pet-office-mouse', 'Office Mouse', 'pet', 'common', 'Office Survivors'),
+  cosmetic('pet-bread-pigeon', 'Bánh Mì Pigeon', 'pet', 'common', 'Food Fight'),
+  cosmetic('pet-shiba-inu', 'Shiba Inu', 'pet', 'uncommon', 'Pond Basics'),
+  cosmetic('pet-calico-cat', 'Calico Cat', 'pet', 'uncommon', 'Pond Basics'),
+  cosmetic('pet-mini-capybara', 'Mini Capybara', 'pet', 'uncommon', 'Pond Basics'),
+  cosmetic('pet-coffee-slime', 'Cà Phê Slime', 'pet', 'uncommon', 'Food Fight'),
+  cosmetic('pet-tiny-drone', 'Tiny Drone', 'pet', 'rare', 'Cyber Quack', { animation: 'hover' }),
+  cosmetic('pet-golden-carp', 'Golden Carp', 'pet', 'rare', 'Viet Duck', { animation: 'float' }),
+  cosmetic('pet-lucky-black-cat', 'Lucky Black Cat', 'pet', 'rare', 'Spirit Lotus', { animation: 'wave' }),
+  cosmetic('pet-baby-dragon', 'Baby Dragon', 'pet', 'epic', 'Pond Royalty'),
+  cosmetic('pet-neon-jellyfish', 'Neon Jellyfish', 'pet', 'epic', 'Cyber Quack'),
+  cosmetic('pet-moon-rabbit', 'Moon Rabbit', 'pet', 'legendary', 'Spirit Lotus'),
+
+  // Aura
+  cosmetic('aura-fireflies', 'Pond Fireflies', 'aura', 'common', 'Pond Basics'),
+  cosmetic('aura-coffee-steam', 'Coffee Steam', 'aura', 'common', 'Office Survivors'),
+  cosmetic('aura-bubble-halo', 'Bubble Halo', 'aura', 'common', 'Pond Basics'),
+  cosmetic('aura-lucky-leaves', 'Lucky Leaves', 'aura', 'uncommon', 'Street Duck'),
+  cosmetic('aura-lotus-breeze', 'Lotus Breeze', 'aura', 'uncommon', 'Viet Duck'),
+  cosmetic('aura-storm-cloud', 'Storm Cloud', 'aura', 'rare', 'Office Survivors', { animation: 'storm' }),
+  cosmetic('aura-neon-glitch', 'Neon Glitch', 'aura', 'rare', 'Cyber Quack', { animation: 'glitch' }),
+  cosmetic('aura-golden-rays', 'Golden Rays', 'aura', 'epic', 'Pond Royalty'),
+  cosmetic('aura-ghost-fog', 'Ghost Fog', 'aura', 'epic', 'Spirit Lotus'),
+  cosmetic('aura-dragon-flame', 'Thần Long Flame', 'aura', 'legendary', 'Pond Royalty'),
+
+  // Trail
+  cosmetic('trail-ripples', 'Fresh Ripples', 'trail', 'common', 'Pond Basics'),
+  cosmetic('trail-bubble-wake', 'Bubble Wake', 'trail', 'common', 'Pond Basics'),
+  cosmetic('trail-paper-boats', 'Paper Boats', 'trail', 'common', 'Office Survivors'),
+  cosmetic('trail-lotus-petals', 'Lotus Petals', 'trail', 'uncommon', 'Viet Duck'),
+  cosmetic('trail-coffee-spill', 'Coffee Spill', 'trail', 'uncommon', 'Office Survivors'),
+  cosmetic('trail-neon-wake', 'Neon Wake', 'trail', 'rare', 'Cyber Quack', { animation: 'stream' }),
+  cosmetic('trail-pixel-stream', 'Pixel Stream', 'trail', 'rare', 'Cyber Quack', { animation: 'stream' }),
+  cosmetic('trail-rainbow-wake', 'Rainbow Wake', 'trail', 'epic', 'Pond Basics'),
+  cosmetic('trail-dragon-sparks', 'Dragon Sparks', 'trail', 'epic', 'Pond Royalty'),
+  cosmetic('trail-golden-water', 'Golden Wake', 'trail', 'legendary', 'Pond Royalty'),
 ]
-
-const COLLECTIONS = [
-  'Office Survivors', 'River Royalty', 'Cyber Quack', 'Street Duck',
-  'Viet Duck', 'Space Duck', 'Food Fight', 'Cursed Collection',
-  'Spirit Realm', 'Star Guardians', 'Blood Moon', 'Arcane Hextech',
-  'Reddit Collectibles', 'Coven Gods', 'High Noon',
-]
-const RARITIES: CosmeticDefinition['rarity'][] = ['common', 'uncommon', 'rare', 'epic', 'legendary']
-const EXTRA_NAMES: Record<string, string[]> = {
-  bodySkin: [
-    'Lotus Speckles', 'River Stripes', 'Pixel Pond', 'Cloud Patches', 'Coffee Stains',
-    'Neon Scales', 'Star Freckles', 'Barcode Duck', 'Bamboo Marks', 'Chilli Dots',
-    'Moon Craters', 'Circuit Feathers', 'Newsprint', 'Tiger Quack', 'Confetti Rain',
-    'Koi Patches', 'Storm Lines', 'Galaxy Dust', 'Lucky Tiles', 'Cursed Scribble',
-    'Gold Veins', 'Prism Checks', 'Dragon Scale',
-    'Spirit Inks', 'Hextech Runes', 'KDA Iridescent', 'Blood Moon Markings', 'Star Constellations',
-    'Snoo Wireframe', 'Coven Bramble', 'Diamond Facets', 'Porcelain Glaze', 'High Noon Brands',
-  ],
-  face: [
-    'Sleepy Eyes', 'Office Burnout', 'Laser Visor', 'Monocle', 'Heart Eyes',
-    'Angry Brows', 'Tiny Moustache', 'Star Glasses', 'Swimming Goggles', 'Pixel Eyes',
-    'Anime Sparkle', 'Detective Lens', 'Chef Focus', 'Moon Gaze', 'Cyber Scan',
-    'Lucky Wink', 'Panic Face', 'Villain Brows', 'Disco Shades', 'Golden Gaze',
-    'Ghost Eyes', 'Frog Goggles', 'Diamond Tears', 'Monday Face', 'Victory Wink',
-    'Space Visor', 'Chilli Tears', 'Royal Lashes',
-    'Spirit Fox Mask', 'KDA Neon Demon Visor', 'Star Guardian Gem', 'Blood Moon Oni Half Mask', 'Rojom Abyss Eyes',
-    'Arcane Hextech Monocle', 'Snoo Heart Blush', 'High Noon Smolder', 'Coven Occult Veil', 'PROJECT HUD Reticle',
-  ],
-  head: [
-    'Beanie', 'Office Headset', 'Paper Crown', 'Chef Hat', 'Traffic Cone',
-    'Lotus Hat', 'Motorbike Helmet', 'Cowboy Hat', 'Wizard Hat', 'Space Dome',
-    'Propeller Cap', 'Viking Horns', 'Detective Hat', 'Party Cone', 'Rice Bowl',
-    'Noodle Cup', 'Bamboo Hat', 'Cloud Halo', 'Dev Antenna', 'Cat Ears',
-    'Frog Hood', 'Pirate Hat', 'Captain Cap', 'Disco Ball', 'Moon Tiara',
-    'Dragon Horns', 'Golden Laurel', 'Cyber Mohawk', 'Bread Beret', 'Coffee Lid',
-    'Rocket Helm', 'Fish Crown', 'Storm Cloud', 'Mushroom Cap', 'Lucky Helmet',
-    'Neon Fedora', 'Paper Boat', 'Royal Turban', 'Cursed Candle', 'Galaxy Crown',
-    'Boss Comb', 'Quackphone', 'Hotpot Lid', 'Victory Wreath', 'Diamond Crown',
-    'Satellite Dish', 'Pho Bowl', 'Tiny Pond',
-    'Snoo Antenna Glow', 'Spirit Blossom Kanzashi', 'Star Guardian Wings Tiara', 'Blood Moon Horns', 'Reddit Cone Head Prime',
-    'PROJECT Cyber Helm', 'Coven Antler Crown', 'Winterblessed Crown', 'High Noon Hellfire Hat', 'Dark Star Singularity',
-  ],
-  neck: [
-    'Office Lanyard', 'Red Scarf', 'Golden Bow', 'Lotus Chain', 'Cyber Collar', 'Royal Cape Clip',
-    'Spirit Prayer Beads', 'Star Guardian Ribbon', 'Blood Moon Magatama', 'PROJECT Energy Collar', 'Reddit Diamond Pendant',
-    'Coven Raven Skull', 'Arcane Hextech Choker', 'High Noon Bandana', 'KDA Golden Collar', 'Winterblessed Fur Collar',
-  ],
-  outfit: [
-    'Office Shirt', 'Dev Hoodie', 'Street Jacket', 'Chef Apron', 'Space Suit',
-    'Wizard Robe', 'Biker Vest', 'Sailor Shirt', 'Lotus Tunic', 'Pixel Armor',
-    'Royal Mantle', 'Football Jersey', 'Pajamas', 'Detective Coat', 'Rain Poncho',
-    'Noodle Armor', 'Coffee Uniform', 'Dragon Robe', 'Disco Suit', 'Pirate Coat',
-    'Cloud Sweater', 'Neon Tracksuit', 'Moon Kimono', 'Racing Suit', 'Golden Tux',
-    'Cursed Cloak', 'Bamboo Armor', 'Hotpot Apron', 'Galaxy Jacket', 'Victory Cape',
-    'Frog Onesie', 'Bread Suit', 'Storm Coat', 'Diamond Armor', 'Pond Lifeguard',
-    'Retro Windbreaker', 'Cyber Samurai', 'Lucky Áo Dài', 'Quack Knight', 'Boss Blazer',
-    'Spirit Blossom Haori', 'Star Guardian Sailor Dress', 'KDA Holographic Jacket', 'PROJECT Cyber Exosuit', 'Blood Moon Assassin Garb',
-    'Coven Witch Gown', 'High Noon Gunslinger Poncho', 'Reddit Drip Squad Puffer', 'Porcelain Hanfu Robe', 'Winterblessed Regal Coat',
-  ],
-  back: [
-    'Office Backpack', 'Paper Wings', 'Jetpack', 'Bamboo Basket', 'Royal Cape',
-    'Dragon Wings', 'Cloud Pack', 'Neon Battery', 'Chef Knives', 'Space Tank',
-    'Lucky Flag', 'Cursed Hands', 'Lotus Fan', 'Rocket Pack', 'Disco Speakers', 'Tiny Pond Pack',
-    'Spirit Fox Nine Tails', 'Star Guardian Wings', 'PROJECT Cyber Katanas', 'Blood Moon Eclipse Wheel', 'The Hands Spectral Grasp',
-    'Coven Raven Wings', 'Dark Star Cosmic Void', 'Reddit Diamond Hands Wings', 'Hextech Jet Boosters', 'High Noon Fiery Shroud',
-  ],
-  pet: [
-    'Rubber Fish', 'Tiny Drone', 'Coffee Slime', 'Baby Dragon', 'Cloud Cat',
-    'Pixel Crab', 'Lotus Spirit', 'Space Frog', 'Noodle Worm', 'Golden Carp',
-    'Cursed Eye', 'Mini Capybara', 'Office Mouse', 'Neon Jellyfish', 'Bread Pigeon',
-    'Tiny Shark', 'Moon Rabbit', 'Hotpot Spirit', 'Shiba Inu', 'Corgi Pup',
-    'Calico Cat', 'Lucky Black Cat', 'Golden Retriever', 'Cyber Hamster',
-    'Spirit Fox Kiko', 'Star Guardian Dango', 'Reddit Snoo Mini Bot', 'Blood Moon Little Crow', 'Porofessor Poro',
-    'Little Legend Pengu', 'PROJECT Cyber Drone', 'Coven Shadow Familiar', 'Cafe Cutie Pastry Pup', 'Arcane Firelight Beetle',
-  ],
-  aura: [
-    'Coffee Steam', 'Royal Sparkles', 'Neon Glitch', 'Lotus Breeze', 'Storm Cloud',
-    'Pixel Orbit', 'Golden Rays', 'Ghost Fog', 'Space Dust', 'Chilli Heat',
-    'Bubble Halo', 'Dragon Flame', 'Disco Lights', 'Moon Glow', 'Lucky Leaves',
-    'Spirit Blossom Petals', 'Star Guardian Stardust', 'Blood Moon Eclipse', 'PROJECT Matrix Grid', 'Coven Dark Eclipse',
-    'Dark Star Event Horizon', 'Reddit Upvote Tornado', 'High Noon Hellfire Flare', 'Winterblessed Aurora Ribbon', 'Arcane Hextech Anomaly',
-  ],
-  trail: [
-    'Bubble Wake', 'Neon Wake', 'Lotus Petals', 'Coffee Spill', 'Pixel Stream',
-    'Golden Water', 'Storm Foam', 'Rainbow Wake', 'Ghost Ripples', 'Chilli Sauce',
-    'Moon Dust', 'Dragon Sparks', 'Paper Boats',
-    'Spirit Blossom Sakura', 'Star Guardian Starlight', 'Blood Moon Crimson Ink', 'PROJECT Cyber Glitch', 'Dark Star Void Dust',
-    'Reddit Upvote Stream', 'High Noon Sulfur Smoke', 'Winterblessed Snowflakes', 'Arcane Hextech Lightning', 'Porcelain Blue Wave',
-  ],
-  finish: [
-    'Confetti Quack', 'Golden Splash', 'Pixel Explosion', 'Lotus Bloom', 'Dragon Roar',
-    'Coffee Burst', 'Moon Landing', 'Neon Victory', 'Storm Strike', 'Royal Fireworks',
-    'Star Guardian Starfall', 'Spirit Blossom Torii Bloom', 'Blood Moon Eclipse Burst', 'PROJECT Laser Strike', 'Dark Star Supernova',
-    'Reddit Diamond Rocket', 'Arcane Hextech Overdrive', 'High Noon Quickdraw Flare', 'Coven Occult Thorn Burst', 'Winterblessed Aurora Burst',
-  ],
-  nameplate: [
-    'Office Badge', 'River Ribbon', 'Cyber Tag', 'Street Sticker', 'Lotus Frame',
-    'Space Panel', 'Golden Plaque', 'Cursed Label', 'Coffee Card', 'Dragon Banner',
-    'Moon Plate', 'Victory Sign',
-    'Spirit Blossom Shrine', 'Star Guardian Crest', 'Blood Moon Torii Crest', 'PROJECT Cyber Tag', 'Coven Gothic Plaque',
-    'Dark Star Void Horizon', 'Reddit Hexagon Avatar Border', 'High Noon Wanted Plate', 'Winterblessed Frost Frame', 'Porcelain Dragon Plinth',
-  ],
-}
-
-const EXTRA_BODY_COLORS: Array<[string, string]> = [
-  ['Lime Soda', '#B9F45D'], ['Ocean', '#368BCB'], ['Coral', '#FF6F61'], ['Plum', '#8D5AA7'],
-  ['Coffee', '#9A6948'], ['Lotus', '#F4A7C5'], ['Silver', '#B9C3D2'], ['Emerald', '#2DBE79'],
-  ['Ruby', '#CB4052'], ['Cyber Cyan', '#26E6E6'], ['Royal Purple', '#673AB7'], ['Chilli', '#EF3E36'],
-  ['Galaxy', '#39406E'], ['Peach', '#FFB38A'], ['Bamboo', '#78A84B'], ['Ghost', '#DDEAF2'],
-  ['Spirit Blossom Lotus', '#FFC0D9'], ['Star Guardian Blue', '#85E3FF'], ['Blood Moon Crimson', '#991B1B'], ['Void Purple', '#6B21A8'],
-  ['Hextech Blue', '#0284C7'], ['Snoo Cosmic Abyss', '#1E1B4B'], ['WSB Diamond Mint', '#34D399'], ['Coven Bone White', '#F1F5F9'],
-  ['High Noon Sulfur', '#EA580C'], ['Porcelain Cobalt', '#2563EB'],
-]
-
-function slug(value: string) {
-  return value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-}
-
-function generatedRarity(index: number): CosmeticDefinition['rarity'] {
-  if (index % 23 === 22) return 'legendary'
-  if (index % 11 === 10) return 'epic'
-  if (index % 5 === 4) return 'rare'
-  return RARITIES[index % 3]!
-}
-
-const EXTRA_CATALOG = [
-  ...EXTRA_BODY_COLORS.map(([name, color], index) => cosmetic(`body-${slug(name)}`, name, 'bodyColor', generatedRarity(index), 'body', { color, collection: COLLECTIONS[index % COLLECTIONS.length] })),
-  ...Object.entries(EXTRA_NAMES).flatMap(([slot, names]) => names.map((name, index) => {
-    const typedSlot = slot as CosmeticDefinition['slot']
-    const anchor = ({ bodySkin: 'body', face: 'face', head: 'head', neck: 'neck', outfit: 'body', back: 'back', pet: 'petRight', aura: 'auraCenter', trail: 'tail', finish: 'auraCenter', nameplate: 'body' } as const)[typedSlot as keyof typeof EXTRA_NAMES] ?? 'body'
-    return cosmetic(`${slot}-${slug(name)}`, name, typedSlot, generatedRarity(index + slot.length), anchor, {
-      collection: COLLECTIONS[(index + slot.length) % COLLECTIONS.length],
-      tags: [slug(COLLECTIONS[(index + slot.length) % COLLECTIONS.length]!), typedSlot],
-      animation: ['pet', 'aura', 'trail', 'finish'].includes(typedSlot) ? 'procedural' : undefined,
-    })
-  })),
-]
-
-export const COSMETIC_CATALOG: CosmeticDefinition[] = [...CORE_CATALOG, ...EXTRA_CATALOG]
 
 export const COSMETIC_BY_ID = new Map(COSMETIC_CATALOG.map((item) => [item.id, item]))
 

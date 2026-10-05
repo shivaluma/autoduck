@@ -14,9 +14,9 @@ const MATRIX_COLORS = [
   'body-rose',
   'body-cream',
   'body-midnight',
-  'body-cyber-cyan',
-  'body-ruby',
-  'body-emerald',
+  'body-chrome',
+  'body-coral',
+  'body-mallard',
 ]
 
 const MATRIX_HATS = [
@@ -34,9 +34,9 @@ const MATRIX_FACES = [
   'face-happy',
   'face-shades',
   'face-laser-visor',
-  'face-office-burnout',
+  'face-monday-face',
   'face-pixel-eyes',
-  'face-victory-wink',
+  'face-heart-eyes',
 ]
 
 const MATRIX_OUTFITS = [
@@ -52,15 +52,15 @@ const MATRIX_OUTFITS = [
 const MATRIX_SKINS = [
   'bodySkin-tiger-quack',
   'bodySkin-dragon-scale',
-  'bodySkin-neon-scales',
+  'bodySkin-circuit-feathers',
   'bodySkin-galaxy-dust',
   'bodySkin-gold-veins',
-  'bodySkin-lotus-speckles',
+  'bodySkin-koi-patches',
 ]
 
 const MATRIX_PETS = [
   'pet-shiba-inu',
-  'pet-corgi-pup',
+  'pet-shiba-inu',
   'pet-calico-cat',
   'pet-mini-capybara',
   'pet-baby-dragon',
@@ -70,13 +70,13 @@ const MATRIX_AURAS = [
   { id: 'aura-dragon-flame', name: 'Thần Long Bao Thân / Dragon Flame' },
   { id: 'aura-golden-rays', name: 'Phật Quang Vạn Trượng / Golden Mandala' },
   { id: 'aura-storm-cloud', name: 'Lôi Thần Sấm Sét / Lightning Arc Tempest' },
-  { id: 'aura-moon-glow', name: 'Hàn Băng Cực Quang / Glacial Blizzard' },
-  { id: 'aura-chilli-heat', name: 'Hỏa Diệm Sơn / Super Saiyan Inferno' },
+  { id: 'aura-ghost-fog', name: 'Hàn Băng Cực Quang / Glacial Blizzard' },
+  { id: 'aura-dragon-flame', name: 'Hỏa Diệm Sơn / Super Saiyan Inferno' },
   { id: 'aura-ghost-fog', name: 'U Hồn Vạn Quỷ / Spectral Souls' },
   { id: 'aura-neon-glitch', name: 'Cyber Matrix / Hologram HUD' },
   { id: 'aura-lotus-breeze', name: 'Hoa Khai Phú Quý / Lotus Cyclone' },
-  { id: 'aura-space-dust', name: 'Cosmic Singularity / Galaxy Nebula' },
-  { id: 'aura-disco-lights', name: 'Neon Disco / Stage Equalizer' },
+  { id: 'aura-fireflies', name: 'Cosmic Singularity / Galaxy Nebula' },
+  { id: 'aura-neon-glitch', name: 'Neon Disco / Stage Equalizer' },
   { id: 'aura-bubble-halo', name: 'Thủy Cung Thần Châu / Tidal Vortex' },
   { id: 'aura-lucky-leaves', name: 'Kim Tiền Cát Tường / Lucky Coins' },
 ]
@@ -172,7 +172,7 @@ export default function AvatarMatrixPage() {
                   desc: 'Distinct silhouette cuts, stylized cultural or tech gear (Cowboy Hat, Non La, Dev Hoodie, Lucky Ao Dai, Shiba Inu, Tiger Skin).',
                   items: [
                     { name: 'Cowboy Hat', appearance: { bodyColorId: 'body-cream', headId: 'head-cowboy-hat' } },
-                    { name: 'Dev Hoodie', appearance: { bodyColorId: 'body-cyber-cyan', outfitId: 'outfit-dev-hoodie' } },
+                    { name: 'Dev Hoodie', appearance: { bodyColorId: 'body-chrome', outfitId: 'outfit-dev-hoodie' } },
                     { name: 'Non La & Ao Dai', appearance: { bodyColorId: 'body-mint', headId: 'head-bamboo-hat', outfitId: 'outfit-lucky-ao-dai' } },
                     { name: 'Shiba Inu Pet', appearance: { bodyColorId: 'body-tangerine', petId: 'pet-shiba-inu' } },
                     { name: 'Tiger Quack Skin', appearance: { bodyColorId: 'body-sunshine', bodySkinId: 'bodySkin-tiger-quack' } },
@@ -184,9 +184,9 @@ export default function AvatarMatrixPage() {
                   desc: 'Advanced materials, glowing neon energy, glass reflections, dynamic pets, and fantasy spells (Wizard Hat, Cyber Mohawk, Space Suit, Baby Dragon, Dragon Scales).',
                   items: [
                     { name: 'Wizard Hat', appearance: { bodyColorId: 'body-lavender', headId: 'head-wizard-hat' } },
-                    { name: 'Cyber Mohawk', appearance: { bodyColorId: 'body-cyber-cyan', headId: 'head-cyber-mohawk', faceId: 'face-laser-visor' } },
+                    { name: 'Cyber Mohawk', appearance: { bodyColorId: 'body-chrome', headId: 'head-cyber-mohawk', faceId: 'face-laser-visor' } },
                     { name: 'Space Suit', appearance: { bodyColorId: 'body-sky', headId: 'head-space-dome', outfitId: 'outfit-space-suit' } },
-                    { name: 'Baby Dragon', appearance: { bodyColorId: 'body-ruby', petId: 'pet-baby-dragon' } },
+                    { name: 'Baby Dragon', appearance: { bodyColorId: 'body-coral', petId: 'pet-baby-dragon' } },
                     { name: 'Dragon Scales', appearance: { bodyColorId: 'body-tangerine', bodySkinId: 'bodySkin-dragon-scale' } },
                   ],
                 },
@@ -195,9 +195,9 @@ export default function AvatarMatrixPage() {
                   badge: 'bg-amber-900/80 text-amber-200 border-amber-400',
                   desc: 'Supreme multi-layer prestige, golden crowns, knight armor, kintsugi gold veins, celestial stardust, and animated mythical spirits.',
                   items: [
-                    { name: 'Diamond Crown', appearance: { bodyColorId: 'body-midnight', headId: 'head-diamond-crown', outfitId: 'outfit-quack-knight' } },
-                    { name: 'Kintsugi Gold Veins', appearance: { bodyColorId: 'body-ruby', bodySkinId: 'bodySkin-gold-veins' } },
-                    { name: 'Galaxy Singularity', appearance: { bodyColorId: 'body-midnight', bodySkinId: 'bodySkin-galaxy-dust', auraId: 'aura-space-dust' } },
+                    { name: 'Diamond Crown', appearance: { bodyColorId: 'body-midnight', headId: 'head-dragon-emperor-crown', outfitId: 'outfit-quack-knight' } },
+                    { name: 'Kintsugi Gold Veins', appearance: { bodyColorId: 'body-coral', bodySkinId: 'bodySkin-gold-veins' } },
+                    { name: 'Galaxy Singularity', appearance: { bodyColorId: 'body-midnight', bodySkinId: 'bodySkin-galaxy-dust', auraId: 'aura-fireflies' } },
                     { name: 'Dragon Flame Emperor', appearance: { bodyColorId: 'body-sunshine', headId: 'head-dragon-horns', auraId: 'aura-dragon-flame' } },
                     { name: 'Phật Quang Vạn Trượng', appearance: { bodyColorId: 'body-cream', headId: 'head-tiny-crown', auraId: 'aura-golden-rays' } },
                   ],
@@ -346,16 +346,16 @@ export default function AvatarMatrixPage() {
                   outfitId: 'outfit-quack-knight',
                   bodySkinId: 'bodySkin-gold-veins',
                   faceId: 'face-happy',
-                  petId: 'pet-corgi-pup',
+                  petId: 'pet-shiba-inu',
                 },
               },
               {
                 title: 'Cyberpunk Ninja (Mohawk + Laser Visor + Cyber Suit + Drone)',
                 appearance: {
-                  bodyColorId: 'body-cyber-cyan',
+                  bodyColorId: 'body-chrome',
                   headId: 'head-cyber-mohawk',
                   faceId: 'face-laser-visor',
-                  bodySkinId: 'bodySkin-neon-scales',
+                  bodySkinId: 'bodySkin-circuit-feathers',
                   petId: 'pet-shiba-inu',
                 },
               },
@@ -431,7 +431,7 @@ export default function AvatarMatrixPage() {
                   bodyColorId: 'body-mint',
                   headId: 'head-bamboo-hat',
                   outfitId: 'outfit-lucky-ao-dai',
-                  bodySkinId: 'bodySkin-lotus-speckles',
+                  bodySkinId: 'bodySkin-koi-patches',
                   petId: 'pet-calico-cat',
                   auraId: 'aura-fireflies',
                 },
@@ -444,13 +444,13 @@ export default function AvatarMatrixPage() {
                   faceId: 'face-happy',
                   bodySkinId: 'bodySkin-galaxy-dust',
                   petId: 'pet-mini-capybara',
-                  auraId: 'aura-pixel-orbit',
+                  auraId: 'aura-neon-glitch',
                 },
               },
               {
                 title: 'Dragon King (Horns + Dragon Robe + Dragon Scales + Baby Dragon)',
                 appearance: {
-                  bodyColorId: 'body-ruby',
+                  bodyColorId: 'body-coral',
                   headId: 'head-dragon-horns',
                   outfitId: 'outfit-racing-suit',
                   bodySkinId: 'bodySkin-dragon-scale',

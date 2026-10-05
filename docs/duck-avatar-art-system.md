@@ -59,7 +59,7 @@ $$\mathbf{FACE\_SAFE\_ZONE} = [X_1: 270, Y_1: 90] \to [X_2: 430, Y_2: 240]$$
 
 ## 4. Canonical Coordinate Space & ViewBox
 
-Every asset in the Dzịt ecosystem is authored and rendered in a single normalized coordinate space:
+Every asset in the Dzịt ecosystem is authored in a single normalized coordinate space. v2 files are framed with `AVATAR_VIEWBOX = -24 -56 560 560`: the same 512 rig coordinates, padded so crowns, ears, pets and auras have room. Author in rig coordinates; the frame only adds margin.
 
 $$\mathbf{viewBox} = \begin{bmatrix} 0 & 0 & 512 & 512 \end{bmatrix}$$
 

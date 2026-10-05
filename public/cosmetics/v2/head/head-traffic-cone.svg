@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-24 -56 560 560" width="100%" height="100%" fill="none">
+<g id="traffic-cone"><path d="M286 80 L350 -34 L420 76 Z" fill="#F97316" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<clipPath id="cone-c"><path d="M286 80 L350 -34 L420 76 Z"/></clipPath><g clip-path="url(#cone-c)"><path d="M290 40 H420 V56 H290 Z M300 0 H400 V14 H300 Z" fill="#FFFDF4"/><path d="M286 80 L350 -34 L330 80 Z" fill="#C2410C" opacity="0.5"/><path d="M362 -16 L404 60 L392 60 Z" fill="#FDBA74" opacity="0.8"/></g>
+<path d="M244 100 C300 80 400 74 456 92 L452 72 C400 58 300 62 248 80 Z" fill="#EA580C" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M254 96 C306 80 396 76 446 88 L446 84 C396 72 306 76 254 90 Z" fill="#9A3412" opacity="0.6"/></g>
+</svg>

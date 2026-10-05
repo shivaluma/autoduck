@@ -7,7 +7,7 @@ import { createRiverTrack } from '@/packages/race-core/src/track'
 import { type DuckSnapshot, type RaceConfig, type RaceEvent, type RaceItemId, type RecordedWildItemInput, type StateSnapshotMessage, type WildItemId } from '@/packages/race-protocol/src'
 import { RaceAudioSystem } from './race-audio'
 import { COSMETIC_BY_ID, STARTER_COSMETIC_IDS } from '@/lib/cosmetics/catalog'
-import { COSMETIC_LAYER_ORDER, type DuckAppearance } from '@/lib/cosmetics/types'
+import { AVATAR_FRAME, COSMETIC_LAYER_ORDER, type DuckAppearance } from '@/lib/cosmetics/types'
 
 export type PlayerLabel = {
   playerId: string
@@ -70,86 +70,14 @@ const PICKUP_TEXTURES = {
 } as const
 
 const DUCK_THEME_PRESETS: DuckAppearance[] = [
-  {
-    bodyColorId: 'body-sunshine',
-    headId: 'head-tiny-crown',
-    faceId: 'face-happy',
-    outfitId: 'outfit-quack-knight',
-    bodySkinId: 'bodySkin-gold-veins',
-    petId: 'pet-corgi-pup',
-    auraId: 'aura-golden-rays',
-    trailId: 'trail-golden-water',
-  },
-  {
-    bodyColorId: 'body-mint',
-    headId: 'head-bamboo-hat',
-    faceId: 'face-happy',
-    outfitId: 'outfit-lucky-ao-dai',
-    bodySkinId: 'bodySkin-lotus-speckles',
-    petId: 'pet-calico-cat',
-    auraId: 'aura-lotus-breeze',
-    trailId: 'trail-lotus-petals',
-  },
-  {
-    bodyColorId: 'body-cyber-cyan',
-    headId: 'head-cyber-mohawk',
-    faceId: 'face-laser-visor',
-    outfitId: 'outfit-cyber-samurai',
-    bodySkinId: 'bodySkin-neon-scales',
-    petId: 'pet-tiny-drone',
-    auraId: 'aura-neon-glitch',
-    trailId: 'trail-neon-wake',
-  },
-  {
-    bodyColorId: 'body-ruby',
-    headId: 'head-dragon-horns',
-    faceId: 'face-happy',
-    outfitId: 'outfit-racing-suit',
-    bodySkinId: 'bodySkin-dragon-scale',
-    petId: 'pet-baby-dragon',
-    auraId: 'aura-dragon-flame',
-    trailId: 'trail-dragon-sparks',
-  },
-  {
-    bodyColorId: 'body-midnight',
-    headId: 'head-space-dome',
-    faceId: 'face-happy',
-    outfitId: 'outfit-space-suit',
-    bodySkinId: 'bodySkin-galaxy-dust',
-    petId: 'pet-moon-rabbit',
-    auraId: 'aura-space-dust',
-    trailId: 'trail-moon-dust',
-  },
-  {
-    bodyColorId: 'body-sky',
-    headId: 'head-office-headset',
-    faceId: 'face-office-burnout',
-    outfitId: 'outfit-office-tie',
-    bodySkinId: 'bodySkin-coffee-stains',
-    petId: 'pet-office-mouse',
-    auraId: 'aura-coffee-steam',
-    trailId: 'trail-coffee-spill',
-  },
-  {
-    bodyColorId: 'body-tangerine',
-    headId: 'head-cap-red',
-    faceId: 'face-shades',
-    outfitId: 'outfit-tee-white',
-    bodySkinId: 'bodySkin-tiger-quack',
-    petId: 'pet-shiba-inu',
-    auraId: 'aura-fireflies',
-    trailId: 'trail-ripples',
-  },
-  {
-    bodyColorId: 'body-lavender',
-    headId: 'head-wizard-hat',
-    faceId: 'face-happy',
-    outfitId: 'outfit-dev-hoodie',
-    bodySkinId: 'bodySkin-galaxy-dust',
-    petId: 'pet-mini-capybara',
-    auraId: 'aura-pixel-orbit',
-    trailId: 'trail-pixel-stream',
-  },
+  { bodyColorId: 'body-sunshine', headId: 'head-tiny-crown', faceId: 'face-happy', outfitId: 'outfit-quack-knight', petId: 'pet-shiba-inu', auraId: 'aura-golden-rays', trailId: 'trail-golden-water' },
+  { bodyColorId: 'body-mint', headId: 'head-bamboo-hat', faceId: 'face-happy', outfitId: 'outfit-lucky-ao-dai', bodySkinId: 'bodySkin-koi-patches', petId: 'pet-golden-carp', auraId: 'aura-lotus-breeze', trailId: 'trail-lotus-petals' },
+  { bodyColorId: 'body-chrome', headId: 'head-cyber-mohawk', faceId: 'face-laser-visor', outfitId: 'outfit-cyber-samurai', bodySkinId: 'bodySkin-circuit-feathers', petId: 'pet-tiny-drone', auraId: 'aura-neon-glitch', trailId: 'trail-neon-wake' },
+  { bodyColorId: 'body-coral', headId: 'head-dragon-horns', faceId: 'face-angry-brows', outfitId: 'outfit-racing-suit', bodySkinId: 'bodySkin-dragon-scale', petId: 'pet-baby-dragon', auraId: 'aura-storm-cloud', trailId: 'trail-dragon-sparks' },
+  { bodyColorId: 'body-midnight', headId: 'head-space-dome', faceId: 'face-cosmic-eyes', outfitId: 'outfit-space-suit', bodySkinId: 'bodySkin-star-constellations', petId: 'pet-moon-rabbit', auraId: 'aura-fireflies', trailId: 'trail-bubble-wake' },
+  { bodyColorId: 'body-sky', headId: 'head-office-headset', faceId: 'face-monday-face', outfitId: 'outfit-office-tie', bodySkinId: 'bodySkin-band-aid-hero', petId: 'pet-office-mouse', auraId: 'aura-coffee-steam', trailId: 'trail-coffee-spill' },
+  { bodyColorId: 'body-tangerine', headId: 'head-cap-red', faceId: 'face-shades', outfitId: 'outfit-tee-white', bodySkinId: 'bodySkin-tiger-quack', petId: 'pet-calico-cat', auraId: 'aura-lucky-leaves', trailId: 'trail-ripples' },
+  { bodyColorId: 'body-lavender', headId: 'head-wizard-hat', faceId: 'face-monocle', outfitId: 'outfit-wizard-robe', bodySkinId: 'bodySkin-galaxy-dust', petId: 'pet-mini-capybara', auraId: 'aura-ghost-fog', trailId: 'trail-pixel-stream' },
 ]
 
 const IS_DEFAULT_UNIFORM = (app?: DuckAppearance | null) => {
@@ -329,7 +257,7 @@ export function PhaserRaceCanvas({
           for (const cosmeticId of cosmeticsToLoad) {
             const item = COSMETIC_BY_ID.get(cosmeticId)
             if (item && !this.textures.exists(`cosmetic-${item.id}`)) {
-              this.load.svg(`cosmetic-${item.id}`, item.asset, { width: 512, height: 512 })
+              this.load.svg(`cosmetic-${item.id}`, item.asset, { width: AVATAR_FRAME.size, height: AVATAR_FRAME.size })
             }
           }
         }
@@ -477,8 +405,11 @@ export function PhaserRaceCanvas({
             const cosmeticId = appearance[`${slot}Id` as keyof DuckAppearance]
             const item = cosmeticId ? COSMETIC_BY_ID.get(cosmeticId) : undefined
             if (item && this.textures.exists(`cosmetic-${item.id}`)) {
-              const img = this.add.image(0, 0, `cosmetic-${item.id}`)
-                .setDisplaySize(duckDisplaySize, duckDisplaySize)
+              // v2 layers use the padded avatar frame; scale + shift so rig point (256,256) stays at the origin.
+              const layerSize = duckDisplaySize * (AVATAR_FRAME.size / 512)
+              const frameCenterY = AVATAR_FRAME.y + AVATAR_FRAME.size / 2
+              const img = this.add.image(0, (frameCenterY - 256) * (layerSize / AVATAR_FRAME.size), `cosmetic-${item.id}`)
+                .setDisplaySize(layerSize, layerSize)
                 .setData('cosmetic-slot', slot)
               cosmeticLayers.push(img)
 

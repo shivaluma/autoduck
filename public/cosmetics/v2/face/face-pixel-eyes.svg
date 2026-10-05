@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-24 -56 560 560" width="100%" height="100%" fill="none">
+<g id="pixel-shades"><path d="M268 112 H432 V128 H424 V144 H416 V160 H392 V152 H384 V144 H368 V136 H352 V144 H344 V160 H336 V168 H296 V160 H288 V152 H280 V128 H268 Z" fill="#0B0716" stroke="#1B132B" stroke-width="4"/>
+<path d="M296 128 h16 v8 h-16 Z M312 136 h8 v8 h-8 Z M392 128 h12 v8 h-12 Z M404 136 h6 v6 h-6 Z" fill="#FFFFFF"/>
+<path d="M232 112 H268 V120 H232 Z" fill="#0B0716"/>
+<path d="M300 144 h8 v8 h-8 Z" fill="#61C9FF" opacity="0.8"/></g>
+</svg>

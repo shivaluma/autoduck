@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-24 -56 560 560" width="100%" height="100%" fill="none">
+<g id="space-dome"><defs><radialGradient id="glass" cx="0.4" cy="0.4" r="0.6"><stop offset="0" stop-color="#E0F7FF" stop-opacity="0.04"/><stop offset="0.75" stop-color="#A5E8FF" stop-opacity="0.14"/><stop offset="1" stop-color="#61C9FF" stop-opacity="0.38"/></radialGradient><filter id="dome-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<ellipse cx="338" cy="140" rx="160" ry="146" fill="url(#glass)" stroke="#1B132B" stroke-width="8"/>
+<ellipse cx="338" cy="140" rx="148" ry="134" fill="none" stroke="#E0F7FF" stroke-width="3" opacity="0.6"/>
+<path d="M402 22 C446 40 478 76 488 120" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/>
+<path d="M478 150 C478 166 474 180 468 192" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+<path d="M230 52 c10 -10 22 -14 30 -12 c-14 8 -22 16 -28 26 Z" fill="#FFFFFF" opacity="0.7"/>
+<path d="M196 236 C250 286 420 290 478 230 L486 250 C420 312 250 310 188 254 Z" fill="#E2E8F0" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M210 256 C270 296 410 296 470 250" fill="none" stroke="#94A3B8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="262" cy="268" r="6" fill="#38BDF8"/>
+<circle cx="298" cy="280" r="6" fill="#F43F5E"/>
+<circle cx="334" cy="284" r="6" fill="#FDE047"/>
+<path d="M300 -2 L312 8" fill="none" stroke="#1B132B" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+<g filter="url(#dome-glow)"><circle cx="298" cy="-4" r="9" fill="#F43F5E" stroke="#1B132B" stroke-width="4"/><circle cx="298" cy="-4" r="9" fill="#FECDD3"><animate attribute-name="opacity" values="0;1;0" dur="1.6s" repeat-count="indefinite" calc-mode="spline" key-splines="0.45 0 0.55 1;0.45 0 0.55 1"/></circle></g></g>
+</svg>

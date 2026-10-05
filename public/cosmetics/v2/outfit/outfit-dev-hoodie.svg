@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-24 -56 560 560" width="100%" height="100%" fill="none">
+<g id="hoodie"><defs><mask id="hoodie-m" maskUnits="userSpaceOnUse" x="-40" y="-80" width="620" height="640"><rect x="-40" y="-80" width="620" height="640" fill="#000"/><path d="M80 328 c0 -72 70 -114 164 -110 c92 2 156 44 166 102 c14 68 -52 102 -166 98 c-108 -2 -164 -34 -164 -90 Z" fill="#fff"/><path d="M212 216 c-10 -62 14 -126 66 -158 c54 -34 118 -16 150 30 c36 50 20 118 -20 156 c-44 44 -118 54 -166 18 c-16 -12 -26 -28 -30 -46 Z" fill="#000" stroke="#000" stroke-width="14"/></mask></defs>
+<g mask="url(#hoodie-m)">
+<path d="M80 328 c0 -72 70 -114 164 -110 c92 2 156 44 166 102 c14 68 -52 102 -166 98 c-108 -2 -164 -34 -164 -90 Z" fill="#334155"/>
+<path d="M84 340 c10 42 60 72 150 72 c74 0 134 -20 162 -54 c-22 56 -86 82 -168 80 c-94 -2 -144 -36 -144 -98 Z" fill="#1E293B" opacity="0.75"/>
+<path d="M300 236 C360 240 404 270 410 312 C390 280 352 258 300 252 Z" fill="#64748B" opacity="0.7"/>
+<path d="M236 350 C280 340 340 342 372 356 L366 406 C330 418 268 418 238 404 Z" fill="#2B3647" stroke="#1B132B" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/><path d="M240 352 C280 344 340 346 370 358" fill="none" stroke="#94A3B8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 7" opacity="0.7"/><text x="262" y="330" font-family="Menlo, monospace" font-weight="700" font-size="34" fill="#58E6B0">&lt;/&gt;</text>
+<path d="M80 328 c0 -72 70 -114 164 -110 c92 2 156 44 166 102 c14 68 -52 102 -166 98 c-108 -2 -164 -34 -164 -90 Z" fill="none" stroke="#1B132B" stroke-width="14"/>
+<path d="M222 236 C250 274 300 292 352 282 C384 276 404 260 414 238" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58 C122 352 120 330 136 316 Z" fill="#334155" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M206 232 C214 272 270 304 340 298 C384 294 414 270 422 236 C424 262 404 290 374 304 C320 322 240 312 210 274 C202 262 202 246 206 232 Z" fill="#475569" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/><path d="M316 300 V346 M334 300 V340" fill="none" stroke="#E2E8F0" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="316" cy="348" r="5" fill="#E2E8F0"/><circle cx="334" cy="342" r="5" fill="#E2E8F0"/></g>
+</svg>

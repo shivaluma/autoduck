@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-24 -56 560 560" width="100%" height="100%" fill="none">
+<ellipse cx="252" cy="436" rx="170" ry="30" fill="#100A20" opacity="0.28"/><!-- Base Duck Body -->
+  <!-- Feet -->
+  <path d="M178 402 c2 18 -8 30 -30 40 c24 6 48 0 64 -18" fill="none" stroke="#FF9B42" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M178 402 c2 18 -8 30 -30 40 c24 6 48 0 64 -18" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.3"/>
+  <path d="M238 386 c2 18 -8 30 -30 40 c24 4 46 0 62 -16" fill="none" stroke="#FF9B42" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M238 386 c2 18 -8 30 -30 40 c24 4 46 0 62 -16" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.3"/>
+
+  <!-- Tail Feathers -->
+  <path d="M94 322 c-18 -16 -30 -36 -34 -58 c28 8 52 20 70 34" fill="#FFD84D" stroke="#1B132B" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Main Torso Body -->
+  <path d="M80 328 c0 -72 70 -114 164 -110 c92 2 156 44 166 102 c14 68 -52 102 -166 98 c-108 -2 -164 -34 -164 -90 Z" fill="#FFD84D" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+  
+  <!-- Torso Shadow Form -->
+  <path d="M84 340 c10 42 60 72 150 72 c74 0 134 -20 162 -54 c-22 56 -86 82 -168 80 c-94 -2 -144 -36 -144 -98 Z" fill="#E5A812" opacity="0.55"/>
+
+  <!-- Head & Neck -->
+  <path d="M212 216 c-10 -62 14 -126 66 -158 c54 -34 118 -16 150 30 c36 50 20 118 -20 156 c-44 44 -118 54 -166 18 c-16 -12 -26 -28 -30 -46 Z" fill="#FFD84D" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+
+  <!-- Head Highlight & Shadow Form -->
+  <path d="M296 74 c34 -20 72 -14 96 14 c16 18 18 42 8 66 c-4 -28 -24 -56 -62 -66 c-18 -4 -32 -2 -42 -14 Z" fill="#FFF1A8" opacity="0.75"/>
+  <path d="M216 220 c6 14 18 24 34 32 c-16 -8 -26 -18 -34 -32 Z" fill="#E5A812" opacity="0.6"/>
+
+  <!-- Wing Silhouette & Highlight -->
+  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="#FFF1A8" opacity="0.4"/>
+  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+
+  
+  <!-- Cheeks / Blush (Soft accent) -->
+  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.45"/>
+
+  <!-- Left Eye -->
+  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
+  <ellipse cx="330" cy="152" rx="11" ry="18" fill="#1B132B"/>
+  <circle cx="326" cy="144" r="5" fill="#FFFDF4"/>
+
+  <!-- Right Eye -->
+  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
+  <ellipse cx="390" cy="156" rx="9" ry="16" fill="#1B132B"/>
+  <circle cx="388" cy="150" r="4" fill="#FFFDF4"/>
+
+  <!-- Orange Beak -->
+  <path d="M354 186 c34 -2 68 8 110 22 c18 6 18 22 0 32 c-40 20 -84 24 -118 10 c-20 -8 -24 -28 -10 -46 c6 -8 12 -14 18 -18 Z" fill="#FF9B42" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+  <!-- Beak Top Highlight -->
+  <path d="M362 192 c28 0 54 8 84 18" stroke="#FFD099" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <!-- Beak Smile Crease & Shadow -->
+  <path d="M342 230 c38 10 78 6 120 -10" stroke="#C95E24" stroke-width="8" stroke-linecap="round" fill="none"/><g id="camo"><defs><mask id="camo-m" maskUnits="userSpaceOnUse" x="-40" y="-80" width="620" height="640"><rect x="-40" y="-80" width="620" height="640" fill="#000"/><path d="M80 328 c0 -72 70 -114 164 -110 c92 2 156 44 166 102 c14 68 -52 102 -166 98 c-108 -2 -164 -34 -164 -90 Z" fill="#fff"/><path d="M212 216 c-10 -62 14 -126 66 -158 c54 -34 118 -16 150 30 c36 50 20 118 -20 156 c-44 44 -118 54 -166 18 c-16 -12 -26 -28 -30 -46 Z" fill="#fff"/><path d="M94 322 c-18 -16 -30 -36 -34 -58 c28 8 52 20 70 34" fill="#fff"/><ellipse cx="320" cy="138" rx="46" ry="54" fill="#000"/><ellipse cx="382" cy="144" rx="36" ry="46" fill="#000"/><path d="M354 186 c34 -2 68 8 110 22 c18 6 18 22 0 32 c-40 20 -84 24 -118 10 c-20 -8 -24 -28 -10 -46 c6 -8 12 -14 18 -18 Z" fill="#000" stroke="#000" stroke-width="14"/></mask><mask id="face-fade" maskUnits="userSpaceOnUse" x="-40" y="-80" width="620" height="640"><rect x="-40" y="-80" width="620" height="640" fill="#fff"/><path d="M212 216 c-10 -62 14 -126 66 -158 c54 -34 118 -16 150 30 c36 50 20 118 -20 156 c-44 44 -118 54 -166 18 c-16 -12 -26 -28 -30 -46 Z" fill="#777"/></mask></defs>
+<g mask="url(#camo-m)"><g mask="url(#face-fade)"><path d="M80 328 c0 -72 70 -114 164 -110 c92 2 156 44 166 102 c14 68 -52 102 -166 98 c-108 -2 -164 -34 -164 -90 Z" fill="#7C8B5A" opacity="0.92"/><path d="M212 216 c-10 -62 14 -126 66 -158 c54 -34 118 -16 150 30 c36 50 20 118 -20 156 c-44 44 -118 54 -166 18 c-16 -12 -26 -28 -30 -46 Z" fill="#7C8B5A" opacity="0.92"/><path d="M94 322 c-18 -16 -30 -36 -34 -58 c28 8 52 20 70 34" fill="#7C8B5A" opacity="0.92"/><path d="M148.5 280.0 Q148.5 280.0 143.7 289.5 Q138.9 298.9 125.9 301.9 Q112.9 304.9 101.3 298.3 Q89.7 291.7 94.3 281.8 Q98.9 271.9 106.7 266.1 Q114.4 260.4 125.6 261.8 Q136.7 263.2 142.6 271.6 Z" fill="#4B5A32"/><path d="M250.4 320.0 Q250.4 320.0 246.5 331.3 Q242.6 342.7 228.1 342.4 Q213.7 342.2 201.4 337.1 Q189.1 331.9 192.6 321.3 Q196.1 310.8 204.5 302.8 Q212.8 294.8 228.3 295.4 Q243.8 296.1 247.1 308.1 Z" fill="#3B2F22"/><path d="M345.1 380.0 Q345.1 380.0 343.1 390.5 Q341.0 401.1 327.1 402.3 Q313.3 403.6 304.5 396.5 Q295.8 389.3 297.4 380.6 Q298.9 371.9 305.9 363.5 Q312.9 355.1 325.3 358.6 Q337.8 362.1 341.5 371.1 Z" fill="#4B5A32"/><path d="M196.9 390.0 Q196.9 390.0 189.7 396.3 Q182.5 402.6 173.7 405.2 Q164.9 407.8 155.9 403.3 Q147.0 398.9 150.0 391.2 Q153.1 383.5 159.2 378.4 Q165.2 373.3 175.2 374.1 Q185.1 374.9 191.0 382.4 Z" fill="#B9A774"/><path d="M312.2 260.0 Q312.2 260.0 307.6 266.5 Q303.1 273.1 294.3 274.2 Q285.6 275.3 279.5 270.9 Q273.4 266.4 274.0 260.2 Q274.5 254.0 279.5 247.4 Q284.5 240.7 294.6 243.0 Q304.6 245.3 308.4 252.7 Z" fill="#B9A774"/><path d="M401.3 320.0 Q401.3 320.0 396.2 325.6 Q391.2 331.2 383.1 334.4 Q375.0 337.5 368.9 332.1 Q362.9 326.6 364.4 320.6 Q365.9 314.6 370.7 309.4 Q375.5 304.3 383.0 306.9 Q390.4 309.5 395.9 314.8 Z" fill="#3B2F22"/><path d="M291.4 80.0 Q291.4 80.0 283.0 87.3 Q274.6 94.7 264.3 97.7 Q254.1 100.8 243.6 95.6 Q233.1 90.4 236.7 81.4 Q240.3 72.4 247.4 66.4 Q254.4 60.5 266.0 61.4 Q277.6 62.3 284.5 71.2 Z" fill="#4B5A32"/><path d="M258.4 180.0 Q258.4 180.0 256.9 187.7 Q255.4 195.5 245.2 196.4 Q235.1 197.3 228.7 192.1 Q222.3 186.8 223.4 180.4 Q224.5 174.0 229.7 167.9 Q234.8 161.7 243.9 164.3 Q253.1 166.9 255.7 173.5 Z" fill="#3B2F22"/><path d="M426.1 90.0 Q426.1 90.0 424.0 96.0 Q422.0 102.0 414.3 101.9 Q406.6 101.8 400.1 99.0 Q393.6 96.3 395.5 90.7 Q397.4 85.1 401.8 80.9 Q406.2 76.6 414.4 77.0 Q422.6 77.4 424.3 83.7 Z" fill="#B9A774"/><path d="M109.2 330.0 Q109.2 330.0 104.6 335.0 Q100.0 340.1 92.8 342.9 Q85.5 345.8 80.0 340.9 Q74.6 335.9 76.0 330.5 Q77.4 325.1 81.7 320.5 Q86.0 315.8 92.7 318.2 Q99.4 320.6 104.3 325.3 Z" fill="#3B2F22"/></g>
+<path d="M80 328 c0 -72 70 -114 164 -110 c92 2 156 44 166 102 c14 68 -52 102 -166 98 c-108 -2 -164 -34 -164 -90 Z" fill="none" stroke="#1B132B" stroke-width="14"/><path d="M212 216 c-10 -62 14 -126 66 -158 c54 -34 118 -16 150 30 c36 50 20 118 -20 156 c-44 44 -118 54 -166 18 c-16 -12 -26 -28 -30 -46 Z" fill="none" stroke="#1B132B" stroke-width="14"/></g>
+<path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>
+</svg>

@@ -2,9 +2,15 @@
 
 import { useMemo, useState } from 'react'
 import { CosmeticDuck } from './cosmetic-duck'
-import type { CosmeticDefinition, CosmeticSlot, DuckAppearance } from '@/lib/cosmetics/types'
+import { COSMETIC_RARITIES, SLOT_FRAMES, type CosmeticDefinition, type CosmeticRarity, type CosmeticSlot, type DuckAppearance } from '@/lib/cosmetics/types'
 
-/* eslint-disable @next/next/no-img-element -- exact SVG layer previews are intentionally unoptimized */
+export const RARITY_STYLE: Record<CosmeticRarity, { label: string; color: string; glow: string }> = {
+  common: { label: 'Thường', color: '#94A3B8', glow: 'rgba(148,163,184,0)' },
+  uncommon: { label: 'Khá', color: '#4ADE80', glow: 'rgba(74,222,128,0.18)' },
+  rare: { label: 'Hiếm', color: '#38BDF8', glow: 'rgba(56,189,248,0.25)' },
+  epic: { label: 'Sử thi', color: '#C084FC', glow: 'rgba(192,132,252,0.32)' },
+  legendary: { label: 'Huyền thoại', color: '#FBBF24', glow: 'rgba(251,191,36,0.42)' },
+}
 
 const INTERACTIVE_SLOTS: Array<{ id: CosmeticSlot; label: string }> = [
   { id: 'bodyColor', label: 'Màu' },
@@ -42,7 +48,24 @@ export function DuckCloset({
   const [message, setMessage] = useState('')
   const [presetName, setPresetName] = useState('')
   const owned = useMemo(() => new Set(ownedIds), [ownedIds])
-  const choices = catalog.filter((item) => item.slot === slot && owned.has(item.id))
+  const choices = catalog
+    .filter((item) => item.slot === slot && owned.has(item.id))
+    .sort((left, right) => COSMETIC_RARITIES.indexOf(right.rarity) - COSMETIC_RARITIES.indexOf(left.rarity))
+  const slotKey = `${slot}Id` as keyof DuckAppearance
+  // Tiles try the item on the player's own duck, minus anything that would hide it or clutter the crop:
+  // ambient extras (aura, pet, trail) always, and the outfit when picking a color or skin it would cover.
+  const tileBase = useMemo(() => {
+    const base: Record<string, string> = {}
+    const keys = slot === 'bodyColor' ? ['bodyColorId', 'faceId'] as const
+      : slot === 'bodySkin' ? ['bodyColorId', 'bodySkinId', 'faceId'] as const
+        : ['bodyColorId', 'bodySkinId', 'faceId', 'headId', 'outfitId'] as const
+    for (const key of keys) {
+      const value = appearance[key]
+      if (value) base[key] = value
+    }
+    return base as DuckAppearance
+  }, [appearance, slot])
+  const equippedItem = catalog.find((item) => item.id === appearance[slotKey])
 
   function equip(cosmeticId: string | null) {
     const key = `${slot}Id` as keyof DuckAppearance
@@ -88,17 +111,44 @@ export function DuckCloset({
     <div className="grid md:grid-cols-[280px_1fr]">
       <div className="flex flex-col items-center justify-center border-b-2 border-white/10 bg-black/15 p-5 md:border-b-0 md:border-r-2">
         <div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-neon-green)]">{onboarded ? 'DUCK CLOSET' : 'MAKE YOUR DUCK'}</div>
-        <CosmeticDuck appearance={appearance} size={220} label={`Dzịt của ${name}`} />
+        <CosmeticDuck appearance={appearance} size={232} label={`Dzịt của ${name}`} />
         <div className="font-display text-2xl">{name}</div>
         <div className="mt-1 rounded-full bg-black/30 px-3 py-1 text-sm font-black text-[var(--color-ggd-gold)]">🪙 {quackPoints} QP</div>
       </div>
       <div className="p-5">
         <div className="flex flex-wrap gap-2">
-          {INTERACTIVE_SLOTS.map((option) => <button key={option.id} onClick={() => setSlot(option.id)} className={`rounded-full px-3 py-2 text-xs font-black ${slot === option.id ? 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]' : 'bg-black/25 text-white/65'}`}>{option.label}</button>)}
+          {INTERACTIVE_SLOTS.map((option) => {
+            const total = catalog.filter((item) => item.slot === option.id).length
+            const mine = catalog.filter((item) => item.slot === option.id && owned.has(item.id)).length
+            return <button key={option.id} onClick={() => setSlot(option.id)} className={`rounded-full px-3 py-2 text-xs font-black ${slot === option.id ? 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]' : 'bg-black/25 text-white/65'}`}>{option.label} <span className="opacity-60">{mine}/{total}</span></button>
+          })}
         </div>
-        <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
-          {slot !== 'bodyColor' && <button onClick={() => equip(null)} className={`aspect-square rounded-xl border-2 text-xs font-black ${!appearance[`${slot}Id` as keyof DuckAppearance] ? 'border-white bg-white/10' : 'border-white/10 bg-black/20'}`}>Không</button>}
-          {choices.map((item) => <button key={item.id} title={item.name} onClick={() => equip(item.id)} className={`relative aspect-square overflow-hidden rounded-xl border-2 bg-black/20 transition-transform active:scale-95 ${appearance[`${slot}Id` as keyof DuckAppearance] === item.id ? 'border-[var(--color-ggd-gold)] shadow-[0_0_12px_rgba(255,216,77,0.35)]' : 'border-white/10 hover:border-white/30'}`}><img src={item.previewAsset || item.asset} alt={item.name} className="h-full w-full object-contain" /><span className="absolute inset-x-1 bottom-1 truncate rounded bg-black/75 px-1 text-[9px] font-black">{item.name}</span></button>)}
+        <div className="mt-3 min-h-5 text-xs font-bold text-white/60">
+          {equippedItem ? <>Đang mặc: <span style={{ color: RARITY_STYLE[equippedItem.rarity].color }}>{equippedItem.name}</span> · {RARITY_STYLE[equippedItem.rarity].label} · {equippedItem.collection}</> : 'Chưa mặc gì ở ô này.'}
+        </div>
+        <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
+          {slot !== 'bodyColor' && <button onClick={() => equip(null)} className={`aspect-square rounded-xl border-2 text-xs font-black ${!appearance[slotKey] ? 'border-white bg-white/10' : 'border-white/10 bg-black/20'}`}>Không</button>}
+          {choices.map((item) => {
+            const rarity = RARITY_STYLE[item.rarity]
+            const selected = appearance[slotKey] === item.id
+            return <button
+              key={item.id}
+              title={`${item.name} · ${rarity.label}`}
+              onClick={() => equip(item.id)}
+              className="group relative aspect-square overflow-hidden rounded-xl border-2 transition-transform active:scale-95"
+              style={{
+                borderColor: selected ? 'var(--color-ggd-gold)' : `${rarity.color}66`,
+                background: `radial-gradient(circle at 50% 40%, ${rarity.glow}, rgba(0,0,0,0.25) 70%)`,
+                boxShadow: selected ? '0 0 14px rgba(255,216,77,0.45)' : undefined,
+              }}
+            >
+              <span className="absolute inset-0">
+                <CosmeticDuck appearance={{ ...tileBase, [slotKey]: item.id }} size="100%" frame={SLOT_FRAMES[slot]} animate={false} label={item.name} />
+              </span>
+              <span className="absolute left-1.5 top-1.5 h-2.5 w-2.5 rotate-45 rounded-[2px] border border-black/60" style={{ background: rarity.color }} />
+              <span className="absolute inset-x-1 bottom-1 truncate rounded bg-black/75 px-1 text-[9px] font-black" style={{ color: item.rarity === 'common' ? undefined : rarity.color }}>{item.name}</span>
+            </button>
+          })}
           {choices.length === 0 && <div className="col-span-full rounded-xl border border-dashed border-white/15 p-4 text-sm text-white/50">Chưa có món nào.</div>}
         </div>
         <div className="mt-5 flex flex-wrap gap-2">

@@ -3,6 +3,8 @@ import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 import { PrismaClient } from '../prisma/generated/prisma/client'
 import { getIsoWeekKey, normalizeLegacyShieldState } from '../lib/shield-decay'
 import { DEFAULT_APPEARANCE, STARTER_COSMETIC_IDS } from '../lib/cosmetics/catalog'
+import { applyQuackTransaction } from '../lib/cosmetics/economy'
+import { planLegacyInventory, remapAppearance } from '../lib/cosmetics/legacy'
 
 type Migration = {
   id: string
@@ -867,6 +869,64 @@ async function addGoogleAuthFields(prisma: PrismaClient) {
   await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "User_googleId_key" ON "User"("googleId")`)
 }
 
+/**
+ * Duck Closet v2: the ~390 generated v1 items become 122 hand-designed ones. Per player, in one transaction:
+ * retired items are swapped for their v2 equivalent or refunded at the v1 shop price, then the equipped
+ * appearance, favorite and presets are rewritten to IDs that exist and are owned. Audit tables are untouched.
+ */
+async function migrateCosmeticsV2Catalog(prisma: PrismaClient) {
+  const players = await prisma.seasonPlayer.findMany({ select: { id: true, cosmetics: { select: { cosmeticId: true } } } })
+  let grants = 0
+  let refunds = 0
+  let refundedQp = 0
+  for (const player of players) {
+    const plan = planLegacyInventory(player.cosmetics.map((entry) => entry.cosmeticId))
+    await prisma.$transaction(async (tx) => {
+      for (const grant of plan.grant) {
+        await tx.playerCosmetic.upsert({
+          where: { seasonPlayerId_cosmeticId: { seasonPlayerId: player.id, cosmeticId: grant.cosmeticId } },
+          create: { seasonPlayerId: player.id, cosmeticId: grant.cosmeticId, source: 'MIGRATION', sourceReferenceId: grant.replaces },
+          update: {},
+        })
+      }
+      for (const refund of plan.refund) {
+        await applyQuackTransaction(tx, {
+          seasonPlayerId: player.id,
+          amount: refund.amount,
+          reason: 'COSMETIC_RETIRED_REFUND',
+          cosmeticId: refund.cosmeticId,
+          idempotencyKey: `cosmetics-v2-refund:${player.id}:${refund.cosmeticId}`,
+        })
+      }
+      if (plan.remove.length) await tx.playerCosmetic.deleteMany({ where: { seasonPlayerId: player.id, cosmeticId: { in: plan.remove } } })
+
+      const ownedAfter = new Set((await tx.playerCosmetic.findMany({ where: { seasonPlayerId: player.id }, select: { cosmeticId: true } })).map((entry) => entry.cosmeticId))
+      const appearance = await tx.playerAppearance.findUnique({ where: { seasonPlayerId: player.id } })
+      if (appearance) {
+        const next = remapAppearance(appearance as unknown as Record<string, unknown>, ownedAfter)
+        const favoriteId = appearance.favoriteId && ownedAfter.has(appearance.favoriteId) ? appearance.favoriteId : null
+        await tx.playerAppearance.update({
+          where: { seasonPlayerId: player.id },
+          data: {
+            bodyColorId: next.bodyColorId, bodySkinId: next.bodySkinId ?? null, faceId: next.faceId ?? null, headId: next.headId ?? null,
+            neckId: null, outfitId: next.outfitId ?? null, backId: null, petId: next.petId ?? null, auraId: next.auraId ?? null,
+            trailId: next.trailId ?? null, finishId: null, nameplateId: null, favoriteId,
+          },
+        })
+      }
+      const presets = await tx.cosmeticPreset.findMany({ where: { seasonPlayerId: player.id } })
+      for (const preset of presets) {
+        const next = remapAppearance(JSON.parse(preset.appearanceJson) as Record<string, unknown>, ownedAfter)
+        await tx.cosmeticPreset.update({ where: { id: preset.id }, data: { appearanceJson: JSON.stringify(next) } })
+      }
+    })
+    grants += plan.grant.length
+    refunds += plan.refund.length
+    refundedQp += plan.refund.reduce((total, refund) => total + refund.amount, 0)
+  }
+  console.log(`    cosmetics v2: ${players.length} players, ${grants} replacements, ${refunds} refunds (${refundedQp} QP)`)
+}
+
 const migrations: Migration[] = [
   {
     id: '2026-04-23-001-shield-charges-v1',
@@ -942,6 +1002,11 @@ const migrations: Migration[] = [
     id: '2026-08-16-001-google-auth-fields',
     name: 'Add googleId and email columns to User for Google Sign-In and account binding',
     run: addGoogleAuthFields,
+  },
+  {
+    id: '2026-10-05-001-cosmetics-v2-catalog',
+    name: 'Retire v1 generated cosmetics: swap for v2 equivalents or refund QP, remap appearances and presets',
+    run: migrateCosmeticsV2Catalog,
   },
 ]
 

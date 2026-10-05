@@ -69,3 +69,28 @@ export const COSMETIC_LAYER_ORDER: CosmeticSlot[] = [
   'aura', 'trail', 'bodyColor', 'bodySkin', 'back', 'outfit',
   'neck', 'face', 'head', 'pet', 'nameplate', 'finish',
 ]
+
+/** v2 render frame (512 rig coordinates padded for headroom) shared by every layer. */
+export const AVATAR_FRAME = { x: -24, y: -56, size: 560 } as const
+
+/**
+ * Per-slot framing for previews and closet tiles, as a square crop [x, y, size] in rig coordinates.
+ * Zooming on the part an item changes makes small tiles read instantly.
+ */
+export const SLOT_FRAMES: Record<CosmeticSlot, readonly [number, number, number]> = {
+  bodyColor: [-24, -56, 560],
+  bodySkin: [-24, -56, 560],
+  face: [190, 0, 320],
+  head: [150, -56, 380],
+  outfit: [10, 60, 470],
+  pet: [280, 196, 270],
+  aura: [-24, -56, 560],
+  trail: [-24, 150, 380],
+  neck: [120, 140, 340],
+  back: [-24, 100, 400],
+  finish: [-24, -56, 560],
+  nameplate: [-24, 200, 560],
+}
+
+/** Layers that render behind the duck body. */
+export const BEHIND_BODY_SLOTS: CosmeticSlot[] = ['aura', 'trail']

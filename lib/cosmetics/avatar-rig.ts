@@ -6,6 +6,12 @@
 export const DUCK_VIEWBOX = '0 0 512 512'
 
 /**
+ * v2 render frame: same 512 rig coordinates, padded so crowns, ears and auras have headroom.
+ * Every v2 layer uses this exact viewBox so stacked <img> layers stay aligned.
+ */
+export const AVATAR_VIEWBOX = '-24 -56 560 560'
+
+/**
  * Standardized Stroke Hierarchy Tokens
  * Guarantees visual unity across all cosmetics as if drawn by a single artist.
  */
@@ -25,115 +31,6 @@ export const FACE_SAFE_ZONE = {
   minY: 90,
   maxX: 430,
   maxY: 240,
-} as const
-
-export interface ThemePalette {
-  primary: string
-  secondary: string
-  accent: string
-  neutral: string
-  fx: string
-}
-
-export const THEME_PALETTES: Record<string, ThemePalette> = {
-  royal: {
-    primary: '#FFD84D',
-    secondary: '#1E293B',
-    accent: '#EF4444',
-    neutral: '#0F172A',
-    fx: '#FDE047',
-  },
-  viet: {
-    primary: '#58E6B0',
-    secondary: '#F4E0A5',
-    accent: '#FF78A8',
-    neutral: '#065F46',
-    fx: '#FDA4AF',
-  },
-  cyber: {
-    primary: '#00F2FE',
-    secondary: '#0B0F19',
-    accent: '#FF007F',
-    neutral: '#1E1B4B',
-    fx: '#38BDF8',
-  },
-  dragon: {
-    primary: '#DC2626',
-    secondary: '#7F1D1D',
-    accent: '#FFD84D',
-    neutral: '#1B132B',
-    fx: '#F59E0B',
-  },
-  space: {
-    primary: '#39406E',
-    secondary: '#F8FAFC',
-    accent: '#38BDF8',
-    neutral: '#0F172A',
-    fx: '#C084FC',
-  },
-  office: {
-    primary: '#61C9FF',
-    secondary: '#0F172A',
-    accent: '#EF4444',
-    neutral: '#1E293B',
-    fx: '#94A3B8',
-  },
-  street: {
-    primary: '#FF9B42',
-    secondary: '#EF4444',
-    accent: '#FFFDF4',
-    neutral: '#18181B',
-    fx: '#61C9FF',
-  },
-  wizard: {
-    primary: '#B99AFF',
-    secondary: '#2B1D52',
-    accent: '#FFD84D',
-    neutral: '#1B132B',
-    fx: '#FDE047',
-  },
-  spirit: {
-    primary: '#FFC0D9',
-    secondary: '#1E1B4B',
-    accent: '#38BDF8',
-    neutral: '#4A1D46',
-    fx: '#FDA4AF',
-  },
-  starguardian: {
-    primary: '#85E3FF',
-    secondary: '#FF78A8',
-    accent: '#FFD84D',
-    neutral: '#1E1B4B',
-    fx: '#FFFDF4',
-  },
-  bloodmoon: {
-    primary: '#991B1B',
-    secondary: '#18181B',
-    accent: '#F59E0B',
-    neutral: '#5C0D0D',
-    fx: '#EF4444',
-  },
-  coven: {
-    primary: '#F1F5F9',
-    secondary: '#1E1B4B',
-    accent: '#A855F7',
-    neutral: '#0F172A',
-    fx: '#C084FC',
-  },
-  highnoon: {
-    primary: '#EA580C',
-    secondary: '#78350F',
-    accent: '#FFD84D',
-    neutral: '#18181B',
-    fx: '#F59E0B',
-  },
-  reddit: {
-    primary: '#FF4500',
-    secondary: '#1E1B4B',
-    accent: '#6EE7B7',
-    neutral: '#0F172A',
-    fx: '#00F2FE',
-  },
 } as const
 
 export interface DuckPaletteTokens {
@@ -258,56 +155,53 @@ export const CANONICAL_PALETTES: Record<string, DuckPaletteTokens> = {
     eyeHighlight: '#FFFDF4',
     blush: '#FF78A8',
   },
-  'body-midnight': {
-    bodyBase: '#475569',
-    bodyShadow: '#1E293B',
-    bodyHighlight: '#94A3B8',
-    outline: '#0B0F19',
-    beakBase: '#F59E0B',
-    beakShadow: '#B45309',
-    beakHighlight: '#FCD34D',
-    feetBase: '#F59E0B',
-    feetShadow: '#B45309',
-    eyeWhite: '#FFFDF4',
-    eyePupil: '#0F172A',
-    eyeHighlight: '#38BDF8',
-    blush: '#C084FC',
-  },
-  'body-cyber-cyan': {
-    bodyBase: '#06B6D4',
-    bodyShadow: '#0891B2',
-    bodyHighlight: '#67E8F9',
-    outline: '#082F49',
-    beakBase: '#FF9B42',
-    beakShadow: '#C95E24',
-    beakHighlight: '#FFD099',
-    feetBase: '#0891B2',
-    feetShadow: '#082F49',
-    eyeWhite: '#FFFDF4',
-    eyePupil: '#082F49',
-    eyeHighlight: '#00F2FE',
-    blush: '#FF007F',
-  },
-  'body-ruby': {
-    bodyBase: '#EF4444',
-    bodyShadow: '#B91C1C',
-    bodyHighlight: '#FCA5A5',
-    outline: '#1B132B',
-    beakBase: '#F59E0B',
-    beakShadow: '#B45309',
-    beakHighlight: '#FCD34D',
-    feetBase: '#F59E0B',
-    feetShadow: '#B45309',
-    eyeWhite: '#FFFDF4',
-    eyePupil: '#1B132B',
-    eyeHighlight: '#FFFDF4',
-    blush: '#F43F5E',
-  },
-  'body-emerald': {
-    bodyBase: '#10B981',
-    bodyShadow: '#047857',
-    bodyHighlight: '#6EE7B7',
-    outline: '#1B132B',
+}
+
+function hexToHsl(hex: string) {
+  const value = hex.replace('#', '')
+  const [r, g, b] = [0, 2, 4].map((offset) => parseInt(value.slice(offset, offset + 2), 16) / 255) as [number, number, number]
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  const l = (max + min) / 2
+  if (max === min) return { h: 0, s: 0, l }
+  const d = max - min
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+  const h = max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4
+  return { h: h * 60, s, l }
+}
+
+function hslToHex(h: number, s: number, l: number) {
+  const hue = ((h % 360) + 360) % 360
+  const sat = Math.min(1, Math.max(0, s))
+  const light = Math.min(1, Math.max(0, l))
+  const k = (n: number) => (n + hue / 30) % 12
+  const a = sat * Math.min(light, 1 - light)
+  const f = (n: number) => light - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)))
+  return `#${[f(0), f(8), f(4)].map((channel) => Math.round(channel * 255).toString(16).padStart(2, '0')).join('').toUpperCase()}`
+}
+
+/**
+ * Shifts a color the way a painter would: shadows get darker, more saturated and lean toward
+ * violet; highlights get lighter and lean toward warm yellow. Keeps every derived tone in-family.
+ */
+export function shiftTone(hex: string, amount: number) {
+  const { h, s, l } = hexToHsl(hex)
+  if (amount < 0) {
+    const towardViolet = h > 60 && h < 260 ? 1 : -1
+    return hslToHex(h + towardViolet * 10 * -amount, s + 0.08 * -amount, l + amount * 0.2)
+  }
+  const towardWarm = h > 60 && h < 240 ? -1 : 1
+  return hslToHex(h + towardWarm * 6 * amount, s - 0.04 * amount, l + amount * (1 - l) * 0.55)
+}
+
+/** Builds a full duck palette from one body color so any hex shades correctly. */
+export function derivePalette(base: string, overrides: Partial<DuckPaletteTokens> = {}): DuckPaletteTokens {
+  const { l } = hexToHsl(base)
+  return {
+    bodyBase: base,
+    bodyShadow: shiftTone(base, -1),
+    bodyHighlight: shiftTone(base, 1),
+    outline: l < 0.25 ? '#0B0716' : STROKE_TOKENS.COLOR,
     beakBase: '#FF9B42',
     beakShadow: '#C95E24',
     beakHighlight: '#FFD099',
@@ -316,181 +210,29 @@ export const CANONICAL_PALETTES: Record<string, DuckPaletteTokens> = {
     eyeWhite: '#FFFDF4',
     eyePupil: '#1B132B',
     eyeHighlight: '#FFFDF4',
-    blush: '#FF78A8',
-  },
-  'body-spirit-blossom-lotus': {
-    bodyBase: '#FFC0D9',
-    bodyShadow: '#E085A8',
-    bodyHighlight: '#FFE8F2',
-    outline: '#4A1D46',
-    beakBase: '#FF9B42',
-    beakShadow: '#C95E24',
-    beakHighlight: '#FFD099',
-    feetBase: '#FF9B42',
-    feetShadow: '#C95E24',
-    eyeWhite: '#FFFDF4',
-    eyePupil: '#4A1D46',
-    eyeHighlight: '#38BDF8',
-    blush: '#FF4D88',
-  },
-  'body-star-guardian-blue': {
-    bodyBase: '#85E3FF',
-    bodyShadow: '#38BDF8',
-    bodyHighlight: '#D1F4FF',
-    outline: '#1E1B4B',
-    beakBase: '#FF9B42',
-    beakShadow: '#C95E24',
-    beakHighlight: '#FFD099',
-    feetBase: '#FF9B42',
-    feetShadow: '#C95E24',
-    eyeWhite: '#FFFDF4',
-    eyePupil: '#1E1B4B',
-    eyeHighlight: '#FFD84D',
-    blush: '#FF78A8',
-  },
-  'body-blood-moon-crimson': {
-    bodyBase: '#991B1B',
-    bodyShadow: '#5C0D0D',
-    bodyHighlight: '#DC2626',
-    outline: '#18181B',
-    beakBase: '#F59E0B',
-    beakShadow: '#B45309',
-    beakHighlight: '#FCD34D',
-    feetBase: '#F59E0B',
-    feetShadow: '#B45309',
-    eyeWhite: '#FFFDF4',
-    eyePupil: '#18181B',
-    eyeHighlight: '#DC2626',
-    blush: '#EF4444',
-  },
-  'body-void-purple': {
-    bodyBase: '#6B21A8',
-    bodyShadow: '#3B0764',
-    bodyHighlight: '#A855F7',
-    outline: '#0F172A',
-    beakBase: '#C084FC',
-    beakShadow: '#7E22CE',
-    beakHighlight: '#E9D5FF',
-    feetBase: '#C084FC',
-    feetShadow: '#7E22CE',
-    eyeWhite: '#FFFDF4',
-    eyePupil: '#0F172A',
-    eyeHighlight: '#00F2FE',
-    blush: '#C084FC',
-  },
-  'body-hextech-blue': {
-    bodyBase: '#0284C7',
-    bodyShadow: '#0369A1',
-    bodyHighlight: '#38BDF8',
-    outline: '#082F49',
-    beakBase: '#F59E0B',
-    beakShadow: '#B45309',
-    beakHighlight: '#FCD34D',
-    feetBase: '#F59E0B',
-    feetShadow: '#B45309',
-    eyeWhite: '#FFFDF4',
-    eyePupil: '#082F49',
-    eyeHighlight: '#67E8F9',
-    blush: '#38BDF8',
-  },
-  'body-snoo-cosmic-abyss': {
-    bodyBase: '#1E1B4B',
-    bodyShadow: '#0F172A',
-    bodyHighlight: '#312E81',
-    outline: '#020617',
-    beakBase: '#F59E0B',
-    beakShadow: '#B45309',
-    beakHighlight: '#FCD34D',
-    feetBase: '#F59E0B',
-    feetShadow: '#B45309',
-    eyeWhite: '#FFFDF4',
-    eyePupil: '#020617',
-    eyeHighlight: '#38BDF8',
-    blush: '#818CF8',
-  },
-  'body-wsb-diamond-mint': {
-    bodyBase: '#34D399',
-    bodyShadow: '#059669',
-    bodyHighlight: '#A7F3D0',
-    outline: '#064E3B',
-    beakBase: '#FF9B42',
-    beakShadow: '#C95E24',
-    beakHighlight: '#FFD099',
-    feetBase: '#FF9B42',
-    feetShadow: '#C95E24',
-    eyeWhite: '#FFFDF4',
-    eyePupil: '#064E3B',
-    eyeHighlight: '#67E8F9',
-    blush: '#FF78A8',
-  },
-  'body-coven-bone-white': {
-    bodyBase: '#F1F5F9',
-    bodyShadow: '#CBD5E1',
-    bodyHighlight: '#FFFFFF',
-    outline: '#0F172A',
-    beakBase: '#475569',
-    beakShadow: '#1E293B',
-    beakHighlight: '#94A3B8',
-    feetBase: '#475569',
-    feetShadow: '#1E293B',
-    eyeWhite: '#FFFDF4',
-    eyePupil: '#0F172A',
-    eyeHighlight: '#A855F7',
-    blush: '#94A3B8',
-  },
-  'body-high-noon-sulfur': {
-    bodyBase: '#EA580C',
-    bodyShadow: '#9A3412',
-    bodyHighlight: '#FDBA74',
-    outline: '#18181B',
-    beakBase: '#B45309',
-    beakShadow: '#78350F',
-    beakHighlight: '#FCD34D',
-    feetBase: '#B45309',
-    feetShadow: '#78350F',
-    eyeWhite: '#FFFDF4',
-    eyePupil: '#18181B',
-    eyeHighlight: '#F59E0B',
-    blush: '#DC2626',
-  },
-  'body-porcelain-cobalt': {
-    bodyBase: '#2563EB',
-    bodyShadow: '#1E40AF',
-    bodyHighlight: '#60A5FA',
-    outline: '#0F172A',
-    beakBase: '#FF9B42',
-    beakShadow: '#C95E24',
-    beakHighlight: '#FFD099',
-    feetBase: '#FF9B42',
-    feetShadow: '#C95E24',
-    eyeWhite: '#FFFDF4',
-    eyePupil: '#0F172A',
-    eyeHighlight: '#FFFDF4',
-    blush: '#38BDF8',
-  },
+    blush: l > 0.7 ? '#FF78A8' : '#FF5C93',
+    ...overrides,
+  }
 }
 
 export function getDuckPalette(colorIdOrHex = 'body-sunshine'): DuckPaletteTokens {
   if (CANONICAL_PALETTES[colorIdOrHex]) return CANONICAL_PALETTES[colorIdOrHex]
-  
-  // Custom hex color fallback
-  const base = colorIdOrHex.startsWith('#') ? colorIdOrHex : '#FFD84D'
-  return {
-    bodyBase: base,
-    bodyShadow: '#C29312',
-    bodyHighlight: '#FFF7C2',
-    outline: STROKE_TOKENS.COLOR,
-    beakBase: '#FF9B42',
-    beakShadow: '#C95E24',
-    beakHighlight: '#FFD099',
-    feetBase: '#FF9B42',
-    feetShadow: '#C95E24',
-    eyeWhite: '#FFFDF4',
-    eyePupil: '#1B132B',
-    eyeHighlight: '#FFFDF4',
-    blush: '#FF78A8',
-  }
+  return derivePalette(colorIdOrHex.startsWith('#') ? colorIdOrHex : '#FFD84D')
 }
+
+/**
+ * Canonical silhouette paths shared by the base duck and every overlay that must hug the body
+ * (skins, outfits). Overlays clip to these so nothing floats off the silhouette.
+ */
+export const DUCK_PATHS = {
+  tail: 'M94 322 c-18 -16 -30 -36 -34 -58 c28 8 52 20 70 34',
+  torso: 'M80 328 c0 -72 70 -114 164 -110 c92 2 156 44 166 102 c14 68 -52 102 -166 98 c-108 -2 -164 -34 -164 -90 Z',
+  torsoShadow: 'M84 340 c10 42 60 72 150 72 c74 0 134 -20 162 -54 c-22 56 -86 82 -168 80 c-94 -2 -144 -36 -144 -98 Z',
+  head: 'M212 216 c-10 -62 14 -126 66 -158 c54 -34 118 -16 150 30 c36 50 20 118 -20 156 c-44 44 -118 54 -166 18 c-16 -12 -26 -28 -30 -46 Z',
+  headHighlight: 'M296 74 c34 -20 72 -14 96 14 c16 18 18 42 8 66 c-4 -28 -24 -56 -62 -66 c-18 -4 -32 -2 -42 -14 Z',
+  wing: 'M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58',
+  beak: 'M354 186 c34 -2 68 8 110 22 c18 6 18 22 0 32 c-40 20 -84 24 -118 10 c-20 -8 -24 -28 -10 -46 c6 -8 12 -14 18 -18 Z',
+} as const
 
 /**
  * Semantic Avatar Rig Anchors in 512x512 Space
@@ -523,11 +265,16 @@ export const DUCK_RIG_ANCHORS = {
 /**
  * Generates the canonical base duck SVG body in 512x512 space
  */
-export function generateBaseDuckSvg(palette: DuckPaletteTokens): string {
+/**
+ * `overlay` is painted over the body but under the face, so regional coloring (a mallard's green
+ * head, a white belly) never covers the eyes or beak. `defs` lets gradient/metal fills be referenced
+ * from palette tokens as `url(#id)`.
+ */
+export function generateBaseDuckSvg(palette: DuckPaletteTokens, options: { overlay?: string; defs?: string } = {}): string {
   const { OUTLINE_MAJOR, OUTLINE_MINOR, DETAIL, COLOR } = STROKE_TOKENS
   const outline = palette.outline || COLOR
 
-  return `<!-- Base Duck Body -->
+  return `${options.defs ? `<defs>${options.defs}</defs>` : ''}<!-- Base Duck Body -->
   <!-- Feet -->
   <path d="M178 402 c2 18 -8 30 -30 40 c24 6 48 0 64 -18" fill="none" stroke="${palette.feetBase}" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M178 402 c2 18 -8 30 -30 40 c24 6 48 0 64 -18" fill="none" stroke="${outline}" stroke-width="${OUTLINE_MINOR}" stroke-linecap="round" stroke-linejoin="round" opacity="0.3"/>
@@ -554,6 +301,7 @@ export function generateBaseDuckSvg(palette: DuckPaletteTokens): string {
   <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="${palette.bodyHighlight}" opacity="0.4"/>
   <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="${outline}" stroke-width="${OUTLINE_MINOR}" stroke-linecap="round" stroke-linejoin="round"/>
 
+  ${options.overlay ?? ''}
   <!-- Cheeks / Blush (Soft accent) -->
   <circle cx="270" cy="190" r="14" fill="${palette.blush}" opacity="0.45"/>
 

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-24 -56 560 560" width="100%" height="100%" fill="none">
+<g id="tiny-crown"><path d="M312 58 L304 14 L332 34 L350 4 L370 32 L398 12 L396 56 C368 48 340 50 312 58 Z" fill="#FFD84D" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M350 14 L364 32 L388 20 L386 50 C372 46 360 46 350 46 Z" fill="#FFF3A6" opacity="0.85"/>
+<path d="M312 58 L304 14 L322 30 L322 56 Z" fill="#D9A21B" opacity="0.8"/>
+<path d="M310 60 C340 50 370 50 400 58 L398 46 C370 38 340 38 312 48 Z" fill="#F2B627" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+<g><path d="M355 42 L361.88 48.4 L359 58 L351 58 L348.12 48.4 Z" fill="#EF4444" stroke="#1B132B" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/><path d="M355 44.4 L359 48.8 L355 50.8 L352.6 48.4 Z" fill="#FCECE9" opacity="0.85"/><path d="M351 56.8 L355 50.8 L358.36 56.8 Z" fill="#C50827" opacity="0.55"/></g>
+<circle cx="304" cy="14" r="6" fill="#FF78A8" stroke="#1B132B" stroke-width="4"/>
+<circle cx="350" cy="4" r="6" fill="#61C9FF" stroke="#1B132B" stroke-width="4"/>
+<circle cx="398" cy="12" r="6" fill="#58E6B0" stroke="#1B132B" stroke-width="4"/></g>
+</svg>

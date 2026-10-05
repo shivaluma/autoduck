@@ -1714,3 +1714,18 @@
       -1px -1px 0 var(--color-ggd-outline);
   }
 }
+
+/* Duck Closet v2 — the whole stacked avatar breathes as one so layers never drift apart. */
+@keyframes duck-avatar-idle {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-1.5%) rotate(-0.6deg); }
+}
+
+.duck-avatar-rig-idle {
+  animation: duck-avatar-idle 3.2s ease-in-out infinite;
+  transform-origin: 50% 85%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .duck-avatar-rig-idle { animation: none; }
+}

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-24 -56 560 560" width="100%" height="100%" fill="none">
+<g id="goggles"><path d="M276 150 C240 150 218 160 204 176" fill="none" stroke="#1B132B" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M276 150 C240 150 218 160 204 176" fill="none" stroke="#FF7A59" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M280 134 C280 108 300 96 322 96 C346 96 364 110 362 136 C360 164 342 178 320 178 C296 178 280 162 280 134 Z" fill="#38BDF8" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round" fill-opacity="0.45"/>
+<path d="M366 140 C366 118 380 108 396 108 C414 108 426 122 424 142 C422 164 410 174 394 174 C378 174 366 160 366 140 Z" fill="#38BDF8" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round" fill-opacity="0.45"/>
+<path d="M362 136 C364 130 366 130 366 138" fill="none" stroke="#1B132B" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M296 110 c10 -8 24 -8 32 -2 c-12 0 -22 4 -28 10 Z M378 118 c6 -6 16 -6 22 -2 c-8 0 -14 2 -18 8 Z" fill="#FFFFFF" opacity="0.85"/></g>
+</svg>

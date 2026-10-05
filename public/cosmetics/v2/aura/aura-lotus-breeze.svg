@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-24 -56 560 560" width="100%" height="100%" fill="none">
+<g id="lotus-breeze"><path d="M30 330 C40 200 140 110 260 100 C380 92 470 160 500 260" fill="none" stroke="#F9A8D4" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.45" stroke-dasharray="2 14"/>
+<path transform="translate(40 300) rotate(-30)" d="M0 -14 C9 -6 9 6 0 14 C-9 6 -9 -6 0 -14 Z" fill="#F9A8D4" stroke="#1B132B" stroke-width="3"/>
+<path transform="translate(80 190) rotate(10)" d="M0 -14 C9 -6 9 6 0 14 C-9 6 -9 -6 0 -14 Z" fill="#F9A8D4" stroke="#1B132B" stroke-width="3"/>
+<path transform="translate(160 120) rotate(40)" d="M0 -14 C9 -6 9 6 0 14 C-9 6 -9 -6 0 -14 Z" fill="#F9A8D4" stroke="#1B132B" stroke-width="3"/>
+<path transform="translate(470 190) rotate(-50)" d="M0 -14 C9 -6 9 6 0 14 C-9 6 -9 -6 0 -14 Z" fill="#F9A8D4" stroke="#1B132B" stroke-width="3"/>
+<path transform="translate(500 290) rotate(-10)" d="M0 -14 C9 -6 9 6 0 14 C-9 6 -9 -6 0 -14 Z" fill="#FBCFE8" stroke="#1B132B" stroke-width="3"/>
+<g><path transform="translate(380 100) rotate(60)" d="M0 -14 C9 -6 9 6 0 14 C-9 6 -9 -6 0 -14 Z" fill="#FBCFE8" stroke="#1B132B" stroke-width="3"/><animateTransform attribute-name="transform" type="translate" values="0 0; 10 6; 0 0" dur="4s" repeat-count="indefinite" additive="sum"/></g></g>
+</svg>

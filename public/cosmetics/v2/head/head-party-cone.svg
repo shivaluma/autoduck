@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-24 -56 560 560" width="100%" height="100%" fill="none">
+<g id="party-cone"><path d="M286 78 L384 -36 L428 66 Z" fill="#A855F7" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<clipPath id="party-c"><path d="M286 78 L384 -36 L428 66 Z"/></clipPath><g clip-path="url(#party-c)"><path d="M300 78 L392 -40 L404 -26 L320 78 Z M352 78 L412 2 L420 18 L374 78 Z" fill="#FDE047"/><circle cx="330" cy="40" r="6" fill="#61C9FF"/><circle cx="396" cy="46" r="6" fill="#FF78A8"/><circle cx="372" cy="4" r="5" fill="#58E6B0"/><path d="M286 78 L384 -36 L350 78 Z" fill="#7E22CE" opacity="0.4"/></g>
+<path d="M284 74 C320 92 390 88 430 62 L428 76 C390 102 320 104 282 86 Z" fill="#FDE047" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M384 -36 c-14 -8 -12 -26 0 -28 c4 -12 22 -10 22 2 c14 -2 18 18 6 24 c4 12 -14 20 -22 10 Z" fill="#FF78A8" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M290 86 C264 130 258 168 266 204" fill="none" stroke="#FFFDF4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/></g>
+</svg>

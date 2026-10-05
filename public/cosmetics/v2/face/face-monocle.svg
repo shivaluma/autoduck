@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-24 -56 560 560" width="100%" height="100%" fill="none">
+<g id="monocle"><defs><linearGradient id="mono-gold" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF0A6"/><stop offset="0.5" stop-color="#F2B627"/><stop offset="1" stop-color="#9A6A0B"/></linearGradient><linearGradient id="mono-glass" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.45"/><stop offset="1" stop-color="#BAE6FD" stop-opacity="0.08"/></linearGradient></defs>
+<ellipse cx="320" cy="140" rx="46" ry="52" fill="url(#mono-glass)" stroke="#1B132B" stroke-width="16"/>
+<ellipse cx="320" cy="140" rx="46" ry="52" fill="none" stroke="url(#mono-gold)" stroke-width="8"/>
+<path d="M298 106 C306 98 318 96 328 98" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+<path d="M286 180 C270 220 262 250 276 286 C286 310 300 318 316 314" fill="none" stroke="#1B132B" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M286 180 C270 220 262 250 276 286 C286 310 300 318 316 314" fill="none" stroke="#F2B627" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 6"/>
+<path d="M364 108 C376 98 396 98 410 106" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M358 96 Q359.76 102.24 366 104 Q359.76 105.76 358 112 Q356.24 105.76 350 104 Q356.24 102.24 358 96 Z" fill="#FFF8D6"/></g>
+</svg>

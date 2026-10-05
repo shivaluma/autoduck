@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-24 -56 560 560" width="100%" height="100%" fill="none">
+<g id="pond-shades"><path d="M274 116 C244 112 226 122 216 140" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M272 108 H362 C366 144 352 168 318 168 C286 168 270 144 272 108 Z" fill="#16323F" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M366 114 H424 C428 146 416 166 394 166 C372 166 362 146 366 114 Z" fill="#16323F" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M362 116 C364 110 366 110 366 116" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M286 118 h24 l-18 34 h-14 Z" fill="#4FD1C5" opacity="0.55"/>
+<path d="M376 122 h16 l-12 26 h-10 Z" fill="#4FD1C5" opacity="0.55"/>
+<path d="M272 108 H362 M366 114 H424" fill="none" stroke="#2DD4BF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></g>
+</svg>

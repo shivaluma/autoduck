@@ -14,9 +14,20 @@ Legacy Prediction Points and physical merch remain separate so the existing Seas
 
 ## Content pipeline
 
-Run `pnpm cosmetics:generate` to regenerate original 256×256 SVG layers, attached previews, and `public/cosmetics/contact-sheet.html`. Run `pnpm cosmetics:validate` to reject duplicate IDs, invalid metadata, missing assets/previews, and malformed dimensions. `/dev/cosmetics` is the interactive visual-QA gallery.
+Duck Closet v2 (see `docs/cosmetics-v2-redesign.md`) has 122 hand-designed items across the 8 closet tabs. Rarity is set by hand to match each item's art budget.
 
-The catalog lives in `lib/cosmetics/catalog.ts`; UI code must not define cosmetics locally. Layer order and duck anchors live in `lib/cosmetics/types.ts`.
+- Catalog metadata: `lib/cosmetics/catalog.ts`. UI code must not define cosmetics locally.
+- Art: one draw function per catalog ID in `scripts/cosmetics/art/<slot>.ts`, built from the shared helpers in `scripts/cosmetics/kit.ts`. Skins and outfits mask to `DUCK_PATHS` from `lib/cosmetics/avatar-rig.ts` so they hug the body.
+- Frame: every v2 layer uses `AVATAR_VIEWBOX` (`-24 -56 560 560`, the 512 rig padded for headroom), so stacked `<img>` layers stay aligned. Per-slot preview and closet-tile crops live in `SLOT_FRAMES` (`lib/cosmetics/types.ts`), next to the layer order.
+- `pnpm cosmetics:generate` writes `public/cosmetics/v2/<slot>/<id>.svg` plus framed previews.
+- `pnpm cosmetics:validate` fails on:
+  - missing art, assets or previews
+  - a tab missing any rarity, or an item in a slot with no closet tab
+  - duplicate element IDs inside an SVG
+  - recolor duplicates (two items in a slot that differ only by color)
+  - a shop pool below the rotation minimums
+- `pnpm exec tsx scripts/render-contact-sheet.ts` renders `public/cosmetics/contact-sheet.{html,png}`. `/dev/cosmetics` is the interactive gallery.
+- Retired v1 IDs are frozen in `lib/cosmetics/legacy-v1.ts`. App migration `2026-10-05-001-cosmetics-v2-catalog` swaps each retired item for its `LEGACY_REMAP` equivalent or refunds its v1 shop price.
 
 ## Shop and Mystery Egg
 
