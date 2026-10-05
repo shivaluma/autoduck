@@ -7,7 +7,7 @@ import { createRiverTrack } from '@/packages/race-core/src/track'
 import { type DuckSnapshot, type RaceConfig, type RaceEvent, type RaceItemId, type RecordedWildItemInput, type StateSnapshotMessage, type WildItemId } from '@/packages/race-protocol/src'
 import { RaceAudioSystem } from './race-audio'
 import { COSMETIC_BY_ID, STARTER_COSMETIC_IDS } from '@/lib/cosmetics/catalog'
-import { AVATAR_FRAME, COSMETIC_LAYER_ORDER, type DuckAppearance } from '@/lib/cosmetics/types'
+import { AVATAR_FRAME, COSMETIC_LAYER_ORDER, MOTION_SPRITE, type DuckAppearance } from '@/lib/cosmetics/types'
 
 export type PlayerLabel = {
   playerId: string
@@ -259,6 +259,10 @@ export function PhaserRaceCanvas({
             if (item && !this.textures.exists(`cosmetic-${item.id}`)) {
               this.load.svg(`cosmetic-${item.id}`, item.asset, { width: AVATAR_FRAME.size, height: AVATAR_FRAME.size })
             }
+            // Auras and trails animate: their SVG motion is baked into a sprite sheet (Phaser can't play SMIL).
+            if (item?.spriteAsset && !reducedMotion && !this.textures.exists(`cosmetic-anim-${item.id}`)) {
+              this.load.spritesheet(`cosmetic-anim-${item.id}`, item.spriteAsset, { frameWidth: MOTION_SPRITE.frameSize, frameHeight: MOTION_SPRITE.frameSize })
+            }
           }
         }
 
@@ -399,7 +403,7 @@ export function PhaserRaceCanvas({
           const waterWake = this.add.ellipse(-8, 16, 56, 18, 0x8be5ff, 0.35)
 
           // 2. Avatar Container with all cosmetic layers in exact COSMETIC_LAYER_ORDER
-          const cosmeticLayers: PhaserType.GameObjects.Image[] = []
+          const cosmeticLayers: Array<PhaserType.GameObjects.Image | PhaserType.GameObjects.Sprite> = []
           for (const slot of COSMETIC_LAYER_ORDER) {
             if ((mobileViewport || scenePlayers.length > 12) && ['finish'].includes(slot)) continue
             const cosmeticId = appearance[`${slot}Id` as keyof DuckAppearance]
@@ -408,9 +412,19 @@ export function PhaserRaceCanvas({
               // v2 layers use the padded avatar frame; scale + shift so rig point (256,256) stays at the origin.
               const layerSize = duckDisplaySize * (AVATAR_FRAME.size / 512)
               const frameCenterY = AVATAR_FRAME.y + AVATAR_FRAME.size / 2
-              const img = this.add.image(0, (frameCenterY - 256) * (layerSize / AVATAR_FRAME.size), `cosmetic-${item.id}`)
-                .setDisplaySize(layerSize, layerSize)
-                .setData('cosmetic-slot', slot)
+              const layerY = (frameCenterY - 256) * (layerSize / AVATAR_FRAME.size)
+              const animKey = `cosmetic-anim-${item.id}`
+              let img: PhaserType.GameObjects.Image | PhaserType.GameObjects.Sprite
+              if (this.textures.exists(animKey)) {
+                if (!this.anims.exists(animKey)) {
+                  this.anims.create({ key: animKey, frames: this.anims.generateFrameNumbers(animKey), frameRate: MOTION_SPRITE.fps, repeat: -1 })
+                }
+                // Start each duck at a different frame so a pack of identical auras doesn't pulse in lockstep.
+                img = this.add.sprite(0, layerY, animKey).play({ key: animKey, startFrame: (index * 7) % MOTION_SPRITE.frames })
+              } else {
+                img = this.add.image(0, layerY, `cosmetic-${item.id}`)
+              }
+              img.setDisplaySize(layerSize, layerSize).setData('cosmetic-slot', slot)
               cosmeticLayers.push(img)
 
               if (!reducedMotion) {

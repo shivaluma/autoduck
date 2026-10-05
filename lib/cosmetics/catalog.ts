@@ -1,4 +1,4 @@
-import type { CosmeticDefinition } from './types'
+import { SPRITE_SLOTS, type CosmeticDefinition } from './types'
 
 /**
  * Duck Closet v2 catalog — every item is hand-designed and its rarity is set by its art budget
@@ -34,6 +34,7 @@ const cosmetic = (
   tags: [collection.toLowerCase().replace(/[^a-z0-9]+/g, '-'), slot],
   version: 2,
   animation: rarity === 'epic' || rarity === 'legendary' ? 'idle' : undefined,
+  spriteAsset: SPRITE_SLOTS.includes(slot) ? `/cosmetics/v2/sprites/${id}.png` : undefined,
   ...options,
 })
 

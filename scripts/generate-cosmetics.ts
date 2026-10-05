@@ -3,6 +3,7 @@ import path from 'node:path'
 import { COSMETIC_CATALOG } from '../lib/cosmetics/catalog'
 import { AVATAR_VIEWBOX, generateBaseDuckSvg, getDuckPalette } from '../lib/cosmetics/avatar-rig'
 import { BEHIND_BODY_SLOTS, SLOT_FRAMES, type CosmeticSlot } from '../lib/cosmetics/types'
+import { renderSpriteSheets } from './cosmetics/sprites'
 import { AURA_ART } from './cosmetics/art/aura'
 import { BODY_COLOR_ART } from './cosmetics/art/bodyColor'
 import { BODY_SKIN_ART } from './cosmetics/art/bodySkin'
@@ -33,7 +34,7 @@ export function drawCosmetic(id: string, slot: CosmeticSlot) {
   return draw()
 }
 
-function main() {
+async function main() {
   const outputRoot = path.join(process.cwd(), 'public', 'cosmetics', 'v2')
   fs.rmSync(outputRoot, { recursive: true, force: true })
   const baseDuck = generateBaseDuckSvg(getDuckPalette('body-sunshine'))
@@ -53,7 +54,11 @@ function main() {
     fs.writeFileSync(previewPath, svgFrame(stacked, `${x} ${y} ${size} ${size}`), 'utf8')
   }
 
-  console.log(`✓ Generated ${COSMETIC_CATALOG.length} v2 cosmetics and previews in ${outputRoot}`)
+  // Bake aura/trail animation into sprite sheets so the Phaser race canvas can play it.
+  const animated = COSMETIC_CATALOG.filter((item) => item.spriteAsset).map((item) => ({ item, content: drawCosmetic(item.id, item.slot) }))
+  await renderSpriteSheets(animated)
+
+  console.log(`✓ Generated ${COSMETIC_CATALOG.length} v2 cosmetics, previews and ${animated.length} sprite sheets in ${outputRoot}`)
 }
 
-if (require.main === module) main()
+if (require.main === module) void main()

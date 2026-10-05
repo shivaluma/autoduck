@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { AVATAR_VIEWBOX } from '../lib/cosmetics/avatar-rig'
 import { COSMETIC_CATALOG, DEFAULT_APPEARANCE, STARTER_COSMETIC_IDS } from '../lib/cosmetics/catalog'
-import { COSMETIC_RARITIES, COSMETIC_SLOTS, type CosmeticSlot } from '../lib/cosmetics/types'
+import { COSMETIC_RARITIES, COSMETIC_SLOTS, SPRITE_SLOTS, type CosmeticSlot } from '../lib/cosmetics/types'
 import { ART_BY_SLOT } from './generate-cosmetics'
 
 const CLOSET_SLOTS: CosmeticSlot[] = ['bodyColor', 'bodySkin', 'face', 'head', 'outfit', 'pet', 'aura', 'trail']
@@ -42,6 +42,10 @@ for (const item of COSMETIC_CATALOG) {
   if (/\b(attribute-name|repeat-count|calc-mode|key-splines|key-times)=/.test(svg)) errors.push(`${item.id}: kebab-case SMIL attribute — browsers ignore it and the animation never plays`)
   const motion = (svg.match(/<animate(Transform|Motion)?\b/g) ?? []).length
   if (motion < MOTION_MINIMUMS[item.rarity]) errors.push(`${item.id}: ${item.rarity} needs ≥${MOTION_MINIMUMS[item.rarity]} animations, found ${motion}`)
+  if (SPRITE_SLOTS.includes(item.slot)) {
+    if (motion < 2) errors.push(`${item.id}: every ${item.slot} must animate (found ${motion} animations)`)
+    if (!item.spriteAsset || !fs.existsSync(path.join(process.cwd(), 'public', item.spriteAsset))) errors.push(`${item.id}: missing race sprite sheet (run pnpm cosmetics:generate)`)
+  }
   const svgIds = [...svg.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]!)
   const duplicateSvgId = svgIds.find((id, index) => svgIds.indexOf(id) !== index)
   if (duplicateSvgId) errors.push(`${item.id}: duplicate element id "${duplicateSvgId}" breaks url(#…) references`)

@@ -46,6 +46,8 @@ export interface CosmeticDefinition {
   anchor: CosmeticAnchor
   color?: string
   zLayer?: AvatarRenderLayer
+  /** Pre-rendered animation frames (see MOTION_SPRITE) for renderers that cannot play SVG animation, e.g. the Phaser race canvas. */
+  spriteAsset?: string
   hasBackLayer?: boolean
 }
 
@@ -94,3 +96,12 @@ export const SLOT_FRAMES: Record<CosmeticSlot, readonly [number, number, number]
 
 /** Layers that render behind the duck body. */
 export const BEHIND_BODY_SLOTS: CosmeticSlot[] = ['aura', 'trail']
+
+/** Slots whose SVG animation is baked into a sprite sheet so the race canvas can play it too. */
+export const SPRITE_SLOTS: CosmeticSlot[] = ['aura', 'trail']
+
+/**
+ * Sprite sheet layout for baked animations: `frames` frames sampled at `fps` (one 2.4s loop),
+ * laid out in a grid `columns` wide, each frame a square of the full AVATAR_FRAME.
+ */
+export const MOTION_SPRITE = { frames: 24, columns: 6, frameSize: 160, fps: 10 } as const

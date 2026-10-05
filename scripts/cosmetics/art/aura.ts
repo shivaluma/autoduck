@@ -1,4 +1,4 @@
-import { DUCK_PATHS, INK, MINOR, animate, animateTransform, defs, dot, flame, glow, group, line, linear, motes, part, radial, sparkle, tone, twinkle } from '../kit'
+import { DUCK_PATHS, INK, MINOR, animate, animateTransform, defs, dot, flame, glow, group, hover, line, linear, motes, part, pulse, radial, sparkle, sway, tone, twinkle } from '../kit'
 
 // Auras render behind the whole duck (AURA_BACK). Centre (256, 274). Common = static, rare+ = motion,
 // legendary = set-piece with a clearance gap so the silhouette still pops.
@@ -15,19 +15,19 @@ const bubble = (x: number, y: number, r: number) => `<circle cx="${x}" cy="${y}"
 export const AURA_ART: Record<string, () => string> = {
   // ─── COMMON ──────────────────────────────────────────────────────────────
   'aura-fireflies': () => group('fireflies',
-    [[50, 200, 1], [480, 250, 0.8], [110, 100, 0.9], [450, 390, 1], [30, 340, 0.7]].map(([x, y, s]) => `<circle cx="${x}" cy="${y}" r="${30 * s!}" fill="#D9F99D" opacity="0.22"/><circle cx="${x}" cy="${y}" r="${18 * s!}" fill="#D9F99D" opacity="0.3"/>` + dot(x!, y!, 10 * s!, '#BEF264', { stroke: INK, strokeWidth: 3 })).join(''),
+    [[50, 200, 1], [480, 250, 0.8], [110, 100, 0.9], [450, 390, 1], [30, 340, 0.7]].map(([x, y, s], i) => hover(12, 2.6 + i * 0.3,
+      `<g>${animate('opacity', '0.35;1;0.35', 1.8 + i * 0.25, { begin: `${i * 0.4}s` })}<circle cx="${x}" cy="${y}" r="${30 * s!}" fill="#D9F99D" opacity="0.22"/><circle cx="${x}" cy="${y}" r="${18 * s!}" fill="#D9F99D" opacity="0.3"/>${dot(x!, y!, 10 * s!, '#BEF264', { stroke: INK, strokeWidth: 3 })}</g>`, i * 0.5)).join(''),
   ),
 
   'aura-coffee-steam': () => group('coffee-steam',
-    line('M120 220 C90 180 150 150 120 110 C96 80 130 50 118 20', '#FFFFFF', 12, { opacity: 0.5 }),
-    line('M200 160 C176 120 226 96 200 56 C184 30 208 4 200 -20', '#FFFFFF', 10, { opacity: 0.4 }),
-    line('M470 200 C446 170 490 140 466 110', '#FFFFFF', 9, { opacity: 0.4 }),
-    `<ellipse cx="74" cy="250" rx="13" ry="9" fill="#7A4A26" stroke="${INK}" stroke-width="3" transform="rotate(-30 74 250)"/>` + line('M66 254 C72 248 78 248 82 244', '#3B2412', 2.5),
-    `<ellipse cx="480" cy="290" rx="11" ry="8" fill="#7A4A26" stroke="${INK}" stroke-width="3" transform="rotate(20 480 290)"/>`,
+    [['M120 220 C90 180 150 150 120 110 C96 80 130 50 118 20', 12, 0], ['M200 160 C176 120 226 96 200 56 C184 30 208 4 200 -20', 10, 1], ['M470 200 C446 170 490 140 466 110', 9, 2]].map(([d, w, delay]) =>
+      `<path d="${d}" fill="none" stroke="#FFFFFF" stroke-width="${w}" stroke-linecap="round" opacity="0"><animateTransform attributeName="transform" type="translate" values="0 30;0 -30" dur="3s" begin="${delay}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.55;0" dur="3s" begin="${delay}s" repeatCount="indefinite"/></path>`).join(''),
+    sway(74, 250, 14, 2.4, `<ellipse cx="74" cy="250" rx="13" ry="9" fill="#7A4A26" stroke="${INK}" stroke-width="3" transform="rotate(-30 74 250)"/>` + line('M66 254 C72 248 78 248 82 244', '#3B2412', 2.5)),
+    sway(480, 290, 14, 2.8, `<ellipse cx="480" cy="290" rx="11" ry="8" fill="#7A4A26" stroke="${INK}" stroke-width="3" transform="rotate(20 480 290)"/>`, 0.6),
   ),
 
   'aura-bubble-halo': () => group('bubble-halo',
-    [[40, 250, 16], [70, 160, 12], [130, 80, 18], [470, 300, 14], [490, 200, 10], [450, 390, 12], [30, 360, 10], [200, 20, 10]].map(([x, y, r]) => bubble(x!, y!, r!)).join(''),
+    [[40, 250, 16], [70, 160, 12], [130, 80, 18], [470, 300, 14], [490, 200, 10], [450, 390, 12], [30, 360, 10], [200, 20, 10]].map(([x, y, r], i) => hover(10, 2.2 + (i % 3) * 0.4, pulse(x!, y!, 1.08, 1.6, bubble(x!, y!, r!), i * 0.2), i * 0.3)).join(''),
   ),
 
   // ─── UNCOMMON — one element drifts ───────────────────────────────────────
