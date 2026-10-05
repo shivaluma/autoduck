@@ -12,6 +12,7 @@ import { QuackEconomy } from '@/components/cosmetics/quack-economy'
 import { Duckdex } from '@/components/cosmetics/duckdex'
 import { evaluateLoadoutPairing } from '@/lib/racing/loadout-guide'
 import { GoogleAuthButton } from '@/components/auth/google-auth-button'
+import { RaceItemIcon } from '@/components/racing/race-item-icon'
 
 type SeasonData = {
   season: { name: string; year: number; weeks: number } | null
@@ -367,7 +368,7 @@ export default function Season3Page() {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-3xl">{item.icon}</span>
+                    <RaceItemIcon id={item.id} fallback={item.icon} size={40} />
                     <div>
                       <div className="font-black">{item.name}</div>
                       <div className="text-xs font-bold text-[var(--color-ggd-gold)]">

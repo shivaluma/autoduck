@@ -10,7 +10,7 @@ Quack Boxes add readable, temporary race chaos without changing persistent power
 - Purple Chaos Box: architecture exists, disabled in Normal races.
 - Gameplay icons and effects always render above cosmetic layers.
 
-Original lightweight SVGs live in `public/race-pickups`. Validate them with `pnpm race:validate-pickups`.
+Original lightweight SVGs live in `public/race-pickups`. Validate them with `pnpm race:validate-pickups`. The race canvas now renders pickups, hazards and item icons from the animated Race FX set instead (see `docs/race-fx.md`).
 
 ## Deterministic world
 

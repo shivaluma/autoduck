@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-8 -8 144 144" width="100%" height="100%" fill="none">
+<g id="i-magnet"><path d="M30 28 h22 v44 c0 8 6 14 12 14 s12 -6 12 -14 v-44 h22 v44 c0 22 -16 38 -34 38 s-34 -16 -34 -38 Z" fill="#EF4444" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M30 28 h22 v16 h-22 Z M76 28 h22 v16 h-22 Z" fill="#E2E8F0" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M16 18 l8 8 M112 18 l-8 8 M64 6 v10" fill="none" stroke="#38BDF8" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></g>
+</svg>

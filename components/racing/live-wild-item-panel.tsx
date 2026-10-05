@@ -7,6 +7,7 @@ import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader,
 import { Progress } from '@/components/ui/progress'
 import { getWildItem } from '@/packages/race-core/src'
 import type { WildItemId } from '@/packages/race-protocol/src'
+import { RaceItemIcon } from '@/components/racing/race-item-icon'
 
 type LiveDuck = {
   rank: number
@@ -106,7 +107,7 @@ export function LiveWildItemPanel({ raceId, token, isTest = false }: { raceId: n
       <div className="flex items-center justify-between gap-3 text-sm"><span>Tiến độ</span><strong>{progress}%</strong></div>
       <Progress value={progress} aria-label={`Race progress ${progress}%`} />
       {item && live?.duck?.wildItem ? <div className="flex items-center gap-4 rounded-xl border bg-background/50 p-4">
-        <span className="text-5xl" aria-hidden>{item.icon}</span>
+        <RaceItemIcon id={item.id} fallback={item.icon} size={56} />
         <div className="min-w-0 flex-1"><div className="font-display text-2xl">{item.displayName}</div><p className="text-sm text-muted-foreground">{item.description}</p></div>
       </div> : <div className="rounded-xl border border-dashed bg-background/30 p-4 text-center text-sm text-muted-foreground">Chưa giữ Wild Item.</div>}
       {effects.length > 0 && <div className="flex flex-wrap gap-2">{effects.map((effect) => <Badge key={effect} variant="secondary">{effect.replaceAll('_', ' ')}</Badge>)}</div>}

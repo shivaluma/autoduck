@@ -59,4 +59,8 @@ Official races persist the immutable config, seed commitment, engine/balance/tra
 
 The catalog is in `lib/cosmetics/catalog.ts` and the hand-drawn SVG art in `scripts/cosmetics/art/<slot>.ts` (one function per ID). After editing either, run `pnpm cosmetics:generate && pnpm cosmetics:validate`. The validator rejects recolor duplicates and missing rarities. Assets in `public/cosmetics/v2` are generated; never hand-edit them. Retiring or renaming an owned ID needs an entry in `lib/cosmetics/legacy.ts` and an app migration. Details: `docs/COSMETICS.md`.
 
+### Race visuals
+
+Race FX (pickups, hazards, rockets, status overlays, event effects, icons) are hand-drawn SVG in `scripts/race-fx/art.ts`, listed in `lib/race-fx/manifest.ts` and baked to sprite sheets with `pnpm race:fx`. Preview them at `/dev/race-fx`. Phaser glue is in `components/racing/race-fx.ts`. Details: `docs/race-fx.md`.
+
 Other docs: `docs/race-pickups.md`, `docs/COSMETICS.md`, `docs/COSMETIC_SIMULATION.md`, `docs/duck-avatar-art-system.md`.

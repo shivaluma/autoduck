@@ -21,27 +21,45 @@ async function launch(): Promise<Browser> {
   return chromium.launch().catch(() => chromium.launch({ channel: 'chrome' }))
 }
 
-export async function renderSpriteSheets(items: Array<{ item: CosmeticDefinition; content: string }>) {
-  const { frames, columns, frameSize, fps } = MOTION_SPRITE
-  const rows = Math.ceil(frames / columns)
+export interface SpriteJob {
+  content: string
+  /** Absolute output path of the PNG sheet. */
+  output: string
+  viewBox: string
+  frames: number
+  columns: number
+  frameSize: number
+  fps: number
+}
+
+/** Renders each job's animation into a grid sprite sheet (frame i sampled at i / fps seconds). */
+export async function renderSpriteJobs(jobs: SpriteJob[]) {
   const browser = await launch()
-  const page = await browser.newPage({ viewport: { width: columns * frameSize, height: rows * frameSize }, deviceScaleFactor: 1 })
+  const page = await browser.newPage({ viewport: { width: 1024, height: 1024 }, deviceScaleFactor: 1 })
   try {
-    for (const { item, content } of items) {
-      const cells = Array.from({ length: frames }, (_, frame) =>
-        `<svg data-t="${(frame / fps).toFixed(3)}" xmlns="http://www.w3.org/2000/svg" viewBox="${AVATAR_VIEWBOX}" width="${frameSize}" height="${frameSize}">${frameMarkup(content, frame)}</svg>`).join('')
-      await page.setContent(`<style>html,body{margin:0;background:transparent}main{display:grid;grid-template-columns:repeat(${columns},${frameSize}px);line-height:0}</style><main>${cells}</main>`)
+    for (const job of jobs) {
+      const cells = Array.from({ length: job.frames }, (_, frame) =>
+        `<svg data-t="${(frame / job.fps).toFixed(3)}" xmlns="http://www.w3.org/2000/svg" viewBox="${job.viewBox}" width="${job.frameSize}" height="${job.frameSize}">${frameMarkup(job.content, frame)}</svg>`).join('')
+      await page.setViewportSize({ width: job.columns * job.frameSize, height: Math.ceil(job.frames / job.columns) * job.frameSize })
+      await page.setContent(`<style>html,body{margin:0;background:transparent}main{display:grid;grid-template-columns:repeat(${job.columns},${job.frameSize}px);line-height:0}</style><main>${cells}</main>`)
       await page.evaluate(() => document.querySelectorAll('svg[data-t]').forEach((node) => {
         const svg = node as SVGSVGElement
         svg.pauseAnimations()
         svg.setCurrentTime(Number(svg.dataset.t))
       }))
       await page.waitForTimeout(50)
-      const output = path.join(process.cwd(), 'public', item.spriteAsset!)
-      fs.mkdirSync(path.dirname(output), { recursive: true })
-      await page.locator('main').screenshot({ path: output, omitBackground: true })
+      fs.mkdirSync(path.dirname(job.output), { recursive: true })
+      await page.locator('main').screenshot({ path: job.output, omitBackground: true })
     }
   } finally {
     await browser.close()
   }
+}
+
+export async function renderSpriteSheets(items: Array<{ item: CosmeticDefinition; content: string }>) {
+  const { frames, columns, frameSize, fps } = MOTION_SPRITE
+  await renderSpriteJobs(items.map(({ item, content }) => ({
+    content, frames, columns, frameSize, fps, viewBox: AVATAR_VIEWBOX,
+    output: path.join(process.cwd(), 'public', item.spriteAsset!),
+  })))
 }

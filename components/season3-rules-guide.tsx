@@ -16,6 +16,7 @@ import {
 } from '@/lib/season3-rules-content'
 import { loadoutComboBadge, loadoutComboLabel } from '@/packages/race-core/src/items/classes'
 import { AUTO_LOADOUT_PRESETS } from '@/packages/race-core/src/items/catalog'
+import { RaceItemIcon } from '@/components/racing/race-item-icon'
 
 function Section({
   id,
@@ -232,7 +233,7 @@ export function Season3RulesGuide() {
               <article key={item.id} className="flex flex-col justify-between rounded-2xl border-2 border-white/10 bg-black/25 p-4">
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="text-3xl">{item.icon}</span>
+                    <RaceItemIcon id={item.id} fallback={item.icon} size={40} />
                     <ItemClassTag itemClass={item.itemClass} />
                   </div>
                   <h4 className="mt-3 font-display text-xl text-white">{item.name}</h4>
@@ -255,7 +256,7 @@ export function Season3RulesGuide() {
               <article key={item.id} className="flex flex-col justify-between rounded-2xl border-2 border-white/10 bg-black/25 p-4">
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="text-3xl">{item.icon}</span>
+                    <RaceItemIcon id={item.id} fallback={item.icon} size={40} />
                     <ItemClassTag itemClass={item.itemClass} />
                   </div>
                   <h4 className="mt-3 font-display text-xl text-white">{item.name}</h4>
@@ -332,7 +333,7 @@ export function Season3RulesGuide() {
               <article key={item.id} className="flex flex-col justify-between rounded-xl border border-white/10 bg-black/25 p-3.5">
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="text-3xl">{item.icon}</span>
+                    <RaceItemIcon id={item.id} fallback={item.icon} size={40} />
                     <span className="rounded bg-white/10 px-2 py-0.5 text-[10px] font-black text-white/60">
                       {item.typeText}
                     </span>

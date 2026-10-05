@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-8 -8 144 144" width="100%" height="100%" fill="none">
+<g id="i-paddle"><path d="M26 104 L98 28" fill="none" stroke="#1B132B" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M26 104 L98 28" fill="none" stroke="#B45309" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M86 20 C98 8 118 10 116 26 C114 40 98 44 90 38 Z" fill="#F59E0B" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M30 28 L102 104" fill="none" stroke="#1B132B" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M30 28 L102 104" fill="none" stroke="#92400E" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M20 20 C8 32 10 52 26 50 C40 48 44 32 38 24 Z" fill="#FBBF24" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="64" cy="112" r="6" fill="#7DD3FC" stroke="#1B132B" stroke-width="3"/>
+<circle cx="46" cy="116" r="4" fill="#7DD3FC" stroke="#1B132B" stroke-width="3"/></g>
+</svg>

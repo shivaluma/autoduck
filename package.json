@@ -25,7 +25,8 @@
     "db:bootstrap": "bash scripts/auto-migrate.sh",
     "db:seed": "tsx prisma/seed.ts",
     "db:migrate:app": "tsx scripts/run-migrations.ts",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "race:fx": "tsx scripts/generate-race-fx.ts"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^2.0.41",

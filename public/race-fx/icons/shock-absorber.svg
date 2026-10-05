@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-8 -8 144 144" width="100%" height="100%" fill="none">
+<g id="i-vest"><path d="M36 26 L54 20 C58 30 70 30 74 20 L92 26 L100 58 L96 108 H32 L28 58 Z" fill="#F97316" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M36 26 L54 20 C56 26 60 28 64 28 L64 108 H32 L28 58 Z" fill="#FDBA74" opacity="0.6"/>
+<path d="M30 62 H98 M32 84 H96" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M64 30 V108" fill="none" stroke="#1B132B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></g>
+</svg>
