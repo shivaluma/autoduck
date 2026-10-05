@@ -1,4 +1,4 @@
-import { INK, animate, animateTransform, burst, defs, dot, flame, glow, group, line, linear, metal, motes, part, sparkle, tone, twinkle } from '../kit'
+import { INK, animate, animateTransform, burst, sway, defs, dot, flame, glow, group, line, linear, metal, motes, part, sparkle, tone, twinkle } from '../kit'
 
 // Trails stream left from TAIL_TIP (84, 322) along the waterline (y ≈ 430). Render behind the duck.
 
@@ -12,27 +12,31 @@ const RAW_TRAIL_ART: Record<string, () => string> = {
   'trail-ripples': () => group('ripples',
     ripple(70, 432, 60), ripple(-4, 438, 40, 0.6), ripple(150, 444, 34, 0.5),
     line('M20 420 C34 414 48 414 60 420', '#FFFFFF', 4, { opacity: 0.7 }),
+    [0, 1.2].map((d) => `<ellipse cx="70" cy="432" rx="16" ry="3" fill="none" stroke="#BAE6FD" stroke-width="4"><animate attributeName="rx" values="16;70" dur="2.4s" begin="${d}s" repeatCount="indefinite"/><animate attributeName="ry" values="3;13" dur="2.4s" begin="${d}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.8;0" dur="2.4s" begin="${d}s" repeatCount="indefinite"/></ellipse>`).join(''),
   ),
 
   'trail-bubble-wake': () => group('bubble-wake',
     [[60, 400, 12], [20, 380, 9], [-6, 350, 7], [40, 350, 6], [90, 372, 7], [-14, 400, 5]].map(([x, y, r]) =>
       `<circle cx="${x}" cy="${y}" r="${r}" fill="#BAE6FD" fill-opacity="0.3" stroke="${INK}" stroke-width="3"/>` + dot(x! - r! * 0.35, y! - r! * 0.35, r! * 0.25, '#FFFFFF')).join(''),
     ripple(60, 434, 56, 0.6),
+    motes({ count: 4, x: -10, y: 380, width: 100, height: 40, rise: 50, colors: ['#BAE6FD'], size: [3, 6], seconds: 2.6, seed: 121 }),
   ),
 
   'trail-paper-boats': () => group('paper-boats',
     ripple(34, 440, 44, 0.6), ripple(-10, 420, 26, 0.5),
-    paperBoat(34, 430, 1.1), paperBoat(-8, 410, 0.75, '#FDE68A'),
+    sway(34, 434, 6, 2.2, paperBoat(34, 430, 1.1)), sway(-8, 414, 7, 2.6, paperBoat(-8, 410, 0.75, '#FDE68A'), 0.7),
   ),
 
   // ─── UNCOMMON ────────────────────────────────────────────────────────────
   'trail-lotus-petals': () => group('lotus-petals',
     ripple(60, 436, 60, 0.6),
-    [[60, 424, -20, '#F9A8D4'], [10, 410, 30, '#FBCFE8'], [-14, 436, 70, '#F9A8D4'], [110, 440, 10, '#FBCFE8']].map(([x, y, r, c]) =>
-      `<path transform="translate(${x} ${y}) rotate(${r})" d="M0 -14 C9 -6 9 6 0 14 C-9 6 -9 -6 0 -14 Z" fill="${c}" stroke="${INK}" stroke-width="3"/>` +
-      `<path transform="translate(${x} ${y}) rotate(${r})" d="M0 -10 V8" stroke="#F472B6" stroke-width="2"/>`).join(''),
+    [[60, 424, -20, '#F9A8D4'], [10, 410, 30, '#FBCFE8'], [-14, 436, 70, '#F9A8D4'], [110, 440, 10, '#FBCFE8']].map(([x, y, r, c], i) =>
+      sway(x as number, y as number, 10, 2.4,
+        `<path transform="translate(${x} ${y}) rotate(${r})" d="M0 -14 C9 -6 9 6 0 14 C-9 6 -9 -6 0 -14 Z" fill="${c}" stroke="${INK}" stroke-width="3"/>` +
+        `<path transform="translate(${x} ${y}) rotate(${r})" d="M0 -10 V8" stroke="#F472B6" stroke-width="2"/>`, i * 0.5)).join(''),
     part('M20 448 a18 7 0 1 0 36 0 a18 7 0 1 0 -36 0 Z', '#4ADE80', { strokeWidth: 4 }) + tone('M28 446 l10 -4 l2 6 Z', '#15803D'),
     `<ellipse cx="60" cy="436" rx="20" ry="4" fill="none" stroke="#BAE6FD" stroke-width="3"><animate attributeName="rx" values="20;70" dur="2.4s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.8;0" dur="2.4s" repeatCount="indefinite"/></ellipse>`,
+    `<g>${[[60, 424], [10, 410]].map(([x, y], i) => `<circle cx="${x}" cy="${y! + 10}" r="2" fill="#BAE6FD"><animate attributeName="opacity" values="0;0.9;0" dur="1.8s" begin="${i * 0.9}s" repeatCount="indefinite"/></circle>`).join('')}</g>`,
   ),
 
   'trail-coffee-spill': () => group('coffee-spill',
