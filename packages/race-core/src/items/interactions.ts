@@ -6,7 +6,8 @@ export type DefenseOutcome = 'HIT' | 'BLOCKED_BUBBLE' | 'BLOCKED_MINI_BUBBLE' | 
 export const ITEM_INTERACTION_MATRIX = {
   ROCKET: { bubbleShield: 'BLOCK', feather: 'NO', shockAbsorber: 'MITIGATE' },
   BANANA: { bubbleShield: 'BLOCK', feather: 'DODGE', shockAbsorber: 'NO' },
-  QUACK_HORN: { bubbleShield: 'NO', feather: 'NO', shockAbsorber: 'MITIGATE' },
+  // A raised prep Bubble ignores the horn; Feather hops it; Shock dampens the push and silence.
+  QUACK_HORN: { bubbleShield: 'BLOCK', feather: 'DODGE', shockAbsorber: 'MITIGATE' },
   NATURAL_OBSTACLE: { bubbleShield: 'NO', feather: 'NO', shockAbsorber: 'NO' },
   DUCK_COLLISION: { bubbleShield: 'NO', feather: 'NO', shockAbsorber: 'NO' },
   MINI_ROCKET: { bubbleShield: 'BLOCK', feather: 'NO', shockAbsorber: 'MITIGATE' },

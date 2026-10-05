@@ -12,6 +12,8 @@ import type { HazardZone, PickupZone, RaceTrack } from '../track'
 import {
   applyItemBoost,
   applyItemSlow,
+  breakActiveSpeedBoost,
+  grantMomentumSteal,
   type BananaRuntime,
   type DuckItemRuntime,
   type ItemDuckState,
@@ -20,6 +22,7 @@ import {
 } from '../items/engine'
 import { resolveIncomingRaceEffect } from '../items/interactions'
 import { PICKUP_BALANCE, POSITION_CATEGORY_WEIGHTS } from './config'
+import { ITEM_BALANCE } from '../items/config'
 import { getWildItem, WILD_ITEM_CATALOG, type WildItemCategory } from './catalog'
 
 export interface PickupSpawn {
@@ -52,7 +55,11 @@ export interface PickupRaceState {
   activatedZoneIds: Set<string>
   slotFullFeedback: Set<string>
   goldenCollectorPlayerId: string | null
+  lootOverride?: WildLootOverride
 }
+
+/** Returns the item to grant, 'NONE' for an empty box, or null to roll normally. */
+export type WildLootOverride = (playerId: string) => WildItemId | 'NONE' | null
 
 type ResolvedPickupConfig = Omit<Required<PickupConfig>, 'forceItem'> & { forceItem?: WildItemId }
 
@@ -255,7 +262,9 @@ export function rollWildItem(config: RaceConfig, pickupState: PickupRaceState, p
 
 function grantOrTriggerItem(config: RaceConfig, pickupState: PickupRaceState, itemState: ItemRaceState, pickup: PickupSpawn, duck: ItemDuckState, ducks: ItemDuckState[], tick: number, tickRate: number, emit: EmitPickupEvent) {
   const runtime = itemState.byPlayer.get(duck.playerId)!
-  const itemId = rollWildItem(config, pickupState, pickup, duck, ducks)
+  const override = pickupState.lootOverride?.(duck.playerId) ?? null
+  if (override === 'NONE') return
+  const itemId = override ?? rollWildItem(config, pickupState, pickup, duck, ducks)
   const definition = getWildItem(itemId)
   const instanceId = `wild:${config.raceId}:${pickup.id}:${duck.playerId}`
   if (definition.behavior === 'HELD') {
@@ -347,6 +356,7 @@ function resolveHazards(pickupState: PickupRaceState, itemState: ItemRaceState, 
       const minor = hazard.type !== 'WHIRLPOOL'
       const outcome = minor ? resolveIncomingRaceEffect(runtime, 'MINOR_HAZARD', tick, tickRate) : 'HIT'
       if (outcome === 'DODGED_WILD_FEATHER') {
+        applyItemBoost(runtime, PICKUP_BALANCE.counter.guardSurge.multiplier, PICKUP_BALANCE.counter.guardSurge.durationSeconds, tick, tickRate)
         emit('WILD_FEATHER_DODGED', duck.playerId, undefined, { hazardId: hazard.id, hazardType: hazard.type })
         emit('HAZARD_DODGED', duck.playerId, undefined, { hazardId: hazard.id, hazardType: hazard.type })
         continue
@@ -421,7 +431,7 @@ const HELD_HANDLERS: Record<Exclude<WildItemId, 'MINI_NITRO' | 'TAILWIND' | 'SLI
     emit('WILD_BANANA_DROPPED', duck.playerId, undefined, { id: banana.id, progress: banana.progress, lateralOffset: banana.lateralOffset })
     return { ok: true }
   },
-  QUACK_HORN: ({ itemState, duck, ducks, emit }) => {
+  QUACK_HORN: ({ itemState, duck, ducks, tick, tickRate, emit }) => {
     const endGame = duck.progress >= PICKUP_BALANCE.autoUse.endGameBurnProgress
     const forceBurn = duck.progress >= PICKUP_BALANCE.autoUse.forceBurnProgress
     const radiusScale = forceBurn ? PICKUP_BALANCE.horn.endGameProgressRadiusMultiplier : endGame ? 1.25 : 1
@@ -433,7 +443,18 @@ const HELD_HANDLERS: Record<Exclude<WildItemId, 'MINI_NITRO' | 'TAILWIND' | 'SLI
       && Math.abs(candidate.lateralOffset - duck.lateralOffset) <= lateralRadius)
       .sort((left, right) => left.playerId.localeCompare(right.playerId))
     if (nearby.length === 0) return { ok: false, reason: 'NO_TARGET' }
+    let momentumStolen = false
     for (const target of nearby) {
+      const defense = itemState.byPlayer.get(target.playerId)!
+      // Box defenses shrug the blast off, like their prep counterparts.
+      if ((defense.wildBubbleAvailable && tick < defense.wildBubbleUntilTick) || (defense.bubbleAvailable && tick < defense.bubbleUntilTick)) continue
+      const broken = breakActiveSpeedBoost(defense, tick, tickRate, emit, duck.playerId, target.playerId, 'WILD_HORN')
+      if (!momentumStolen) momentumStolen = grantMomentumSteal(itemState, duck.playerId, target.playerId, broken, tick, tickRate, emit, PICKUP_BALANCE.counter.momentumStealSeconds, PICKUP_BALANCE.counter.momentumStealMultiplier)
+      if (tick >= Math.max(defense.silencedUntilTick, defense.silenceImmuneUntilTick ?? 0)) {
+        defense.silencedUntilTick = tick + Math.round(PICKUP_BALANCE.counter.hornSilenceSeconds * tickRate)
+        defense.silenceImmuneUntilTick = defense.silencedUntilTick + Math.round(ITEM_BALANCE.horn.silenceRecoverySeconds * tickRate)
+        emit('ITEM_SILENCED', target.playerId, duck.playerId, { durationSeconds: PICKUP_BALANCE.counter.hornSilenceSeconds, untilTick: defense.silencedUntilTick, source: 'WILD_HORN' })
+      }
       const direction = target.lateralOffset === duck.lateralOffset ? (target.playerId.localeCompare(duck.playerId) < 0 ? -1 : 1) : Math.sign(target.lateralOffset - duck.lateralOffset)
       target.lateralVelocity += direction * PICKUP_BALANCE.horn.lateralPush
       target.lateralOffset = Math.max(-0.95, Math.min(0.95, target.lateralOffset + direction * PICKUP_BALANCE.horn.lateralShove))
@@ -466,13 +487,17 @@ export function activateWildItem(itemState: ItemRaceState, ducks: ItemDuckState[
   return result
 }
 
-function expireWildEffects(itemState: ItemRaceState, tick: number, emit: EmitPickupEvent) {
+function expireWildEffects(itemState: ItemRaceState, tick: number, tickRate: number, emit: EmitPickupEvent) {
   for (const [playerId, runtime] of [...itemState.byPlayer].sort(([left], [right]) => left.localeCompare(right))) {
     if (runtime.wildBubbleAvailable && tick >= runtime.wildBubbleUntilTick) {
       runtime.wildBubbleAvailable = false
-      emit('MINI_BUBBLE_EXPIRED', playerId, undefined, {})
+      applyItemBoost(runtime, PICKUP_BALANCE.counter.miniBubbleExpiryBoost.multiplier, PICKUP_BALANCE.counter.miniBubbleExpiryBoost.durationSeconds, tick, tickRate)
+      emit('MINI_BUBBLE_EXPIRED', playerId, undefined, { expiryBoost: true })
     }
-    if (runtime.wildFeatherAvailable && tick >= runtime.wildFeatherUntilTick) runtime.wildFeatherAvailable = false
+    if (runtime.wildFeatherAvailable && tick >= runtime.wildFeatherUntilTick) {
+      runtime.wildFeatherAvailable = false
+      applyItemBoost(runtime, PICKUP_BALANCE.counter.expiryBoost.multiplier, PICKUP_BALANCE.counter.expiryBoost.durationSeconds, tick, tickRate)
+    }
     if (runtime.tailwindUntilTick > 0 && tick === runtime.tailwindUntilTick) emit('TAILWIND_ENDED', playerId, undefined, {})
     if (runtime.magnetUntilTick > 0 && tick === runtime.magnetUntilTick) emit('MAGNET_ENDED', playerId, undefined, {})
   }
@@ -492,7 +517,7 @@ export function applyRecordedWildInputs(itemState: ItemRaceState, ducks: ItemDuc
 }
 
 export function tickPickupSystem(config: RaceConfig, track: RaceTrack, pickupState: PickupRaceState, itemState: ItemRaceState, ducks: Array<ItemDuckState & { previousProgress?: number }>, tick: number, tickRate: number, emit: EmitPickupEvent) {
-  expireWildEffects(itemState, tick, emit)
+  expireWildEffects(itemState, tick, tickRate, emit)
   if (!pickupState.config.enabled && pickupState.pickups.length === 0 && pickupState.hazards.length === 0) return
   activateZones(track, pickupState, ducks, emit)
   collectPickups(config, pickupState, itemState, ducks, tick, tickRate, emit)

@@ -58,6 +58,10 @@ export interface DuckItemRuntime extends ItemDefenseState {
   nitroStartRank?: number
   reactiveRocketVisibleSinceTick: number | null
   reactiveBananaVisibleSinceTick: number | null
+  queuedGuardSurgeTick?: number
+  queuedGuardSurgeSource?: string
+  queuedGuardSurgeBlocked?: 'ROCKET' | 'BANANA'
+  speedDrained?: boolean
 }
 
 const SPEED_BOOST_PRIORITY: Partial<Record<RaceItemId, number>> = {
@@ -233,17 +237,18 @@ export function breakActiveSpeedBoost(
   sourcePlayerId: string,
   targetPlayerId: string,
   breakSource: BoostBreakSource,
-) {
-  if (tick >= runtime.boostUntilTick || runtime.boostMultiplier <= 1) return
-  if ((breakSource === 'QUACK_HORN' || breakSource === 'WILD_HORN') && runtime.activeSpeedItemId === 'NITRO') {
-    return
+): RaceItemId | null {
+  if (tick >= runtime.boostUntilTick || runtime.boostMultiplier <= 1) return null
+  // Wild horns cannot break Nitro; the prep Horn can (ATTACK > SPEED).
+  if (breakSource === 'WILD_HORN' && runtime.activeSpeedItemId === 'NITRO') {
+    return null
   }
   const ended = runtime.activeSpeedItemId
   const boostMultiplier = runtime.boostMultiplier
   const remainingBoostTicks = Math.max(0, runtime.boostUntilTick - tick)
   const originalBoostTicks = Math.max(1, runtime.boostUntilTick - runtime.boostStartedAtTick)
 
-  if (breakSource === 'MINI_ROCKET' || breakSource === 'BANANA' || breakSource === 'WILD_BANANA') {
+  if (breakSource === 'MINI_ROCKET' || breakSource === 'WILD_BANANA') {
     const breakRatio = breakSource === 'MINI_ROCKET' ? 0.50 : 0.30
     const lostTicks = Math.round(remainingBoostTicks * breakRatio)
     runtime.boostUntilTick -= lostTicks
@@ -267,7 +272,7 @@ export function breakActiveSpeedBoost(
       breakSource,
       partial: !fullyEnded,
     })
-    return
+    return null
   }
 
   const fractionDenied = remainingBoostTicks / originalBoostTicks
@@ -287,7 +292,50 @@ export function breakActiveSpeedBoost(
     breakSource,
     partial: false,
   })
+  return ended && SPEED_BOOST_PRIORITY[ended] ? ended : null
 }
+
+/** ATTACK > SPEED: a prep attack landing on a speed duck (boosting, or still holding Nitro) hands its momentum to the attacker. */
+export function grantMomentumSteal(
+  itemState: ItemRaceState,
+  attackerPlayerId: string,
+  victimPlayerId: string,
+  brokenItemId: RaceItemId | null,
+  tick: number,
+  tickRate: number,
+  emit: EmitItemEvent,
+  stealSeconds: number = ITEM_BALANCE.counter.momentumStealSeconds,
+  stealMultiplier: number = ITEM_BALANCE.counter.momentumStealMultiplier,
+): boolean {
+  const victim = itemState.byPlayer.get(victimPlayerId)
+  // Momentum carriers: any duck whose speed boost was just broken, or a SPEED-class duck still holding its Nitro.
+  const stolenItemId = brokenItemId ?? (victim?.itemIds.includes('NITRO') && !victim.usedItems.has('NITRO') ? 'NITRO' : null)
+  if (!stolenItemId) return false
+  const attacker = itemState.byPlayer.get(attackerPlayerId)
+  if (!attacker) return false
+  if (!brokenItemId && victim) victim.speedDrained = true
+  applyItemBoost(attacker, stealMultiplier, stealSeconds, tick, tickRate)
+  emit('MOMENTUM_STOLEN', attackerPlayerId, victimPlayerId, { stolenItemId, brokeBoost: brokenItemId !== null, multiplier: stealMultiplier, durationSeconds: stealSeconds })
+  return true
+}
+
+/** DEFENSE > ATTACK: a prep defense that stops or absorbs an attack converts it into a surge. */
+export function grantGuardSurge(
+  defense: DuckItemRuntime,
+  defenderPlayerId: string,
+  attackerPlayerId: string | undefined,
+  defenseItemId: 'BUBBLE_SHIELD' | 'FEATHER' | 'SHOCK_ABSORBER',
+  blocked: IncomingAttack,
+  tick: number,
+  tickRate: number,
+  emit: EmitItemEvent,
+) {
+  const { multiplier, durationSeconds } = ITEM_BALANCE.counter.guardSurge[defenseItemId]
+  applyItemBoost(defense, multiplier, durationSeconds, tick, tickRate)
+  emit('GUARD_SURGE', defenderPlayerId, attackerPlayerId, { defenseItemId, blocked, multiplier, durationSeconds })
+}
+
+type IncomingAttack = 'ROCKET' | 'MINI_ROCKET' | 'BANANA' | 'WILD_BANANA' | 'QUACK_HORN'
 
 export function tryActivateBubbleShield(
   runtime: DuckItemRuntime,
@@ -307,6 +355,13 @@ export function tryActivateBubbleShield(
     ...metadata,
   })
   return true
+}
+
+/** A packed Bubble Shield snaps up on the first incoming prep rocket/banana unless its owner is silenced. Box attacks only meet a raised bubble. */
+function armBubbleReflex(runtime: DuckItemRuntime, playerId: string, tick: number, tickRate: number, emit: EmitItemEvent, threat: 'ROCKET' | 'BANANA') {
+  if (tick < runtime.itemImmunityUntilTick || tick < runtime.silencedUntilTick) return
+  if (runtime.bubbleAvailable && tick < runtime.bubbleUntilTick) return
+  tryActivateBubbleShield(runtime, playerId, tick, tickRate, emit, { autoReason: 'REACTIVE_DEFENSE', reflex: threat })
 }
 
 export function triggerMenacePredatorRush(
@@ -341,6 +396,11 @@ export function tryApplyPrepSpeedBoost(
 ): 'applied' | 'queued' | 'ignored' {
   const startEvent = SPEED_START_EVENT[itemId]
   if (!startEvent) return 'applied'
+  if (runtime.speedDrained) {
+    runtime.speedDrained = false
+    durationSeconds *= ITEM_BALANCE.counter.speedDrainDurationRatio
+    metadata = { ...metadata, drained: true }
+  }
   if (tick < runtime.boostUntilTick && runtime.boostMultiplier > 1) {
     const incoming = { multiplier, durationSeconds, itemId }
     const incomingPriority = SPEED_BOOST_PRIORITY[itemId] ?? 0
@@ -534,6 +594,7 @@ function updateRockets(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
     }
     const defense = itemState.byPlayer.get(target.playerId)!
     const incoming = rocket.kind === 'WILD' ? 'MINI_ROCKET' : 'ROCKET'
+    if (rocket.kind === 'PREP') armBubbleReflex(defense, target.playerId, tick, tickRate, emit, 'ROCKET')
     const outcome = resolveIncomingRaceEffect(defense, incoming, tick, tickRate)
     const hitType = rocket.kind === 'WILD' ? 'MINI_ROCKET_HIT' : 'ROCKET_HIT'
     const blockedType = rocket.kind === 'WILD' ? 'MINI_ROCKET_BLOCKED' : 'ROCKET_BLOCKED'
@@ -543,17 +604,15 @@ function updateRockets(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
         defense.shockAbsorberAvailable = false
         isShockAbsorbed = true
         emit('SHOCK_ABSORBER_PROC', target.playerId, rocket.sourcePlayerId, { mitigated: incoming })
-        const boostMult = defense.loadoutCombo === 'FORTRESS' ? ITEM_BALANCE.fortress.surgeMultiplier : 1.05
-        const boostDur = defense.loadoutCombo === 'FORTRESS' ? ITEM_BALANCE.fortress.surgeDurationSeconds : 1.2
-        applyItemBoost(defense, boostMult, boostDur, tick, tickRate)
       }
 
-      // If shock absorber is triggered, full boost break becomes partial 50% break!
-      const breakSource = isShockAbsorbed
-        ? 'MINI_ROCKET'
-        : (rocket.kind === 'WILD' ? 'MINI_ROCKET' : 'ROCKET')
+      // Shock softens the slow only; a prep rocket still fully breaks the boost (ATTACK > SPEED).
+      const breakSource = rocket.kind === 'WILD' ? 'MINI_ROCKET' : 'ROCKET'
 
-      breakActiveSpeedBoost(defense, tick, tickRate, emit, rocket.sourcePlayerId, target.playerId, breakSource)
+      const broken = breakActiveSpeedBoost(defense, tick, tickRate, emit, rocket.sourcePlayerId, target.playerId, breakSource)
+      // Shock softens the blow but a packed Nitro is still up for grabs.
+      if (rocket.kind === 'PREP') grantMomentumSteal(itemState, rocket.sourcePlayerId, target.playerId, broken, tick, tickRate, emit)
+      else grantMomentumSteal(itemState, rocket.sourcePlayerId, target.playerId, broken, tick, tickRate, emit, PICKUP_BALANCE.counter.momentumStealSeconds, PICKUP_BALANCE.counter.momentumStealMultiplier)
 
       // Slight lateral wobble on impact without backward coordinate teleport
       const lateralJolt = isShockAbsorbed ? 0.08 : 0.18
@@ -570,6 +629,10 @@ function updateRockets(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
           tick,
           tickRate,
         )
+        // The surge starts once the absorbed stagger has played out.
+        defense.queuedGuardSurgeTick = defense.recoverySlowUntilTick
+        defense.queuedGuardSurgeSource = rocket.sourcePlayerId
+        defense.queuedGuardSurgeBlocked = 'ROCKET'
       } else if (rocket.kind === 'PREP') {
         applyStagedSlow(
           defense,
@@ -594,19 +657,17 @@ function updateRockets(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
 
       emit(hitType, rocket.sourcePlayerId, target.playerId, { shockAbsorbed: isShockAbsorbed })
 
-      if (rocket.kind === 'PREP' && rocket.sourcePlayerId) {
+      if (rocket.kind === 'PREP' && rocket.sourcePlayerId && !isShockAbsorbed) {
         triggerMenacePredatorRush(itemState, rocket.sourcePlayerId, tick, tickRate, emit, 'ROCKET')
       }
     } else if (outcome === 'BLOCKED_MINI_BUBBLE') {
       emit('MINI_BUBBLE_BLOCKED', target.playerId, rocket.sourcePlayerId, { blocked: incoming })
       emit(blockedType, rocket.sourcePlayerId, target.playerId, { defense: 'MINI_BUBBLE' })
-      applyItemBoost(defense, 1.05, 1.0, tick, tickRate)
+      applyItemBoost(defense, PICKUP_BALANCE.counter.guardSurge.multiplier, PICKUP_BALANCE.counter.guardSurge.durationSeconds, tick, tickRate)
     } else if (outcome === 'BLOCKED_BUBBLE') {
       emit('BUBBLE_POPPED', target.playerId, rocket.sourcePlayerId, { blocked: 'ROCKET' })
       emit(blockedType, rocket.sourcePlayerId, target.playerId, { defense: 'BUBBLE_SHIELD' })
-      const surgeMult = defense.loadoutCombo === 'FORTRESS' ? ITEM_BALANCE.fortress.surgeMultiplier : ITEM_BALANCE.bubbleShield.burstMultiplier
-      const surgeDur = defense.loadoutCombo === 'FORTRESS' ? ITEM_BALANCE.fortress.surgeDurationSeconds : ITEM_BALANCE.bubbleShield.burstDurationSeconds
-      applyItemBoost(defense, surgeMult, surgeDur, tick, tickRate)
+      grantGuardSurge(defense, target.playerId, rocket.sourcePlayerId, 'BUBBLE_SHIELD', incoming, tick, tickRate, emit)
     } else {
       emit(blockedType, rocket.sourcePlayerId, target.playerId, { defense: 'IMMUNITY' })
     }
@@ -634,15 +695,36 @@ function updateBananas(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
     }
     const defense = itemState.byPlayer.get(target.playerId)!
     const incoming = banana.kind === 'WILD' ? 'WILD_BANANA' : 'BANANA'
+    if (banana.kind === 'PREP') armBubbleReflex(defense, target.playerId, tick, tickRate, emit, 'BANANA')
     const outcome = resolveIncomingRaceEffect(defense, incoming, tick, tickRate)
     const hitType = banana.kind === 'WILD' ? 'WILD_BANANA_HIT' : 'BANANA_HIT'
     const blockedType = banana.kind === 'WILD' ? 'WILD_BANANA_BLOCKED' : 'BANANA_BLOCKED'
     if (outcome === 'HIT') {
-      breakActiveSpeedBoost(defense, tick, tickRate, emit, banana.sourcePlayerId, target.playerId, banana.kind === 'WILD' ? 'WILD_BANANA' : 'BANANA')
+      const shockAbsorbed = false as boolean
+      if (shockAbsorbed) {
+        defense.shockAbsorberAvailable = false
+        emit('SHOCK_ABSORBER_PROC', target.playerId, banana.sourcePlayerId, { mitigated: incoming })
+      }
+      const broken = breakActiveSpeedBoost(defense, tick, tickRate, emit, banana.sourcePlayerId, target.playerId, banana.kind === 'WILD' || shockAbsorbed ? 'WILD_BANANA' : 'BANANA')
+      if (banana.kind === 'PREP') grantMomentumSteal(itemState, banana.sourcePlayerId, target.playerId, broken, tick, tickRate, emit)
+      else grantMomentumSteal(itemState, banana.sourcePlayerId, target.playerId, broken, tick, tickRate, emit, PICKUP_BALANCE.counter.momentumStealSeconds, PICKUP_BALANCE.counter.momentumStealMultiplier)
       const direction = target.lateralOffset >= banana.lateralOffset ? 1 : -1
-      target.lateralVelocity += direction * banana.lateralSlip
+      target.lateralVelocity += direction * banana.lateralSlip * (shockAbsorbed ? ITEM_BALANCE.shockAbsorber.hornPushMultiplier : 1)
 
-      if (banana.kind === 'PREP') {
+      if (shockAbsorbed) {
+        applyStagedSlow(
+          defense,
+          ITEM_BALANCE.shockAbsorber.staggerMultiplier,
+          ITEM_BALANCE.shockAbsorber.staggerDurationSeconds,
+          ITEM_BALANCE.shockAbsorber.recoverySlowMultiplier,
+          ITEM_BALANCE.shockAbsorber.recoveryDurationSeconds,
+          tick,
+          tickRate,
+        )
+        defense.queuedGuardSurgeTick = defense.recoverySlowUntilTick
+        defense.queuedGuardSurgeSource = banana.sourcePlayerId
+        defense.queuedGuardSurgeBlocked = 'BANANA'
+      } else if (banana.kind === 'PREP') {
         applyStagedSlow(
           defense,
           ITEM_BALANCE.banana.staggerMultiplier,
@@ -664,31 +746,25 @@ function updateBananas(itemState: ItemRaceState, ducks: ItemDuckState[], tick: n
         )
       }
 
-      emit(hitType, banana.sourcePlayerId, target.playerId, { lateralSlip: banana.lateralSlip })
-      if (banana.kind === 'PREP' && banana.sourcePlayerId) {
+      emit(hitType, banana.sourcePlayerId, target.playerId, { lateralSlip: banana.lateralSlip, shockAbsorbed })
+      if (banana.kind === 'PREP' && banana.sourcePlayerId && !shockAbsorbed) {
         triggerMenacePredatorRush(itemState, banana.sourcePlayerId, tick, tickRate, emit, 'BANANA')
       }
     } else if (outcome === 'BLOCKED_MINI_BUBBLE') {
       emit('MINI_BUBBLE_BLOCKED', target.playerId, banana.sourcePlayerId, { blocked: incoming })
       emit(blockedType, banana.sourcePlayerId, target.playerId, { blocked: true, defense: 'MINI_BUBBLE' })
-      applyItemBoost(defense, 1.05, 1.0, tick, tickRate)
+      applyItemBoost(defense, PICKUP_BALANCE.counter.guardSurge.multiplier, PICKUP_BALANCE.counter.guardSurge.durationSeconds, tick, tickRate)
     } else if (outcome === 'BLOCKED_BUBBLE') {
       emit('BUBBLE_POPPED', target.playerId, banana.sourcePlayerId, { blocked: 'BANANA' })
       emit(blockedType, banana.sourcePlayerId, target.playerId, { blocked: true, defense: 'BUBBLE_SHIELD' })
-      const surgeMult = defense.loadoutCombo === 'FORTRESS' ? ITEM_BALANCE.fortress.surgeMultiplier : ITEM_BALANCE.bubbleShield.burstMultiplier
-      const surgeDur = defense.loadoutCombo === 'FORTRESS' ? ITEM_BALANCE.fortress.surgeDurationSeconds : ITEM_BALANCE.bubbleShield.burstDurationSeconds
-      applyItemBoost(defense, surgeMult, surgeDur, tick, tickRate)
+      grantGuardSurge(defense, target.playerId, banana.sourcePlayerId, 'BUBBLE_SHIELD', incoming, tick, tickRate, emit)
     } else if (outcome === 'DODGED_WILD_FEATHER') {
       emit('WILD_FEATHER_DODGED', target.playerId, banana.sourcePlayerId, {})
       emit(blockedType, banana.sourcePlayerId, target.playerId, { blocked: true, defense: 'WILD_FEATHER' })
-      applyItemBoost(defense, 1.05, 1.0, tick, tickRate)
+      applyItemBoost(defense, PICKUP_BALANCE.counter.guardSurge.multiplier, PICKUP_BALANCE.counter.guardSurge.durationSeconds, tick, tickRate)
     } else if (outcome === 'DODGED_FEATHER') {
-      if (defense.loadoutCombo === 'FORTRESS') {
-        applyItemBoost(defense, ITEM_BALANCE.fortress.surgeMultiplier, ITEM_BALANCE.fortress.surgeDurationSeconds, tick, tickRate)
-      } else {
-        applyItemSlow(defense, 0.80, 0.8, tick, tickRate)
-      }
       emit('FEATHER_DODGED', target.playerId, banana.sourcePlayerId, {})
+      grantGuardSurge(defense, target.playerId, banana.sourcePlayerId, 'FEATHER', incoming, tick, tickRate, emit)
       emit('BANANA_BLOCKED', banana.sourcePlayerId, target.playerId, { defense: 'FEATHER' })
     } else {
       emit('BANANA_BLOCKED', banana.sourcePlayerId, target.playerId, { defense: 'IMMUNITY' })
@@ -742,10 +818,23 @@ export function tickItemSystem(
         runtime.recoverySlowUntilTick = undefined
       }
     }
+    if (runtime.queuedGuardSurgeTick !== undefined && tick >= runtime.queuedGuardSurgeTick) {
+      const source = runtime.queuedGuardSurgeSource
+      const blocked = runtime.queuedGuardSurgeBlocked ?? 'ROCKET'
+      runtime.queuedGuardSurgeTick = undefined
+      runtime.queuedGuardSurgeSource = undefined
+      runtime.queuedGuardSurgeBlocked = undefined
+      grantGuardSurge(runtime, duck.playerId, source, 'SHOCK_ABSORBER', blocked, tick, tickRate, emit)
+    }
+    if (runtime.featherAvailable && duck.progress >= ITEM_BALANCE.feather.glideProgress) {
+      runtime.featherAvailable = false
+      applyItemBoost(runtime, ITEM_BALANCE.feather.glideMultiplier, ITEM_BALANCE.feather.glideDurationSeconds, tick, tickRate)
+      emit('GUARD_SURGE', duck.playerId, undefined, { defenseItemId: 'FEATHER', glide: true, multiplier: ITEM_BALANCE.feather.glideMultiplier, durationSeconds: ITEM_BALANCE.feather.glideDurationSeconds })
+    }
     if (runtime.bubbleAvailable && tick >= runtime.bubbleUntilTick) {
       runtime.bubbleAvailable = false
-      const expireMult = runtime.loadoutCombo === 'FORTRESS' ? 1.07 : 1.05
-      const expireDur = runtime.loadoutCombo === 'FORTRESS' ? 1.4 : 1.1
+      const expireMult = runtime.loadoutCombo === 'FORTRESS' ? 1.07 : 1.03
+      const expireDur = runtime.loadoutCombo === 'FORTRESS' ? 1.4 : 1.0
       applyItemBoost(runtime, expireMult, expireDur, tick, tickRate)
       emit('BUBBLE_SHIELD_EXPIRED', duck.playerId)
     }
@@ -789,7 +878,8 @@ export function itemSpeedMultiplier(runtime: DuckItemRuntime, tick: number) {
   } else if (runtime.recoverySlowUntilTick && tick < runtime.recoverySlowUntilTick) {
     slow = runtime.recoverySlowMultiplier ?? 1
   }
-  return Math.min(ITEM_BALANCE.maximumSpeedMultiplier, boost) * Math.max(ITEM_BALANCE.minimumSpeedMultiplier, slow)
+  const drag = runtime.itemIds.includes('BUBBLE_SHIELD') && !runtime.usedItems.has('BUBBLE_SHIELD') ? ITEM_BALANCE.bubbleShield.packedDragMultiplier : 1
+  return Math.min(ITEM_BALANCE.maximumSpeedMultiplier, boost) * Math.max(ITEM_BALANCE.minimumSpeedMultiplier, slow) * drag
 }
 
 export function itemActiveEffects(runtime: DuckItemRuntime, tick: number) {

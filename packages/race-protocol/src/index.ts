@@ -2,10 +2,10 @@ import { z } from 'zod'
 
 export const RACE_PROTOCOL_VERSION = '1.0.0'
 export const RACE_ENGINE_VERSION = '1.2.0'
-export const RACE_BALANCE_VERSION = 'S3.12'
+export const RACE_BALANCE_VERSION = 'S3.13'
 export const DEFAULT_TRACK_VERSION = 'river-01-v2'
 export const PICKUP_SPAWN_VERSION = 'pickups-v1'
-export const WILD_ITEM_BALANCE_VERSION = 'wild-items-v5'
+export const WILD_ITEM_BALANCE_VERSION = 'wild-items-v6'
 export const HAZARD_BALANCE_VERSION = 'hazards-v1'
 export const RACE_TICK_RATE = 60
 
@@ -208,6 +208,7 @@ export const raceEventTypeSchema = z.enum([
   'HAZARD_SPAWNED', 'HAZARD_HIT', 'HAZARD_DODGED',
   'GOLDEN_BOX_SPAWNED', 'GOLDEN_BOX_COLLECTED', 'QP_TRACK_REWARD_GRANTED',
   'BOOST_GATE_PASSED',
+  'MOMENTUM_STOLEN', 'GUARD_SURGE',
 ])
 export type RaceEventType = z.infer<typeof raceEventTypeSchema>
 

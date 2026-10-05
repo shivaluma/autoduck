@@ -13,14 +13,14 @@ export interface WildItemDefinition {
 }
 
 export const WILD_ITEM_CATALOG: readonly WildItemDefinition[] = [
-  { id: 'MINI_NITRO', displayName: 'Mini Nitro', icon: '⚡', category: 'MOBILITY', behavior: 'INSTANT', description: 'Bứt tốc tức thì +30% tốc độ trong 2.5 giây.' },
-  { id: 'TAILWIND', displayName: 'Tailwind', icon: '🌊', category: 'UTILITY', behavior: 'INSTANT', description: 'Thuận gió đẩy thuyền: +20% tốc độ và bơi ổn định giữ làn trong 3.0 giây.' },
-  { id: 'MINI_BUBBLE', displayName: 'Mini Bubble', icon: '🫧', category: 'DEFENSE', behavior: 'HELD', description: 'Bong bóng phòng hộ cầm tay: chặn 1 đòn tấn công hoặc bẫy trong tối đa 6.0 giây.' },
-  { id: 'MINI_ROCKET', displayName: 'Mini Rocket', icon: '🚀', category: 'ATTACK', behavior: 'HELD', description: 'Tên lửa mini cắt 50% thời gian boost còn lại, hãm tốc còn 35% trong 0.4s rồi 80% trong 0.35s.' },
-  { id: 'BANANA', displayName: 'Banana', icon: '🍌', category: 'ATTACK', behavior: 'HELD', description: 'Thả bẫy chuối trên làn bơi (8s): đối thủ đạp phải bị trượt lệch làn và giật lùi 4% quãng đường.' },
-  { id: 'QUACK_HORN', displayName: 'Quack Horn', icon: '🔊', category: 'UTILITY', behavior: 'HELD', description: 'Thổi còi xung kích húc dạt các vịt bơi sát cạnh sang hai bên.' },
-  { id: 'FEATHER', displayName: 'Feather Hop', icon: '🪽', category: 'DEFENSE', behavior: 'HELD', description: 'Lông Vũ nhảy né (5.0s): tự động kích hoạt nhảy né bẫy Chuối hoặc chướng ngại vật kế tiếp.' },
-  { id: 'SLIPSTREAM_MAGNET', displayName: 'Slipstream Magnet', icon: '🧲', category: 'MOBILITY', behavior: 'INSTANT', description: 'Nam châm bám luồng hút đối thủ gần nhất phía trước, tăng +18% tốc độ trong 1.6 giây.' },
+  { id: 'MINI_NITRO', displayName: 'Mini Nitro', icon: '⚡', category: 'MOBILITY', behavior: 'INSTANT', description: 'Bứt tốc tức thì +9% tốc độ trong 1.15 giây.' },
+  { id: 'TAILWIND', displayName: 'Tailwind', icon: '🌊', category: 'UTILITY', behavior: 'INSTANT', description: 'Thuận gió đẩy thuyền: +7% tốc độ và bơi ổn định giữ làn trong 1.9 giây.' },
+  { id: 'MINI_BUBBLE', displayName: 'Mini Bubble', icon: '🫧', category: 'DEFENSE', behavior: 'HELD', description: 'Bong bóng phòng hộ cầm tay (6s): chặn 1 đòn tấn công hoặc bẫy rồi nhận +12% trong 1.2s; hết hạn mà chưa dùng sẽ hóa luồng đẩy +13% trong 1.8s.' },
+  { id: 'MINI_ROCKET', displayName: 'Mini Rocket', icon: '🚀', category: 'ATTACK', behavior: 'HELD', description: 'Tên lửa mini cắt 50% thời gian boost còn lại, hãm tốc còn 25% trong 0.55s rồi 65% trong 0.45s. Trúng vịt Tốc độ sẽ cướp đà +20% trong 1.2s.' },
+  { id: 'BANANA', displayName: 'Banana', icon: '🍌', category: 'ATTACK', behavior: 'HELD', description: 'Thả bẫy chuối trên làn bơi (8s): đối thủ đạp phải trượt lệch làn, hãm còn 22% trong 0.6s rồi 60% trong 0.5s. Trúng vịt Tốc độ sẽ cướp đà.' },
+  { id: 'QUACK_HORN', displayName: 'Quack Horn', icon: '🔊', category: 'UTILITY', behavior: 'HELD', description: 'Thổi còi húc dạt các vịt sát cạnh, phá boost (trừ Nitro) và Câm Lặng 0.7s; cướp đà từ 1 vịt Tốc độ. Bong bóng đang bật chặn được còi.' },
+  { id: 'FEATHER', displayName: 'Feather Hop', icon: '🪽', category: 'DEFENSE', behavior: 'HELD', description: 'Lông Vũ nhảy né (5.0s): né bẫy Chuối hoặc chướng ngại vật kế tiếp rồi nhận +12% trong 1.2s; hết hạn mà chưa dùng sẽ hóa luồng lướt +8% trong 1.2s.' },
+  { id: 'SLIPSTREAM_MAGNET', displayName: 'Slipstream Magnet', icon: '🧲', category: 'MOBILITY', behavior: 'INSTANT', description: 'Nam châm bám luồng hút đối thủ gần nhất phía trước, tăng +12% tốc độ trong 1.6 giây.' },
 ] as const
 
 export const WILD_ITEM_BY_ID = new Map(WILD_ITEM_CATALOG.map((item) => [item.id, item]))

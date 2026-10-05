@@ -278,7 +278,7 @@ test('Horn AI values removable boosts within configured radius', () => {
   // Position duck-2 within the configured progress and lateral radius.
   const ducks = [
     { playerId: 'duck-1', progress: 0.50, lateralOffset: 0.0, lateralVelocity: 0, currentRank: 2, finished: false },
-    { playerId: 'duck-2', progress: 0.54, lateralOffset: 0.45, lateralVelocity: 0, currentRank: 1, finished: false },
+    { playerId: 'duck-2', progress: 0.54, lateralOffset: 0.35, lateralVelocity: 0, currentRank: 1, finished: false },
     { playerId: 'duck-3', progress: 0.80, lateralOffset: 0.0, lateralVelocity: 0, currentRank: 3, finished: false },
   ]
   const objective = buildRaceObjectiveContext(cfg)

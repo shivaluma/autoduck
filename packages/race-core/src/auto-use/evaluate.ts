@@ -49,6 +49,11 @@ function hasUnusedOffensiveMajor(runtime: ItemRaceState['byPlayer'] extends Map<
     || (runtime.itemIds.includes('NITRO') && !runtime.usedItems.has('NITRO'))
 }
 
+function carriesSpeedMomentum(runtime: ItemRaceState['byPlayer'] extends Map<string, infer R> ? R : never, tick: number) {
+  if (runtime.activeSpeedItemId && tick < runtime.boostUntilTick) return true
+  return runtime.itemIds.includes('NITRO') && !runtime.usedItems.has('NITRO')
+}
+
 function baseSpeed() {
   return 1 / CORE_BALANCE.targetDurationSeconds
 }
@@ -191,6 +196,11 @@ function rocketTargets(ctx: EvaluationContext, kind: 'PREP' | 'WILD', preferredT
       expectedBoostBreakValue = clamp(boostSecondsRemaining * 14 * (targetRuntime.boostMultiplier - 1) * 35 * breakEfficiency, 0, 24) * damageProbability * hitConfidence
     }
 
+    // ATTACK > SPEED: a clean hit on a speed duck steals its momentum.
+    const momentumStealValue = carriesSpeedMomentum(targetRuntime, ctx.tick)
+      ? AUTO_USE_CONFIG.momentumStealValue * damageProbability * hitConfidence
+      : 0
+
     // Shield Strip Value (valuable when under inventory pressure, endgame, or no other unprotected targets ahead)
     let shieldStripValue = 0
     if (hasBubbleProtection) {
@@ -224,7 +234,7 @@ function rocketTargets(ctx: EvaluationContext, kind: 'PREP' | 'WILD', preferredT
 
     if (source.progress >= AUTO_USE_CONFIG.progressLate) objectiveValue += 12
 
-    let totalScore = objectiveValue + expectedDamageValue + expectedBoostBreakValue + shieldStripValue - penalty
+    let totalScore = objectiveValue + expectedDamageValue + expectedBoostBreakValue + momentumStealValue + shieldStripValue - penalty
 
     if (source.progress >= ITEM_BALANCE.autoUse.endGameBurnProgress) {
       totalScore = Math.max(totalScore, 20 + clamp((maxDistance - gap) / maxDistance * 10, 0, 10))
@@ -281,19 +291,8 @@ export function evaluateReactiveDefense(ctx: EvaluationContext): AutoUseCandidat
   })
   const reactive: AutoUseCandidateDraft[] = []
 
-  if (ctx.prepAutoUseEnabled && hasUnusedPrep(runtime, 'BUBBLE_SHIELD') && !runtime.bubbleAvailable) {
-    if (incomingRocket || incomingBanana) {
-      reactive.push({
-        itemKey: 'prep:BUBBLE_SHIELD',
-        itemId: 'BUBBLE_SHIELD',
-        source: 'PREP',
-        action: 'USE',
-        score: 105,
-        reason: 'REACTIVE_DEFENSE',
-        bypassThreshold: true,
-      })
-    }
-  }
+  // The prep Bubble Shield is no longer raised here: it reflexes on its own against prep attacks
+  // (items/engine.ts armBubbleReflex), and box attacks only meet a bubble that is already up.
 
   if (ctx.wildAutoUseEnabled) {
     if (incomingRocket && runtime.wildItem?.itemId === 'MINI_BUBBLE' && !runtime.wildBubbleAvailable) {
@@ -571,9 +570,15 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
         break
       }
 
+      const targetRuntime = ctx.itemState.byPlayer.get(target.playerId)
+      // Bubble / Feather stop the horn and hand the target a guard surge.
+      const bubbleReady = targetRuntime && targetRuntime.bubbleAvailable && ctx.tick < targetRuntime.bubbleUntilTick
+      if (targetRuntime && (bubbleReady || targetRuntime.featherAvailable)) {
+        netValue -= 12
+        continue
+      }
       targetsCount += 1
       const impact = ITEM_BALANCE.horn.lateralPush
-      const targetRuntime = ctx.itemState.byPlayer.get(target.playerId)
 
       if (target.currentRank < duck.currentRank) {
         netValue += impact * 18
@@ -582,9 +587,12 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
       }
       netValue += ctx.objective.offensiveTargetRankBonus(duck.playerId, target.currentRank) * 0.25
 
-      // Horn breaks active non-Nitro boosts only.
-      if (targetRuntime && ctx.tick < targetRuntime.boostUntilTick && targetRuntime.boostMultiplier > 1 && targetRuntime.activeSpeedItemId !== 'NITRO') {
+      // Horn breaks active speed-item boosts and steals speed ducks' momentum (Shock Absorber only softens it).
+      if (targetRuntime && !targetRuntime.shockAbsorberAvailable && ctx.tick < targetRuntime.boostUntilTick && targetRuntime.boostMultiplier > 1 && targetRuntime.activeSpeedItemId) {
         netValue += 20
+      }
+      if (targetRuntime && carriesSpeedMomentum(targetRuntime, ctx.tick)) {
+        netValue += AUTO_USE_CONFIG.momentumStealValue * 0.5
       }
 
       // Destroy target's drafting slipstream charge
@@ -632,15 +640,12 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
   if (hasUnusedPrep(runtime, 'BUBBLE_SHIELD') && !runtime.bubbleAvailable) {
     const isLateSprint = duck.progress >= ITEM_BALANCE.autoUse.endGameBurnProgress
     let score = 0
-    if (duck.progress >= 0.38 && duck.currentRank <= 2) {
-      score += 42
-    } else if (duck.progress >= 0.48 && duck.currentRank <= 4) {
-      score += 34
-    } else if (duck.progress >= ITEM_BALANCE.bubbleShield.endGameBurnProgress) {
+    // Bubble is a reactive counter to attacks; it is only burned proactively in the final sprint.
+    if (duck.progress >= ITEM_BALANCE.bubbleShield.endGameBurnProgress) {
       score += 35
     }
     if (ctx.objective.isCurrentlyLosing(duck.playerId, duck.currentRank) && duck.progress >= 0.50) score += 15
-    if (isLateSprint) score += 30
+    if (duck.progress >= AUTO_USE_CONFIG.progressFinal) score += 30
     score += endGameBurnScore(duck.progress, 'PREP')
     score += pressure * 0.1
     if (score >= 28) {

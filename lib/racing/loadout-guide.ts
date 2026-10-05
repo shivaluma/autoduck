@@ -4,9 +4,9 @@ import type { RaceItemId } from '@/packages/race-protocol/src'
 export type LoadoutPairingTier = 'recommended' | 'solid' | 'niche' | 'hybrid'
 
 const PURE_COMBO_NOTES: Record<'SPEED' | 'DEFENSE' | 'ATTACK', string> = {
-  SPEED: 'SPEED DEMON — Lối chơi bứt tốc áp đảo: tối ưu hóa bám đuôi lướt gió và bứt phá về đích. Nhược điểm: không có phòng thủ, dễ bị Tên Lửa ngắt đà.',
-  DEFENSE: 'FORTRESS — Lối chơi bo thủ kiên cố: kích hoạt Fortress Surge (+8% tốc độ khi thoát hiểm, giảm 30% lực va chạm) và vô hiệu hóa cạm bẫy. Nhược điểm: tốc độ cơ bản không quá nổi trội.',
-  ATTACK: 'MENACE — Lối chơi áp đảo khống chế: phát sóng EMP khóa item 0.5s, phá boost Draft/Paddle của đối thủ và nhận Predator Rush (+20% tốc độ trong 2.0s) khi đánh trúng mục tiêu.',
+  SPEED: 'SPEED DEMON — Bứt tốc áp đảo: bám đuôi lướt gió nhanh hơn 20% và vượt mặt hệ Phòng thủ. Nhược điểm: hệ Tấn công phá boost và cướp đà của bạn.',
+  DEFENSE: 'FORTRESS — Bo thủ kiên cố: chặn đòn để nhận Guard Surge, giảm 20% lực va chạm và 25% lực đẩy của Còi. Khắc chế hệ Tấn công; nhược điểm: không theo kịp hệ Tốc độ.',
+  ATTACK: 'MENACE — Áp đảo khống chế: phá boost, cướp đà vịt Tốc độ và nhận thêm Predator Rush (+10% trong 1s) mỗi khi đánh trúng. Nhược điểm: đòn bị Phòng thủ chặn thì không được gì.',
 }
 
 const HYBRID_NOTES: ReadonlyArray<{ classes: readonly [string, string]; message: string }> = [

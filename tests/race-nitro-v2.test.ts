@@ -108,7 +108,7 @@ test('Nitro does NOT cleanse slow effects and combines smoothly', () => {
   assert.equal(Number(slowAfterNitro.toFixed(2)), 0.80)
 })
 
-test('Attack interactions: Prep Rocket 100% break, Mini Rocket 50% break, Banana 30% disruption, Horn no break', () => {
+test('Attack interactions: prep attacks fully break boosts, Mini Rocket 50%, Wild Banana 30%, Wild Horn spares Nitro', () => {
   const tickRate = 60
   const emitted: Array<{ type: string; metadata: Record<string, unknown> }> = []
   const emit = (type: string, _source?: string, _target?: string, metadata: Record<string, unknown> = {}) => {
@@ -132,22 +132,29 @@ test('Attack interactions: Prep Rocket 100% break, Mini Rocket 50% break, Banana
   assert.equal(remainingAfterMini, Math.round(remainingBeforeMini * 0.5))
   assert.equal(miniRocketVictim.activeSpeedItemId, 'NITRO') // Still running remaining duration
 
-  // 3. Banana: 30% partial disruption (not full 100% cancellation)
+  // 3. Prep Banana: full break (ATTACK > SPEED); Wild Banana keeps the 30% partial disruption
   const bananaVictim = createTestRuntime(['NITRO'])
   tryApplyPrepSpeedBoost(bananaVictim, 'duck-3', 'NITRO', 1.25, 1.70, 100, tickRate, emit)
-  const remainingBeforeBanana = bananaVictim.boostUntilTick - 130
-  breakActiveSpeedBoost(bananaVictim, 130, tickRate, emit as never, 'attacker', 'duck-3', 'BANANA')
-  const remainingAfterBanana = bananaVictim.boostUntilTick - 130
+  assert.equal(breakActiveSpeedBoost(bananaVictim, 130, tickRate, emit as never, 'attacker', 'duck-3', 'BANANA'), 'NITRO')
+  assert.equal(bananaVictim.activeSpeedItemId, null)
+  const wildBananaVictim = createTestRuntime(['NITRO'])
+  tryApplyPrepSpeedBoost(wildBananaVictim, 'duck-5', 'NITRO', 1.25, 1.70, 100, tickRate, emit)
+  const remainingBeforeBanana = wildBananaVictim.boostUntilTick - 130
+  breakActiveSpeedBoost(wildBananaVictim, 130, tickRate, emit as never, 'attacker', 'duck-5', 'WILD_BANANA')
+  const remainingAfterBanana = wildBananaVictim.boostUntilTick - 130
   assert.equal(remainingAfterBanana, remainingBeforeBanana - Math.round(remainingBeforeBanana * 0.30))
-  assert.equal(bananaVictim.activeSpeedItemId, 'NITRO') // Continues running underneath
+  assert.equal(wildBananaVictim.activeSpeedItemId, 'NITRO') // Continues running underneath
 
-  // 4. Horn: does NOT cancel Nitro
+  // 4. Prep Horn breaks Nitro; Wild Horn still cannot
   const hornVictim = createTestRuntime(['NITRO'])
   tryApplyPrepSpeedBoost(hornVictim, 'duck-4', 'NITRO', 1.25, 1.70, 100, tickRate, emit)
-  const boostUntilBeforeHorn = hornVictim.boostUntilTick
-  breakActiveSpeedBoost(hornVictim, 130, tickRate, emit as never, 'attacker', 'duck-4', 'QUACK_HORN')
-  assert.equal(hornVictim.boostUntilTick, boostUntilBeforeHorn)
-  assert.equal(hornVictim.activeSpeedItemId, 'NITRO')
+  assert.equal(breakActiveSpeedBoost(hornVictim, 130, tickRate, emit as never, 'attacker', 'duck-4', 'QUACK_HORN'), 'NITRO')
+  const wildHornVictim = createTestRuntime(['NITRO'])
+  tryApplyPrepSpeedBoost(wildHornVictim, 'duck-6', 'NITRO', 1.25, 1.70, 100, tickRate, emit)
+  const boostUntilBeforeHorn = wildHornVictim.boostUntilTick
+  breakActiveSpeedBoost(wildHornVictim, 130, tickRate, emit as never, 'attacker', 'duck-6', 'WILD_HORN')
+  assert.equal(wildHornVictim.boostUntilTick, boostUntilBeforeHorn)
+  assert.equal(wildHornVictim.activeSpeedItemId, 'NITRO')
 })
 
 test('Nitro AI utility scoring: overtakes, loser zone safety, finish conversion, and rocket threat avoidance', () => {

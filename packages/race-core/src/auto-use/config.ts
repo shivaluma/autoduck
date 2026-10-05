@@ -6,6 +6,8 @@ export const AUTO_USE_CONFIG = {
   cooldownMinSeconds: 0.35,
   cooldownMaxSeconds: 0.55,
   bananaPredictionHorizonSeconds: 1,
+  // Target score for an attack that would steal a speed duck's momentum.
+  momentumStealValue: 8,
   thresholds: {
     early: 72,
     mid: 64,

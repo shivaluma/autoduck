@@ -19,6 +19,7 @@ import {
   announcePickupWorld,
   applyRecordedWildInputs,
   createPickupRaceState,
+  type WildLootOverride,
   snapshotPickupWorld,
   tickPickupSystem,
   type PickupRaceState,
@@ -79,6 +80,8 @@ export interface SimulationOptions {
   onEvent?: (raceEvent: RaceEvent) => void
   manualInputs?: RecordedWildItemInput[]
   phaseProfile?: SimulationPhaseProfile
+  /** Balance tooling only (never set for official races): override the loot a duck rolls from regular boxes. */
+  lootOverride?: WildLootOverride
 }
 
 function event(state: RaceSimulationState, value: Omit<RaceEvent, 'raceId' | 'tick' | 'timestampWithinRaceMs'>): RaceEvent {
@@ -190,7 +193,7 @@ export function createSimulation(config: RaceConfig, options: SimulationOptions 
     onEvent: options.onEvent,
     rngByPlayer,
     itemState: createItemRaceState(config),
-    pickupState: createPickupRaceState(config, track),
+    pickupState: { ...createPickupRaceState(config, track), lootOverride: options.lootOverride },
     manualInputs: [...(options.manualInputs ?? [])],
     lastCollisionEventTick: new Map(),
     phaseProfile: options.phaseProfile,

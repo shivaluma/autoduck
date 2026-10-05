@@ -1,0 +1,80 @@
+{
+  "wildItemBalanceVersion": "wild-items-v6",
+  "seeds": 800,
+  "start": 40001,
+  "players": 8,
+  "rows": [
+    {
+      "item": "NONE",
+      "winPct": 8.63,
+      "avgRank": 4.759,
+      "rankGain": 0,
+      "ci95": 0,
+      "gainPerPickup": 0
+    },
+    {
+      "item": "MINI_NITRO",
+      "winPct": 10.75,
+      "avgRank": 4.59,
+      "rankGain": 0.169,
+      "ci95": 0.13,
+      "gainPerPickup": 0.078
+    },
+    {
+      "item": "TAILWIND",
+      "winPct": 11.88,
+      "avgRank": 4.431,
+      "rankGain": 0.328,
+      "ci95": 0.145,
+      "gainPerPickup": 0.151
+    },
+    {
+      "item": "MINI_BUBBLE",
+      "winPct": 10.25,
+      "avgRank": 4.58,
+      "rankGain": 0.179,
+      "ci95": 0.118,
+      "gainPerPickup": 0.083
+    },
+    {
+      "item": "MINI_ROCKET",
+      "winPct": 12,
+      "avgRank": 4.54,
+      "rankGain": 0.219,
+      "ci95": 0.136,
+      "gainPerPickup": 0.101
+    },
+    {
+      "item": "BANANA",
+      "winPct": 9.63,
+      "avgRank": 4.631,
+      "rankGain": 0.128,
+      "ci95": 0.121,
+      "gainPerPickup": 0.059
+    },
+    {
+      "item": "QUACK_HORN",
+      "winPct": 11.25,
+      "avgRank": 4.612,
+      "rankGain": 0.146,
+      "ci95": 0.148,
+      "gainPerPickup": 0.068
+    },
+    {
+      "item": "FEATHER",
+      "winPct": 11.63,
+      "avgRank": 4.537,
+      "rankGain": 0.221,
+      "ci95": 0.121,
+      "gainPerPickup": 0.102
+    },
+    {
+      "item": "SLIPSTREAM_MAGNET",
+      "winPct": 13.38,
+      "avgRank": 4.476,
+      "rankGain": 0.282,
+      "ci95": 0.157,
+      "gainPerPickup": 0.13
+    }
+  ]
+}

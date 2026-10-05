@@ -237,7 +237,7 @@ test('Banana expires, Horn pushes only laterally, and neither hard-stuns', () =>
   const hornConfig = config([
     { playerId: '1', itemIds: ['NITRO', 'SHOCK_ABSORBER'] },
     { playerId: '2', itemIds: ['BUBBLE_SHIELD', 'QUACK_HORN'] },
-    { playerId: '3', itemIds: ['NITRO', 'FEATHER'] },
+    { playerId: '3', itemIds: ['NITRO', 'PADDLE_BURST'] },
   ])
   const hornState = createItemRaceState(hornConfig)
   const hornDucks = [duck('1', 0.7, 1, 0), duck('2', 0.695, 2, 0.3), duck('3', 0.698, 3, -0.05)]
@@ -247,7 +247,8 @@ test('Banana expires, Horn pushes only laterally, and neither hard-stuns', () =>
   }
   assert.ok(hornEvents.includes('HORN_USED'))
   assert.notEqual(hornDucks[0].lateralVelocity, 0)
-  assert.equal(itemActiveEffects(hornState.byPlayer.get('3')!, 1).includes('FEATHER'), true)
+  assert.equal(hornDucks[2].lateralOffset !== -0.05 || hornDucks[2].lateralVelocity !== 0, true)
+  assert.equal(itemActiveEffects(hornState.byPlayer.get('3')!, 1).includes('SLOWED'), false)
 })
 
 test('Rocket hits the duck ahead and applies the configured slow', () => {
@@ -287,16 +288,16 @@ test('Rocket applies two-stage stagger then recovery slow', () => {
     60,
   )
 
-  // Stage 1: Stagger (0.85s = 51 ticks, from tick 100 to 151)
+  // Stage 1: Stagger (0.95s = 57 ticks, from tick 100 to 157)
   assert.equal(runtime.slowMultiplier, ITEM_BALANCE.rocket.staggerMultiplier)
-  assert.equal(runtime.slowUntilTick, 151)
+  assert.equal(runtime.slowUntilTick, 157)
   assert.equal(itemSpeedMultiplier(runtime, 110), ITEM_BALANCE.rocket.staggerMultiplier)
 
-  // Stage 2: Recovery slow (0.65s = 39 ticks, from tick 151 to 190)
-  assert.equal(itemSpeedMultiplier(runtime, 151), ITEM_BALANCE.rocket.recoverySlowMultiplier)
+  // Stage 2: Recovery slow (0.65s = 39 ticks, from tick 157 to 196)
+  assert.equal(itemSpeedMultiplier(runtime, 157), ITEM_BALANCE.rocket.recoverySlowMultiplier)
 
-  // Stage 3: Fully recovered at tick 190
-  assert.equal(itemSpeedMultiplier(runtime, 190), 1.0)
+  // Stage 3: Fully recovered at tick 196
+  assert.equal(itemSpeedMultiplier(runtime, 196), 1.0)
 })
 
 test('Rocket breaks active speed boost before applying slow', () => {

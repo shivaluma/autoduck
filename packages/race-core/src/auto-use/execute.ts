@@ -2,7 +2,7 @@ import type { RaceConfig, RaceEventType } from '../../../race-protocol/src'
 import { ITEM_BALANCE } from '../items/config'
 import type { AutoUseCandidate } from './types'
 import type { ItemDuckState, ItemRaceState } from '../items/engine'
-import { breakActiveSpeedBoost, firePrepRocket, slipstreamReady, triggerMenacePredatorRush, tryActivateBubbleShield, tryApplyPrepSpeedBoost } from '../items/engine'
+import { breakActiveSpeedBoost, firePrepRocket, grantGuardSurge, grantMomentumSteal, slipstreamReady, triggerMenacePredatorRush, tryActivateBubbleShield, tryApplyPrepSpeedBoost } from '../items/engine'
 import { resolveRocketTarget } from './evaluate'
 import { buildRaceObjectiveContext } from './objective'
 import { activateWildItem } from '../pickups/engine'
@@ -143,27 +143,47 @@ export function executePrepAction(
       }
       runtime.usedItems.add('QUACK_HORN')
       let slipstreamChargeDestroyedTicks = 0
+      let landed = 0
+      let momentumStolen = false
       for (const target of nearby.sort((left, right) => left.playerId.localeCompare(right.playerId))) {
         const defense = runtimeFor(itemState, target.playerId)
+        // DEFENSE > ATTACK: an active Bubble or an unused Feather stops the horn outright.
+        // A raised Bubble Shield shrugs the horn off without being spent.
+        if (defense.bubbleAvailable && tick < defense.bubbleUntilTick) {
+          emit('BUBBLE_POPPED', target.playerId, duck.playerId, { blocked: 'QUACK_HORN', intact: true })
+          grantGuardSurge(defense, target.playerId, duck.playerId, 'BUBBLE_SHIELD', 'QUACK_HORN', tick, tickRate, emit)
+          continue
+        }
+        if (defense.featherAvailable) {
+          defense.featherAvailable = false
+          emit('FEATHER_DODGED', target.playerId, duck.playerId, { blocked: 'QUACK_HORN' })
+          grantGuardSurge(defense, target.playerId, duck.playerId, 'FEATHER', 'QUACK_HORN', tick, tickRate, emit)
+          continue
+        }
+        landed++
         let push = ITEM_BALANCE.horn.lateralPush
         let shove = ITEM_BALANCE.horn.lateralShove
         if (defense.loadoutCombo === 'FORTRESS') {
           push *= 0.75
           shove *= 0.75
         }
-        if (defense.shockAbsorberAvailable) {
+        const shockAbsorbed = defense.shockAbsorberAvailable
+        if (shockAbsorbed) {
           defense.shockAbsorberAvailable = false
           push *= ITEM_BALANCE.shockAbsorber.hornPushMultiplier
           shove *= ITEM_BALANCE.shockAbsorber.hornShoveMultiplier
           emit('SHOCK_ABSORBER_PROC', target.playerId, duck.playerId, { mitigated: 'QUACK_HORN' })
+          grantGuardSurge(defense, target.playerId, duck.playerId, 'SHOCK_ABSORBER', 'QUACK_HORN', tick, tickRate, emit)
         }
         slipstreamChargeDestroyedTicks += defense.draftSlipstreamTicks
         defense.draftSlipstreamTicks = 0
         defense.draftTargetPlayerId = null
 
         // A short interrupt followed by guaranteed recovery; repeated horns cannot refresh it.
-        breakActiveSpeedBoost(defense, tick, tickRate, emit, duck.playerId, target.playerId, 'QUACK_HORN')
-        if (tick >= Math.max(defense.silencedUntilTick, defense.silenceImmuneUntilTick ?? 0)) {
+        const broken = shockAbsorbed ? null : breakActiveSpeedBoost(defense, tick, tickRate, emit, duck.playerId, target.playerId, 'QUACK_HORN')
+        // One steal per blast: the first speed duck caught (boosting or holding a speed item).
+        if (!momentumStolen) momentumStolen = grantMomentumSteal(itemState, duck.playerId, target.playerId, broken, tick, tickRate, emit, ITEM_BALANCE.counter.hornMomentumStealSeconds)
+        if (!shockAbsorbed && tick >= Math.max(defense.silencedUntilTick, defense.silenceImmuneUntilTick ?? 0)) {
           defense.silencedUntilTick = tick + Math.round(ITEM_BALANCE.horn.silenceDurationSeconds * tickRate)
           defense.silenceImmuneUntilTick = defense.silencedUntilTick + Math.round(ITEM_BALANCE.horn.silenceRecoverySeconds * tickRate)
           emit('ITEM_SILENCED', target.playerId, duck.playerId, {
@@ -179,7 +199,7 @@ export function executePrepAction(
         target.lateralVelocity += direction * push
         target.lateralOffset = Math.max(-0.95, Math.min(0.95, target.lateralOffset + direction * shove))
       }
-      if (runtime.loadoutCombo === 'MENACE') {
+      if (runtime.loadoutCombo === 'MENACE' && landed > 0) {
         triggerMenacePredatorRush(itemState, duck.playerId, tick, tickRate, emit, 'QUACK_HORN')
       }
       emit('HORN_USED', duck.playerId, undefined, {
