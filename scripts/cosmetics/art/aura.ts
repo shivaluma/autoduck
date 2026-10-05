@@ -1,4 +1,4 @@
-import { DUCK_PATHS, INK, MINOR, animate, animateTransform, defs, dot, glow, group, line, linear, part, radial, sparkle, tone, twinkle } from '../kit'
+import { DUCK_PATHS, INK, MINOR, animate, animateTransform, defs, dot, flame, glow, group, line, linear, motes, part, radial, sparkle, tone, twinkle } from '../kit'
 
 // Auras render behind the whole duck (AURA_BACK). Centre (256, 274). Common = static, rare+ = motion,
 // legendary = set-piece with a clearance gap so the silhouette still pops.
@@ -36,12 +36,14 @@ export const AURA_ART: Record<string, () => string> = {
     clover(470, 250, 0.8, 30), clover(110, 380, 0.7, 10),
     `<g>${clover(430, 90, 0.9, -40)}${animateTransform('translate', '0 0; -6 8; 0 0', 5)}</g>`,
     sparkle(140, 120, 6, '#FDE047'), sparkle(490, 350, 5, '#FDE047'),
+    motes({ count: 4, x: 60, y: 260, width: 420, height: 120, rise: 90, colors: ['#86EFAC'], size: [3, 5], seconds: 3.4, seed: 101, shape: 'sparkle' }),
   ),
 
   'aura-lotus-breeze': () => group('lotus-breeze',
     line('M30 330 C40 200 140 110 260 100 C380 92 470 160 500 260', '#F9A8D4', 6, { opacity: 0.45, strokeDasharray: '2 14' }),
     petal(40, 300, -30), petal(80, 190, 10), petal(160, 120, 40), petal(470, 190, -50), petal(500, 290, -10, '#FBCFE8'),
     `<g>${petal(380, 100, 60, '#FBCFE8')}${animateTransform('translate', '0 0; 10 6; 0 0', 4)}</g>`,
+    [0, 1.6, 3.2, 4.8].map((d, i) => `<g>${petal(0, 0, i * 50, i % 2 ? '#FBCFE8' : '#F9A8D4')}<animateMotion dur="6.4s" begin="${-d}s" repeatCount="indefinite" rotate="auto" path="M30 330 C40 200 140 110 260 100 C380 92 470 160 500 260"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.85;1" dur="6.4s" begin="${-d}s" repeatCount="indefinite"/></g>`).join(''),
   ),
 
   // ─── RARE — motion ───────────────────────────────────────────────────────
@@ -52,6 +54,7 @@ export const AURA_ART: Record<string, () => string> = {
     tone('M110 64 C130 40 170 38 190 60 C166 52 136 54 110 64 Z', '#94A3B8', 0.8),
     [70, 120, 170, 220].map((x, i) => `<path d="M${x} 136 l-10 26" stroke="#7DD3FC" stroke-width="4" stroke-linecap="round" opacity="0.8">${animateTransform('translate', '0 -6; 0 14', 0.8, { begin: `${i * 0.2}s` })}${animate('opacity', '0.9;0', 0.8, { begin: `${i * 0.2}s`, calcMode: 'linear', keySplines: undefined })}</path>`).join(''),
     `<g filter="url(#bolt-glow)" opacity="0"><path d="M150 132 L132 176 L152 176 L136 220 L178 160 L156 160 L170 132 Z" fill="#FDE047" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/><animate attributeName="opacity" values="0;0;1;0;1;0;0" keyTimes="0;0.6;0.64;0.68;0.72;0.78;1" dur="3.2s" repeatCount="indefinite"/></g>`,
+    `<rect x="-30" y="-60" width="580" height="580" fill="#E0F2FE" opacity="0"><animate attributeName="opacity" values="0;0;0.14;0;0.1;0;0" keyTimes="0;0.6;0.64;0.68;0.72;0.78;1" dur="3.2s" repeatCount="indefinite"/></rect>`,
   ),
 
   'aura-neon-glitch': () => group('neon-glitch',
@@ -60,6 +63,7 @@ export const AURA_ART: Record<string, () => string> = {
     `<g transform="translate(-14 4)"><path d="${DUCK_PATHS.torso}" fill="none" stroke="#FF2BD6" stroke-width="6"/><path d="${DUCK_PATHS.head}" fill="none" stroke="#FF2BD6" stroke-width="6"/>${animateTransform('translate', '0 0; -6 0; 4 0; 0 0', 0.6, { calcMode: 'discrete' })}</g>` +
     `<g transform="translate(14 -4)"><path d="${DUCK_PATHS.torso}" fill="none" stroke="#00F2FE" stroke-width="6"/><path d="${DUCK_PATHS.head}" fill="none" stroke="#00F2FE" stroke-width="6"/>${animateTransform('translate', '0 0; 6 0; -4 0; 0 0', 0.7, { calcMode: 'discrete' })}</g></g>`,
     [[30, 180, 60, '#00F2FE'], [450, 260, 50, '#FF2BD6'], [60, 400, 40, '#FF2BD6'], [470, 120, 36, '#00F2FE']].map(([x, y, w, c], i) => `<rect x="${x}" y="${y}" width="${w}" height="8" fill="${c}"><animate attributeName="opacity" values="1;0;1;1;0" dur="${1 + i * 0.3}s" repeatCount="indefinite" calcMode="discrete"/></rect>`).join(''),
+    `<g opacity="0.5">${[0, 1, 2].map((i) => `<rect x="-30" y="${60 + i * 140}" width="580" height="3" fill="${i % 2 ? '#FF2BD6' : '#00F2FE'}"><animateTransform attributeName="transform" type="translate" values="0 0;0 120" dur="${1.6 + i * 0.4}s" repeatCount="indefinite"/></rect>`).join('')}</g>`,
   ),
 
   // ─── EPIC — emissive set-pieces ──────────────────────────────────────────
@@ -69,6 +73,8 @@ export const AURA_ART: Record<string, () => string> = {
     `<g filter="url(#ray-glow)" opacity="0.85"><g>${Array.from({ length: 12 }, (_, i) => `<path transform="rotate(${i * 30} 256 250)" d="M248 250 L232 12 L280 12 L264 250 Z" fill="${i % 2 ? '#FDE047' : '#FFF3A6'}" opacity="${i % 2 ? 0.55 : 0.8}"/>`).join('')}${animateTransform('rotate', '0 256 250; 360 256 250', 30, { calcMode: 'linear' })}</g></g>`,
     `<circle cx="256" cy="250" r="214" fill="none" stroke="#FDE047" stroke-width="4" stroke-dasharray="4 18" opacity="0.8">${animateTransform('rotate', '360 256 250; 0 256 250', 40, { calcMode: 'linear' })}</circle>`,
     `<g>${sparkle(40, 120, 10, '#FFFBEA')}${twinkle(2)}</g><g>${sparkle(480, 180, 12, '#FFFBEA')}${twinkle(2.4, 0.8)}</g>`,
+    `<circle cx="256" cy="250" r="200" fill="none" stroke="#FFF3A6" stroke-width="6" opacity="0"><animate attributeName="r" values="140;260" dur="2.4s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.8;0" dur="2.4s" repeatCount="indefinite"/></circle>`,
+    motes({ count: 12, x: 20, y: 220, width: 470, height: 220, rise: 200, colors: ['#FFF3A6', '#FDE047'], size: [2.5, 5], seconds: 3.4, seed: 103, shape: 'sparkle' }),
   ),
 
   'aura-ghost-fog': () => group('ghost-fog',
@@ -76,6 +82,7 @@ export const AURA_ART: Record<string, () => string> = {
     `<path d="M-20 420 C60 380 140 400 200 386 C280 370 360 400 440 380 C490 370 520 386 540 400 L540 460 L-20 460 Z" fill="url(#fog)"><animateTransform attributeName="transform" type="translate" values="0 0; 16 -4; 0 0" dur="6s" repeatCount="indefinite"/></path>`,
     `<path d="M-20 440 C80 410 160 430 260 414 C360 400 440 430 540 416 L540 470 L-20 470 Z" fill="url(#fog)" opacity="0.8"/>`,
     `<g filter="url(#wisp-glow)">` + [0, 2.6, 5.2].map((delay, i) => `<g><path d="M0 -16 C12 -16 16 -4 16 6 L16 16 L10 12 L5 16 L0 12 L-5 16 L-10 12 L-16 16 L-16 6 C-16 -4 -12 -16 0 -16 Z" fill="#EDE9FE" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>${dot(-5, -2, 2.6, INK)}${dot(5, -2, 2.6, INK)}<animateMotion dur="7.8s" begin="${-delay}s" repeatCount="indefinite" path="M256 30 C460 30 520 220 460 340 C400 440 110 440 50 330 C0 220 60 30 256 30 Z"/>${i === 1 ? animate('opacity', '0.6;1;0.6', 2) : ''}</g>`).join('') + '</g>',
+    `<g filter="url(#wisp-glow)">${motes({ count: 8, x: 20, y: 300, width: 470, height: 130, rise: 140, colors: ['#DDD6FE', '#A78BFA'], size: [3, 6], seconds: 3.6, seed: 105 })}</g>`,
   ),
 
   // ─── LEGENDARY — Thần Long (Pond Royalty) ────────────────────────────────
@@ -102,5 +109,7 @@ export const AURA_ART: Record<string, () => string> = {
     `<path d="M34 394 C30 420 40 440 60 452" fill="none" stroke="#FFE58A" stroke-width="4" stroke-linecap="round">${animate('d', 'M34 394 C30 420 40 440 60 452;M34 394 C38 422 34 444 52 458;M34 394 C30 420 40 440 60 452', 2.8)}</path>`,
     // flaming pearl
     `<g filter="url(#dragon-glow)"><circle cx="480" cy="430" r="20" fill="url(#pearl)" stroke="${INK}" stroke-width="${MINOR}"/>${sparkle(474, 424, 6, '#FFFFFF')}<circle cx="480" cy="430" r="28" fill="none" stroke="#F97316" stroke-width="4" opacity="0.7">${animate('r', '24;34;24', 1.6)}${animate('opacity', '0.8;0.1;0.8', 1.6)}</circle></g>`,
+    `<g filter="url(#dragon-glow)">${motes({ count: 14, x: 0, y: 140, width: 520, height: 300, rise: 220, colors: ['#FDE047', '#F97316', '#FCA5A5'], size: [2.5, 5.5], seconds: 2.6, seed: 107 })}</g>`,
+    `<g filter="url(#dragon-glow)">${flame(150, 70, 60, ['#F97316', '#FDE047'], 0.5)}${flame(420, 88, 56, ['#DC2626', '#FDE047'], 0.55, 0.2)}${flame(500, 230, 50, ['#F97316', '#FDE047'], 0.5, 0.3)}${flame(30, 250, 48, ['#DC2626', '#FDE047'], 0.6, 0.1)}</g>`,
   ),
 }

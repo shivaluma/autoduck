@@ -7,6 +7,8 @@ import { ART_BY_SLOT } from './generate-cosmetics'
 
 const CLOSET_SLOTS: CosmeticSlot[] = ['bodyColor', 'bodySkin', 'face', 'head', 'outfit', 'pet', 'aura', 'trail']
 const SHOP_MINIMUMS = { common: 6, uncommon: 6, rare: 6, epic: 3, legendary: 2 } as const
+/** Minimum SMIL animation elements per rarity: motion is part of the art budget. */
+const MOTION_MINIMUMS = { common: 0, uncommon: 0, rare: 2, epic: 6, legendary: 15 } as const
 
 const ids = new Set<string>()
 const errors: string[] = []
@@ -37,6 +39,9 @@ for (const item of COSMETIC_CATALOG) {
   }
   const svg = fs.readFileSync(file, 'utf8')
   if (!svg.includes('<svg') || !svg.includes(`viewBox="${AVATAR_VIEWBOX}"`) || !svg.includes('</svg>')) errors.push(`Invalid v2 frame: ${item.asset}`)
+  if (/\b(attribute-name|repeat-count|calc-mode|key-splines|key-times)=/.test(svg)) errors.push(`${item.id}: kebab-case SMIL attribute — browsers ignore it and the animation never plays`)
+  const motion = (svg.match(/<animate(Transform|Motion)?\b/g) ?? []).length
+  if (motion < MOTION_MINIMUMS[item.rarity]) errors.push(`${item.id}: ${item.rarity} needs ≥${MOTION_MINIMUMS[item.rarity]} animations, found ${motion}`)
   const svgIds = [...svg.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]!)
   const duplicateSvgId = svgIds.find((id, index) => svgIds.indexOf(id) !== index)
   if (duplicateSvgId) errors.push(`${item.id}: duplicate element id "${duplicateSvgId}" breaks url(#…) references`)

@@ -1729,3 +1729,58 @@
 @media (prefers-reduced-motion: reduce) {
   .duck-avatar-rig-idle { animation: none; }
 }
+
+/* Closet tiles: lift on hover, animated shimmer border for epic/legendary, pop on equip. */
+@property --closet-tile-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes closet-tile-spin {
+  to { --closet-tile-angle: 360deg; }
+}
+
+@keyframes closet-equip-pop {
+  0% { transform: scale(0.92); }
+  55% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+.closet-tile {
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.closet-tile:hover {
+  transform: translateY(-2px);
+}
+
+.closet-tile--epic::before,
+.closet-tile--legendary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  padding: 2px;
+  pointer-events: none;
+  background: conic-gradient(from var(--closet-tile-angle), transparent 0deg, var(--closet-tile-shine) 50deg, transparent 110deg, transparent 180deg, var(--closet-tile-shine) 230deg, transparent 290deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: closet-tile-spin 3.2s linear infinite;
+}
+
+.closet-tile--epic { --closet-tile-shine: #E9D5FF; }
+.closet-tile--legendary { --closet-tile-shine: #FFF3A6; }
+.closet-tile--legendary::before { animation-duration: 2.2s; }
+
+.closet-equip-pop {
+  animation: closet-equip-pop 360ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .closet-tile--epic::before,
+  .closet-tile--legendary::before,
+  .closet-equip-pop { animation: none; }
+}

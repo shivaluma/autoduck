@@ -111,7 +111,7 @@ export function DuckCloset({
     <div className="grid md:grid-cols-[280px_1fr]">
       <div className="flex flex-col items-center justify-center border-b-2 border-white/10 bg-black/15 p-5 md:border-b-0 md:border-r-2">
         <div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-neon-green)]">{onboarded ? 'DUCK CLOSET' : 'MAKE YOUR DUCK'}</div>
-        <CosmeticDuck appearance={appearance} size={232} label={`Dzịt của ${name}`} />
+        <div key={JSON.stringify(appearance)} className="closet-equip-pop"><CosmeticDuck appearance={appearance} size={232} label={`Dzịt của ${name}`} /></div>
         <div className="font-display text-2xl">{name}</div>
         <div className="mt-1 rounded-full bg-black/30 px-3 py-1 text-sm font-black text-[var(--color-ggd-gold)]">🪙 {quackPoints} QP</div>
       </div>
@@ -135,7 +135,7 @@ export function DuckCloset({
               key={item.id}
               title={`${item.name} · ${rarity.label}`}
               onClick={() => equip(item.id)}
-              className="group relative aspect-square overflow-hidden rounded-xl border-2 transition-transform active:scale-95"
+              className={`closet-tile closet-tile--${item.rarity} group relative aspect-square overflow-hidden rounded-xl border-2 active:scale-95`}
               style={{
                 borderColor: selected ? 'var(--color-ggd-gold)' : `${rarity.color}66`,
                 background: `radial-gradient(circle at 50% 40%, ${rarity.glow}, rgba(0,0,0,0.25) 70%)`,

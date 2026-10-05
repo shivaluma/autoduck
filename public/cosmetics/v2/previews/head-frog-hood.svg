@@ -49,11 +49,9 @@
 <clipPath id="frog-c"><path d="M216 214 C196 132 224 52 296 28 C360 8 432 34 444 100 C384 76 300 72 260 104 C238 130 236 170 250 214 Z"/></clipPath><g clip-path="url(#frog-c)"><path d="M210 220 C200 140 224 70 270 40 C246 90 238 150 252 220 Z" fill="#16A34A"/><path d="M340 18 C390 18 428 44 440 82 C410 54 380 40 346 36 Z" fill="#BBF7D0" opacity="0.8"/></g>
 <path d="M262 102 C300 78 380 74 442 98" fill="none" stroke="#BBF7D0" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M282 40 C278 12 300 -2 318 4 C336 10 338 34 326 46 Z" fill="#4ADE80" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
-<circle cx="306" cy="20" r="11" fill="#FFFDF4" stroke="#1B132B" stroke-width="4"/>
-<circle cx="309" cy="22" r="5" fill="#1B132B"/>
+<g transform="translate(306 20)"><g><animateTransform attributeName="transform" type="scale" values="1 1;1 1;1 0.08;1 1" keyTimes="0;0.9;0.95;1" dur="3.4s" begin="0s" repeatCount="indefinite"/><g transform="translate(-306 -20)"><circle cx="306" cy="20" r="11" fill="#FFFDF4" stroke="#1B132B" stroke-width="4"/><circle cx="309" cy="22" r="5" fill="#1B132B"/></g></g></g>
 <path d="M366 30 C368 4 392 -4 408 6 C422 16 418 38 404 46 Z" fill="#4ADE80" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
-<circle cx="392" cy="20" r="11" fill="#FFFDF4" stroke="#1B132B" stroke-width="4"/>
-<circle cx="395" cy="22" r="5" fill="#1B132B"/>
+<g transform="translate(392 20)"><g><animateTransform attributeName="transform" type="scale" values="1 1;1 1;1 0.08;1 1" keyTimes="0;0.9;0.95;1" dur="3.4s" begin="0s" repeatCount="indefinite"/><g transform="translate(-392 -20)"><circle cx="392" cy="20" r="11" fill="#FFFDF4" stroke="#1B132B" stroke-width="4"/><circle cx="395" cy="22" r="5" fill="#1B132B"/></g></g></g>
 <circle cx="236" cy="190" r="7" fill="#16A34A"/>
 <circle cx="226" cy="166" r="5" fill="#16A34A"/></g>
 </svg>

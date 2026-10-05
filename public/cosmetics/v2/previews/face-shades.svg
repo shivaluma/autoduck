@@ -49,6 +49,7 @@
 <path d="M272 108 H362 C366 144 352 168 318 168 C286 168 270 144 272 108 Z" fill="#16323F" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
 <path d="M366 114 H424 C428 146 416 166 394 166 C372 166 362 146 366 114 Z" fill="#16323F" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
 <path d="M362 116 C364 110 366 110 366 116" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<clipPath id="shade-glint"><path d="M272 108 H362 C366 144 352 168 318 168 C286 168 270 144 272 108 Z M366 114 H424 C428 146 416 166 394 166 C372 166 362 146 366 114 Z"/></clipPath><g clip-path="url(#shade-glint)"><linearGradient id="shade-sweep" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/><stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.6"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient><rect x="230" y="100" width="30" height="80" fill="url(#shade-sweep)" transform="skewX(-22)"><animateTransform attributeName="transform" type="translate" values="0 0;230 0;230 0" keyTimes="0;0.45;1" dur="3.2s" begin="0s" repeatCount="indefinite" additive="sum"/></rect></g>
 <path d="M286 118 h24 l-18 34 h-14 Z" fill="#4FD1C5" opacity="0.55"/>
 <path d="M376 122 h16 l-12 26 h-10 Z" fill="#4FD1C5" opacity="0.55"/>
 <path d="M272 108 H362 M366 114 H424" fill="none" stroke="#2DD4BF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></g>

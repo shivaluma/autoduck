@@ -1,6 +1,6 @@
 import {
-  DETAIL, DUCK_PATHS, INK, MAJOR, MINOR, animate, animateTransform, dark, defs, dot, glow, group, light,
-  line, linear, metal, part, solid, sparkle, stitch, tone, twinkle,
+  DETAIL, DUCK_PATHS, INK, MAJOR, MINOR, animate, animateTransform, burst, clipped, dark, defs, dot, glow, group, light,
+  line, linear, metal, motes, part, pulse, solid, sparkle, stitch, sway, sweepBand, tone, twinkle,
 } from '../kit'
 
 // Neckline follows the head's lower edge: (408,244) → (320,284) → (242,262).
@@ -103,7 +103,8 @@ export const OUTFIT_ART: Record<string, () => string> = {
   // ─── UNCOMMON ────────────────────────────────────────────────────────────
   'outfit-raincoat': () => garment({
     id: 'raincoat', fill: '#FFD43B', shadow: '#E0A400', highlight: '#FFF6B8',
-    inner: tone('M330 250 C380 256 404 280 408 300 C390 284 366 272 330 266 Z', '#FFFFFF', 0.8) + stitch('M300 280 C296 330 300 380 312 418', '#B78300', 0.9),
+    inner: tone('M330 250 C380 256 404 280 408 300 C390 284 366 272 330 266 Z', '#FFFFFF', 0.8) + stitch('M300 280 C296 330 300 380 312 418', '#B78300', 0.9) +
+      [[150, 280, 0], [220, 300, 0.8], [360, 300, 1.6]].map(([x, y, d]) => `<path d="M${x} ${y} c-4 6 -4 10 0 12 c4 -2 4 -6 0 -12 Z" fill="#E0F2FE" opacity="0"><animateTransform attributeName="transform" type="translate" values="0 0;-6 70" dur="2.4s" begin="${d}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.9;0" dur="2.4s" begin="${d}s" repeatCount="indefinite"/></path>`).join(''),
     over: [312, 346, 380].map((y) => part(`M300 ${y} h26 v10 h-26 Z`, '#8B5E34', { strokeWidth: 4 }) + line(`M296 ${y + 5} H330`, INK, 2)).join('') +
       part('M226 240 C252 276 300 296 350 288 C382 282 404 266 416 240 L414 222 C400 252 370 270 340 272 C290 278 250 260 232 226 Z', '#FFC21A'),
   }),
@@ -114,14 +115,14 @@ export const OUTFIT_ART: Record<string, () => string> = {
       stitch('M240 352 C280 344 340 346 370 358', '#94A3B8', 0.7) +
       `<text x="262" y="330" font-family="Menlo, monospace" font-weight="700" font-size="34" fill="#58E6B0">&lt;/&gt;</text>`,
     over: solid('M206 232 C214 272 270 304 340 298 C384 294 414 270 422 236 C424 262 404 290 374 304 C320 322 240 312 210 274 C202 262 202 246 206 232 Z', '#475569', { strokeWidth: MINOR }) +
-      line('M316 300 V346 M334 300 V340', '#E2E8F0', 4) + dot(316, 348, 5, '#E2E8F0') + dot(334, 342, 5, '#E2E8F0'),
+      sway(316, 300, 6, 1.8, line('M316 300 V346', '#E2E8F0', 4) + dot(316, 348, 5, '#E2E8F0')) + sway(334, 300, 6, 1.8, line('M334 300 V340', '#E2E8F0', 4) + dot(334, 342, 5, '#E2E8F0'), 0.4),
   }),
 
   'outfit-pond-lifeguard': () => garment({
     id: 'lifeguard', fill: '#EF4444', shadow: '#B91C1C', highlight: '#FCA5A5', sleeve: false,
     inner: tone('M300 316 h20 v-20 h20 v20 h20 v20 h-20 v20 h-20 v-20 h-20 Z', '#FFFFFF') + line('M60 400 H440', '#FFFFFF', 8),
     over: line('M246 260 C262 300 288 320 300 340', '#FFFFFF', 5) + line('M396 252 C380 300 352 330 330 344', '#FFFFFF', 5) +
-      part('M302 344 h30 a10 10 0 0 1 0 20 h-30 Z', '#FDE047', { strokeWidth: 4 }) + dot(310, 354, 4, INK),
+      sway(316, 340, 8, 2, part('M302 344 h30 a10 10 0 0 1 0 20 h-30 Z', '#FDE047', { strokeWidth: 4 }) + dot(310, 354, 4, INK)),
   }),
 
   'outfit-biker-vest': () => group('biker',
@@ -150,11 +151,13 @@ export const OUTFIT_ART: Record<string, () => string> = {
   'outfit-lucky-ao-dai': () => garment({
     id: 'aodai', fill: 'url(#aodai-silk)', shadow: '#8E0B12', highlight: '#FF7A6B', sleeve: '#C8161D',
     extraDefs: linear('aodai-silk', [[0, '#F0423F'], [0.5, '#C8161D'], [1, '#8E0B12']], 1, 0, 0, 1) + linear('aodai-gold', [[0, '#FFF0A6'], [1, '#D49B16']], 0, 0, 1, 1),
-    inner: [[160, 300, 1], [230, 360, 0.8], [130, 380, 0.7], [210, 270, 0.6]].map(([x, y, s]) => `<g transform="translate(${x} ${y}) scale(${s})" fill="url(#aodai-gold)" opacity="0.9"><path d="M0 -14 C8 -6 8 6 0 14 C-8 6 -8 -6 0 -14 Z"/><path d="M-14 0 C-6 -8 6 -8 14 0 C6 8 -6 8 -14 0 Z"/><circle r="4" fill="#FFF8D6"/></g>`).join('') +
+    inner: [[160, 300, 1], [230, 360, 0.8], [130, 380, 0.7], [210, 270, 0.6]].map(([x, y, s], i) => `<g transform="translate(${x} ${y}) scale(${s})" fill="url(#aodai-gold)" opacity="0.9"><g>${animateTransform('rotate', '0;90', 6, { calcMode: 'linear' })}<path d="M0 -14 C8 -6 8 6 0 14 C-8 6 -8 -6 0 -14 Z"/><path d="M-14 0 C-6 -8 6 -8 14 0 C6 8 -6 8 -14 0 Z"/></g><circle r="4" fill="#FFF8D6">${twinkle(1.8, i * 0.4)}</circle></g>`).join('') +
+      sweepBand('aodai-sweep', -20, 200, 50, 260, 540, 3.2, 0, 0.5) +
       line('M340 280 C356 300 372 300 390 290', '#FFD84D', 4) + [306, 324, 342].map((y, i) => dot(370 - i * 2, y, 4, '#FFD84D', { stroke: INK, strokeWidth: 2 })).join(''),
     over: solid('M244 262 C276 288 330 296 372 286 C392 282 408 270 416 254 L414 238 C402 260 376 276 344 278 C300 282 264 270 246 248 Z', '#FFD84D', { strokeWidth: MINOR }) +
-      solid('M300 400 C318 432 352 452 396 458 C380 440 372 420 370 402 Z', '#C8161D', { strokeWidth: MINOR }) +
-      tone('M318 412 C334 434 356 446 380 450 L374 440 C356 436 340 426 330 410 Z', '#FFD84D', 0.8),
+      sway(320, 402, 7, 2.6, solid('M300 400 C318 432 352 452 396 458 C380 440 372 420 370 402 Z', '#C8161D', { strokeWidth: MINOR }) +
+        tone('M318 412 C334 434 356 446 380 450 L374 440 C356 436 340 426 330 410 Z', '#FFD84D', 0.8)) +
+      burst(372, 300, 7, 2.6, 0.5),
   }),
 
   'outfit-racing-suit': () => garment({
@@ -164,7 +167,9 @@ export const OUTFIT_ART: Record<string, () => string> = {
       [0, 1, 2, 3, 4, 5, 6, 7].map((i) => `<rect x="${256 - i * 7.6}" y="${258 + i * 22}" width="11" height="11" fill="${INK}"/><rect x="${267 - i * 7.6}" y="${269 + i * 22}" width="11" height="11" fill="${INK}"/>`).join('') +
       part('M330 320 h56 v24 h-56 Z', '#FFFFFF', { strokeWidth: 4 }) + `<text x="336" y="339" font-family="Arial Black, sans-serif" font-size="17" font-weight="900" fill="#EF4444">QUACK</text>` +
       part('M120 340 h44 v20 h-44 Z', '#FDE047', { strokeWidth: 3 }) +
-      line('M300 270 C300 320 310 370 330 420', '#E2E8F0', 5),
+      line('M300 270 C300 320 310 370 330 420', '#E2E8F0', 5) +
+      sweepBand('race-sweep', -40, 200, 60, 260, 560, 1.8, 0, 0.75) +
+      [0, 0.3, 0.6].map((d, i) => `<path d="M420 ${300 + i * 22} H470" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0"><animateTransform attributeName="transform" type="translate" values="0 0;40 0" dur="0.9s" begin="${d}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.8;0" dur="0.9s" begin="${d}s" repeatCount="indefinite"/></path>`).join(''),
     over: part('M232 254 C262 282 310 294 356 286 C382 280 404 266 414 248 L412 234 C396 256 368 270 340 272 C296 276 256 262 236 238 Z', '#FFFFFF'),
   }),
 
@@ -172,8 +177,9 @@ export const OUTFIT_ART: Record<string, () => string> = {
     id: 'blazer', fill: 'url(#blazer-wool)', shadow: '#0B1226', highlight: '#475569', sleeve: '#1E293B',
     extraDefs: linear('blazer-wool', [[0, '#334155'], [1, '#0F172A']], 1, 0, 0, 1),
     inner: `<path d="M286 270 L352 290 L330 420 L300 420 Z" fill="#F8FAFC"/>` +
-      solid('M316 286 L338 286 L344 380 L327 400 L310 380 Z', '#7F1D1D', { strokeWidth: 5 }) +
-      line('M308 330 H348', '#F2B627', 5) +
+      sway(327, 286, 4, 2.4, solid('M316 286 L338 286 L344 380 L327 400 L310 380 Z', '#7F1D1D', { strokeWidth: 5 })) +
+      line('M308 330 H348', '#F2B627', 5) + burst(340, 328, 7, 2.4, 0.6) +
+      sweepBand('blazer-sweep', -20, 200, 40, 260, 540, 3, 0.4, 0.35) +
       dot(372, 350, 5, '#94A3B8') + dot(372, 380, 5, '#94A3B8'),
     over: solid('M244 252 L302 290 L290 360 L262 312 Z', '#1E293B', { strokeWidth: MINOR }) +
       solid('M410 244 L352 292 L364 356 L412 296 Z', '#1E293B', { strokeWidth: MINOR }) +
@@ -185,9 +191,9 @@ export const OUTFIT_ART: Record<string, () => string> = {
     id: 'spacesuit', fill: 'url(#suit-white)', shadow: '#94A3B8', highlight: '#FFFFFF', sleeve: '#F1F5F9',
     extraDefs: linear('suit-white', [[0, '#FFFFFF'], [1, '#CBD5E1']], 1, 0, 0, 1),
     inner: part('M300 304 h80 v56 h-80 Z', '#1E293B', { strokeWidth: MINOR }) +
-      `<rect x="310" y="314" width="18" height="12" rx="3" fill="#22C55E"><animate attributeName="opacity" values="1;0.3;1" dur="1.4s" repeatCount="indefinite"/></rect>` +
-      `<rect x="334" y="314" width="18" height="12" rx="3" fill="#F43F5E"/><rect x="358" y="314" width="14" height="12" rx="3" fill="#38BDF8"/>` +
-      line('M312 340 H370', '#38BDF8', 4) +
+      [[310, 18, '#22C55E', 0], [334, 18, '#F43F5E', 0.35], [358, 14, '#38BDF8', 0.7]].map(([x, w, c, d]) => `<rect x="${x}" y="314" width="${w}" height="12" rx="3" fill="${c}"><animate attributeName="opacity" values="1;0.25;1" dur="1.05s" begin="${d}s" repeatCount="indefinite"/></rect>`).join('') +
+      `<path d="M312 340 H370" stroke="#38BDF8" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 6">${animate('stroke-dashoffset', '0;-32', 0.8, { calcMode: 'linear', keySplines: undefined })}</path>` +
+      sweepBand('suit-sweep', -20, 200, 40, 260, 540, 3.4, 0, 0.6) +
       tone('M100 360 C180 380 300 384 414 360 L412 376 C300 400 180 396 100 376 Z', '#38BDF8', 0.85) +
       line('M150 290 C176 310 200 340 210 380', '#94A3B8', 10) + line('M150 290 C176 310 200 340 210 380', '#E2E8F0', 5),
     over: part('M226 246 C254 286 306 300 354 292 C386 286 408 270 418 246 L420 228 C404 262 370 280 340 282 C290 286 248 266 228 228 Z', '#94A3B8') +
@@ -197,7 +203,8 @@ export const OUTFIT_ART: Record<string, () => string> = {
   'outfit-wizard-robe': () => garment({
     id: 'wizrobe', fill: 'url(#robe)', shadow: '#2E1065', highlight: '#A78BFA', sleeve: '#5B21B6',
     extraDefs: linear('robe', [[0, '#7C3AED'], [1, '#2E1065']], 1, 0, 0, 1),
-    inner: [[160, 290, 9], [220, 360, 7], [130, 360, 6], [380, 340, 7], [260, 300, 5], [320, 390, 6]].map(([x, y, r]) => sparkle(x!, y!, r!, '#FDE047')).join('') +
+    inner: [[160, 290, 9], [220, 360, 7], [130, 360, 6], [380, 340, 7], [260, 300, 5], [320, 390, 6]].map(([x, y, r], i) => `<g>${sparkle(x!, y!, r!, '#FDE047')}${twinkle(1.6, i * 0.27)}</g>`).join('') +
+      motes({ count: 6, x: 110, y: 320, width: 300, height: 90, rise: 70, colors: ['#FDE047', '#C4B5FD'], size: [2.5, 4.5], seconds: 2.6, seed: 61, shape: 'sparkle' }) +
       tone('M180 300 c10 -12 28 -12 34 0 c-12 -4 -24 -2 -34 8 Z', '#FDE047') +
       line('M80 370 C180 390 300 392 414 368', '#F2B627', 9) + line('M260 376 C258 400 266 418 278 430 M276 376 C282 398 296 412 312 420', '#F2B627', 6),
     over: part('M230 248 C258 284 306 298 352 290 C384 284 406 268 416 248 L414 232 C398 260 368 276 338 278 C292 282 254 264 234 234 Z', '#F2B627'),
@@ -206,29 +213,36 @@ export const OUTFIT_ART: Record<string, () => string> = {
   // ─── EPIC ────────────────────────────────────────────────────────────────
   'outfit-quack-knight': () => garment({
     id: 'knight', fill: 'url(#plate)', shadow: '#334155', highlight: '#F8FAFC', sleeve: false,
-    extraDefs: metal('plate', '#A9B6C8') + linear('k-sweep', [[0, '#FFFFFF', 0], [0.5, '#FFFFFF', 0.85], [1, '#FFFFFF', 0]], 0, 0, 1, 0),
+    extraDefs: metal('plate', '#A9B6C8') + glow('knight-glow', 4),
     inner: line('M120 300 C180 290 240 292 290 304 M100 350 C190 340 280 344 410 350', '#475569', 6) +
       [[140, 300], [200, 294], [260, 298], [140, 348], [220, 344], [380, 352]].map(([x, y]) => dot(x!, y!, 5, '#E2E8F0', { stroke: INK, strokeWidth: 3 })).join('') +
-      `<rect x="0" y="200" width="50" height="260" fill="url(#k-sweep)" transform="skewX(-24)">${animateTransform('translate', '0 0; 520 0; 520 0', 3.8)}</rect>`,
+      sweepBand('knight-sweep', -20, 200, 60, 260, 560, 2.4, 0, 0.95),
     over: solid(CHEST, 'url(#plate)', { strokeWidth: MINOR }) +
       part('M334 304 l28 0 l0 36 c0 18 -14 28 -14 28 c0 0 -14 -10 -14 -28 Z', '#1D4ED8', { strokeWidth: 5 }) +
       `<path d="M342 326 c4 -10 16 -10 18 0 l8 2 -8 4 c-4 8 -14 8 -18 0 Z" fill="#FFD84D"/>` +
       solid('M128 300 C150 270 210 262 262 284 C268 312 252 340 220 352 C180 362 140 350 124 330 Z', 'url(#plate)') +
       line('M140 304 C170 286 214 282 252 296 M134 322 C166 306 210 302 246 316', '#475569', 5) +
-      dot(240, 290, 6, '#E2E8F0', { stroke: INK, strokeWidth: 3 }) + sparkle(392, 300, 9),
+      dot(240, 290, 6, '#E2E8F0', { stroke: INK, strokeWidth: 3 }) +
+      clipped('knight-chest', CHEST, sweepBand('knight-chest-sweep', 250, 260, 40, 160, 260, 2.4, 0.6, 0.95)) +
+      `<g filter="url(#knight-glow)">${pulse(348, 330, 1.15, 1.6, `<path d="M342 326 c4 -10 16 -10 18 0 l8 2 -8 4 c-4 8 -14 8 -18 0 Z" fill="#FFD84D"/>`)}</g>` +
+      burst(392, 300, 11, 2.4, 0.3) + burst(240, 290, 8, 2.4, 1.2) + burst(160, 300, 7, 2.4, 1.8),
   }),
 
   'outfit-cyber-samurai': () => garment({
     id: 'samurai', fill: 'url(#cyber-armor)', shadow: '#050816', highlight: '#334155', sleeve: false,
     extraDefs: linear('cyber-armor', [[0, '#1F2937'], [1, '#05070D']], 1, 0, 0, 1) + glow('neon-seam', 4),
     inner: `<g filter="url(#neon-seam)" fill="none" stroke-width="5" stroke-linecap="round">` +
-      `<path d="M110 320 H290 M100 360 H300 M120 396 H300" stroke="#00F2FE">${animate('opacity', '0.45;1;0.45', 2)}</path>` +
-      `<path d="M306 280 L330 420 M380 284 L360 410" stroke="#FF2BD6">${animate('opacity', '1;0.45;1', 2)}</path></g>` +
+      `<path d="M110 320 H290 M100 360 H300 M120 396 H300" stroke="#00F2FE">${animate('opacity', '0.45;1;0.45', 1.4)}</path>` +
+      `<path d="M306 280 L330 420 M380 284 L360 410" stroke="#FF2BD6">${animate('opacity', '1;0.45;1', 1.4)}</path>` +
+      `<path d="M110 320 H290 M100 360 H300 M120 396 H300" stroke="#FFFFFF" stroke-width="3" stroke-dasharray="18 160">${animate('stroke-dashoffset', '178;0', 1.1, { calcMode: 'linear', keySplines: undefined })}</path>` +
+      `<path d="M306 280 L330 420 M380 284 L360 410" stroke="#FFFFFF" stroke-width="3" stroke-dasharray="14 130">${animate('stroke-dashoffset', '0;144', 0.9, { calcMode: 'linear', keySplines: undefined })}</path></g>` +
       line('M110 340 H300 M110 378 H300', '#334155', 4),
     over: solid('M118 300 C140 266 204 252 266 276 L254 336 C206 348 150 342 116 326 Z', '#111827') +
       `<g filter="url(#neon-seam)">${line('M132 304 C160 282 206 276 252 290', '#00F2FE', 4)}${line('M126 320 C170 330 214 330 252 322', '#FF2BD6', 3)}</g>` +
       part('M332 300 l22 -12 l22 12 l0 22 l-22 12 l-22 -12 Z', '#0B0F19', { strokeWidth: 5 }) +
-      `<circle cx="354" cy="311" r="7" fill="#FF2BD6" filter="url(#neon-seam)">${animate('r', '5;8;5', 1.6)}</circle>`,
+      `<circle cx="354" cy="311" r="7" fill="#FF2BD6" filter="url(#neon-seam)">${animate('r', '5;9;5', 1.2)}${animate('fill', '#FF2BD6;#00F2FE;#FF2BD6', 2.4)}</circle>` +
+      `<circle cx="354" cy="311" r="10" fill="none" stroke="#FF2BD6" stroke-width="3">${animate('r', '10;30', 1.2, { calcMode: 'linear', keySplines: undefined })}${animate('opacity', '0.9;0', 1.2, { calcMode: 'linear', keySplines: undefined })}</circle>` +
+      `<g filter="url(#neon-seam)">${motes({ count: 6, x: 110, y: 300, width: 200, height: 100, rise: 60, colors: ['#00F2FE', '#FF2BD6'], size: [2, 3.5], seconds: 1.6, seed: 71 })}</g>`,
   }),
 
   'outfit-spirit-haori': () => garment({
@@ -238,34 +252,35 @@ export const OUTFIT_ART: Record<string, () => string> = {
       line('M80 400 C180 420 300 420 414 396', '#A855F7', 7, { opacity: 0.7 }),
     over: solid('M246 254 L292 300 L300 420 L276 420 L268 304 Z', '#7C3AED', { strokeWidth: MINOR }) +
       solid('M410 244 L360 300 L344 420 L370 420 L380 306 Z', '#7C3AED', { strokeWidth: MINOR }) +
-      solid('M136 316 C168 276 226 266 274 292 C276 340 264 392 226 430 C190 440 146 430 120 410 C114 380 120 340 136 316 Z', 'url(#haori-sleeve)') +
-      line('M136 400 C170 414 206 416 236 410', '#A855F7', 5) +
-      `<g filter="url(#petal-glow)">` + [[440, 300, 0], [470, 220, 1.2], [96, 230, 2.1]].map(([x, y, d]) => `<g transform="translate(${x} ${y})"><path d="M0 -10 C6 -5 6 4 0 9 C-6 4 -6 -5 0 -10 Z" fill="#F9A8D4">${animateTransform('rotate', '0;360', 6)}</path>${animateTransform('translate', '0 -8; 8 10; 0 -8', 4, { begin: `${d}s` })}${twinkle(4, d)}</g>`).join('') + '</g>',
+      sway(200, 290, 4, 3, solid('M136 316 C168 276 226 266 274 292 C276 340 264 392 226 430 C190 440 146 430 120 410 C114 380 120 340 136 316 Z', 'url(#haori-sleeve)') +
+        line('M136 400 C170 414 206 416 236 410', '#A855F7', 5)) +
+      `<g filter="url(#petal-glow)">` + [[440, 300, 0], [470, 220, 1.2], [96, 230, 2.1], [60, 340, 0.6], [490, 360, 1.8], [420, 180, 2.6]].map(([x, y, d]) => `<g transform="translate(${x} ${y})"><path d="M0 -10 C6 -5 6 4 0 9 C-6 4 -6 -5 0 -10 Z" fill="#F9A8D4">${animateTransform('rotate', '0;360', 6)}</path>${animateTransform('translate', '0 -8; 8 10; 0 -8', 4, { begin: `${d}s` })}${twinkle(4, d)}</g>`).join('') + '</g>',
   }),
 
   // ─── LEGENDARY — Dragon Robe (Pond Royalty) ──────────────────────────────
   'outfit-dragon-robe': () => garment({
     id: 'dragonrobe', fill: 'url(#imperial)', shadow: '#B7791F', highlight: '#FFF6C9', sleeve: false,
-    extraDefs: linear('imperial', [[0, '#FFE58A'], [0.5, '#F2B627'], [1, '#C98A10']], 1, 0, 0, 1) +
-      linear('dr-sweep', [[0, '#FFFFFF', 0], [0.5, '#FFFFFF', 0.8], [1, '#FFFFFF', 0]], 0, 0, 1, 0) + glow('dr-glow', 4),
+    extraDefs: linear('imperial', [[0, '#FFE58A'], [0.5, '#F2B627'], [1, '#C98A10']], 1, 0, 0, 1) + glow('dr-glow', 5),
     inner:
       // wave hem (thủy ba) in red & blue
-      `<path d="M70 392 q20 -22 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 V440 H70 Z" fill="#B91C1C"/>` +
-      `<path d="M70 412 q20 -16 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 V440 H70 Z" fill="#1D4ED8"/>` +
+      `<path d="M30 392 q20 -22 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 V440 H30 Z" fill="#B91C1C">${animateTransform('translate', '0 0;40 0', 1.6, { calcMode: 'linear' })}</path>` +
+      `<path d="M30 412 q20 -16 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 V440 H30 Z" fill="#1D4ED8">${animateTransform('translate', '40 0;0 0', 1.6, { calcMode: 'linear' })}</path>` +
       // embroidered dragon coiling across the belly
       `<g filter="url(#dr-glow)" fill="none" stroke="#9A2A0E" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">` +
       `<path d="M300 384 C296 350 330 336 352 352 C372 368 400 356 396 326 C394 304 376 292 360 296"/>` +
       `<path d="M300 370 l-14 -6 M312 346 l-12 -12 M340 342 l0 -16 M366 362 l6 14 M392 344 l14 4 M396 318 l14 -4" stroke-width="6"/></g>` +
-      line('M300 384 C296 350 330 336 352 352 C372 368 400 356 396 326 C394 304 376 292 360 296', '#FFF3A6', 3, { strokeDasharray: '6 8' }) +
+      `<path d="M300 384 C296 350 330 336 352 352 C372 368 400 356 396 326 C394 304 376 292 360 296" fill="none" stroke="#FFF3A6" stroke-width="3" stroke-dasharray="6 8">${animate('stroke-dashoffset', '0;-28', 0.8, { calcMode: 'linear', keySplines: undefined })}</path>` +
+      `<path d="M300 384 C296 350 330 336 352 352 C372 368 400 356 396 326 C394 304 376 292 360 296" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-dasharray="30 300" filter="url(#dr-glow)">${animate('stroke-dashoffset', '330;0', 2.2, { calcMode: 'linear', keySplines: undefined })}</path>` +
       `<path d="M362 300 c-10 -16 -32 -14 -36 0 c4 4 10 4 14 2 l-6 10 c10 4 22 0 28 -12 Z" fill="#B91C1C" stroke="${INK}" stroke-width="4"/>` +
       dot(342, 296, 3, '#FFF3A6') +
       `<circle cx="120" cy="336" r="10" fill="#DC2626" stroke="${INK}" stroke-width="4">${animate('r', '9;12;9', 2)}</circle>` +
-      `<rect x="0" y="200" width="60" height="260" fill="url(#dr-sweep)" transform="skewX(-24)">${animateTransform('translate', '0 0; 540 0; 540 0', 3.4)}</rect>`,
+      sweepBand('dr-sweep-band', -40, 200, 70, 260, 580, 2.6, 0, 0.85) +
+      `<g filter="url(#dr-glow)">${motes({ count: 10, x: 100, y: 300, width: 310, height: 110, rise: 100, colors: ['#FFF3A6', '#FDE047', '#FCA5A5'], size: [2, 4], seconds: 2.8, seed: 81, shape: 'sparkle' })}</g>`,
     over: solid('M226 244 C254 284 306 300 354 292 C386 286 408 270 418 246 L420 222 C404 260 370 278 338 280 C288 284 248 262 230 222 Z', '#B91C1C', { strokeWidth: MINOR }) +
       line('M234 244 C262 276 306 288 350 282', '#FFD84D', 4) +
       solid('M132 306 C170 266 230 264 276 290 C282 336 268 378 238 404 C196 414 150 400 126 376 C118 352 120 324 132 306 Z', 'url(#imperial)') +
       `<path d="M128 372 q16 -14 32 0 t32 0 t32 0 t30 0 L238 404 C196 414 150 400 126 376 Z" fill="#1D4ED8" stroke="${INK}" stroke-width="${DETAIL}"/>` +
-      `<g>${sparkle(420, 286, 10, '#FFFBEA')}${twinkle(2.4)}</g><g>${sparkle(196, 330, 8, '#FFFBEA')}${twinkle(2.8, 1)}</g>`,
+      `<g filter="url(#dr-glow)">${burst(420, 286, 12, 2.2)}${burst(196, 330, 9, 2.2, 0.7)}${burst(300, 260, 8, 2.2, 1.4)}</g>`,
   }),
 }
 

@@ -6,5 +6,5 @@
 <ellipse cx="392" cy="146" rx="32" ry="34" fill="none" stroke="#8B5E34" stroke-width="5"/>
 <path d="M352 132 h18 v14 h-18 Z" fill="#FFFDF4" stroke="#1B132B" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
 <path d="M356 132 v14 M362 132 v14" fill="none" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M300 116 l12 -8 M380 126 l8 -6" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/></g>
+<g><path d="M300 116 l12 -8 M380 126 l8 -6" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><animate attributeName="opacity" values="0.3;1;0.3" dur="2.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/></g></g>
 </svg>

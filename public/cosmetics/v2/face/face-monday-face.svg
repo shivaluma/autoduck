@@ -3,5 +3,5 @@
 <clipPath id="lid-382"><path d="M350 144 a32 42 0 1 0 64 0 a32 42 0 1 0 -64 0 Z"/></clipPath><g clip-path="url(#lid-382)"><rect x="346" y="98" width="72" height="39.28" fill="#D9CDE8"/></g><path d="M354 137.28 Q382 143.28 410 137.28" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M286 186 C300 196 330 198 352 188" fill="none" stroke="#8B5CF6" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.55"/>
 <path d="M362 188 C372 194 392 196 404 188" fill="none" stroke="#8B5CF6" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.55"/>
-<path d="M262 92 c-8 12 -8 22 0 26 c8 -4 8 -14 0 -26 Z" fill="#7DD3FC" stroke="#1B132B" stroke-width="4"><animateTransform attribute-name="transform" type="translate" values="0 0; 0 10; 0 0" dur="2.4s" repeat-count="indefinite" additive="sum"/></path></g>
+<path d="M262 92 c-8 12 -8 22 0 26 c8 -4 8 -14 0 -26 Z" fill="#7DD3FC" stroke="#1B132B" stroke-width="4"><animateTransform attributeName="transform" type="translate" values="0 0; 0 10; 0 0" dur="2.4s" repeatCount="indefinite" additive="sum"/></path></g>
 </svg>

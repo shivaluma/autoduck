@@ -19,6 +19,7 @@ Duck Closet v2 (see `docs/cosmetics-v2-redesign.md`) has 122 hand-designed items
 - Catalog metadata: `lib/cosmetics/catalog.ts`. UI code must not define cosmetics locally.
 - Art: one draw function per catalog ID in `scripts/cosmetics/art/<slot>.ts`, built from the shared helpers in `scripts/cosmetics/kit.ts`. Skins and outfits mask to `DUCK_PATHS` from `lib/cosmetics/avatar-rig.ts` so they hug the body.
 - Frame: every v2 layer uses `AVATAR_VIEWBOX` (`-24 -56 560 560`, the 512 rig padded for headroom), so stacked `<img>` layers stay aligned. Per-slot preview and closet-tile crops live in `SLOT_FRAMES` (`lib/cosmetics/types.ts`), next to the layer order.
+- Motion is part of the rarity budget. Common items are static, uncommon items get one gentle loop, rare items get 2–3 loops, and epic/legendary items get layered emissive motion. Use the motion helpers in `kit.ts` (`sway`, `pulse`, `hover`, `blink`, `burst`, `motes`, `flame`, `sweepBand`, `livingGradient`). Animations are SMIL so they play inside `<img>` layers; they are static in Phaser race textures.
 - `pnpm cosmetics:generate` writes `public/cosmetics/v2/<slot>/<id>.svg` plus framed previews.
 - `pnpm cosmetics:validate` fails on:
   - missing art, assets or previews
@@ -26,6 +27,7 @@ Duck Closet v2 (see `docs/cosmetics-v2-redesign.md`) has 122 hand-designed items
   - duplicate element IDs inside an SVG
   - recolor duplicates (two items in a slot that differ only by color)
   - a shop pool below the rotation minimums
+  - a rare/epic/legendary item below its minimum animation count, or kebab-cased SMIL attributes (browsers silently ignore those)
 - `pnpm exec tsx scripts/render-contact-sheet.ts` renders `public/cosmetics/contact-sheet.{html,png}`. `/dev/cosmetics` is the interactive gallery.
 - Retired v1 IDs are frozen in `lib/cosmetics/legacy-v1.ts`. App migration `2026-10-05-001-cosmetics-v2-catalog` swaps each retired item for its `LEGACY_REMAP` equivalent or refunds its v1 shop price.
 

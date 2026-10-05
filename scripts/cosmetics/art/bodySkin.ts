@@ -1,6 +1,6 @@
 import {
-  DUCK_PATHS, INK, MAJOR, MINOR, animate, animateTransform, defs, dot, glow, group, line, linear,
-  part, radial, sparkle, tone, twinkle,
+  DUCK_PATHS, INK, MAJOR, MINOR, animate, animateTransform, burst, defs, dot, glow, group, hover, line, linear, livingGradient,
+  motes, part, pulse, radial, sparkle, sweepBand, tone, twinkle,
 } from '../kit'
 
 // Skins paint onto the feathers only: torso + head + tail, minus eyes and beak, so the face stays clean.
@@ -78,7 +78,8 @@ export const BODY_SKIN_ART: Record<string, () => string> = {
   'bodySkin-koi-patches': () => skin('koi',
     `<path d="${DUCK_PATHS.torso}" fill="#FFFDF4" opacity="0.9"/><path d="${DUCK_PATHS.head}" fill="#FFFDF4" opacity="0.9"/><path d="${DUCK_PATHS.tail}" fill="#FFFDF4" opacity="0.9"/>` +
     [[150, 290, 46, 2, '#FF5A1F'], [300, 360, 40, 4, '#FF5A1F'], [320, 60, 44, 6, '#FF5A1F'], [210, 380, 22, 3, '#1F1A2E'], [380, 300, 16, 5, '#1F1A2E'], [90, 320, 22, 1, '#FF5A1F']].map(([x, y, r, s, c]) => tone(blob(x as number, y as number, r as number, s as number), c as string)).join('') +
-    line('M126 270 C150 262 176 268 190 282', '#FF9A6B', 5, { opacity: 0.8 })),
+    line('M126 270 C150 262 176 268 190 282', '#FF9A6B', 5, { opacity: 0.8 }) +
+    sweepBand('koi-sweep', -20, 180, 40, 300, 520, 4, 0, 0.45)),
 
   'bodySkin-street-camo': () => skin('camo',
     `<path d="${DUCK_PATHS.torso}" fill="#7C8B5A" opacity="0.92"/><path d="${DUCK_PATHS.head}" fill="#7C8B5A" opacity="0.92"/><path d="${DUCK_PATHS.tail}" fill="#7C8B5A" opacity="0.92"/>` +
@@ -87,57 +88,64 @@ export const BODY_SKIN_ART: Record<string, () => string> = {
 
   // ─── RARE ────────────────────────────────────────────────────────────────
   'bodySkin-me-tattoo': () => group('me-tattoo',
-    defs(skinMask('tattoo-m')),
+    defs(skinMask('tattoo-m'), glow('tattoo-glow', 3)),
     `<g mask="url(#tattoo-m)">` +
-    `<path d="M196 330 C176 304 196 284 214 298 C232 284 252 304 232 330 L214 350 Z" fill="#E11D48" stroke="#1E3A8A" stroke-width="5" stroke-linejoin="round"/>` +
-    tone('M200 312 C200 300 210 296 214 304 Z', '#FDA4AF') +
+    pulse(214, 318, 1.12, 0.9,
+      `<path d="M196 330 C176 304 196 284 214 298 C232 284 252 304 232 330 L214 350 Z" fill="#E11D48" stroke="#1E3A8A" stroke-width="5" stroke-linejoin="round"/>` +
+      tone('M200 312 C200 300 210 296 214 304 Z', '#FDA4AF')) +
     `<path d="M160 324 L176 318 L250 318 L268 324 L250 342 L176 342 Z" fill="#FFFDF4" stroke="#1E3A8A" stroke-width="4" stroke-linejoin="round"/>` +
     `<text x="214" y="337" text-anchor="middle" font-family="Georgia, serif" font-weight="900" font-size="20" fill="#1E3A8A">MẸ</text>` +
-    `<path d="M290 360 c14 -10 30 -10 40 0 c-8 -2 -14 0 -18 6 c10 0 18 4 22 12 c-14 -4 -28 -2 -40 4 c4 -8 8 -14 14 -16 c-8 -2 -14 0 -18 -6 Z" fill="#1E3A8A" opacity="0.9"/>` +
-    sparkle(270, 300, 6, '#1E3A8A') + `</g>`,
+    hover(6, 2.2, `<path d="M290 360 c14 -10 30 -10 40 0 c-8 -2 -14 0 -18 6 c10 0 18 4 22 12 c-14 -4 -28 -2 -40 4 c4 -8 8 -14 14 -16 c-8 -2 -14 0 -18 -6 Z" fill="#1E3A8A" opacity="0.9"/>`) +
+    `<g filter="url(#tattoo-glow)">${burst(270, 300, 7, 2.2, 0.4, '#60A5FA')}</g>` + `</g>`,
     line(DUCK_PATHS.wing, INK, MINOR),
   ),
 
   'bodySkin-circuit-feathers': () => skin('circuit',
-    `<g filter="url(#circuit-glow)" fill="none" stroke="#00F2FE" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">` +
+    `<g filter="url(#circuit-glow)" fill="none" stroke="#00F2FE" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">${animate('stroke', '#00F2FE;#22FFA6;#00F2FE', 2.4)}` +
     `<path d="M80 300 H140 L160 280 H230 L250 300 H300"/><path d="M100 360 H170 L190 380 H280 L300 360 H360"/><path d="M230 150 V110 L260 80 H300"/><path d="M420 110 L400 90 H370"/><path d="M200 400 L220 420"/></g>` +
-    [[300, 300], [360, 360], [300, 80], [370, 90], [80, 300], [100, 360]].map(([x, y]) => dot(x!, y!, 7, '#0B1220', { stroke: '#00F2FE', strokeWidth: 4 })).join('') +
-    `<circle r="5" fill="#FFFFFF"><animateMotion dur="2.4s" repeatCount="indefinite" path="M80 300 H140 L160 280 H230 L250 300 H300"/></circle>`,
-    glow('circuit-glow', 3)),
+    [[300, 300, 0], [360, 360, 0.4], [300, 80, 0.8], [370, 90, 1.2], [80, 300, 1.6], [100, 360, 2]].map(([x, y, d]) => `<circle cx="${x}" cy="${y}" r="7" fill="#0B1220" stroke="#00F2FE" stroke-width="4">${animate('fill', '#0B1220;#00F2FE;#0B1220', 2.4, { begin: `${d}s` })}</circle>`).join('') +
+    `<g filter="url(#circuit-glow)">` +
+    [['M80 300 H140 L160 280 H230 L250 300 H300', 1.6, 0], ['M80 300 H140 L160 280 H230 L250 300 H300', 1.6, 0.8], ['M100 360 H170 L190 380 H280 L300 360 H360', 2, 0.3], ['M230 150 V110 L260 80 H300', 1.4, 0.6]].map(([path, dur, d]) =>
+      `<circle r="5" fill="#FFFFFF"><animateMotion dur="${dur}s" begin="${d}s" repeatCount="indefinite" path="${path}"/></circle>`).join('') + `</g>`,
+    glow('circuit-glow', 4)),
 
   'bodySkin-star-constellations': () => skin('constellation',
     `<path d="${DUCK_PATHS.torso}" fill="url(#night)" opacity="0.55"/>` +
-    line('M120 300 L170 270 L230 296 L260 260 M170 270 L190 340 L270 370 L340 340', '#FDE68A', 3, { opacity: 0.85 }) +
-    line('M250 80 L290 60 L330 70', '#FDE68A', 3, { opacity: 0.7 }) +
-    [[120, 300, 6], [170, 270, 8], [230, 296, 6], [260, 260, 7], [190, 340, 6], [270, 370, 8], [340, 340, 6], [250, 80, 6], [290, 60, 7], [330, 70, 5]].map(([x, y, r], i) => `<g>${sparkle(x!, y!, r!, '#FFF7D6')}${i % 3 === 0 ? twinkle(2.6, i * 0.3) : ''}</g>`).join(''),
+    `<path d="M120 300 L170 270 L230 296 L260 260 M170 270 L190 340 L270 370 L340 340" fill="none" stroke="#FDE68A" stroke-width="3" stroke-linecap="round" stroke-dasharray="420" opacity="0.85">${animate('stroke-dashoffset', '420;0;0;420', 6, { keyTimes: '0;0.4;0.85;1', calcMode: 'linear', keySplines: undefined })}</path>` +
+    `<path d="M250 80 L290 60 L330 70" fill="none" stroke="#FDE68A" stroke-width="3" stroke-dasharray="100" opacity="0.7">${animate('stroke-dashoffset', '100;0;0;100', 6, { keyTimes: '0;0.3;0.85;1', calcMode: 'linear', keySplines: undefined, begin: '1s' })}</path>` +
+    [[120, 300, 6], [170, 270, 8], [230, 296, 6], [260, 260, 7], [190, 340, 6], [270, 370, 8], [340, 340, 6], [250, 80, 6], [290, 60, 7], [330, 70, 5]].map(([x, y, r], i) => `<g>${sparkle(x!, y!, r!, '#FFF7D6')}${twinkle(1.6 + (i % 3) * 0.5, i * 0.25)}</g>`).join(''),
     radial('night', [[0, '#312E81', 0.2], [1, '#1E1B4B', 0.9]], 0.4, 0.4, 0.7)),
 
   // ─── EPIC ────────────────────────────────────────────────────────────────
   'bodySkin-dragon-scale': () => skin('dragon-scale',
     `<path d="${DUCK_PATHS.torso}" fill="url(#scale-tile)"/><path d="${DUCK_PATHS.head}" fill="url(#scale-tile)" opacity="0.6"/><path d="${DUCK_PATHS.tail}" fill="url(#scale-tile)"/>` +
-    // belly plates
-    [0, 1, 2, 3].map((i) => `<path d="M${300 + i * 4} ${300 + i * 26} C${330 + i * 4} ${292 + i * 26} ${380 - i * 6} ${296 + i * 26} ${400 - i * 10} ${310 + i * 26}" fill="none" stroke="#FFD84D" stroke-width="10" stroke-linecap="round" opacity="0.85"/>`).join('') +
-    `<rect x="-40" y="200" width="40" height="260" fill="url(#scale-sweep)" transform="skewX(-24)">${animateTransform('translate', '0 0; 520 0; 520 0', 3.6)}</rect>`,
-    `<pattern id="scale-tile" width="52" height="40" patternUnits="userSpaceOnUse"><rect width="52" height="40" fill="#7F1D1D" opacity="0.85"/><path d="M0 40 C0 18 26 18 26 40 M26 40 C26 18 52 18 52 40 M-26 20 C-26 -2 0 -2 0 20 M0 20 C0 -2 26 -2 26 20 M26 20 C26 -2 52 -2 52 20" fill="#B91C1C" stroke="#1B132B" stroke-width="3"/><path d="M6 36 C6 26 14 22 20 24 M32 16 C32 6 40 2 46 4" fill="none" stroke="#FFB020" stroke-width="3" stroke-linecap="round"/></pattern>` +
-    linear('scale-sweep', [[0, '#FFFFFF', 0], [0.5, '#FFF3A6', 0.8], [1, '#FFFFFF', 0]], 0, 0, 1, 0)),
+    `<path d="${DUCK_PATHS.torso}" fill="#FF6A1A">${animate('opacity', '0;0.28;0', 1.8)}</path>` +
+    [0, 1, 2, 3].map((i) => `<path d="M${300 + i * 4} ${300 + i * 26} C${330 + i * 4} ${292 + i * 26} ${380 - i * 6} ${296 + i * 26} ${400 - i * 10} ${310 + i * 26}" fill="none" stroke="#FFD84D" stroke-width="10" stroke-linecap="round" opacity="0.85">${animate('stroke', '#FFD84D;#FFF3A6;#FFD84D', 1.8, { begin: `${i * 0.2}s` })}</path>`).join('') +
+    sweepBand('scale-sweep', -40, 200, 40, 260, 540, 2.4, 0, 0.8) +
+    `<g filter="url(#scale-glow)">${motes({ count: 8, x: 100, y: 300, width: 300, height: 100, rise: 90, colors: ['#FDE047', '#F97316'], size: [2, 4], seconds: 2, seed: 51 })}</g>`,
+    `<pattern id="scale-tile" width="52" height="40" patternUnits="userSpaceOnUse"><rect width="52" height="40" fill="#7F1D1D" opacity="0.85"/><path d="M0 40 C0 18 26 18 26 40 M26 40 C26 18 52 18 52 40 M-26 20 C-26 -2 0 -2 0 20 M0 20 C0 -2 26 -2 26 20 M26 20 C26 -2 52 -2 52 20" fill="#B91C1C" stroke="#1B132B" stroke-width="3"/><path d="M6 36 C6 26 14 22 20 24 M32 16 C32 6 40 2 46 4" fill="none" stroke="#FFB020" stroke-width="3" stroke-linecap="round"/></pattern>` + glow('scale-glow', 3)),
 
   'bodySkin-gold-veins': () => skin('kintsugi',
     `<path d="${DUCK_PATHS.torso}" fill="#F8FAFC" opacity="0.92"/><path d="${DUCK_PATHS.head}" fill="#F8FAFC" opacity="0.92"/><path d="${DUCK_PATHS.tail}" fill="#F8FAFC" opacity="0.92"/>` +
     tone(DUCK_PATHS.torsoShadow, '#CBD5E1', 0.7) +
     line('M120 300 C140 280 170 284 186 270 C210 250 230 262 250 250', '#2563EB', 3, { opacity: 0.35 }) +
-    `<g filter="url(#kin-glow)" fill="none" stroke="url(#kin-gold)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">` +
+    `<g filter="url(#kin-glow)" fill="none" stroke="url(#kin-gold)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">${animate('stroke-width', '5;8;5', 2.4)}` +
     `<path d="M90 310 L130 300 L150 320 L196 312 L214 340 L262 336"/><path d="M196 312 L210 280 L250 268"/><path d="M262 336 L300 370 L350 362 L380 390"/><path d="M262 60 L280 90 L270 120 L290 150"/><path d="M150 380 L190 372 L210 400"/></g>` +
-    `<path d="M90 310 L130 300 L150 320 L196 312 L214 340 L262 336" fill="none" stroke="#FFFBEA" stroke-width="3" stroke-dasharray="20 220" stroke-linecap="round">${animate('stroke-dashoffset', '240;0', 2.8, { calcMode: 'linear', keySplines: undefined })}</path>`,
-    linear('kin-gold', [[0, '#FFF0A6'], [0.5, '#F2B627'], [1, '#B7791F']], 0, 0, 1, 1) + glow('kin-glow', 3)),
+    [['M90 310 L130 300 L150 320 L196 312 L214 340 L262 336 L300 370 L350 362 L380 390', 0], ['M262 60 L280 90 L270 120 L290 150', 0.9], ['M196 312 L210 280 L250 268', 1.6]].map(([path, d]) =>
+      `<path d="${path}" fill="none" stroke="#FFFBEA" stroke-width="3" stroke-dasharray="24 400" stroke-linecap="round">${animate('stroke-dashoffset', '424;0', 2.4, { calcMode: 'linear', keySplines: undefined, begin: `${d}s` })}</path>`).join('') +
+    burst(214, 340, 8, 2.4, 0.6) + burst(300, 370, 7, 2.4, 1.4),
+    linear('kin-gold', [[0, '#FFF0A6'], [0.5, '#F2B627'], [1, '#B7791F']], 0, 0, 1, 1) + glow('kin-glow', 4)),
 
   // ─── LEGENDARY — Galaxy Body (Cosmic Pond) ───────────────────────────────
   'bodySkin-galaxy-dust': () => skin('galaxy-body',
     `<path d="${DUCK_PATHS.torso}" fill="url(#galaxy)"/><path d="${DUCK_PATHS.head}" fill="url(#galaxy)"/><path d="${DUCK_PATHS.tail}" fill="url(#galaxy)"/>` +
-    tone('M90 330 C160 280 260 300 340 260 C380 240 410 260 420 290 C380 280 340 300 300 320 C220 360 140 360 90 330 Z', '#F0ABFC', 0.35) +
-    tone('M120 380 C200 360 300 380 380 350 C340 390 220 410 120 380 Z', '#67E8F9', 0.3) +
-    [[110, 300], [160, 340], [200, 280], [250, 360], [300, 300], [360, 340], [390, 300], [180, 400], [280, 400], [240, 70], [300, 50], [420, 110], [230, 200], [80, 300]].map(([x, y], i) => `<g>${dot(x!, y!, i % 3 === 0 ? 3 : 2, '#FFFFFF')}${twinkle(1.6 + (i % 4) * 0.5, i * 0.2)}</g>`).join('') +
-    [[200, 330, 9], [330, 380, 7], [270, 90, 6]].map(([x, y, r], i) => `<g>${sparkle(x!, y!, r!, '#FFF7D6')}${twinkle(2.4, i * 0.8)}</g>`).join('') +
-    `<g><path d="M60 250 l60 20" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.9"/>${animateTransform('translate', '0 0; 360 120; 360 120', 4)}${animate('opacity', '0;1;0;0', 4, { keyTimes: '0;0.15;0.35;1', calcMode: 'linear', keySplines: undefined })}</g>`,
-    linear('galaxy', [[0, '#1E1B4B'], [0.4, '#4C1D95'], [0.75, '#312E81'], [1, '#0B0716']], 1, 0, 0, 1)),
+    `<g>${animateTransform('translate', '-30 0;30 -10;-30 0', 10)}` +
+      tone('M90 330 C160 280 260 300 340 260 C380 240 410 260 420 290 C380 280 340 300 300 320 C220 360 140 360 90 330 Z', '#F0ABFC', 0.4) +
+      tone('M120 380 C200 360 300 380 380 350 C340 390 220 410 120 380 Z', '#67E8F9', 0.32) + `</g>` +
+    `<g>${animateTransform('translate', '20 0;-30 10;20 0', 13)}${tone('M180 250 C240 230 300 240 330 270 C290 262 240 262 180 280 Z', '#FDE68A', 0.25)}</g>` +
+    [[110, 300], [160, 340], [200, 280], [250, 360], [300, 300], [360, 340], [390, 300], [180, 400], [280, 400], [240, 70], [300, 50], [420, 110], [230, 200], [80, 300]].map(([x, y], i) => `<g>${dot(x!, y!, i % 3 === 0 ? 3 : 2, '#FFFFFF')}${twinkle(1.2 + (i % 4) * 0.4, i * 0.15)}</g>`).join('') +
+    `<g filter="url(#galaxy-glow)">${burst(200, 330, 10, 2.2)}${burst(330, 380, 8, 2.2, 0.7)}${burst(270, 90, 7, 2.2, 1.4)}</g>` +
+    [[60, 250, 0], [120, 220, 2]].map(([x, y, d]) => `<g><path d="M${x} ${y} l60 20" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.9"/>${animateTransform('translate', '0 0; 360 120; 360 120', 4, { begin: `${d}s` })}${animate('opacity', '0;1;0;0', 4, { keyTimes: '0;0.15;0.35;1', calcMode: 'linear', keySplines: undefined, begin: `${d}s` })}</g>`).join(''),
+    livingGradient('galaxy', [['#1E1B4B', '#0F172A', '#1E1B4B'], ['#4C1D95', '#1E3A8A', '#831843'], ['#312E81', '#4C1D95', '#312E81'], ['#0B0716', '#0B0716', '#0B0716']], 9, 1, 0, 0, 1) + glow('galaxy-glow', 4)),
 }
 

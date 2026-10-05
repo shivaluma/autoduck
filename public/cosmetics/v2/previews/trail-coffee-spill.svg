@@ -3,7 +3,8 @@
 <path d="M20 436 C50 430 90 428 110 434 C80 436 50 438 20 436 Z" fill="#C79A6B" opacity="0.8"/>
 <circle cx="-14" cy="418" r="6" fill="#7A4A26" stroke="#1B132B" stroke-width="3"/>
 <circle cx="40" cy="408" r="4" fill="#7A4A26" stroke="#1B132B" stroke-width="3"/>
-<ellipse cx="70" cy="440" rx="10" ry="4" fill="#FFFFFF" opacity="0.6"/></g></g><ellipse cx="252" cy="436" rx="170" ry="30" fill="#100A20" opacity="0.28"/><!-- Base Duck Body -->
+<ellipse cx="70" cy="440" rx="10" ry="4" fill="#FFFFFF" opacity="0.6"/>
+<g><circle cx="20.5" cy="400.1" r="3.0" fill="#FFFFFF"/><animateTransform attributeName="transform" type="translate" values="0 0;-9.9 -50" dur="1.96s" begin="-0.01s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.2;0.7;1" dur="1.96s" begin="-0.01s" repeatCount="indefinite"/></g><g><circle cx="33.4" cy="400.5" r="4.7" fill="#FFFFFF"/><animateTransform attributeName="transform" type="translate" values="0 0;-6.6 -50" dur="3.06s" begin="-0.07s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.2;0.7;1" dur="3.06s" begin="-0.07s" repeatCount="indefinite"/></g><g><circle cx="76.6" cy="410.4" r="4.1" fill="#FFFFFF"/><animateTransform attributeName="transform" type="translate" values="0 0;4.2 -50" dur="2.64s" begin="-1.38s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.2;0.7;1" dur="2.64s" begin="-1.38s" repeatCount="indefinite"/></g></g></g><ellipse cx="252" cy="436" rx="170" ry="30" fill="#100A20" opacity="0.28"/><!-- Base Duck Body -->
   <!-- Feet -->
   <path d="M178 402 c2 18 -8 30 -30 40 c24 6 48 0 64 -18" fill="none" stroke="#FF9B42" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M178 402 c2 18 -8 30 -30 40 c24 6 48 0 64 -18" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.3"/>

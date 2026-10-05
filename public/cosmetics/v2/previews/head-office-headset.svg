@@ -53,5 +53,5 @@
 <path d="M240 160 C250 210 300 232 342 226" fill="none" stroke="#1B132B" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M240 160 C250 210 300 232 342 226" fill="none" stroke="#334155" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M336 216 C350 212 362 220 360 232 C356 242 340 242 334 234 Z" fill="#1E293B" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
-<circle cx="444" cy="96" r="7" fill="#58E6B0" stroke="#1B132B" stroke-width="4"/></g>
+<circle cx="444" cy="96" r="7" fill="#58E6B0" stroke="#1B132B" stroke-width="4"><animate attributeName="fill" values="#58E6B0;#58E6B0;#EF4444;#58E6B0" dur="2.4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"/></circle></g>
 </svg>
