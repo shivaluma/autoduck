@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 140 140" width="100%" height="100%" fill="none">
+<g id="u-egg"><defs><radialGradient id="u-egg-fill" cx="0.4" cy="0.3" r="0.8"><stop offset="0" stop-color="#FFFFFF"/><stop offset="0.7" stop-color="#FDF2F8"/><stop offset="1" stop-color="#F9A8D4"/></radialGradient></defs>
+<path d="M64 12 C92 12 108 58 108 78 C108 102 88 116 64 116 C40 116 20 102 20 78 C20 58 36 12 64 12 Z" fill="url(#u-egg-fill)" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M24 78 l14 -10 l12 12 l14 -12 l14 12 l12 -12 l16 10" fill="none" stroke="#A855F7" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="48" cy="48" r="6" fill="#38BDF8"/>
+<circle cx="80" cy="40" r="5" fill="#FDE047"/>
+<circle cx="78" cy="96" r="6" fill="#22C55E"/>
+<path d="M50 22 C40 30 34 44 32 56 C40 44 48 34 58 28 Z" fill="#FFFFFF" opacity="0.9"/></g>
+</svg>

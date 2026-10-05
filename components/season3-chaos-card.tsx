@@ -40,25 +40,36 @@ function RuleVisual({ type, targetName, groups }: { type: string; targetName?: s
   return <div className="flex items-center gap-2"><RankChip danger>#N−1</RankChip><RankChip danger>#N (BÉT)</RankChip><span className="text-xs font-black text-[var(--color-ggd-orange)]">→ BỊ LÀM DZỊT</span></div>
 }
 
+const CARD_TONE: Record<string, 'mint' | 'sky' | 'violet' | 'rose' | 'gold'> = {
+  NORMAL: 'mint', REVERSE: 'sky', DUO: 'violet', TRIPLE_ELIMINATION: 'rose', CUT_LINE: 'gold', CONSTRUCTORS: 'gold', BOUNTY_HUNT: 'rose',
+}
+
 export function Season3ChaosCard({ type, weekNumber, targetName, groups, predictionCount, playerCount, compact = false }: ChaosCardProps) {
   const spec = specs[type] ?? specs.NORMAL
-  return <section className={cn('relative overflow-hidden rounded-[2rem] border-4 border-[var(--color-ggd-outline)] bg-gradient-to-br p-4 shadow-[0_8px_0_var(--color-ggd-outline)] sm:p-6', spec.tone, compact ? 'sm:p-4' : '')}>
-    <div className="pointer-events-none absolute -right-8 -top-12 text-[9rem] opacity-10 grayscale">{spec.icon}</div>
+  const tone = CARD_TONE[type] ?? 'violet'
+  return <section data-tone={tone} className={cn('gx-panel overflow-hidden p-5 sm:p-6', compact ? 'sm:p-4' : '')}>
+    <div aria-hidden className="pointer-events-none absolute -right-6 -top-10 rotate-12 text-[10rem] opacity-[0.12]">{spec.icon}</div>
     <div className="relative z-[1] flex flex-wrap items-start justify-between gap-4">
-      <div className="flex min-w-0 flex-1 items-start gap-3 sm:gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-white/20 bg-black/25 text-3xl shadow-inner sm:h-16 sm:w-16 sm:text-4xl">{spec.icon}</div>
+      <div className="flex min-w-0 flex-1 items-start gap-4">
+        <div className="relative grid h-20 w-16 shrink-0 rotate-[-6deg] place-items-center rounded-2xl border-[3px] border-[var(--gx-ink)] bg-[linear-gradient(160deg,#fff7d6,#ffd84d)] text-4xl shadow-[0_5px_0_var(--gx-ink),inset_0_2px_0_#fff] sm:h-24 sm:w-[76px] sm:text-5xl">
+          <span className="drop-shadow-[0_2px_0_rgba(27,19,43,.4)]">{spec.icon}</span>
+          <span className="absolute -bottom-2 rounded-md border-2 border-[var(--gx-ink)] bg-[var(--gx-ink)] px-1.5 text-[9px] font-black tracking-widest text-[var(--gx-gold)]">CHAOS</span>
+        </div>
         <div className="min-w-0 flex-1">
-          <div className={cn('text-xs font-black tracking-[0.25em]', spec.accent)}>TUẦN {weekNumber} • CHAOS</div>
-          <h2 className="mt-1 break-words font-display text-2xl leading-none text-white min-[430px]:text-3xl sm:text-4xl">{spec.label}</h2>
+          <div className={cn('gx-kicker', spec.accent)}>TUẦN {weekNumber} · CHAOS CARD</div>
+          <h2 className="gx-title mt-1 break-words text-3xl text-white min-[430px]:text-4xl sm:text-5xl">{spec.label}</h2>
           <p className="mt-2 max-w-xl text-base font-bold text-white/85">{spec.rule}</p>
         </div>
       </div>
-      <span className="rounded-full border border-white/20 bg-black/25 px-3 py-1 text-[10px] font-black tracking-widest text-white/70">1 CHAOS / TUẦN</span>
     </div>
-    <div className="relative z-[1] mt-6 rounded-2xl border-2 border-white/10 bg-black/25 p-4">
-      <div className="mb-3 text-[10px] font-black tracking-[0.2em] text-white/45">LUẬT TUẦN NÀY</div>
+    <div className="gx-well relative z-[1] mt-5 p-4">
+      <div className="gx-kicker mb-3 text-white/50">LUẬT TUẦN NÀY</div>
       <RuleVisual type={type} targetName={targetName} groups={groups} />
     </div>
-    {typeof predictionCount === 'number' && typeof playerCount === 'number' && <div className="relative z-[1] mt-4 flex flex-wrap items-center justify-between gap-3 text-sm"><span className="text-white/65">🔮 Dự đoán</span><span className="font-black text-white">{predictionCount}/{playerCount} đã khóa</span><div className="h-2 min-w-32 flex-1 overflow-hidden rounded-full bg-black/30"><div className={cn('h-full rounded-full transition-all', spec.accent.replace('text-', 'bg-'))} style={{ width: `${playerCount ? Math.min(100, (predictionCount / playerCount) * 100) : 0}%` }} /></div></div>}
+    {typeof predictionCount === 'number' && typeof playerCount === 'number' && <div className="relative z-[1] mt-4 flex flex-wrap items-center gap-3 text-sm">
+      <span className="font-black text-white/75">🔮 Dự đoán đã khóa</span>
+      <div className="gx-progress min-w-32 flex-1"><span style={{ width: `${playerCount ? Math.min(100, (predictionCount / playerCount) * 100) : 0}%`, background: 'linear-gradient(180deg,#f5d0fe,#a855f7)' }} /></div>
+      <span className="font-data font-black text-white">{predictionCount}/{playerCount}</span>
+    </div>}
   </section>
 }

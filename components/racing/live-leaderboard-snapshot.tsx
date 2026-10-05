@@ -101,13 +101,13 @@ export function LiveLeaderboardSnapshot({
   const bottomCutoffRank = Math.max(1, officialStandings.length - 1)
 
   return (
-    <section className="rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-5 shadow-[0_6px_0_var(--color-ggd-outline)]">
+    <section className="gx-panel p-5">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
         <div>
           <div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-neon-green)]">
             {isLive ? 'TIẾN ĐỘ THỜI GIAN THỰC' : 'BẢNG THỨ HẠNG CHI TIẾT'}
           </div>
-          <h2 className="mt-1 font-display text-2xl">
+          <h2 className="mt-1 gx-title text-2xl">
             🏆 Bảng Xếp Hạng Vịt ({officialStandings.length})
           </h2>
         </div>
@@ -256,7 +256,7 @@ export function LiveLeaderboardSnapshot({
               {ghostStandings.map((duck) => (
                 <div
                   key={duck.playerId}
-                  className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/15 px-3 py-2 text-xs text-white/60"
+                  className="flex items-center gap-3 gx-well px-3 py-2 text-xs text-white/60"
                 >
                   <span className="font-bold">👻</span>
                   <Season3Avatar name={duck.name} avatarUrl={duck.avatarUrl} size={24} />

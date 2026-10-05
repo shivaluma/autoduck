@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 140 140" width="100%" height="100%" fill="none">
+<g id="u-trophy"><defs><linearGradient id="u-trophy-gold" x1="1" y1="0" x2="0.2" y2="1"><stop offset="0" stop-color="#FBF4CF"/><stop offset="0.35" stop-color="#F2B627"/><stop offset="0.62" stop-color="#D58307"/><stop offset="0.78" stop-color="#F6DE88"/><stop offset="1" stop-color="#9D5001"/></linearGradient></defs>
+<path d="M34 34 C10 34 14 70 42 66 M94 34 C118 34 114 70 86 66" fill="none" stroke="#1B132B" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M34 34 C10 34 14 70 42 66 M94 34 C118 34 114 70 86 66" fill="none" stroke="#F2B627" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M32 20 h64 v24 c0 24 -14 40 -32 40 c-18 0 -32 -16 -32 -40 Z" fill="url(#u-trophy-gold)" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M54 84 h20 v14 h-20 Z M40 98 h48 v14 h-48 Z" fill="#B7791F" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M44 26 h10 v18 c0 12 4 22 10 28 c-12 -2 -20 -14 -20 -28 Z" fill="#FFF3A6" opacity="0.8"/></g>
+</svg>

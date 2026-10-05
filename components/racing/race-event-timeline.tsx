@@ -508,11 +508,11 @@ export function RaceEventTimeline({
   }, [parsedEvents])
 
   return (
-    <section className="rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-5 shadow-[0_6px_0_var(--color-ggd-outline)]">
+    <section className="gx-panel p-5">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
         <div>
           <div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-gold)]">NHẬT KÝ ĐƯỜNG ĐUA</div>
-          <h2 className="mt-1 font-display text-2xl">📜 Diễn Biến Sự Kiện ({parsedEvents.length})</h2>
+          <h2 className="mt-1 gx-title text-2xl">📜 Diễn Biến Sự Kiện ({parsedEvents.length})</h2>
         </div>
 
         {/* Player Selector Filter */}

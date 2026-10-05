@@ -40,7 +40,7 @@ function HighlightCard({
   detail: string
 }) {
   return (
-    <div className="rounded-2xl border-2 border-white/10 bg-black/25 p-4">
+    <div className="gx-well p-4">
       <div className="text-2xl">{emoji}</div>
       <div className="mt-1 text-[10px] font-black tracking-[0.15em] text-white/45 uppercase">{title}</div>
       <div className="mt-1 font-black text-[var(--color-ggd-gold)]">{name}</div>
@@ -93,7 +93,7 @@ function PlayerRow({
 
           {/* Combat Log for this Player */}
           {(encountersDealt.length > 0 || encountersReceived.length > 0) && (
-            <div className="rounded-2xl border border-white/10 bg-black/30 p-3.5 space-y-3">
+            <div className="gx-well p-3.5 space-y-3">
               <div className="text-[10px] font-black uppercase tracking-[0.15em] text-[var(--color-ggd-gold)]">
                 ⚔️ Nhật ký tác chiến cá nhân
               </div>
@@ -159,7 +159,7 @@ function PlayerRow({
               <div className="text-[10px] font-black uppercase tracking-[0.15em] text-white/40">Item breakdown</div>
               <div className="mt-2 flex flex-wrap gap-2">
                 {player.itemStats.map((item) => (
-                  <span key={item.itemId} className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm font-black">
+                  <span key={item.itemId} className="gx-well px-3 py-2 text-sm font-black">
                     {item.icon} {item.name}: {item.successes}/{item.activations} hiệu quả
                   </span>
                 ))}
@@ -205,8 +205,8 @@ export function PostRaceStatsPanel({
 
   if (events.length === 0) {
     return (
-      <section className="rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-6 text-center">
-        <div className="font-display text-2xl">📊 POST-RACE STATS</div>
+      <section className="gx-panel p-6 text-center">
+        <div className="gx-title text-2xl">📊 POST-RACE STATS</div>
         <p className="mt-2 text-white/55">Race này chưa có event log — không thể phân tích chi tiết.</p>
       </section>
     )
@@ -215,9 +215,9 @@ export function PostRaceStatsPanel({
   const { highlights } = stats
 
   return (
-    <section className="overflow-hidden rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)]">
+    <section className="gx-panel overflow-hidden">
       <div className="border-b-2 border-white/10 px-5 py-4">
-        <div className="font-display text-2xl">📊 POST-RACE STATS</div>
+        <div className="gx-title text-2xl">📊 POST-RACE STATS</div>
         <p className="mt-1 text-sm text-white/55">
           {stats.totalEvents.toLocaleString()} events · {formatSeconds(stats.raceDurationMs / 1000)} race time · phân tích từ engine replay
         </p>

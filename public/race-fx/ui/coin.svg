@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 140 140" width="100%" height="100%" fill="none">
+<g id="u-coin"><defs><linearGradient id="u-coin-gold" x1="1" y1="0" x2="0.2" y2="1"><stop offset="0" stop-color="#FBF4CF"/><stop offset="0.35" stop-color="#F2B627"/><stop offset="0.62" stop-color="#D58307"/><stop offset="0.78" stop-color="#F6DE88"/><stop offset="1" stop-color="#9D5001"/></linearGradient></defs>
+<ellipse cx="64" cy="70" rx="46" ry="46" fill="#B7791F" stroke="#1B132B" stroke-width="8"/>
+<ellipse cx="64" cy="62" rx="46" ry="46" fill="url(#u-coin-gold)" stroke="#1B132B" stroke-width="8"/>
+<ellipse cx="64" cy="62" rx="32" ry="32" fill="none" stroke="#B7791F" stroke-width="5"/>
+<text x="64" y="80" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="46" fill="#FFF3A6" stroke="#1B132B" stroke-width="4" paint-order="stroke">Q</text>
+<path d="M96 20 Q98.2 27.8 106 30 Q98.2 32.2 96 40 Q93.8 32.2 86 30 Q93.8 27.8 96 20 Z" fill="#FFFFFF"/></g>
+</svg>

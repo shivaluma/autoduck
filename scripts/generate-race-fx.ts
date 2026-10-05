@@ -1,8 +1,9 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { RACE_FX_COLUMNS, RACE_FX_DECOR, RACE_FX_ICONS, RACE_FX_SHEETS, raceFxDecorPath, raceFxIconPath, raceFxSheetPath } from '../lib/race-fx/manifest'
+import { RACE_FX_COLUMNS, RACE_FX_DECOR, RACE_FX_ICONS, RACE_FX_SHEETS, UI_ICONS, raceFxDecorPath, raceFxIconPath, raceFxSheetPath, uiIconPath } from '../lib/race-fx/manifest'
 import { renderSpriteJobs } from './cosmetics/sprites'
 import { RACE_DECOR_ART, RACE_FX_ART, RACE_ICON_ART } from './race-fx/art'
+import { UI_ICON_ART } from './race-fx/ui-icons'
 
 // Generates the race FX asset set: animated sprite sheets (baked from SVG/SMIL), item icons and bank
 // decor. Run with `pnpm race:fx`; output lives in public/race-fx.
@@ -35,6 +36,14 @@ async function main() {
     fs.writeFileSync(publicPath(raceFxDecorPath(key)), svg(content, '0 0 128 128'))
   }
 
+  for (const key of UI_ICONS) {
+    const content = UI_ICON_ART[key]?.()
+    if (!content) throw new Error(`Missing UI icon art: ${key}`)
+    assertUniqueIds(`ui ${key}`, content)
+    fs.mkdirSync(path.dirname(publicPath(uiIconPath(key))), { recursive: true })
+    fs.writeFileSync(publicPath(uiIconPath(key)), svg(content, '-6 -6 140 140'))
+  }
+
   const jobs = RACE_FX_SHEETS.map((sheet) => {
     const content = RACE_FX_ART[sheet.key]?.()
     if (!content) throw new Error(`Missing FX art: ${sheet.key}`)
@@ -50,7 +59,7 @@ async function main() {
     }
   })
   await renderSpriteJobs(jobs)
-  console.log(`✓ Race FX: ${RACE_FX_SHEETS.length} sprite sheets, ${RACE_FX_ICONS.length} icons, ${RACE_FX_DECOR.length} decor in public/race-fx`)
+  console.log(`✓ Race FX: ${RACE_FX_SHEETS.length} sprite sheets, ${RACE_FX_ICONS.length} icons, ${RACE_FX_DECOR.length} decor, ${UI_ICONS.length} UI icons in public/race-fx`)
 }
 
 void main()

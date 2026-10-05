@@ -30,9 +30,9 @@ function Section({
   children: ReactNode
 }) {
   return (
-    <section id={id} className="scroll-mt-24 rounded-[2rem] border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-surface-2)] p-5 shadow-[0_6px_0_var(--color-ggd-outline)] sm:p-7">
+    <section id={id} className="scroll-mt-24 gx-panel p-5 sm:p-7">
       {eyebrow && <div className="text-xs font-black tracking-[0.25em] text-[var(--color-ggd-gold)]">{eyebrow}</div>}
-      <h2 className="mt-1 font-display text-3xl text-white sm:text-4xl">{title}</h2>
+      <h2 className="mt-1 gx-title text-3xl text-white sm:text-4xl">{title}</h2>
       <div className="mt-5 space-y-5 text-[15px] leading-relaxed text-white/80">{children}</div>
     </section>
   )
@@ -60,14 +60,14 @@ export function Season3RulesGuide() {
   return (
     <main className="mx-auto max-w-6xl space-y-6 p-4 pb-20 text-white sm:p-6 lg:p-8">
       {/* Header Banner */}
-      <header className="relative overflow-hidden rounded-[2rem] border-4 border-[var(--color-ggd-outline)] bg-[radial-gradient(circle_at_90%_10%,rgba(255,204,0,.22),transparent_40%),linear-gradient(135deg,#241548,#110b24)] p-6 shadow-[0_8px_0_var(--color-ggd-outline)] sm:p-8">
+      <header className="gx-panel overflow-hidden p-6 sm:p-8">
         <div className="pointer-events-none absolute -right-6 -top-10 text-[9rem] opacity-10">📜</div>
         <div className="relative z-[1] flex flex-wrap items-start justify-between gap-5">
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-ggd-gold)]/50 bg-[var(--color-ggd-gold)]/10 px-3.5 py-1 text-xs font-black tracking-[0.2em] text-[var(--color-ggd-gold)]">
               CẨM NANG THI ĐẤU CHÍNH THỨC
             </div>
-            <h1 className="mt-3 font-display text-4xl leading-tight sm:text-5xl lg:text-6xl">{SEASON3_RULES_META.title}</h1>
+            <h1 className="mt-3 gx-title text-4xl leading-tight sm:text-5xl lg:text-6xl">{SEASON3_RULES_META.title}</h1>
             <p className="mt-3 max-w-2xl text-base font-medium text-white/75 sm:text-lg">{SEASON3_RULES_META.subtitle}</p>
           </div>
           <div className="flex flex-col gap-2">
@@ -77,9 +77,9 @@ export function Season3RulesGuide() {
             >
               ← Về Season 3
             </Link>
-            <div className="rounded-2xl border-2 border-white/15 bg-black/30 px-4 py-3 text-center">
+            <div className="gx-well px-4 py-3 text-center">
               <div className="text-[10px] font-black tracking-widest text-white/45">MÙA GIẢI KÉO DÀI</div>
-              <div className="font-display text-3xl text-[var(--color-ggd-gold)]">{SEASON3_RULES_META.weeks} TUẦN</div>
+              <div className="gx-title text-3xl text-[var(--color-ggd-gold)]">{SEASON3_RULES_META.weeks} TUẦN</div>
             </div>
           </div>
         </div>
@@ -109,7 +109,7 @@ export function Season3RulesGuide() {
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {QUICK_START_STEPS.map((step) => (
-            <article key={step.step} className="flex flex-col justify-between rounded-2xl border-2 border-white/10 bg-black/25 p-4 transition hover:border-[var(--color-ggd-lavender)]/40">
+            <article key={step.step} className="flex flex-col justify-between gx-well p-4 transition hover:border-[var(--color-ggd-lavender)]/40">
               <div>
                 <div className="flex items-center justify-between">
                   <span className="text-3xl">{step.icon}</span>
@@ -137,14 +137,14 @@ export function Season3RulesGuide() {
           {CHAOS_CARDS.map((chaos) => (
             <article
               key={chaos.id}
-              className="flex flex-col justify-between rounded-2xl border-2 border-white/10 bg-black/25 p-5 transition hover:border-[var(--color-ggd-gold)]/40"
+              className="flex flex-col justify-between gx-well p-5 transition hover:border-[var(--color-ggd-gold)]/40"
             >
               <div>
                 <div className="flex items-center gap-3">
                   <span className="text-4xl">{chaos.icon}</span>
                   <div>
                     <span className="text-[10px] font-black tracking-widest text-white/45">CHAOS CARD</span>
-                    <h3 className="font-display text-2xl text-white">{chaos.name}</h3>
+                    <h3 className="gx-title text-2xl text-white">{chaos.name}</h3>
                   </div>
                 </div>
                 <div className="mt-3 rounded-lg border border-[var(--color-ggd-gold)]/30 bg-[var(--color-ggd-gold)]/10 px-3 py-1.5 text-xs font-black text-[var(--color-ggd-gold)]">
@@ -169,10 +169,10 @@ export function Season3RulesGuide() {
 
         <div className="grid gap-4 lg:grid-cols-2">
           {SCAR_SHIELD_RULES.map((rule) => (
-            <article key={rule.title} className="rounded-2xl border-2 border-white/10 bg-black/25 p-5">
+            <article key={rule.title} className="gx-well p-5">
               <div className="flex items-center gap-3 border-b border-white/10 pb-3">
                 <span className="text-3xl">{rule.icon}</span>
-                <h3 className="font-display text-2xl text-white">{rule.title}</h3>
+                <h3 className="gx-title text-2xl text-white">{rule.title}</h3>
               </div>
               <ul className="mt-4 space-y-3">
                 {rule.points.map((point) => (
@@ -210,7 +210,7 @@ export function Season3RulesGuide() {
           </p>
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
             {LOADOUT_CONFIG.triangle.map((tri) => (
-              <div key={tri.type} className="rounded-2xl border-2 border-white/10 bg-black/25 p-4">
+              <div key={tri.type} className="gx-well p-4">
                 <div className="flex items-center gap-2">
                   <span className="text-2xl">{tri.icon}</span>
                   <span className="font-display text-xl text-white">{tri.name}</span>
@@ -230,7 +230,7 @@ export function Season3RulesGuide() {
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
             {majorItems.map((item) => (
-              <article key={item.id} className="flex flex-col justify-between rounded-2xl border-2 border-white/10 bg-black/25 p-4">
+              <article key={item.id} className="flex flex-col justify-between gx-well p-4">
                 <div>
                   <div className="flex items-center justify-between">
                     <RaceItemIcon id={item.id} fallback={item.icon} size={40} />
@@ -253,7 +253,7 @@ export function Season3RulesGuide() {
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {minorItems.map((item) => (
-              <article key={item.id} className="flex flex-col justify-between rounded-2xl border-2 border-white/10 bg-black/25 p-4">
+              <article key={item.id} className="flex flex-col justify-between gx-well p-4">
                 <div>
                   <div className="flex items-center justify-between">
                     <RaceItemIcon id={item.id} fallback={item.icon} size={40} />
@@ -269,19 +269,19 @@ export function Season3RulesGuide() {
         </div>
 
         {/* Preset Combos */}
-        <div className="rounded-2xl border-2 border-white/10 bg-black/20 p-4">
+        <div className="gx-well p-4">
           <h4 className="font-display text-lg text-white">4 Phong cách phối đồ (Combo Badges)</h4>
           <p className="mt-1 text-xs text-white/60">
             Bạn có thể phối tự do giữa 3 Major và 6 Minor. Khi vào trận, hệ thống sẽ gán danh hiệu phong cách tương ứng:
           </p>
           <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
             {AUTO_LOADOUT_PRESETS.map((preset) => (
-              <div key={preset.join('-')} className="rounded-xl border border-white/10 bg-black/30 p-3 text-xs">
+              <div key={preset.join('-')} className="gx-well p-3 text-xs">
                 <div className="font-black text-[var(--color-ggd-gold)]">{loadoutComboBadge(preset)}</div>
                 <div className="mt-1 text-white/60">{loadoutComboLabel(preset)} ({preset.join(' + ')})</div>
               </div>
             ))}
-            <div className="rounded-xl border border-white/10 bg-black/30 p-3 text-xs">
+            <div className="gx-well p-3 text-xs">
               <div className="font-black text-emerald-300">🧪 HYBRID COMBO</div>
               <div className="mt-1 text-white/60">Mad Duck (Phối 2 hệ khác nhau, cân bằng công thủ)</div>
             </div>
@@ -298,7 +298,7 @@ export function Season3RulesGuide() {
         {/* Track Boxes */}
         <div className="grid gap-3 sm:grid-cols-2">
           {TRACK_BOXES.map((box) => (
-            <article key={box.name} className="rounded-2xl border-2 border-white/10 bg-black/25 p-4">
+            <article key={box.name} className="gx-well p-4">
               <div className="flex items-center justify-between">
                 <span className="text-4xl">{box.icon}</span>
                 <span className={`rounded-full border px-2.5 py-0.5 text-xs font-black ${box.color}`}>{box.tag}</span>
@@ -312,7 +312,7 @@ export function Season3RulesGuide() {
         {/* Race Action Highlights */}
         <div className="grid gap-3 sm:grid-cols-2">
           {RACE_ACTION_TIPS.map((tip) => (
-            <div key={tip.title} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+            <div key={tip.title} className="gx-well p-4">
               <div className="flex items-center gap-2.5">
                 <span className="text-2xl">{tip.icon}</span>
                 <h4 className="font-black text-white">{tip.title}</h4>
@@ -330,7 +330,7 @@ export function Season3RulesGuide() {
           </p>
           <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {WILD_ITEMS_LIST.map((item) => (
-              <article key={item.id} className="flex flex-col justify-between rounded-xl border border-white/10 bg-black/25 p-3.5">
+              <article key={item.id} className="flex flex-col justify-between gx-well p-3.5">
                 <div>
                   <div className="flex items-center justify-between">
                     <RaceItemIcon id={item.id} fallback={item.icon} size={40} />
@@ -354,7 +354,7 @@ export function Season3RulesGuide() {
           </p>
           <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {HAZARDS_LIST.map((hazard) => (
-              <div key={hazard.id} className="rounded-xl border border-white/10 bg-black/25 p-3">
+              <div key={hazard.id} className="gx-well p-3">
                 <div className="flex items-center gap-2">
                   <span className="text-2xl">{hazard.icon}</span>
                   <span className="font-black text-sm text-white">{hazard.name}</span>
@@ -370,7 +370,7 @@ export function Season3RulesGuide() {
       <Section id="standings-qp" eyebrow="VINH QUANG & PHẦN THƯỞNG" title="Điểm Xếp Hạng, Vua Ao & Tiệm Quack Points">
         <div className="grid gap-4 sm:grid-cols-2">
           {SCORING_SYSTEM.map((system) => (
-            <article key={system.title} className="flex flex-col justify-between rounded-2xl border-2 border-white/10 bg-black/25 p-5">
+            <article key={system.title} className="flex flex-col justify-between gx-well p-5">
               <div>
                 <div className="flex items-center justify-between">
                   <span className="text-3xl">{system.icon}</span>
@@ -390,7 +390,7 @@ export function Season3RulesGuide() {
       <Section id="faq" eyebrow="HỎI ĐÁP" title="Câu Hỏi Thường Gặp & Mẹo Sinh Tồn">
         <div className="space-y-3">
           {FAQ_ITEMS.map((item, index) => (
-            <div key={item.q} className="rounded-2xl border border-white/10 bg-black/25 p-4">
+            <div key={item.q} className="gx-well p-4">
               <h4 className="flex items-start gap-2.5 font-black text-sm text-[var(--color-ggd-lavender)] sm:text-base">
                 <span className="rounded-md bg-[var(--color-ggd-lavender)]/20 px-1.5 py-0.5 text-xs text-[var(--color-ggd-lavender)]">Q{index + 1}</span>
                 <span>{item.q}</span>
@@ -404,7 +404,7 @@ export function Season3RulesGuide() {
       {/* Footer CTA */}
       <footer className="rounded-[2rem] border-4 border-dashed border-white/15 bg-black/20 p-6 text-center sm:p-8">
         <div className="text-4xl">🦆🏁</div>
-        <h3 className="mt-2 font-display text-2xl text-white sm:text-3xl">Đã sẵn sàng xuống nước?</h3>
+        <h3 className="mt-2 gx-title text-2xl text-white sm:text-3xl">Đã sẵn sàng xuống nước?</h3>
         <p className="mt-2 text-sm text-white/65">
           Vào ngay sảnh Season 3 để khóa Loadout, kích hoạt Khiên và gửi Dự đoán cho tuần thi đấu này!
         </p>

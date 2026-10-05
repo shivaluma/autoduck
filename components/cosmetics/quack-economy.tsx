@@ -4,6 +4,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { CosmeticDuck } from './cosmetic-duck'
+import { RARITY_STYLE } from './duck-closet'
+import { GameButton, GamePanel, ResourcePill, UiIcon } from '@/components/game-ui'
 import type { CosmeticDefinition, DuckAppearance } from '@/lib/cosmetics/types'
 
 type ShopItem = CosmeticDefinition & { price: number; limitedLabel?: string | null }
@@ -64,25 +66,41 @@ export function QuackEconomy({ token, catalog, appearance, onChanged }: { token:
   const revealedItem = reveal ? catalog.find((item) => item.id === reveal.pull.finalCosmeticId) : null
   const refreshLabel = shop?.endsAt ? new Intl.DateTimeFormat('vi-VN', { weekday: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(shop.endsAt)) : '—'
   return <section className="grid gap-5 lg:grid-cols-[1.25fr_.75fr]">
-    <div className="rounded-[2rem] border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-5 shadow-[0_6px_0_var(--color-ggd-outline)]">
-      <div className="flex items-end justify-between gap-3"><div><div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-neon-green)]">ĐỔI ROTATION {refreshLabel}</div><h2 className="font-display text-3xl">🛒 Quack Shop</h2></div><div className="font-display text-2xl text-[var(--color-ggd-gold)]">🪙 {shop?.balance ?? '—'} QP</div></div>
-      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
-        {(shop?.items ?? []).map((item) => <article key={item.id} className="rounded-2xl border-2 border-white/10 bg-black/20 p-3"><button onClick={() => setPreview(item)} className="w-full"><img src={item.asset} alt={item.name} className="aspect-square w-full object-contain" /></button><div className="truncate text-sm font-black">{item.name}</div><div className="text-[10px] font-bold uppercase text-white/45">{item.rarity}{item.limitedLabel ? ` · ${item.limitedLabel}` : ''}</div><button onClick={() => void buy(item)} className="mt-2 w-full rounded-lg bg-[var(--color-ggd-gold)] px-2 py-2 text-xs font-black text-[var(--color-ggd-outline)]">{item.price} QP</button></article>)}
-        {shop && shop.items.length === 0 && <div className="col-span-full rounded-xl border border-dashed border-white/15 p-5 text-white/50">Bạn đã có hết rotation tuần này.</div>}
+    <GamePanel tone="violet" icon="bag" kicker={`ĐỔI ROTATION · ${refreshLabel}`} title="Quack Shop" actions={<ResourcePill icon="coin" value={shop?.balance ?? '—'} label="Quack Points" />}>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+        {(shop?.items ?? []).map((item) => {
+          const rarity = RARITY_STYLE[item.rarity]
+          const affordable = (shop?.balance ?? 0) >= item.price
+          return <article key={item.id} className={`closet-tile closet-tile--${item.rarity} gx-well relative flex flex-col p-2`} style={{ borderColor: `${rarity.color}88`, background: `radial-gradient(circle at 50% 35%, ${rarity.glow}, rgba(10,6,24,.35) 70%)` }}>
+            <button type="button" onClick={() => setPreview(item)} className="block w-full" aria-label={`Thử ${item.name}`}><img src={item.previewAsset || item.asset} alt={item.name} className="aspect-square w-full object-contain transition hover:scale-105" /></button>
+            <div className="truncate px-1 text-sm font-black">{item.name}</div>
+            <div className="px-1 text-[10px] font-black uppercase" style={{ color: rarity.color }}>{rarity.label}{item.limitedLabel ? ` · ${item.limitedLabel}` : ''}</div>
+            <GameButton size="sm" className="mt-2 w-full" disabled={!affordable} onClick={() => void buy(item)}><UiIcon name="coin" size={18} />{item.price}</GameButton>
+          </article>
+        })}
+        {shop && shop.items.length === 0 && <div className="gx-well col-span-full p-6 text-center text-white/60">🛍️ Bạn đã có hết rotation tuần này — quay lại tuần sau nhé!</div>}
       </div>
-      {preview && <div className="mt-4 flex items-center gap-3 rounded-2xl bg-black/20 p-3"><CosmeticDuck appearance={previewAppearance} size={110} label={`Preview ${preview.name}`} /><div><div className="font-display text-2xl">{preview.name}</div><div className="text-sm text-white/55">{preview.collection} · {preview.rarity}</div></div></div>}
-    </div>
-    <div className="rounded-[2rem] border-4 border-[var(--color-ggd-gold)] bg-[radial-gradient(circle_at_50%_20%,rgba(255,216,77,.25),transparent_38%),#241548] p-5 text-center shadow-[0_6px_0_var(--color-ggd-outline)]">
-      <div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-gold)]">3 QP / PULL</div><h2 className="font-display text-3xl">🥚 Mystery Egg</h2>
-      <div className={`my-4 text-7xl ${pulling ? 'animate-bounce motion-reduce:animate-none' : ''}`}>{revealedItem ? <CosmeticDuck appearance={{ ...appearance, [`${revealedItem.slot}Id`]: revealedItem.id } as DuckAppearance} size={170} label={revealedItem.name} /> : '🥚'}</div>
-      {revealedItem && <div><div className="font-display text-2xl text-[var(--color-ggd-gold)]">{revealedItem.name}</div><div className="text-xs font-black uppercase text-white/55">{reveal?.pull.rolledRarity}{reveal?.pull.wasRerolled ? ' · duplicate rerolled' : ''}{reveal?.pull.refundAmount ? ` · +${reveal.pull.refundAmount} QP refund` : ''}</div></div>}
-      <button disabled={pulling || (shop?.balance ?? 0) < 3} onClick={() => void pull()} className="mt-4 w-full rounded-xl bg-[var(--color-ggd-gold)] px-5 py-3 font-black text-[var(--color-ggd-outline)] disabled:opacity-35">{pulling ? 'ĐANG MỞ...' : 'MỞ EGG · 3 QP'}</button>
-      {pulling && hasSeenReveal && <button onClick={() => skipRevealRef.current?.()} className="mt-2 text-xs font-black text-white/55 underline">SKIP</button>}
-      <div className="mt-4 text-[10px] font-bold text-white/45">Common 40% · Uncommon 30% · Rare 18% · Epic 9% · Legendary 3%</div>
-      {message && <p className="mt-3 text-sm font-bold text-[var(--color-ggd-neon-green)]">{message}</p>}
-    </div>
+      {preview && <div className="gx-well gx-pop-in mt-4 flex items-center gap-4 p-3"><CosmeticDuck appearance={previewAppearance} size={120} label={`Preview ${preview.name}`} /><div><div className="gx-title text-2xl">{preview.name}</div><div className="text-sm font-black" style={{ color: RARITY_STYLE[preview.rarity].color }}>{RARITY_STYLE[preview.rarity].label} · <span className="text-white/60">{preview.collection}</span></div></div></div>}
+    </GamePanel>
+    <GamePanel tone="gold" icon="egg" kicker="3 QP / LƯỢT" title="Mystery Egg" bodyClassName="text-center">
+      <div className="relative mx-auto grid h-52 place-items-center">
+        <div aria-hidden className="absolute h-40 w-40 rounded-full bg-[radial-gradient(circle,rgba(255,243,166,.55),transparent_70%)]" />
+        {revealedItem
+          ? <div className="gx-pop-in relative"><CosmeticDuck appearance={{ ...appearance, [`${revealedItem.slot}Id`]: revealedItem.id } as DuckAppearance} size={190} label={revealedItem.name} /></div>
+          : <UiIcon name="egg" size={140} className={`relative drop-shadow-[0_6px_0_var(--gx-ink)] ${pulling ? 'animate-[wiggle-duck_.35s_ease-in-out_infinite] motion-reduce:animate-none' : 'gx-float'}`} />}
+      </div>
+      {revealedItem && <div className="gx-pop-in"><div className="gx-title text-3xl" style={{ color: RARITY_STYLE[revealedItem.rarity].color }}>{revealedItem.name}</div><div className="text-xs font-black uppercase text-white/65">{RARITY_STYLE[revealedItem.rarity].label}{reveal?.pull.wasRerolled ? ' · trùng → đổi món' : ''}{reveal?.pull.refundAmount ? ` · +${reveal.pull.refundAmount} QP hoàn` : ''}</div></div>}
+      <GameButton size="lg" className="mt-4 w-full" disabled={pulling || (shop?.balance ?? 0) < 3} onClick={() => void pull()} icon="egg">{pulling ? 'ĐANG NỞ…' : 'MỞ TRỨNG · 3 QP'}</GameButton>
+      {pulling && hasSeenReveal && <button type="button" onClick={() => skipRevealRef.current?.()} className="mt-2 text-xs font-black text-white/60 underline">BỎ QUA</button>}
+      <div className="mt-4 flex flex-wrap justify-center gap-1.5">
+        {(['common', 'uncommon', 'rare', 'epic', 'legendary'] as const).map((rarity) => <span key={rarity} className="rounded-md border-2 border-[var(--gx-ink)] bg-black/30 px-1.5 text-[10px] font-black" style={{ color: RARITY_STYLE[rarity].color }}>{RARITY_STYLE[rarity].label} {ODDS[rarity]}%</span>)}
+      </div>
+      {message && <p className="mt-3 text-sm font-bold text-[#bbf7d0]">{message}</p>}
+    </GamePanel>
   </section>
 }
+
+const ODDS = { common: 40, uncommon: 30, rare: 18, epic: 9, legendary: 3 } as const
 
 function playRevealSound(rarity: string) {
   try {

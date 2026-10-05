@@ -128,7 +128,7 @@ export function Season3ReplayPlayer({
 
       <div className="relative">
         <PhaserRaceCanvas key={`${raceId}-${runId}`} raceId={raceId} players={players} replayConfig={config} replayManualInputs={inputs} replaySpeed={speed} replayPaused={!started || paused} onReplayInspect={inspect} />
-        {!started && <button onClick={play} className="absolute inset-0 z-10 m-auto h-20 w-52 rounded-2xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-gold)] font-display text-2xl text-[var(--color-ggd-outline)] shadow-[0_7px_0_var(--color-ggd-outline)] transition hover:scale-105">▶ PLAY REPLAY</button>}
+        {!started && <button onClick={play} className="absolute inset-0 z-10 m-auto h-20 w-52 rounded-2xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-gold)] gx-title text-2xl text-[var(--color-ggd-outline)] shadow-[0_7px_0_var(--color-ggd-outline)] transition hover:scale-105">▶ PLAY REPLAY</button>}
       </div>
 
       {/* Replay Synchronized Leaderboard & Event Feed */}

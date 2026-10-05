@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 140 140" width="100%" height="100%" fill="none">
+<g id="u-flag"><path d="M30 112 V16" fill="none" stroke="#1B132B" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M30 112 V16" fill="none" stroke="#94A3B8" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M34 18 C60 10 74 30 104 22 V70 C74 78 60 58 34 66 Z" fill="#FFFFFF" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<clipPath id="u-flag-c"><path d="M34 18 C60 10 74 30 104 22 V70 C74 78 60 58 34 66 Z"/></clipPath><g clip-path="url(#u-flag-c)"><rect x="34" y="32" width="14" height="20" fill="#1B132B"/><rect x="48" y="12" width="14" height="20" fill="#1B132B"/><rect x="48" y="52" width="14" height="20" fill="#1B132B"/><rect x="62" y="32" width="14" height="20" fill="#1B132B"/><rect x="76" y="12" width="14" height="20" fill="#1B132B"/><rect x="76" y="52" width="14" height="20" fill="#1B132B"/><rect x="90" y="32" width="14" height="20" fill="#1B132B"/></g></g>
+</svg>

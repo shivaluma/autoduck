@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 140 140" width="100%" height="100%" fill="none">
+<g id="u-closet"><path d="M64 26 C64 16 76 16 76 24 C76 30 70 32 64 36" fill="none" stroke="#1B132B" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M64 26 C64 16 76 16 76 24 C76 30 70 32 64 36" fill="none" stroke="#94A3B8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M64 36 L112 72 C116 76 114 82 108 82 H20 C14 82 12 76 16 72 Z" fill="#F472B6" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M64 44 L100 72 H64 Z" fill="#FBCFE8" opacity="0.7"/>
+<path d="M30 82 h68 l-6 30 h-56 Z" fill="#A855F7" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/></g>
+</svg>

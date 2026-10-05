@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 140 140" width="100%" height="100%" fill="none">
+<g id="u-duck"><path d="M20 82 C20 62 40 52 64 54 C90 56 108 68 108 86 C108 104 88 112 64 112 C38 112 20 102 20 82 Z" fill="#FFD84D" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M52 58 C46 40 52 20 70 16 C88 12 100 26 98 42 C96 56 82 64 66 64 Z" fill="#FFD84D" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M94 40 C104 38 116 42 120 48 C112 54 102 54 94 50 Z" fill="#FF9B42" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="80" cy="34" r="10" fill="#FFFDF4" stroke="#1B132B" stroke-width="4"/>
+<circle cx="83" cy="36" r="4.5" fill="#1B132B"/>
+<path d="M38 86 C50 74 70 72 84 80 C70 80 54 84 42 94 Z" fill="#FFF1A8" opacity="0.9"/></g>
+</svg>

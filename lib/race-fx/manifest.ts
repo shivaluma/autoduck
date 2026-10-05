@@ -59,6 +59,15 @@ export type RaceFxIconKey = typeof RACE_FX_ICONS[number]
 
 export const RACE_FX_DECOR = ['lilypad', 'lotus', 'reeds', 'rock'] as const
 
+/** Lobby/web UI icons, drawn in the same style as the race art. */
+export const UI_ICONS = [
+  'coin', 'shield', 'scar', 'crystal', 'trophy', 'crown', 'flag', 'egg', 'bag', 'closet', 'book', 'news', 'cards', 'lock', 'duck',
+] as const
+
+export type UiIconName = typeof UI_ICONS[number]
+
+export const uiIconPath = (key: string) => `/race-fx/ui/${key}.svg`
+
 export const RACE_FX_COLUMNS = 8
 
 export const raceFxSheetPath = (key: string) => `/race-fx/sheets/${key}.png`

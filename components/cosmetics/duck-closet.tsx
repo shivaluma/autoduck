@@ -2,6 +2,9 @@
 
 import { useMemo, useState } from 'react'
 import { CosmeticDuck } from './cosmetic-duck'
+import { GameButton, ResourcePill } from '@/components/game-ui'
+
+/* eslint-disable @next/next/no-img-element -- decorative lily pad SVG */
 import { COSMETIC_RARITIES, SLOT_FRAMES, type CosmeticDefinition, type CosmeticRarity, type CosmeticSlot, type DuckAppearance } from '@/lib/cosmetics/types'
 
 export const RARITY_STYLE: Record<CosmeticRarity, { label: string; color: string; glow: string }> = {
@@ -107,20 +110,23 @@ export function DuckCloset({
     if (response.ok) await onSaved()
   }
 
-  return <section className="overflow-hidden rounded-[2rem] border-4 border-[var(--color-ggd-outline)] bg-[linear-gradient(135deg,#2f1760,#152c43)] shadow-[0_6px_0_var(--color-ggd-outline)]">
-    <div className="grid md:grid-cols-[280px_1fr]">
-      <div className="flex flex-col items-center justify-center border-b-2 border-white/10 bg-black/15 p-5 md:border-b-0 md:border-r-2">
-        <div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-neon-green)]">{onboarded ? 'DUCK CLOSET' : 'MAKE YOUR DUCK'}</div>
-        <div key={JSON.stringify(appearance)} className="closet-equip-pop"><CosmeticDuck appearance={appearance} size={232} label={`Dzịt của ${name}`} /></div>
-        <div className="font-display text-2xl">{name}</div>
-        <div className="mt-1 rounded-full bg-black/30 px-3 py-1 text-sm font-black text-[var(--color-ggd-gold)]">🪙 {quackPoints} QP</div>
+  return <section className="gx-panel overflow-hidden" data-tone="violet">
+    <div className="relative grid md:grid-cols-[300px_1fr]">
+      <div className="flex flex-col items-center justify-center border-b-[3px] border-[var(--gx-ink)] bg-[radial-gradient(circle_at_50%_40%,rgba(125,211,252,.25),transparent_65%),rgba(10,6,24,.3)] p-5 md:sticky md:top-24 md:self-start md:border-b-0 md:border-r-[3px]">
+        <div className="gx-kicker text-[#a5f3fc]">{onboarded ? 'TỦ ĐỒ' : 'TẠO DZỊT CỦA BẠN'}</div>
+        <div className="relative">
+          <img src="/race-fx/decor/lilypad.svg" alt="" aria-hidden className="absolute bottom-2 left-1/2 w-[80%] -translate-x-1/2" />
+          <div key={JSON.stringify(appearance)} className="closet-equip-pop relative"><CosmeticDuck appearance={appearance} size={240} label={`Dzịt của ${name}`} /></div>
+        </div>
+        <div className="gx-title text-3xl">{name}</div>
+        <ResourcePill icon="coin" value={quackPoints} label="Quack Points" className="mt-2" />
       </div>
       <div className="p-5">
         <div className="flex flex-wrap gap-2">
           {INTERACTIVE_SLOTS.map((option) => {
             const total = catalog.filter((item) => item.slot === option.id).length
             const mine = catalog.filter((item) => item.slot === option.id && owned.has(item.id)).length
-            return <button key={option.id} onClick={() => setSlot(option.id)} className={`rounded-full px-3 py-2 text-xs font-black ${slot === option.id ? 'bg-[var(--color-ggd-neon-green)] text-[var(--color-ggd-outline)]' : 'bg-black/25 text-white/65'}`}>{option.label} <span className="opacity-60">{mine}/{total}</span></button>
+            return <button key={option.id} type="button" role="tab" aria-selected={slot === option.id} onClick={() => setSlot(option.id)} className="gx-tab py-1.5 pl-3 text-base">{option.label} <span className="font-data text-xs opacity-60">{mine}/{total}</span></button>
           })}
         </div>
         <div className="mt-3 min-h-5 text-xs font-bold text-white/60">
@@ -152,11 +158,11 @@ export function DuckCloset({
           {choices.length === 0 && <div className="col-span-full rounded-xl border border-dashed border-white/15 p-4 text-sm text-white/50">Chưa có món nào.</div>}
         </div>
         <div className="mt-5 flex flex-wrap gap-2">
-          <button onClick={randomize} className="rounded-xl border-2 border-white/20 px-4 py-2 font-black">🎲 RANDOM</button>
-          <button disabled={saving} onClick={() => void save()} className="rounded-xl bg-[var(--color-ggd-gold)] px-5 py-2 font-black text-[var(--color-ggd-outline)] disabled:opacity-50">{saving ? 'ĐANG LƯU...' : 'LƯU DZỊT'}</button>
+          <GameButton variant="ghost" onClick={randomize}>🎲 NGẪU NHIÊN</GameButton>
+          <GameButton variant="mint" disabled={saving} onClick={() => void save()} icon="duck">{saving ? 'ĐANG LƯU…' : 'LƯU DZỊT'}</GameButton>
           {message && <span className="self-center text-sm font-bold text-[var(--color-ggd-neon-green)]">{message}</span>}
         </div>
-        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-white/10 pt-4"><input value={presetName} onChange={(event) => setPresetName(event.target.value)} placeholder="Tên preset" maxLength={30} className="min-w-32 flex-1 rounded-xl border border-white/15 bg-black/25 px-3 py-2 text-sm" />{[1, 2, 3].map((index) => <div key={index} className="flex overflow-hidden rounded-xl border border-white/15"><button onClick={() => void preset('load-preset', index)} className="px-3 py-2 text-xs font-black">MẶC {index}</button><button onClick={() => void preset('save-preset', index)} className="border-l border-white/15 bg-white/5 px-2 py-2 text-xs font-black">LƯU</button></div>)}</div>
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t-2 border-black/30 pt-4"><input value={presetName} onChange={(event) => setPresetName(event.target.value)} placeholder="Tên preset" maxLength={30} className="gx-well min-w-32 flex-1 px-3 py-2 text-sm focus:border-[var(--gx-mint)] focus:outline-none" />{[1, 2, 3].map((index) => <div key={index} className="flex overflow-hidden rounded-xl border-[3px] border-[var(--gx-ink)] shadow-[0_3px_0_var(--gx-ink)]"><button type="button" onClick={() => void preset('load-preset', index)} className="bg-[#3b2c78] px-3 py-1.5 text-xs font-black hover:bg-[#4c3a96]">MẶC {index}</button><button type="button" onClick={() => void preset('save-preset', index)} className="border-l-2 border-[var(--gx-ink)] bg-[#261a52] px-2 py-1.5 text-xs font-black text-white/70 hover:text-white">LƯU</button></div>)}</div>
       </div>
     </div>
   </section>

@@ -100,10 +100,17 @@ export async function GET(request: Request) {
       liveRace,
       raceItems: RACE_ITEM_CATALOG,
       cosmeticCatalog: COSMETIC_CATALOG,
-      players: season.players.map((player: { user: { id: number; name: string; avatarUrl: string | null }; userId: number; predictionPoints: number; scars: number; shields: number; isKing: boolean; kingStreak: number }) => ({
+      players: season.players.map((player: { user: { id: number; name: string; avatarUrl: string | null }; userId: number; predictionPoints: number; scars: number; shields: number; isKing: boolean; kingStreak: number; appearance: Record<string, unknown> | null }) => ({
         id: player.user.id,
         name: player.user.name,
         avatarUrl: player.user.avatarUrl,
+        appearance: player.appearance ? {
+          bodyColorId: player.appearance.bodyColorId,
+          bodySkinId: player.appearance.bodySkinId,
+          faceId: player.appearance.faceId,
+          headId: player.appearance.headId,
+          outfitId: player.appearance.outfitId,
+        } : null,
         predictionPoints: player.predictionPoints,
         scars: player.scars,
         shields: player.shields,

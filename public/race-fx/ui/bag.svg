@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 140 140" width="100%" height="100%" fill="none">
+<g id="u-bag"><path d="M44 44 V34 C44 20 54 14 64 14 C74 14 84 20 84 34 V44" fill="none" stroke="#1B132B" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M44 44 V34 C44 20 54 14 64 14 C74 14 84 20 84 34 V44" fill="none" stroke="#FDE047" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M24 42 h80 l-6 70 h-68 Z" fill="#22C55E" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M24 42 h80 l-1 10 h-78 Z" fill="#86EFAC" opacity="0.8"/>
+<path d="M30 112 l-6 -70 h14 l4 70 Z" fill="#15803D" opacity="0.6"/>
+<path d="M50 70 h28 a6 6 0 0 1 0 12 h-28 a6 6 0 0 1 0 -12 Z" fill="#FDE047" stroke="#1B132B" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/></g>
+</svg>

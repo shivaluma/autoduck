@@ -39,9 +39,9 @@ export function CombatEncountersPanel({
 
   if (analytics.totalAttacks === 0) {
     return (
-      <section className="rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-6 text-center shadow-[0_6px_0_var(--color-ggd-outline)]">
+      <section className="gx-panel p-6 text-center">
         <div className="text-4xl">🕊️</div>
-        <div className="mt-2 font-display text-2xl text-[var(--color-ggd-gold)]">NHẬT KÝ ĐỐI ĐẦU & TẤN CÔNG</div>
+        <div className="mt-2 gx-title text-2xl text-[var(--color-ggd-gold)]">NHẬT KÝ ĐỐI ĐẦU & TẤN CÔNG</div>
         <p className="mt-2 text-sm text-white/60">
           Chặng đua này không có đòn tấn công nào được tung ra — một cuộc đua tốc độ thuần túy trong hòa bình!
         </p>
@@ -50,13 +50,13 @@ export function CombatEncountersPanel({
   }
 
   return (
-    <section className="rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-5 text-white shadow-[0_6px_0_var(--color-ggd-outline)] sm:p-6">
+    <section className="gx-panel p-5 text-white sm:p-6">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-white/10 pb-4">
         <div className="flex items-center gap-3">
           <span className="text-3xl">⚔️</span>
           <div>
-            <h2 className="font-display text-2xl tracking-wide text-[var(--color-ggd-gold)] sm:text-3xl">
+            <h2 className="gx-title text-2xl tracking-wide text-[var(--color-ggd-gold)] sm:text-3xl">
               NHẬT KÝ TẤN CÔNG & ĐỐI ĐẦU
             </h2>
             <p className="text-xs text-white/65 sm:text-sm">
@@ -94,7 +94,7 @@ export function CombatEncountersPanel({
 
       {/* Highlights Bar */}
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="rounded-2xl border-2 border-white/10 bg-black/25 p-3 sm:p-4">
+        <div className="gx-well p-3 sm:p-4">
           <div className="text-2xl">🎯</div>
           <div className="mt-1 text-[10px] font-black uppercase tracking-wider text-white/40">Tổng Đòn Đánh</div>
           <div className="font-display text-xl text-[var(--color-ggd-gold)] sm:text-2xl">
@@ -137,7 +137,7 @@ export function CombatEncountersPanel({
       {viewTab === 'feed' && (
         <div className="mt-5 space-y-4">
           {/* Filter Controls */}
-          <div className="flex flex-wrap items-center gap-2 rounded-2xl border-2 border-white/10 bg-black/30 p-3 text-xs sm:text-sm">
+          <div className="flex flex-wrap items-center gap-2 gx-well p-3 text-xs sm:text-sm">
             <span className="font-bold text-white/50">Bộ lọc:</span>
 
             {/* Attacker Filter */}
@@ -209,7 +209,7 @@ export function CombatEncountersPanel({
 
           {/* Encounters List */}
           {filteredEncounters.length === 0 ? (
-            <div className="rounded-2xl border-2 border-white/10 bg-black/20 p-8 text-center text-white/50">
+            <div className="gx-well p-8 text-center text-white/50">
               Không tìm thấy pha đối đầu nào phù hợp bộ lọc.
             </div>
           ) : (
@@ -295,7 +295,7 @@ export function CombatEncountersPanel({
       {/* PLAYER COMBAT LEADERBOARD */}
       {viewTab === 'leaderboard' && (
         <div className="mt-5 space-y-3">
-          <div className="rounded-2xl border-2 border-white/10 bg-black/30 p-4">
+          <div className="gx-well p-4">
             <h3 className="font-display text-lg text-[var(--color-ggd-gold)]">
               BẢNG TỔNG HỢP HIỆU SUẤT TÁC CHIẾN CỦA TỪNG VỊT
             </h3>
@@ -304,7 +304,7 @@ export function CombatEncountersPanel({
             </p>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border-2 border-white/10 bg-black/20">
+          <div className="overflow-hidden gx-well">
             <div className="grid grid-cols-12 border-b border-white/10 bg-black/40 px-4 py-2.5 text-[11px] font-black uppercase tracking-wider text-white/40">
               <div className="col-span-4">Vịt Tay Đua</div>
               <div className="col-span-3 text-center">Tấn Công (Trúng / Tung)</div>
