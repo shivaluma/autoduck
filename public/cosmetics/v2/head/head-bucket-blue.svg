@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-24 -56 560 560" width="100%" height="100%" fill="none">
-<g id="bucket"><path d="M258 92 C256 52 300 34 350 34 C404 34 430 60 428 90 Z" fill="#4F9FE8" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<g transform="translate(0 -14)"><g id="bucket"><path d="M258 92 C256 52 300 34 350 34 C404 34 430 60 428 90 Z" fill="#4F9FE8" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
 <clipPath id="bucket-c"><path d="M258 92 C256 52 300 34 350 34 C404 34 430 60 428 90 Z"/></clipPath><g clip-path="url(#bucket-c)"><path d="M250 96 C262 62 288 44 320 38 C292 56 286 76 288 96 Z" fill="#2D6CB5"/></g>
 <path d="M214 100 C250 80 310 74 346 76 C392 78 444 82 470 96 C450 116 390 108 346 106 C296 106 236 118 214 100 Z" fill="#61B4F5" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
 <path d="M230 104 C270 98 310 96 346 98 C392 100 430 102 458 100 C430 110 390 106 346 106 C296 106 248 114 230 104 Z" fill="#2D6CB5" opacity="0.7"/>
-<path d="M262 86 C310 74 380 74 426 84 L426 76 C380 66 310 66 262 78 Z" fill="#2D6CB5"/></g>
+<path d="M262 86 C310 74 380 74 426 84 L426 76 C380 66 310 66 262 78 Z" fill="#2D6CB5"/></g></g>
 </svg>

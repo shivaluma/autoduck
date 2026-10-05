@@ -8,7 +8,7 @@ import {
 
 const DOME = 'M228 104 C224 50 292 18 360 22 C418 26 446 60 440 98 C380 82 286 84 228 104 Z'
 
-export const HEAD_ART: Record<string, () => string> = {
+const RAW_HEAD_ART: Record<string, () => string> = {
   // ─── COMMON — one silhouette, base + shadow ──────────────────────────────
   'head-cap-red': () => group('cap-red',
     solid(DOME, '#EF4444'),
@@ -109,9 +109,9 @@ export const HEAD_ART: Record<string, () => string> = {
     line('M262 70 C290 44 330 36 366 36', '#94A3B8', 4),
     solid('M218 116 C218 100 232 92 248 96 L256 160 C240 166 222 158 220 142 Z', '#334155'),
     part('M226 118 C228 108 236 104 244 106 L250 150 C240 154 230 150 228 140 Z', '#64748B'),
-    line('M240 160 C250 210 300 232 342 226', INK, 9),
-    line('M240 160 C250 210 300 232 342 226', '#334155', 5),
-    part('M336 216 C350 212 362 220 360 232 C356 242 340 242 334 234 Z', '#1E293B'),
+    line('M240 160 C246 200 270 222 300 230', INK, 9),
+    line('M240 160 C246 200 270 222 300 230', '#334155', 5),
+    part('M294 220 C308 216 320 224 318 236 C314 246 298 246 292 238 Z', '#1E293B'),
     `<circle cx="444" cy="96" r="7" fill="#58E6B0" stroke="${INK}" stroke-width="${DETAIL}">${animate('fill', '#58E6B0;#58E6B0;#EF4444;#58E6B0', 2.4)}</circle>`,
   ),
 
@@ -131,7 +131,6 @@ export const HEAD_ART: Record<string, () => string> = {
       line('M338 2 L250 124 M338 2 L300 128 M338 2 L352 128 M338 2 L404 122 M338 2 L452 108', '#C9A75C', 3, { opacity: 0.6 }) +
       tone('M338 2 L420 54 L380 30 Z', '#FFF6D6', 0.8)),
     sway(228, 118, 4, 3, line('M228 118 C220 170 236 218 262 244', '#E11D48', 5)),
-    sway(440, 112, 4, 3, line('M440 112 C446 160 430 208 404 240', '#E11D48', 5, { opacity: 0.85 }), 0.6),
   ),
 
   'head-frog-hood': () => group('frog-hood',
@@ -223,7 +222,7 @@ export const HEAD_ART: Record<string, () => string> = {
     part('M356 52 C368 44 388 46 394 56 C382 60 366 60 356 52 Z', '#B45309', { strokeWidth: 4 }),
     tone('M332 50 c6 -8 16 -6 18 2 c-6 4 -14 4 -18 -2 Z', '#22C55E'),
     tone('M398 60 c4 -6 12 -6 14 0 c-4 4 -10 4 -14 0 Z', '#22C55E'),
-    sway(262, 92, 8, 2, line('M262 92 C258 110 260 124 266 136', '#FDE68A', 6)), sway(402, 96, 8, 2, line('M402 96 C408 112 406 124 400 136', '#FDE68A', 6), 0.5),
+    sway(256, 90, 8, 2, line('M256 90 C250 102 250 112 254 122', '#FDE68A', 6)), sway(430, 92, 8, 2, line('M430 92 C436 102 436 112 432 120', '#FDE68A', 6), 0.5),
     [[362, 0], [392, 0.9], [420, 1.7]].map(([x, d]) => `<path d="M${x} 46 c-10 -14 10 -22 0 -36 c-10 -14 10 -22 0 -36" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0"><animateTransform attributeName="transform" type="translate" values="0 6;0 -30" dur="2.6s" begin="${d}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.75;0" dur="2.6s" begin="${d}s" repeatCount="indefinite"/></path>`).join(''),
   ),
 
@@ -307,3 +306,13 @@ export const HEAD_ART: Record<string, () => string> = {
   ),
 }
 
+
+/** Brims that sat too low over the eyes are lifted (px in rig space) so the eyes stay readable. */
+const HEAD_LIFT: Record<string, number> = {
+  'head-bamboo-hat': 24, 'head-wizard-hat': 16, 'head-bucket-blue': 14, 'head-cowboy-hat': 14, 'head-paper-boat': 10, 'head-pho-bowl': 14,
+  'head-beanie': 8, 'head-motorbike-helmet': 8, 'head-cap-red': 6, 'head-party-cone': 8, 'head-viking-horns': 6, 'head-chef-hat': 6,
+}
+
+export const HEAD_ART: Record<string, () => string> = Object.fromEntries(Object.entries(RAW_HEAD_ART).map(([id, draw]) => [
+  id, HEAD_LIFT[id] ? () => `<g transform="translate(0 ${-HEAD_LIFT[id]!})">${draw()}</g>` : draw,
+]))

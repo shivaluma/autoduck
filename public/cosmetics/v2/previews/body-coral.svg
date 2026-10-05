@@ -26,7 +26,7 @@
   <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="#FECBBE" opacity="0.4"/>
   <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <clipPath id="coral-belly"><path d="M80 328 c0 -72 70 -114 164 -110 c92 2 156 44 166 102 c14 68 -52 102 -166 98 c-108 -2 -164 -34 -164 -90 Z"/></clipPath><g clip-path="url(#coral-belly)"><path d="M250 262 C320 250 400 270 412 322 C420 372 360 404 286 410 C240 412 214 380 222 340 C228 300 236 272 250 262 Z" fill="#FFC2B4" opacity="0.75"/></g><path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  
   <!-- Cheeks / Blush (Soft accent) -->
   <circle cx="270" cy="190" r="14" fill="#FFD1C7" opacity="0.45"/>
 

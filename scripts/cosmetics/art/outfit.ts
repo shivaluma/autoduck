@@ -44,7 +44,7 @@ function garment({ id, fill, shadow, highlight, sleeve, inner = '', over = '', e
 
 const masked = (id: string, content: string) => `<g mask="url(#${id}-m)">${content}</g>`
 
-export const OUTFIT_ART: Record<string, () => string> = {
+const RAW_OUTFIT_ART: Record<string, () => string> = {
   // ─── COMMON ──────────────────────────────────────────────────────────────
   'outfit-tee-white': () => garment({
     id: 'tee', fill: '#F8FAFC', shadow: '#CBD5E1', highlight: '#FFFFFF',
@@ -284,3 +284,13 @@ export const OUTFIT_ART: Record<string, () => string> = {
   }),
 }
 
+
+/**
+ * Every outfit is cut at the head outline (and beak), so collars tuck under the chin instead of
+ * climbing over the face — the duck's face always reads first.
+ */
+const CLEAR_FACE_MASK = `<mask id="outfit-face-clear" maskUnits="userSpaceOnUse" x="-40" y="-80" width="620" height="640"><rect x="-40" y="-80" width="620" height="640" fill="#fff"/><path d="${DUCK_PATHS.head}" fill="#000" stroke="#000" stroke-width="${MAJOR}"/><path d="${DUCK_PATHS.beak}" fill="#000" stroke="#000" stroke-width="${MAJOR + 6}"/></mask>`
+
+export const OUTFIT_ART: Record<string, () => string> = Object.fromEntries(Object.entries(RAW_OUTFIT_ART).map(([id, draw]) => [
+  id, () => `<defs>${CLEAR_FACE_MASK}</defs><g mask="url(#outfit-face-clear)">${draw()}</g>`,
+]))

@@ -12,14 +12,17 @@ function skinMask(id: string) {
 }
 
 /** Head region gets reduced opacity so patterns never compete with the eyes. */
+const OUTSIDE_HEAD = `<mask id="skin-outside-head" maskUnits="userSpaceOnUse" x="-40" y="-80" width="620" height="640"><rect x="-40" y="-80" width="620" height="640" fill="#fff"/><path d="${DUCK_PATHS.head}" fill="#000"/></mask>`
+
 const HEAD_FADE = `<mask id="face-fade" maskUnits="userSpaceOnUse" x="-40" y="-80" width="620" height="640"><rect x="-40" y="-80" width="620" height="640" fill="#fff"/><path d="${DUCK_PATHS.head}" fill="#777"/></mask>`
 
 function skin(id: string, content: string, extraDefs = '', options: { fadeHead?: boolean } = {}) {
   const fade = options.fadeHead !== false
   return group(id,
-    defs(skinMask(`${id}-m`), fade ? HEAD_FADE : '', extraDefs),
+    defs(skinMask(`${id}-m`), OUTSIDE_HEAD, fade ? HEAD_FADE : '', extraDefs),
     `<g mask="url(#${id}-m)"><g${fade ? ' mask="url(#face-fade)"' : ''}>${content}</g>`,
-    `<path d="${DUCK_PATHS.torso}" fill="none" stroke="${INK}" stroke-width="${MAJOR}"/><path d="${DUCK_PATHS.head}" fill="none" stroke="${INK}" stroke-width="${MAJOR}"/></g>`,
+    // Torso outline stops at the head (like the base duck) so it never slices through the neck.
+    `<path d="${DUCK_PATHS.torso}" fill="none" stroke="${INK}" stroke-width="${MAJOR}" mask="url(#skin-outside-head)"/><path d="${DUCK_PATHS.head}" fill="none" stroke="${INK}" stroke-width="${MAJOR}"/></g>`,
     line(DUCK_PATHS.wing, INK, MINOR),
   )
 }
@@ -64,7 +67,6 @@ export const BODY_SKIN_ART: Record<string, () => string> = {
   // ─── UNCOMMON ────────────────────────────────────────────────────────────
   'bodySkin-tiger-quack': () => skin('tiger',
     `<path d="${DUCK_PATHS.torso}" fill="#FF8A1F" opacity="0.9"/><path d="${DUCK_PATHS.head}" fill="#FF8A1F" opacity="0.9"/><path d="${DUCK_PATHS.tail}" fill="#FF8A1F" opacity="0.9"/>` +
-    tone('M250 262 C320 250 400 270 412 322 C420 372 360 404 286 410 C240 412 214 380 222 340 C228 300 236 272 250 262 Z', '#FFF1DC', 0.9) +
     ['M70 290 C110 300 130 290 150 270 C130 300 110 316 74 314 Z', 'M120 240 C150 262 180 264 200 250 C186 274 158 286 124 270 Z', 'M200 226 C220 250 250 256 268 246 C254 268 228 278 204 262 Z',
       'M90 360 C130 360 160 350 180 330 C164 362 136 378 96 380 Z', 'M180 400 C210 388 226 370 236 350 C238 376 222 400 196 414 Z', 'M260 410 C280 396 290 380 294 362 C302 384 294 404 274 420 Z',
       'M240 60 C264 70 286 66 300 52 C292 76 268 88 244 82 Z', 'M222 112 C240 124 258 124 270 116 C262 134 244 140 226 132 Z', 'M418 74 C400 84 392 98 392 112 C406 102 418 92 426 92 Z',

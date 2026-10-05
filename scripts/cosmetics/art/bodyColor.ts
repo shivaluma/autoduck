@@ -2,7 +2,15 @@ import { CANONICAL_PALETTES, DUCK_PATHS, derivePalette, generateBaseDuckSvg, typ
 import { INK, MINOR, animate, burst, clipped, cycleStop, glow, linear, livingGradient, metal, motes, radial, sparkle, sweepBand, tone, twinkle } from '../kit'
 
 const WING = (outline: string) => `<path d="${DUCK_PATHS.wing}" fill="none" stroke="${outline}" stroke-width="${MINOR}" stroke-linecap="round" stroke-linejoin="round"/>`
-const BELLY = 'M250 262 C320 250 400 270 412 322 C420 372 360 404 286 410 C240 412 214 380 222 340 C228 300 236 272 250 262 Z'
+
+/** Solid jewel tone + a colour-shifting sheen sweeping the body (rare tier). */
+function jewel(id: string, base: string, sheen: string[], overrides: Partial<DuckPaletteTokens> = {}) {
+  return duck(derivePalette(base, overrides), {
+    defs: `<linearGradient id="${id}-sheen" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sheen[0]}" stop-opacity="0.55">${cycleStop(sheen, 4)}</stop><stop offset="0.6" stop-color="${base}" stop-opacity="0"/></linearGradient>`,
+    overlay: clipped(`${id}-t`, DUCK_PATHS.torso, `<path d="${DUCK_PATHS.torso}" fill="url(#${id}-sheen)"/>` + sweepBand(`${id}-sweep`, 0, 180, 50, 300, 520, 3.4, 0, 0.5)) +
+      clipped(`${id}-h`, DUCK_PATHS.head, `<path d="${DUCK_PATHS.head}" fill="url(#${id}-sheen)"/>`) + WING(INK),
+  })
+}
 
 const plain = (id: string) => () => generateBaseDuckSvg(CANONICAL_PALETTES[id]!)
 
@@ -20,33 +28,23 @@ export const BODY_COLOR_ART: Record<string, () => string> = {
   'body-cream': plain('body-cream'),
 
   // ─── UNCOMMON — a second tone ────────────────────────────────────────────
-  'body-lavender': () => duck(CANONICAL_PALETTES['body-lavender']!, {
-    overlay: clipped('lav-belly', DUCK_PATHS.torso, tone(BELLY, '#EFE6FF', 0.7)) + WING(INK),
-  }),
+  'body-lavender': plain('body-lavender'),
   'body-midnight': () => duck(derivePalette('#4A5490', { eyeHighlight: '#9FE7FF', blush: '#C084FC', beakBase: '#FFB547', feetBase: '#FFB547' }), {
-    overlay: clipped('mid-stars', DUCK_PATHS.torso, tone(BELLY, '#6E7AC0', 0.6) + `<g>${sparkle(160, 290, 6, '#C7D2FE')}${twinkle(3)}</g><g>${sparkle(230, 370, 5, '#C7D2FE')}${twinkle(3, 1.5)}</g>`) + WING(INK),
+    overlay: clipped('mid-stars', DUCK_PATHS.torso, `<g>${sparkle(160, 290, 6, '#C7D2FE')}${twinkle(3)}</g><g>${sparkle(230, 370, 5, '#C7D2FE')}${twinkle(3, 1.5)}</g>`) + WING(INK),
   }),
+  'body-matcha': () => duck(derivePalette('#9CC46A', { blush: '#FF8FA3' })),
+  'body-coral': () => duck(derivePalette('#FF7A6B', { beakBase: '#FFC24D', beakShadow: '#D98A16', beakHighlight: '#FFE7A6', feetBase: '#FFC24D', blush: '#FFD1C7' })),
+  'body-bubblegum': () => duck(derivePalette('#FF8AD8', { blush: '#FF4FA3' })),
+  'body-grape': () => duck(derivePalette('#8B5CF6', { blush: '#F0ABFC', eyeHighlight: '#E9D5FF' })),
+  'body-cocoa': () => duck(derivePalette('#A0694A', { blush: '#FF9E8A', beakBase: '#FFB347', feetBase: '#FFB347' })),
+  'body-lime': () => duck(derivePalette('#B6F23A')),
+  'body-peach': () => duck(derivePalette('#FFB38A')),
+  'body-aqua': () => duck(derivePalette('#3EDBF0')),
 
-  'body-matcha': () => duck(derivePalette('#9CC46A', { blush: '#FF8FA3' }), {
-    overlay: clipped('matcha-belly', DUCK_PATHS.torso, tone(BELLY, '#F6EBCB')) +
-      clipped('matcha-cheek', DUCK_PATHS.head, tone('M300 170 C330 160 370 176 380 214 C360 246 300 250 268 226 C262 200 276 178 300 170 Z', '#F6EBCB')) + WING(INK),
-  }),
-  'body-coral': () => duck(derivePalette('#FF7A6B', { beakBase: '#FFC24D', beakShadow: '#D98A16', beakHighlight: '#FFE7A6', feetBase: '#FFC24D', blush: '#FFD1C7' }), {
-    overlay: clipped('coral-belly', DUCK_PATHS.torso, tone(BELLY, '#FFC2B4', 0.75)) + WING(INK),
-  }),
-
-  // ─── RARE — regional plumage & material ──────────────────────────────────
-  'body-mallard': () => duck(derivePalette('#B9AFA2', { feetBase: '#FF8A3D', beakBase: '#F2C744', beakShadow: '#B08A1C', beakHighlight: '#FFF0A6' }), {
-    defs: `<linearGradient id="mallard-head" x1="1" y1="0" x2="0.2" y2="1"><stop offset="0" stop-color="#5EEAD4">${cycleStop(['#5EEAD4', '#7C3AED', '#22C55E'], 4)}</stop><stop offset="0.4" stop-color="#1F8F5F"/><stop offset="1" stop-color="#0B3D2A"/></linearGradient>`,
-    overlay:
-      clipped('mallard-h', DUCK_PATHS.head, `<path d="${DUCK_PATHS.head}" fill="url(#mallard-head)"/>` + tone('M300 70 C340 52 390 60 410 92 C380 76 340 72 300 86 Z', '#8AF0C0', 0.6) + sweepBand('mallard-sweep', 150, 0, 40, 280, 340, 3.2, 0, 0.45)) +
-      clipped('mallard-t', DUCK_PATHS.torso,
-        tone('M220 210 C270 214 330 230 360 260 C380 300 360 330 320 330 C270 330 236 300 220 260 Z', '#8B4A2B') +
-        `<path d="M150 300 C190 284 240 290 270 300 C250 330 200 344 150 330 Z" fill="#3A63C9">${animate('fill', '#3A63C9;#6D4BE0;#3A63C9', 2.6)}</path>` +
-        tone('M150 300 C190 284 240 290 270 300 L268 306 C236 298 190 292 152 308 Z', '#FFFFFF', 0.85)) +
-      `<path d="M226 222 C260 236 320 242 368 226" fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round"/>` + WING(INK),
-  }),
-
+  // ─── RARE — one jewel colour with a moving sheen ─────────────────────────
+  'body-mallard': () => jewel('mallard', '#1F8F5F', ['#5EEAD4', '#7C3AED', '#22C55E'], { feetBase: '#FF8A3D', beakBase: '#F2C744', beakShadow: '#B08A1C', beakHighlight: '#FFF0A6' }),
+  'body-cherry': () => jewel('cherry', '#E11D48', ['#FDA4AF', '#FDE68A', '#FB7185'], { beakBase: '#FFC24D', feetBase: '#FFC24D', blush: '#FFD1DC' }),
+  'body-sapphire': () => jewel('sapphire', '#2563EB', ['#93C5FD', '#C4B5FD', '#67E8F9'], { eyeHighlight: '#BFDBFE', blush: '#F0ABFC' }),
   'body-pearl': () => duck(derivePalette('#F3EEF7', { bodyShadow: '#C8BEDA', blush: '#FFB3CF', eyeHighlight: '#BDEBFF' }), {
     defs: `<linearGradient id="pearl-sheen" x1="1" y1="0" x2="0" y2="1">` +
       `<stop offset="0" stop-color="#FFD6EC" stop-opacity="0.9">${cycleStop(['#FFD6EC', '#D6F2FF', '#E9DCFF', '#FFF4D6'], 5)}</stop>` +
@@ -61,8 +59,6 @@ export const BODY_COLOR_ART: Record<string, () => string> = {
 
   'body-ink': () => duck(derivePalette('#2A2638', { bodyShadow: '#141120', bodyHighlight: '#57506E', outline: '#0B0716', beakBase: '#FFC93D', beakShadow: '#C98A0E', beakHighlight: '#FFF0A0', feetBase: '#FFC93D', blush: '#FF6FA0', eyeHighlight: '#FFFFFF' }), {
     overlay:
-      clipped('ink-belly', DUCK_PATHS.torso, tone(BELLY, '#F4F1FA')) +
-      clipped('ink-cheek', DUCK_PATHS.head, tone('M292 168 C320 152 372 168 384 214 C362 250 296 252 262 228 C256 202 268 180 292 168 Z', '#F4F1FA')) +
       `<path d="M300 62 C350 40 412 56 432 104" fill="none" stroke="#9D8FD6" stroke-width="6" stroke-linecap="round" stroke-dasharray="60 200">${animate('stroke-dashoffset', '60;-200', 3, { calcMode: 'linear', keySplines: undefined })}</path>` +
       `<path d="M96 330 C110 280 170 236 244 228" fill="none" stroke="#9D8FD6" stroke-width="5" stroke-linecap="round" stroke-dasharray="50 220" opacity="0.8">${animate('stroke-dashoffset', '50;-220', 3, { calcMode: 'linear', keySplines: undefined, begin: '1.2s' })}</path>` +
       WING('#0B0716'),
