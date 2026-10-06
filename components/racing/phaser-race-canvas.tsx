@@ -498,6 +498,18 @@ export function PhaserRaceCanvas({
                 img = this.add.image(0, layerY, `cosmetic-${item.id}`)
               }
               img.setDisplaySize(layerSize, layerSize).setData('cosmetic-slot', slot)
+              if (slot === 'trail') {
+                // Extend the wake behind the duck with fading, smaller echoes (each on its own frame).
+                for (const [echo, alpha, scale] of [[2, 0.35, 0.82], [1, 0.62, 0.92]] as const) {
+                  const echoSize = layerSize * scale
+                  const echoX = -echo * layerSize * 0.5
+                  const echoY = layerY + (layerSize - echoSize) * 0.32
+                  const echoSprite = this.textures.exists(animKey)
+                    ? this.add.sprite(echoX, echoY, animKey).play({ key: animKey, startFrame: (index * 7 + echo * 9) % MOTION_SPRITE.frames })
+                    : this.add.image(echoX, echoY, `cosmetic-${item.id}`)
+                  cosmeticLayers.push(echoSprite.setDisplaySize(echoSize, echoSize).setAlpha(alpha).setData('cosmetic-slot', slot))
+                }
+              }
               cosmeticLayers.push(img)
             }
           }
