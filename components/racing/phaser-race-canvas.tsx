@@ -62,6 +62,9 @@ const RANK_COLORS = [
   { fill: 0x312e81, text: '#ffffff' },
 ] as const
 
+/** How much longer the trail is drawn in races than in the closet (horizontal stretch from the tail). */
+const TRAIL_STRETCH = 1.6
+
 const WAKE_IDLE_MS = 80
 const WAKE_BOOST_MS = 18
 
@@ -499,16 +502,9 @@ export function PhaserRaceCanvas({
               }
               img.setDisplaySize(layerSize, layerSize).setData('cosmetic-slot', slot)
               if (slot === 'trail') {
-                // Extend the wake behind the duck with fading, smaller echoes (each on its own frame).
-                for (const [echo, alpha, scale] of [[2, 0.35, 0.82], [1, 0.62, 0.92]] as const) {
-                  const echoSize = layerSize * scale
-                  const echoX = -echo * layerSize * 0.5
-                  const echoY = layerY + (layerSize - echoSize) * 0.32
-                  const echoSprite = this.textures.exists(animKey)
-                    ? this.add.sprite(echoX, echoY, animKey).play({ key: animKey, startFrame: (index * 7 + echo * 9) % MOTION_SPRITE.frames })
-                    : this.add.image(echoX, echoY, `cosmetic-${item.id}`)
-                  cosmeticLayers.push(echoSprite.setDisplaySize(echoSize, echoSize).setAlpha(alpha).setData('cosmetic-slot', slot))
-                }
+                // One continuous, longer wake: stretch the trail backwards from the tail tip (rig x 84).
+                const tailOrigin = (84 - AVATAR_FRAME.x) / AVATAR_FRAME.size
+                img.setOrigin(tailOrigin, 0.5).setPosition((tailOrigin - 0.5) * layerSize, layerY).setDisplaySize(layerSize * TRAIL_STRETCH, layerSize)
               }
               cosmeticLayers.push(img)
             }
