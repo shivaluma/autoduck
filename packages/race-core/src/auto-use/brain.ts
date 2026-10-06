@@ -55,6 +55,8 @@ export type AiIntent =
   | 'DESPERATE'
   | 'CLUTCH'
   | 'BREAKAWAY'
+  | 'SHOVE'
+  | 'TRAP_SET'
 
 export interface DuckBrain {
   playerId: string

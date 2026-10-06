@@ -21,6 +21,8 @@ export const AUTO_USE_CONFIG = {
     desperationBonus: 10,
     // Minimum ticks between two announced intents of one duck.
     intentCooldownTicks: 60,
+    // Extra horn value for shoving a duck onto a live peel or hazard.
+    shoveIntoTrapValue: 24,
   },
   thresholds: {
     early: 72,

@@ -11,6 +11,7 @@ import {
   itemSpeedMultiplier,
   snapshotItemWorld,
   tickItemSystem,
+  type DuckItemRuntime,
   type ItemRaceState,
 } from './items/engine'
 import { tickAutoUseDecide, tickAutoUseExecute } from './auto-use/arbiter'
@@ -225,6 +226,68 @@ export function queueWildItemInput(state: RaceSimulationState, input: Omit<Recor
   return recorded
 }
 
+const LANE_GATE_APPETITE = 1.2
+
+interface LaneTactics {
+  /** Lanes to keep out of: a duck ahead holding a peel, or a horn holder when we carry momentum. */
+  avoid: Array<{ lateral: number; radius: number; weight: number }>
+  /** Lanes worth taking: in front of a chaser we can trap, the edge of a pack we can horn. */
+  seek: Array<{ lateral: number; radius: number; weight: number }>
+  /** Break a chaser's slipstream line. */
+  breakAwayFrom: number | null
+}
+
+function holdsBanana(runtime: DuckItemRuntime | undefined) {
+  return Boolean(runtime && ((runtime.itemIds.includes('BANANA') && !runtime.usedItems.has('BANANA')) || runtime.wildItem?.itemId === 'BANANA'))
+}
+
+function holdsHorn(runtime: DuckItemRuntime | undefined) {
+  return Boolean(runtime && ((runtime.itemIds.includes('QUACK_HORN') && !runtime.usedItems.has('QUACK_HORN')) || runtime.wildItem?.itemId === 'QUACK_HORN'))
+}
+
+function laneTacticsFor(state: RaceSimulationState, duck: DuckPhysicsState): LaneTactics {
+  const tactics: LaneTactics = { avoid: [], seek: [], breakAwayFrom: null }
+  const me = state.itemState.byPlayer.get(duck.playerId)
+  const teammates = state.itemState.teammatesByPlayer?.get(duck.playerId)
+  const carriesMomentum = Boolean(me && ((me.itemIds.includes('NITRO') && !me.usedItems.has('NITRO')) || (me.activeSpeedItemId && state.tick < me.boostUntilTick)))
+  const myBanana = holdsBanana(me)
+  const myHorn = holdsHorn(me)
+  const packLaterals: number[] = []
+  let chaser: DuckPhysicsState | null = null
+  for (const other of state.ducks) {
+    if (other.playerId === duck.playerId || other.finished || teammates?.has(other.playerId)) continue
+    const gap = other.progress - duck.progress
+    const runtime = state.itemState.byPlayer.get(other.playerId)
+    if (gap > 0 && gap < 0.06 && holdsBanana(runtime)) tactics.avoid.push({ lateral: other.lateralOffset, radius: ITEM_BALANCE.banana.hitLateralRadius * 1.1, weight: 14 })
+    if (Math.abs(gap) < 0.06 && carriesMomentum && holdsHorn(runtime)) tactics.avoid.push({ lateral: other.lateralOffset, radius: ITEM_BALANCE.horn.sideReach * 0.8, weight: 6 })
+    if (gap < 0 && gap > -0.08 && (!chaser || other.progress > chaser.progress)) chaser = other
+    if (Math.abs(gap) < 0.05) packLaterals.push(other.lateralOffset)
+  }
+  if (chaser) {
+    if (myBanana) tactics.seek.push({ lateral: chaser.lateralOffset, radius: 0.12, weight: 10 })
+    const chaserRuntime = state.itemState.byPlayer.get(chaser.playerId)
+    if (duck.progress - chaser.progress < 0.035 && Math.abs(chaser.lateralOffset - duck.lateralOffset) < 0.2
+      && chaserRuntime?.itemIds.includes('DRAFT_FIN') && !chaserRuntime.usedItems.has('DRAFT_FIN')) {
+      tactics.breakAwayFrom = chaser.lateralOffset
+    }
+  }
+  if (myHorn && packLaterals.length >= 2) {
+    // Stand at the edge of the pack so one directional blast catches everyone.
+    const centre = packLaterals.reduce((sum, value) => sum + value, 0) / packLaterals.length
+    const edge = centre + (duck.lateralOffset >= centre ? 1 : -1) * 0.35
+    tactics.seek.push({ lateral: edge, radius: 0.12, weight: 8 })
+  }
+  return tactics
+}
+
+function scoreLaneTactics(tactics: LaneTactics, candidate: number) {
+  let score = 0
+  for (const zone of tactics.avoid) if (Math.abs(candidate - zone.lateral) <= zone.radius) score -= zone.weight
+  for (const zone of tactics.seek) score += zone.weight * Math.max(0, 1 - Math.abs(candidate - zone.lateral) / zone.radius)
+  if (tactics.breakAwayFrom !== null && Math.abs(candidate - tactics.breakAwayFrom) > 0.2) score += 8
+  return score
+}
+
 export function evaluateSmartDesiredLateralOffset(
   state: RaceSimulationState,
   duck: DuckPhysicsState,
@@ -238,6 +301,10 @@ export function evaluateSmartDesiredLateralOffset(
   const hasDraftFin = Boolean(itemRuntime?.itemIds.includes('DRAFT_FIN') && !itemRuntime.usedItems.has('DRAFT_FIN'))
   const hasShield = Boolean(itemRuntime?.bubbleAvailable || itemRuntime?.wildBubbleAvailable)
   const hasFeather = Boolean(itemRuntime?.featherAvailable || itemRuntime?.wildFeatherAvailable)
+
+  const brain = state.itemState?.brains?.get(duck.playerId)
+  // Lane tactics push a duck forward (traps on chasers, slipstream denial), which is wrong in REVERSE.
+  const tactics = brain && !brain.ablated && state.config.chaosConfig?.type !== 'REVERSE' ? laneTacticsFor(state, duck) : null
 
   let bestCandidate = duck.lateralOffset
   let highestScore = -Infinity
@@ -311,7 +378,9 @@ export function evaluateSmartDesiredLateralOffset(
         else if (targetLane.tier === 'NEUTRAL') crowdPenalty = competitorsInLane * 3
 
         const laneAlignmentBonus = (1 - Math.abs(candidate - targetLane.centerLateral) / 0.25) * 5
-        score += (gateReward - crowdPenalty + laneAlignmentBonus) * proximityWeight
+        // Brains value boost-gate lanes more boldly than the legacy steering (same for every temperament).
+        const appetite = tactics ? LANE_GATE_APPETITE : 1
+        score += (gateReward * appetite - crowdPenalty / appetite + laneAlignmentBonus) * proximityWeight
       }
     }
 
@@ -350,7 +419,10 @@ export function evaluateSmartDesiredLateralOffset(
       }
     }
 
-    // 7. Jitter for organic variation
+    // 7. Brain lane tactics (traps, slipstreams, horn angles); legacy brains skip these.
+    if (tactics) score += scoreLaneTactics(tactics, candidate)
+
+    // 8. Jitter for organic variation
     score += rng.range(-1.5, 1.5)
 
     if (score > highestScore) {

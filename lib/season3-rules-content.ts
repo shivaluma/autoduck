@@ -213,7 +213,7 @@ export const LOADOUT_CONFIG = {
       cost: 1,
       category: 'minor' as const,
       itemClass: 'ATTACK' as const,
-      description: 'Thả vỏ chuối bẫy trên làn bơi phía sau (14s), đối thủ dẫm phải bị trượt văng làn, mất boost và hãm còn 15% trong 0.85s rồi 60% trong 0.7s. Trúng vịt Tốc độ sẽ cướp đà.',
+      description: 'Ném vỏ chuối ra sau (lệch tối đa 0.22 làn sang bên để đón đúng đường bơi của kẻ bám đuôi, tồn tại 14s); đối thủ dẫm phải bị trượt văng làn, mất boost và hãm còn 15% trong 0.85s rồi 60% trong 0.7s. Trúng vịt Tốc độ sẽ cướp đà.',
     },
     {
       id: 'QUACK_HORN',
@@ -222,7 +222,7 @@ export const LOADOUT_CONFIG = {
       cost: 1,
       category: 'minor' as const,
       itemClass: 'ATTACK' as const,
-      description: 'Thổi còi xung kích húc dạt đối thủ bơi sát cạnh, phá mọi boost (kể cả Nitro) và Câm Lặng 0.5s; sau đó mục tiêu miễn câm lặng 2s. Cướp đà 1.5s từ 1 vịt Tốc độ trúng còi. Bong bóng đang bật và Lông vũ chặn được còi.',
+      description: 'Thổi còi định hướng về một bên (tầm 0.55 làn): húc dạt mọi đối thủ phía đó về cùng hướng — có thể đẩy họ vào vỏ chuối hay chướng ngại vật — phá mọi boost (kể cả Nitro) và Câm Lặng 0.5s; sau đó mục tiêu miễn câm lặng 2s. Cướp đà 1.5s từ 1 vịt Tốc độ trúng còi. Bong bóng đang bật và Lông vũ chặn được còi.',
     },
   ],
 }
@@ -285,14 +285,14 @@ export const WILD_ITEMS_LIST = [
     displayName: 'Banana (Vỏ Chuối)',
     icon: '🍌',
     typeText: 'Tự đặt bẫy',
-    description: 'Thả bẫy chuối trên làn bơi (8s): đối thủ đạp phải trượt lệch làn, hãm còn 22% trong 0.6s rồi 60% trong 0.5s. Trúng vịt Tốc độ sẽ cướp đà.',
+    description: 'Ném bẫy chuối (lệch tối đa 0.18 làn, 8s): đối thủ đạp phải trượt lệch làn, hãm còn 22% trong 0.6s rồi 60% trong 0.5s. Trúng vịt Tốc độ sẽ cướp đà.',
   },
   {
     id: 'QUACK_HORN',
     displayName: 'Quack Horn (Còi Vịt)',
     icon: '🔊',
     typeText: 'Tự dùng khi va chạm',
-    description: 'Thổi còi húc dạt các vịt sát cạnh, phá boost (trừ Nitro) và Câm Lặng 0.7s; cướp đà từ 1 vịt Tốc độ. Bong bóng đang bật chặn được còi.',
+    description: 'Thổi còi về một bên, húc dạt các vịt phía đó, phá boost (trừ Nitro) và Câm Lặng 0.7s; cướp đà từ 1 vịt Tốc độ. Bong bóng đang bật chặn được còi.',
   },
   {
     id: 'FEATHER',

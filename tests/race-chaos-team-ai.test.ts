@@ -235,7 +235,7 @@ test('Banana AI drops trap when enemy is behind and teammate is in different lan
   assert.ok(bananaCand, 'Should drop banana to hit chasing enemy duck-3 when teammate is safe ahead')
 })
 
-test('Quack Horn AI does not activate when teammate is in blast radius even if boosting enemy is also nearby', () => {
+test('Quack Horn AI never blasts a side with a teammate on it, and aims away from the teammate when it can', () => {
   const config = createTeamRaceConfig([['duck-1', 'duck-2'], ['duck-3', 'duck-4']], {
     loadouts: [
       { playerId: 'duck-1', itemIds: ['HOMING_ROCKET', 'QUACK_HORN'], source: 'PLAYER' },
@@ -254,7 +254,7 @@ test('Quack Horn AI does not activate when teammate is in blast radius even if b
   const ducks: ItemDuckState[] = [
     { playerId: 'duck-1', progress: 0.50, lateralOffset: 0.0, lateralVelocity: 0, currentRank: 3, finished: false },
     { playerId: 'duck-2', progress: 0.51, lateralOffset: 0.1, lateralVelocity: 0, currentRank: 2, finished: false }, // teammate in blast radius!
-    { playerId: 'duck-3', progress: 0.52, lateralOffset: -0.1, lateralVelocity: 0, currentRank: 1, finished: false }, // enemy in blast radius
+    { playerId: 'duck-3', progress: 0.52, lateralOffset: 0.2, lateralVelocity: 0, currentRank: 1, finished: false }, // enemy on the teammate's side
     { playerId: 'duck-4', progress: 0.30, lateralOffset: 0.0, lateralVelocity: 0, currentRank: 4, finished: false },
   ]
   const objective = buildRaceObjectiveContext(config)
@@ -274,7 +274,13 @@ test('Quack Horn AI does not activate when teammate is in blast radius even if b
 
   const candidates = evaluatePrepCandidates(ctx)
   const hornCand = candidates.find((c) => c.itemId === 'QUACK_HORN')
-  assert.equal(hornCand, undefined, 'Quack Horn must NOT be used when teammate is in the blast radius')
+  assert.equal(hornCand, undefined, 'Quack Horn must NOT be used when the only enemy shares a side with the teammate')
+
+  // Enemy on the other side: the horn blasts away from the teammate.
+  ducks[2]!.lateralOffset = -0.2
+  const aimed = evaluatePrepCandidates(ctx).find((c) => c.itemId === 'QUACK_HORN')
+  assert.ok(aimed, 'Horn should fire at the enemy on the far side')
+  assert.equal(aimed.hornSide, -1)
 })
 
 test('Quack Horn AI activates when only enemy is in blast radius and teammate is far away', () => {

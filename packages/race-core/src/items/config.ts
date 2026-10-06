@@ -59,6 +59,8 @@ export const ITEM_BALANCE = {
   banana: {
     armProgress: 0.2,
     fallbackProgress: 0.55,
+    // How far sideways a banana can be tossed from the dropper's own lane.
+    aimMaxOffset: 0.22,
     endGameDropProgress: 0.72,
     closeBehindDistance: 0.085,
     lifetimeSeconds: 14,
@@ -79,6 +81,9 @@ export const ITEM_BALANCE = {
     armProgress: 0.22,
     progressRadius: 0.055,
     lateralRadius: 0.40,
+    // Directional blast: everything on the chosen side up to sideReach, plus a narrow centre band.
+    sideReach: 0.55,
+    centerBand: 0.08,
     lateralPush: 1.20,
     lateralShove: 0.25,
     fallbackProgress: 0.76,

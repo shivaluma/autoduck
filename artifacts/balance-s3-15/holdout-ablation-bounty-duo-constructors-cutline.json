@@ -1,0 +1,46 @@
+{
+  "seeds": 1200,
+  "start": 60001,
+  "rows": [
+    {
+      "mode": "BOUNTY_HUNT",
+      "races": 1200,
+      "loserPctBrain": 29.1,
+      "loserPctAblated": 31.8,
+      "deltaPts": -2.8,
+      "ci95Pts": "[-5.9, 0.4]",
+      "winPctBrain": 11.8,
+      "winPctAblated": 9.5
+    },
+    {
+      "mode": "DUO",
+      "races": 1200,
+      "loserPctBrain": 24.1,
+      "loserPctAblated": 27.6,
+      "deltaPts": -3.5,
+      "ci95Pts": "[-6.6, -0.4]",
+      "winPctBrain": 12.3,
+      "winPctAblated": 9.5
+    },
+    {
+      "mode": "CONSTRUCTORS",
+      "races": 1200,
+      "loserPctBrain": 55.5,
+      "loserPctAblated": 58.1,
+      "deltaPts": -2.6,
+      "ci95Pts": "[-5.9, 0.7]",
+      "winPctBrain": 11.7,
+      "winPctAblated": 9
+    },
+    {
+      "mode": "CUT_LINE",
+      "races": 1200,
+      "loserPctBrain": 51.1,
+      "loserPctAblated": 52.8,
+      "deltaPts": -1.8,
+      "ci95Pts": "[-5.1, 1.6]",
+      "winPctBrain": 12.2,
+      "winPctAblated": 10.3
+    }
+  ]
+}

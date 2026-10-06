@@ -93,7 +93,8 @@ test('A silenced duck cannot reflex its Bubble', () => {
 test('DEFENSE > ATTACK: raised Bubble ignores the horn, Feather hops it, and both surge', () => {
   const { state, events, emit } = setup([['horn', ['NITRO', 'QUACK_HORN']], ['bub', ['BUBBLE_SHIELD', 'DRAFT_FIN']], ['fea', ['HOMING_ROCKET', 'FEATHER']]])
   tryActivateBubbleShield(state.byPlayer.get('bub')!, 'bub', 90, 60, emit as never)
-  const ducks = [duck('horn', 0.5, 1, 0), duck('bub', 0.5, 2, 0.2), duck('fea', 0.5, 3, -0.2)]
+  // Both defenders on the same side: the horn blasts one side only.
+  const ducks = [duck('horn', 0.5, 1, 0), duck('bub', 0.5, 2, 0.2), duck('fea', 0.5, 3, 0.4)]
   const used = executePrepAction({ playerId: 'horn', itemKey: 'prep:QUACK_HORN', itemId: 'QUACK_HORN', source: 'PREP', action: 'USE', score: 100, reason: 'OPPORTUNITY' }, state, ducks[0]!, ducks, 100, 60, emit as never)
   assert.equal(used, true)
   assert.equal(ducks[1]!.lateralVelocity, 0)

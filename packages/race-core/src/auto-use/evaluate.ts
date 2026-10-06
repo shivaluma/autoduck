@@ -9,6 +9,8 @@ import { AUTO_USE_CONFIG } from './config'
 import type { AutoUseCandidate, AutoUseCandidateDraft, RaceObjectiveContext } from './types'
 import { NEUTRAL_TRAITS, grudgeWeight, type AiIntent, type DuckBrain, type TemperamentTraits } from './brain'
 import { DIRECTOR_CONFIG, readRace } from './director'
+import { defaultHornSide, hornSideTargets, type HornSide } from '../items/aim'
+import { wildHornReach } from '../pickups/engine'
 
 export interface EvaluationContext {
   tick: number
@@ -138,6 +140,70 @@ function estimateDrop(ctx: EvaluationContext, target: ItemDuckState, slowDistanc
     if (other.progress < target.progress && target.progress - other.progress <= slowDistance) drop++
   }
   return drop
+}
+
+export interface BananaAimPlan {
+  /** Lane to toss the peel onto. */
+  aimLateral: number
+  /** 0..100: best chaser's chance of running into it (comparable to bananaIntersectionScore). */
+  intersection: number
+  targetId: string | null
+  teammateAtRisk: boolean
+}
+
+/**
+ * Aims a banana: predicts each chaser's lane when it reaches the peel, discounts chasers that have time
+ * to dodge or a defence that would turn the hit into their guard surge, values hits by Chaos utility,
+ * and tosses the peel (within `maxOffset`) onto the lane with the best expected payoff.
+ */
+export function planBananaAim(ctx: EvaluationContext, duck: ItemDuckState, maxOffset: number, dropBehind: number, hitRadius: number, slowDistance: number): BananaAimPlan {
+  const trap = Math.max(0, duck.progress - dropBehind)
+  const chasers = activeDucks(ctx.ducks)
+    .filter((target) => target.playerId !== duck.playerId && !ctx.ghostPlayerIds?.has(target.playerId) && target.progress < trap && trap - target.progress <= 0.12)
+    .map((target) => {
+      const runtime = ctx.itemState.byPlayer.get(target.playerId)!
+      const seconds = Math.max(0.05, (trap - target.progress) / (baseSpeed() * Math.max(0.3, itemSpeedMultiplier(runtime, ctx.tick))))
+      // The lane AI only steers around peels it sees shortly ahead, on its next impulse (0.5-1.1s).
+      const dodge = seconds < 0.55 ? 1 : seconds < 1.1 ? 0.65 : 0.4
+      const teammate = ctx.objective.isTeammate(duck.playerId, target.playerId)
+      const defended = (runtime.bubbleAvailable && ctx.tick < runtime.bubbleUntilTick) || runtime.featherAvailable
+        || (runtime.wildBubbleAvailable && ctx.tick < runtime.wildBubbleUntilTick) || (runtime.wildFeatherAvailable && ctx.tick < runtime.wildFeatherUntilTick)
+      const value = teammate ? -2 : defended ? -0.3
+        : 1 + clamp(chaosTargetValue(ctx, target, estimateDrop(ctx, target, slowDistance)) / 40, -0.5, 1.5) + socialTargetBonus(ctx, target).bonus / 20
+      return { target, predicted: predictLateral(target, Math.min(seconds, 1)), dodge, teammate, value }
+    })
+  const hitFraction = (lane: number, predicted: number) => Math.max(0, 1 - Math.abs(lane - predicted) / hitRadius)
+  let best = { aimLateral: duck.lateralOffset, total: -Infinity }
+  for (let step = -4; step <= 4; step++) {
+    const lane = Math.max(-0.95, Math.min(0.95, duck.lateralOffset + (maxOffset * step) / 4))
+    let total = 0
+    for (const chaser of chasers) total += chaser.value * chaser.dodge * hitFraction(lane, chaser.predicted)
+    if (total > best.total + 1e-9 || (Math.abs(total - best.total) <= 1e-9 && Math.abs(lane - duck.lateralOffset) < Math.abs(best.aimLateral - duck.lateralOffset))) best = { aimLateral: lane, total }
+  }
+  let intersection = 0
+  let targetId: string | null = null
+  let teammateAtRisk = false
+  for (const chaser of chasers) {
+    const chance = chaser.dodge * hitFraction(best.aimLateral, chaser.predicted)
+    if (chaser.teammate) { if (chance > 0) teammateAtRisk = true; continue }
+    if (chaser.value > 0 && chance * 100 > intersection) { intersection = chance * 100; targetId = chaser.target.playerId }
+  }
+  return { aimLateral: best.aimLateral, intersection, targetId, teammateAtRisk }
+}
+
+/** Would a sideways shove of `distance` toward `side` put `target` onto a live peel or hazard just ahead of it? */
+function shovesIntoTrap(ctx: EvaluationContext, target: ItemDuckState, side: HornSide, distance: number) {
+  const landing = Math.max(-0.95, Math.min(0.95, target.lateralOffset + side * distance))
+  const ahead = (progress: number) => progress > target.progress && progress - target.progress < 0.04
+  for (const banana of ctx.itemState.bananas) {
+    if (banana.sourcePlayerId === target.playerId || !ahead(banana.progress)) continue
+    if (Math.abs(landing - banana.lateralOffset) <= banana.hitLateralRadius && Math.abs(target.lateralOffset - banana.lateralOffset) > banana.hitLateralRadius) return true
+  }
+  for (const hazard of ctx.pickupState.hazards ?? []) {
+    if (hazard.hitPlayerIds.has(target.playerId) || !ahead(hazard.progress)) continue
+    if (Math.abs(landing - hazard.lateralOffset) <= hazard.radius && Math.abs(target.lateralOffset - hazard.lateralOffset) > hazard.radius) return true
+  }
+  return false
 }
 
 /** Chaos utility of knocking `target` back `drop` places (and climbing `selfGain`), ≈ -100..100. */
@@ -598,20 +664,29 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
         && !ctx.objective.isTeammate(duck.playerId, target.playerId)
         && !ctx.ghostPlayerIds?.has(target.playerId),
     )
-    for (const target of enemies) {
-      if (target.progress >= duck.progress) continue
-      bestIntersection = Math.max(bestIntersection, bananaIntersectionScore(duck, target, AUTO_USE_CONFIG.bananaPredictionHorizonSeconds))
+    let teammateAtRisk: boolean
+    let aim: BananaAimPlan | null = null
+    if (brainOf(ctx)) {
+      const bananaSlow = ((1 - ITEM_BALANCE.banana.staggerMultiplier) * ITEM_BALANCE.banana.staggerDurationSeconds
+        + (1 - ITEM_BALANCE.banana.recoverySlowMultiplier) * ITEM_BALANCE.banana.recoveryDurationSeconds) * baseSpeed()
+      aim = planBananaAim(ctx, duck, ITEM_BALANCE.banana.aimMaxOffset, ITEM_BALANCE.banana.dropBehindProgress, ITEM_BALANCE.banana.hitLateralRadius, bananaSlow)
+      bestIntersection = aim.intersection
+      teammateAtRisk = aim.teammateAtRisk
+    } else {
+      for (const target of enemies) {
+        if (target.progress >= duck.progress) continue
+        bestIntersection = Math.max(bestIntersection, bananaIntersectionScore(duck, target, AUTO_USE_CONFIG.bananaPredictionHorizonSeconds))
+      }
+      teammateAtRisk = activeDucks(ctx.ducks).some(
+        (target) => target.playerId !== duck.playerId
+          && ctx.objective.isTeammate(duck.playerId, target.playerId)
+          && target.progress < duck.progress
+          && (
+            bananaIntersectionScore(duck, target, AUTO_USE_CONFIG.bananaPredictionHorizonSeconds) > 0
+            || (duck.progress - target.progress < 0.08 && Math.abs(target.lateralOffset - duck.lateralOffset) <= ITEM_BALANCE.banana.hitLateralRadius * 1.5)
+          ),
+      )
     }
-
-    const teammateAtRisk = activeDucks(ctx.ducks).some(
-      (target) => target.playerId !== duck.playerId
-        && ctx.objective.isTeammate(duck.playerId, target.playerId)
-        && target.progress < duck.progress
-        && (
-          bananaIntersectionScore(duck, target, AUTO_USE_CONFIG.bananaPredictionHorizonSeconds) > 0
-          || (duck.progress - target.progress < 0.08 && Math.abs(target.lateralOffset - duck.lateralOffset) <= ITEM_BALANCE.banana.hitLateralRadius * 1.5)
-        ),
-    )
 
     if (!teammateAtRisk) {
       score += bestIntersection * 0.55
@@ -629,7 +704,12 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
       if (hasUnusedOffensiveMajor(runtime) && chaser) score += 28
       if (hasUnusedOffensiveMajor(runtime) && duck.currentRank >= 4 && chaser) score += 20
       if (bestIntersection > 20 || score >= 24) {
-        candidates.push({ itemKey: 'prep:BANANA', itemId: 'BANANA', source: 'PREP', action: 'USE', score, reason: 'OPPORTUNITY' })
+        candidates.push({
+          itemKey: 'prep:BANANA', itemId: 'BANANA', source: 'PREP', action: 'USE', score, reason: 'OPPORTUNITY',
+          aimLateral: aim?.aimLateral,
+          targetPlayerId: aim?.targetId ?? undefined,
+          intent: aim?.targetId && bestIntersection >= 50 ? 'TRAP_SET' : undefined,
+        })
       }
     }
   }
@@ -638,92 +718,102 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
     ? Math.max(0.15, ITEM_BALANCE.horn.armProgress - 0.03)
     : ITEM_BALANCE.horn.armProgress
   if (hasUnusedPrep(runtime, 'QUACK_HORN') && duck.progress >= hornArmProgress) {
-    let hornIntent: AiIntent | undefined
-    let netValue = 0
-    let targetsCount = 0
-    let hasTeammateInRadius = false
+    const { progressRadius, sideReach, centerBand } = ITEM_BALANCE.horn
+    const isGhost = (target: ItemDuckState) => Boolean(ctx.ghostPlayerIds?.has(target.playerId))
+    // A brain picks the better side; a legacy brain scores the side it would blast by default.
+    const sides: HornSide[] = brainOf(ctx)
+      ? [-1, 1]
+      : [defaultHornSide(duck, activeDucks(ctx.ducks), progressRadius, sideReach, centerBand, isGhost)]
+    let best: { side: HornSide; netValue: number; targetsCount: number; intent: AiIntent | undefined } | null = null
 
-    for (const target of activeDucks(ctx.ducks)) {
-      if (target.playerId === duck.playerId || ctx.ghostPlayerIds?.has(target.playerId)) continue
-      if (Math.abs(target.progress - duck.progress) > ITEM_BALANCE.horn.progressRadius) continue
-      if (Math.abs(target.lateralOffset - duck.lateralOffset) > ITEM_BALANCE.horn.lateralRadius) continue
-      
-      const isTeammate = ctx.objective.isTeammate(duck.playerId, target.playerId)
-      if (isTeammate) {
-        hasTeammateInRadius = true
-        break
-      }
+    for (const side of sides) {
+      let hornIntent: AiIntent | undefined
+      let netValue = 0
+      let targetsCount = 0
+      let hasTeammateInRadius = false
 
-      const targetRuntime = ctx.itemState.byPlayer.get(target.playerId)
-      // Bubble / Feather stop the horn and hand the target a guard surge.
-      const bubbleReady = targetRuntime && targetRuntime.bubbleAvailable && ctx.tick < targetRuntime.bubbleUntilTick
-      if (targetRuntime && (bubbleReady || targetRuntime.featherAvailable)) {
-        netValue -= 12
-        continue
-      }
-      targetsCount += 1
-      const impact = ITEM_BALANCE.horn.lateralPush
+      for (const target of hornSideTargets(duck, activeDucks(ctx.ducks), side, progressRadius, sideReach, centerBand, isGhost)) {
+        if (ctx.objective.isTeammate(duck.playerId, target.playerId)) {
+          hasTeammateInRadius = true
+          break
+        }
 
-      if (target.currentRank < duck.currentRank) {
-        netValue += impact * 18
-      } else {
-        netValue += impact * 10
-      }
-      const hornChaos = chaosTargetValue(ctx, target, estimateDrop(ctx, target, 0.006))
-      // Horn hits several ducks at once: keep its Chaos/social pull small or it becomes a precision steal.
-      netValue += clamp(hornChaos * 0.15, -4, 6)
-      const hornSocial = socialTargetBonus(ctx, target)
-      netValue += hornSocial.bonus * 0.2
-      if (hornSocial.intent && !hornIntent) hornIntent = hornSocial.intent
+        const targetRuntime = ctx.itemState.byPlayer.get(target.playerId)
+        // Bubble / Feather stop the horn and hand the target a guard surge.
+        const bubbleReady = targetRuntime && targetRuntime.bubbleAvailable && ctx.tick < targetRuntime.bubbleUntilTick
+        if (targetRuntime && (bubbleReady || targetRuntime.featherAvailable)) {
+          netValue -= 12
+          continue
+        }
+        targetsCount += 1
+        const impact = ITEM_BALANCE.horn.lateralPush
 
-      // Horn breaks active speed-item boosts and steals speed ducks' momentum (Shock Absorber only softens it).
-      if (targetRuntime && !targetRuntime.shockAbsorberAvailable && ctx.tick < targetRuntime.boostUntilTick && targetRuntime.boostMultiplier > 1 && targetRuntime.activeSpeedItemId) {
-        netValue += 20
-      }
-      if (targetRuntime && carriesSpeedMomentum(targetRuntime, ctx.tick)) {
-        netValue += AUTO_USE_CONFIG.momentumStealValue * 0.5
-      }
+        if (target.currentRank < duck.currentRank) {
+          netValue += impact * 18
+        } else {
+          netValue += impact * 10
+        }
+        const hornChaos = chaosTargetValue(ctx, target, estimateDrop(ctx, target, 0.006))
+        // Horn hits several ducks at once: keep its Chaos/social pull small or it becomes a precision steal.
+        netValue += clamp(hornChaos * 0.15, -4, 6)
+        const hornSocial = socialTargetBonus(ctx, target)
+        netValue += hornSocial.bonus * 0.2
+        if (hornSocial.intent && !hornIntent) hornIntent = hornSocial.intent
+        // Shoving a duck into a waiting peel or hazard is worth a lot more than a plain shove.
+        if (brainOf(ctx) && shovesIntoTrap(ctx, target, side, ITEM_BALANCE.horn.lateralShove + ITEM_BALANCE.horn.lateralPush * 0.25)) {
+          netValue += AUTO_USE_CONFIG.brain.shoveIntoTrapValue
+          hornIntent = 'SHOVE'
+        }
 
-      // Destroy target's drafting slipstream charge
-      if (targetRuntime && targetRuntime.draftSlipstreamTicks > 10) {
-        netValue += 10
-      }
+        // Horn breaks active speed-item boosts and steals speed ducks' momentum (Shock Absorber only softens it).
+        if (targetRuntime && !targetRuntime.shockAbsorberAvailable && ctx.tick < targetRuntime.boostUntilTick && targetRuntime.boostMultiplier > 1 && targetRuntime.activeSpeedItemId) {
+          netValue += 20
+        }
+        if (targetRuntime && carriesSpeedMomentum(targetRuntime, ctx.tick)) {
+          netValue += AUTO_USE_CONFIG.momentumStealValue * 0.5
+        }
 
-      // Silence lockout value: suppress enemies with unspent prep items
-      if (targetRuntime && ctx.tick >= (targetRuntime.silenceImmuneUntilTick ?? 0) && ctx.tick >= targetRuntime.silencedUntilTick && targetRuntime.itemIds.some((id) => !targetRuntime.usedItems.has(id))) {
-        netValue += 8 * ITEM_BALANCE.horn.silenceDurationSeconds / 2.5
-      }
-    }
+        // Destroy target's drafting slipstream charge
+        if (targetRuntime && targetRuntime.draftSlipstreamTicks > 10) {
+          netValue += 10
+        }
 
-    if (!hasTeammateInRadius) {
+        // Silence lockout value: suppress enemies with unspent prep items
+        if (targetRuntime && ctx.tick >= (targetRuntime.silenceImmuneUntilTick ?? 0) && ctx.tick >= targetRuntime.silencedUntilTick && targetRuntime.itemIds.some((id) => !targetRuntime.usedItems.has(id))) {
+          netValue += 8 * ITEM_BALANCE.horn.silenceDurationSeconds / 2.5
+        }
+      }
+      if (hasTeammateInRadius || targetsCount === 0) continue
+
       // Multi-target pack disruption bonus
       if (targetsCount >= 2) {
         netValue += 12 * (targetsCount - 1)
       }
 
       // MENACE synergy rewards hitting a target with Predator Rush.
-      if (runtime.loadoutCombo === 'MENACE' && targetsCount > 0) {
+      if (runtime.loadoutCombo === 'MENACE') {
         netValue += 14
         if (duck.currentRank >= 2) netValue += 6
       }
 
       if (hasUnusedOffensiveMajor(runtime) && netValue > 0) netValue += 6
       if (duck.currentRank >= 3 && netValue > 0) netValue += 3
+      if (!best || netValue > best.netValue) best = { side, netValue, targetsCount, intent: hornIntent }
+    }
 
-      const isLateSprint = duck.progress >= ITEM_BALANCE.autoUse.endGameBurnProgress
-      const minThreshold = isLateSprint ? 4 : (duck.progress >= ITEM_BALANCE.horn.fallbackProgress ? 5 : 7)
-
-      if (targetsCount > 0 && netValue >= minThreshold) {
-        candidates.push({
-          itemKey: 'prep:QUACK_HORN',
-          itemId: 'QUACK_HORN',
-          source: 'PREP',
-          action: 'USE',
-          score: clamp(netValue, 0, 100) + endGameBurnScore(duck.progress, 'PREP') + pressure * 0.05,
-          reason: 'OPPORTUNITY',
-          intent: hornIntent,
-        })
-      }
+    const isLateSprint = duck.progress >= ITEM_BALANCE.autoUse.endGameBurnProgress
+    const minThreshold = isLateSprint ? 4 : (duck.progress >= ITEM_BALANCE.horn.fallbackProgress ? 5 : 7)
+    if (best && best.netValue >= minThreshold) {
+      candidates.push({
+        itemKey: 'prep:QUACK_HORN',
+        itemId: 'QUACK_HORN',
+        source: 'PREP',
+        action: 'USE',
+        score: clamp(best.netValue, 0, 100) + endGameBurnScore(duck.progress, 'PREP') + pressure * 0.05,
+        reason: 'OPPORTUNITY',
+        intent: best.intent,
+        hornSide: brainOf(ctx) ? best.side : undefined,
+      })
     }
   }
 
@@ -796,25 +886,34 @@ export function evaluateWildCandidates(ctx: EvaluationContext): AutoUseCandidate
   if (itemId === 'BANANA') {
     let score = endGameBurnScore(duck.progress, 'WILD')
     let bestIntersection = 0
-    const enemies = activeDucks(ctx.ducks).filter(
-      (target) => target.playerId !== duck.playerId
-        && !ctx.objective.isTeammate(duck.playerId, target.playerId)
-        && !ctx.ghostPlayerIds?.has(target.playerId),
-    )
-    for (const target of enemies) {
-      if (target.progress >= duck.progress) continue
-      bestIntersection = Math.max(bestIntersection, bananaIntersectionScore(duck, target, AUTO_USE_CONFIG.bananaPredictionHorizonSeconds))
+    let teammateAtRisk: boolean
+    let aim: BananaAimPlan | null = null
+    if (brainOf(ctx)) {
+      const bananaSlow = ((1 - PICKUP_BALANCE.banana.staggerMultiplier) * PICKUP_BALANCE.banana.staggerDurationSeconds
+        + (1 - PICKUP_BALANCE.banana.recoverySlowMultiplier) * PICKUP_BALANCE.banana.recoveryDurationSeconds) * baseSpeed()
+      aim = planBananaAim(ctx, duck, PICKUP_BALANCE.banana.aimMaxOffset, PICKUP_BALANCE.banana.dropBehindProgress, PICKUP_BALANCE.banana.hitLateralRadius, bananaSlow)
+      bestIntersection = aim.intersection
+      teammateAtRisk = aim.teammateAtRisk
+    } else {
+      const enemies = activeDucks(ctx.ducks).filter(
+        (target) => target.playerId !== duck.playerId
+          && !ctx.objective.isTeammate(duck.playerId, target.playerId)
+          && !ctx.ghostPlayerIds?.has(target.playerId),
+      )
+      for (const target of enemies) {
+        if (target.progress >= duck.progress) continue
+        bestIntersection = Math.max(bestIntersection, bananaIntersectionScore(duck, target, AUTO_USE_CONFIG.bananaPredictionHorizonSeconds))
+      }
+      teammateAtRisk = activeDucks(ctx.ducks).some(
+        (target) => target.playerId !== duck.playerId
+          && ctx.objective.isTeammate(duck.playerId, target.playerId)
+          && target.progress < duck.progress
+          && (
+            bananaIntersectionScore(duck, target, AUTO_USE_CONFIG.bananaPredictionHorizonSeconds) > 0
+            || (duck.progress - target.progress < 0.08 && Math.abs(target.lateralOffset - duck.lateralOffset) <= PICKUP_BALANCE.banana.hitLateralRadius * 1.5)
+          ),
+      )
     }
-
-    const teammateAtRisk = activeDucks(ctx.ducks).some(
-      (target) => target.playerId !== duck.playerId
-        && ctx.objective.isTeammate(duck.playerId, target.playerId)
-        && target.progress < duck.progress
-        && (
-          bananaIntersectionScore(duck, target, AUTO_USE_CONFIG.bananaPredictionHorizonSeconds) > 0
-          || (duck.progress - target.progress < 0.08 && Math.abs(target.lateralOffset - duck.lateralOffset) <= PICKUP_BALANCE.banana.hitLateralRadius * 1.5)
-        ),
-    )
 
     if (!teammateAtRisk && (bestIntersection > 0 || duck.progress >= AUTO_USE_CONFIG.progressLate || danger > 45)) {
       score += bestIntersection * 0.4 + pressure * 0.35
@@ -829,6 +928,8 @@ export function evaluateWildCandidates(ctx: EvaluationContext): AutoUseCandidate
           score,
           reason: pressure > 0 ? 'INVENTORY_PRESSURE' : 'OPPORTUNITY',
           wildItemInstanceId: wild.instanceId,
+          aimLateral: aim?.aimLateral,
+          intent: aim?.targetId && bestIntersection >= 50 ? 'TRAP_SET' : undefined,
         })
       }
     } else if (teammateAtRisk && (pressure >= 20 || duck.progress >= PICKUP_BALANCE.autoUse.forceBurnProgress)) {
@@ -887,58 +988,64 @@ export function evaluateWildCandidates(ctx: EvaluationContext): AutoUseCandidate
   }
 
   if (itemId === 'QUACK_HORN') {
-    let netValue = 0
-    let targetsCount = 0
-    let hasTeammateInRadius = false
+    const { progressRadius, sideReach, centerBand } = wildHornReach(duck)
+    const isGhost = (target: ItemDuckState) => Boolean(ctx.ghostPlayerIds?.has(target.playerId))
+    const sides: HornSide[] = brainOf(ctx)
+      ? [-1, 1]
+      : [defaultHornSide(duck, activeDucks(ctx.ducks), progressRadius, sideReach, centerBand, isGhost)]
+    let best: { side: HornSide; netValue: number; targetsCount: number; shove: boolean } | null = null
+    let teammateBlocked = false
 
-    for (const target of activeDucks(ctx.ducks)) {
-      if (target.playerId === duck.playerId || ctx.ghostPlayerIds?.has(target.playerId)) continue
-      if (Math.abs(target.progress - duck.progress) > PICKUP_BALANCE.horn.progressRadius * 1.4) continue
-      if (Math.abs(target.lateralOffset - duck.lateralOffset) > PICKUP_BALANCE.horn.lateralRadius * 1.4) continue
-      
-      const isTeammate = ctx.objective.isTeammate(duck.playerId, target.playerId)
-      if (isTeammate) {
-        hasTeammateInRadius = true
-        break
+    for (const side of sides) {
+      let netValue = 0
+      let targetsCount = 0
+      let hasTeammateInRadius = false
+      let shove = false
+      for (const target of hornSideTargets(duck, activeDucks(ctx.ducks), side, progressRadius, sideReach, centerBand, isGhost)) {
+        if (ctx.objective.isTeammate(duck.playerId, target.playerId)) {
+          hasTeammateInRadius = true
+          break
+        }
+        const targetRuntime = ctx.itemState.byPlayer.get(target.playerId)
+        if (targetRuntime && ((targetRuntime.bubbleAvailable && ctx.tick < targetRuntime.bubbleUntilTick) || (targetRuntime.wildBubbleAvailable && ctx.tick < targetRuntime.wildBubbleUntilTick))) {
+          netValue -= 8
+          continue
+        }
+        targetsCount += 1
+        const impact = PICKUP_BALANCE.horn.lateralPush
+        netValue += target.currentRank < duck.currentRank ? impact * 18 : impact * 8
+        netValue += clamp(chaosTargetValue(ctx, target, estimateDrop(ctx, target, 0.005)) * 0.15, -4, 6)
+        netValue += socialTargetBonus(ctx, target).bonus * 0.2
+        if (brainOf(ctx) && shovesIntoTrap(ctx, target, side, PICKUP_BALANCE.horn.lateralShove + PICKUP_BALANCE.horn.lateralPush * 0.25)) {
+          netValue += AUTO_USE_CONFIG.brain.shoveIntoTrapValue
+          shove = true
+        }
+        if (targetRuntime && ctx.tick < targetRuntime.boostUntilTick && targetRuntime.boostMultiplier > 1 && targetRuntime.activeSpeedItemId !== 'NITRO') {
+          netValue += 16
+        }
+        if (targetRuntime && targetRuntime.draftSlipstreamTicks > 10) {
+          netValue += 10
+        }
       }
-
-      targetsCount += 1
-      const impact = PICKUP_BALANCE.horn.lateralPush
-      const targetRuntime = ctx.itemState.byPlayer.get(target.playerId)
-
-      if (target.currentRank < duck.currentRank) {
-        netValue += impact * 18
-      } else {
-        netValue += impact * 8
-      }
-      netValue += clamp(chaosTargetValue(ctx, target, estimateDrop(ctx, target, 0.005)) * 0.15, -4, 6)
-      netValue += socialTargetBonus(ctx, target).bonus * 0.2
-
-      if (targetRuntime && ctx.tick < targetRuntime.boostUntilTick && targetRuntime.boostMultiplier > 1 && targetRuntime.activeSpeedItemId !== 'NITRO') {
-        netValue += 16
-      }
-      if (targetRuntime && targetRuntime.draftSlipstreamTicks > 10) {
-        netValue += 10
-      }
+      if (hasTeammateInRadius) { teammateBlocked = true; continue }
+      if (targetsCount === 0) continue
+      if (targetsCount >= 2) netValue += 10 * (targetsCount - 1)
+      if (!best || netValue > best.netValue) best = { side, netValue, targetsCount, shove }
     }
 
-    if (!hasTeammateInRadius) {
-      if (targetsCount >= 2) {
-        netValue += 10 * (targetsCount - 1)
-      }
-
-      if (targetsCount > 0 && netValue + pressure * 0.1 >= 8) {
-        candidates.push({
-          itemKey: `wild:${wild.instanceId}`,
-          itemId,
-          source: 'WILD',
-          action: 'USE',
-          score: clamp(netValue, 0, 100) + endGameBurnScore(duck.progress, 'WILD') + pressure * 0.1,
-          reason: 'OPPORTUNITY',
-          wildItemInstanceId: wild.instanceId,
-        })
-      }
-    } else if (hasTeammateInRadius && (pressure >= 20 || duck.progress >= PICKUP_BALANCE.autoUse.forceBurnProgress)) {
+    if (best && best.netValue + pressure * 0.1 >= 8) {
+      candidates.push({
+        itemKey: `wild:${wild.instanceId}`,
+        itemId,
+        source: 'WILD',
+        action: 'USE',
+        score: clamp(best.netValue, 0, 100) + endGameBurnScore(duck.progress, 'WILD') + pressure * 0.1,
+        reason: 'OPPORTUNITY',
+        wildItemInstanceId: wild.instanceId,
+        hornSide: brainOf(ctx) ? best.side : undefined,
+        intent: best.shove ? 'SHOVE' : undefined,
+      })
+    } else if (!best && teammateBlocked && (pressure >= 20 || duck.progress >= PICKUP_BALANCE.autoUse.forceBurnProgress)) {
       candidates.push({
         itemKey: `wild:${wild.instanceId}:discard`,
         itemId,
@@ -1053,6 +1160,9 @@ export function revalidatePendingAction(ctx: EvaluationContext, pending: AutoUse
     ...evaluateWildCandidates(ctx),
   ].find((candidate) => candidate.itemKey === pending.itemKey && candidate.action === pending.action)
   if (!fresh) return false
+  // Re-aim with the fresh read: the duck kept moving during its reaction delay.
+  pending.aimLateral = fresh.aimLateral
+  pending.hornSide = fresh.hornSide
   if (pending.itemId === 'HOMING_ROCKET' || pending.itemId === 'MINI_ROCKET') {
     const kind = pending.itemId === 'HOMING_ROCKET' ? 'PREP' : 'WILD'
     const resolvedTarget = resolveRocketTarget(ctx, kind, pending.targetPlayerId)

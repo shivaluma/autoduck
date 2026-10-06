@@ -22,6 +22,8 @@ const INTENT_SHOUTS: Record<string, { label: string; tone: CalloutTone }> = {
   DESPERATE: { label: 'ALL IN!', tone: 'fire' },
   CLUTCH: { label: 'CLUTCH!', tone: 'gold' },
   HOLDING: { label: '…WAIT FOR IT', tone: 'gray' },
+  SHOVE: { label: 'INTO THE TRAP!', tone: 'gold' },
+  TRAP_SET: { label: 'GOTCHA!', tone: 'gold' },
 }
 
 export type PlayerLabel = {

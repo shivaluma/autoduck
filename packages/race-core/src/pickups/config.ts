@@ -35,6 +35,7 @@ export const PICKUP_BALANCE = {
     autoFallbackProgress: 0.70,
   },
   banana: {
+    aimMaxOffset: 0.18,
     lifetimeSeconds: 8,
     dropBehindProgress: 0.012,
     armingSeconds: 0.2,
@@ -57,6 +58,8 @@ export const PICKUP_BALANCE = {
     lateralRadius: 0.42,
     lateralPush: 0.80,
     lateralShove: 0.22,
+    sideReach: 0.5,
+    centerBand: 0.07,
     endGameProgressRadiusMultiplier: 1.6,
   },
   feather: { durationSeconds: 5, autoFallbackProgress: 0.70, endGameProgress: 0.75 },

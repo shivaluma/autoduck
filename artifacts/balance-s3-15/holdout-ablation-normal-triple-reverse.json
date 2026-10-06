@@ -1,0 +1,36 @@
+{
+  "seeds": 1200,
+  "start": 60001,
+  "rows": [
+    {
+      "mode": "NORMAL",
+      "races": 1200,
+      "loserPctBrain": 25.5,
+      "loserPctAblated": 29,
+      "deltaPts": -3.5,
+      "ci95Pts": "[-6.6, -0.4]",
+      "winPctBrain": 11.3,
+      "winPctAblated": 9.8
+    },
+    {
+      "mode": "TRIPLE_ELIMINATION",
+      "races": 1200,
+      "loserPctBrain": 38.3,
+      "loserPctAblated": 41.2,
+      "deltaPts": -2.9,
+      "ci95Pts": "[-6.2, 0.3]",
+      "winPctBrain": 13,
+      "winPctAblated": 9.7
+    },
+    {
+      "mode": "REVERSE",
+      "races": 1200,
+      "loserPctBrain": 24.6,
+      "loserPctAblated": 23.2,
+      "deltaPts": 1.4,
+      "ci95Pts": "[-0.9, 3.7]",
+      "winPctBrain": 12.5,
+      "winPctAblated": 11.4
+    }
+  ]
+}

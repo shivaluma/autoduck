@@ -30,6 +30,10 @@ export function intentCopy(intent: unknown, sourceName: string, targetName: stri
       return { icon: '🆘', title: `${sourceName} liều ăn nhiều!`, description: 'Đang kẹt trong vùng thua ở cuối trận — tung hết bài tẩy.' }
     case 'CLUTCH':
       return { icon: '🎭', title: `${sourceName} tung đòn quyết định!`, description: 'Song đấu sát nút cho ngôi đầu ở chặng cuối.' }
+    case 'SHOVE':
+      return { icon: '📯', title: `${sourceName} húc đối thủ vào bẫy!`, description: 'Thổi còi đúng hướng để đẩy đối thủ thẳng vào vỏ chuối hoặc chướng ngại vật.' }
+    case 'TRAP_SET':
+      return { icon: '🍌', title: `${sourceName} giăng bẫy đón đầu ${targetName}`, description: `Ném vỏ chuối đúng đường bơi của ${targetName} — sát quá không kịp né.` }
     case 'BREAKAWAY':
       return { icon: '💨', title: `${sourceName} bứt phá thoát đoàn`, description: 'Đang dẫn đầu và muốn nới rộng khoảng cách.' }
     default:

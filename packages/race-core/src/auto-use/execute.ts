@@ -4,6 +4,7 @@ import type { AutoUseCandidate } from './types'
 import type { ItemDuckState, ItemRaceState } from '../items/engine'
 import { breakActiveSpeedBoost, firePrepRocket, grantGuardSurge, grantMomentumSteal, slipstreamReady, triggerMenacePredatorRush, tryActivateBubbleShield, tryApplyPrepSpeedBoost } from '../items/engine'
 import { resolveRocketTarget } from './evaluate'
+import { aimedBananaLateral, defaultHornSide, hornSideTargets } from '../items/aim'
 import { buildRaceObjectiveContext } from './objective'
 import { activateWildItem } from '../pickups/engine'
 
@@ -113,13 +114,14 @@ export function executePrepAction(
         if (teammateAtRisk) return false
       }
       const progress = Math.max(0, duck.progress - ITEM_BALANCE.banana.dropBehindProgress)
-      if (itemState.bananas.some((banana) => Math.abs(banana.progress - progress) < ITEM_BALANCE.banana.minimumTrapSpacing && Math.abs(banana.lateralOffset - duck.lateralOffset) < ITEM_BALANCE.banana.hitLateralRadius)) return false
+      const lateralOffset = aimedBananaLateral(duck.lateralOffset, candidate.aimLateral, ITEM_BALANCE.banana.aimMaxOffset)
+      if (itemState.bananas.some((banana) => Math.abs(banana.progress - progress) < ITEM_BALANCE.banana.minimumTrapSpacing && Math.abs(banana.lateralOffset - lateralOffset) < ITEM_BALANCE.banana.hitLateralRadius)) return false
       runtime.usedItems.add('BANANA')
       itemState.bananas.push({
         id: itemState.nextObjectId++,
         sourcePlayerId: duck.playerId,
         progress,
-        lateralOffset: duck.lateralOffset,
+        lateralOffset,
         armedAtTick: tick + Math.round(ITEM_BALANCE.banana.armingSeconds * tickRate),
         expiresAtTick: tick + Math.round(ITEM_BALANCE.banana.lifetimeSeconds * tickRate),
         kind: 'PREP',
@@ -127,15 +129,15 @@ export function executePrepAction(
         hitLateralRadius: ITEM_BALANCE.banana.hitLateralRadius,
         lateralSlip: ITEM_BALANCE.banana.lateralSlip,
       })
-      emit('BANANA_DROPPED', duck.playerId, undefined, { progress, lateralOffset: duck.lateralOffset, autoReason: candidate.reason })
+      emit('BANANA_DROPPED', duck.playerId, undefined, { progress, lateralOffset, aimOffset: lateralOffset - duck.lateralOffset, autoReason: candidate.reason })
       return true
     }
     case 'QUACK_HORN': {
       if (!hasUnused(runtime, 'QUACK_HORN')) return false
-      const nearby = ducks.filter((target) => target.playerId !== duck.playerId && !target.finished
-        && !itemState.ghostPlayerIds.has(target.playerId)
-        && Math.abs(target.progress - duck.progress) <= ITEM_BALANCE.horn.progressRadius
-        && Math.abs(target.lateralOffset - duck.lateralOffset) <= ITEM_BALANCE.horn.lateralRadius)
+      const { progressRadius, sideReach, centerBand } = ITEM_BALANCE.horn
+      const isGhost = (target: ItemDuckState) => itemState.ghostPlayerIds.has(target.playerId)
+      const side = candidate.hornSide ?? defaultHornSide(duck, ducks, progressRadius, sideReach, centerBand, isGhost)
+      const nearby = hornSideTargets(duck, ducks, side, progressRadius, sideReach, centerBand, isGhost)
       if (nearby.length === 0) return false
       const teammates = itemState.teammatesByPlayer?.get(duck.playerId)
       if (teammates && teammates.size > 0 && nearby.some((target) => teammates.has(target.playerId))) {
@@ -193,9 +195,8 @@ export function executePrepAction(
           })
         }
 
-        const direction = target.lateralOffset === duck.lateralOffset
-          ? (target.playerId.localeCompare(duck.playerId) < 0 ? -1 : 1)
-          : Math.sign(target.lateralOffset - duck.lateralOffset)
+        // The blast shoves everything it catches toward the chosen side.
+        const direction = side
         target.lateralVelocity += direction * push
         target.lateralOffset = Math.max(-0.95, Math.min(0.95, target.lateralOffset + direction * shove))
       }
@@ -208,6 +209,7 @@ export function executePrepAction(
         slipstreamChargeDestroyedTicks,
         slipstreamChargeDestroyedSeconds: slipstreamChargeDestroyedTicks / tickRate,
         ducksHit: nearby.length,
+        side,
         silencedSeconds: ITEM_BALANCE.horn.silenceDurationSeconds,
       })
       return true
@@ -247,7 +249,7 @@ export function executeWildAction(
   const result = activateWildItem(
     itemState,
     ducks,
-    { playerId: duck.playerId, wildItemInstanceId: candidate.wildItemInstanceId, targetPlayerId: candidate.targetPlayerId },
+    { playerId: duck.playerId, wildItemInstanceId: candidate.wildItemInstanceId, targetPlayerId: candidate.targetPlayerId, aimLateral: candidate.aimLateral, hornSide: candidate.hornSide },
     tick,
     tickRate,
     'AUTO',

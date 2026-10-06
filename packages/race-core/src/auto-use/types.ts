@@ -25,6 +25,10 @@ export interface AutoUseCandidate {
   wildItemInstanceId?: string
   /** Why the brain wants this (shown as an AI_INTENT event when it fires). */
   intent?: AiIntent
+  /** Banana: lane to toss the peel onto. */
+  aimLateral?: number
+  /** Quack Horn: side to blast. */
+  hornSide?: -1 | 1
 }
 
 export type AutoUseCandidateDraft = Omit<AutoUseCandidate, 'playerId'>
