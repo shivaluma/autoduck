@@ -10,7 +10,7 @@ const CHEST = 'M300 270 C350 268 400 290 410 330 C418 372 380 400 330 404 C300 3
 
 /** Mask = torso minus head (+ its outline), so cloth never covers the chin. */
 function bodyMask(id: string) {
-  return `<mask id="${id}" maskUnits="userSpaceOnUse" x="-40" y="-80" width="620" height="640"><rect x="-40" y="-80" width="620" height="640" fill="#000"/><path d="${DUCK_PATHS.torso}" fill="#fff"/><path d="${DUCK_PATHS.head}" fill="#000" stroke="#000" stroke-width="${MAJOR}"/></mask>`
+  return `<mask id="${id}" maskUnits="userSpaceOnUse" x="-40" y="-80" width="620" height="640"><rect x="-40" y="-80" width="620" height="640" fill="#000"/><path d="${DUCK_PATHS.torso}" fill="#fff"/><path d="${DUCK_PATHS.torsoShadow}" fill="#fff"/><path d="${DUCK_PATHS.head}" fill="#000" stroke="#000" stroke-width="${MAJOR}"/></mask>`
 }
 
 interface Garment {
@@ -31,6 +31,8 @@ function garment({ id, fill, shadow, highlight, sleeve, inner = '', over = '', e
     defs(bodyMask(`${id}-m`), extraDefs),
     `<g mask="url(#${id}-m)">`,
     `<path d="${DUCK_PATHS.torso}" fill="${fill}"/>`,
+    // The base duck's belly shadow bulges below its outline; cloth must cover it too.
+    `<path d="${DUCK_PATHS.torsoShadow}" fill="${fill}"/>`,
     tone(DUCK_PATHS.torsoShadow, shadow ?? dark(base), 0.75),
     tone('M300 236 C360 240 404 270 410 312 C390 280 352 258 300 252 Z', highlight ?? light(base), 0.7),
     inner,
