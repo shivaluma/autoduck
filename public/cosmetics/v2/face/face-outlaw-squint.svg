@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-24 -56 560 560" width="100%" height="100%" fill="none">
+<g id="dso-squint"><clipPath id="dso-lid-l"><path d="M278 138 a42 50 0 1 0 84 0 a42 50 0 1 0 -84 0 Z"/></clipPath><g clip-path="url(#dso-lid-l)"><rect x="270" y="84" width="100" height="44" fill="#4A3A2E"/></g>
+<path d="M280 126 Q320 134 362 124" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<clipPath id="dso-lid-r"><path d="M350 144 a32 42 0 1 0 64 0 a32 42 0 1 0 -64 0 Z"/></clipPath><g clip-path="url(#dso-lid-r)"><rect x="345" y="98" width="74" height="38" fill="#4A3A2E"/></g>
+<path d="M352 134 Q382 140 412 132" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="330" cy="152" r="4" fill="#FDE047"><animate attributeName="opacity" values="0.3;1;0.3" dur="1.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/></circle>
+<circle cx="390" cy="156" r="3" fill="#FDE047"><animate attributeName="opacity" values="0.3;1;0.3" dur="1.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" begin="0.3s"/></circle>
+<path d="M296 92 L312 112 M300 104 l8 -4" fill="none" stroke="#B45309" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M350 238 L300 252" fill="none" stroke="#1B132B" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M350 238 L300 252" fill="none" stroke="#F5D7A1" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="298" cy="252" r="6" fill="#DC2626" stroke="#1B132B" stroke-width="3"/>
+<g filter="url(#dso-match-glow)"><g transform="translate(296 246)"><g><animateTransform attributeName="transform" type="scale" values="1 1;0.86 1.18;1.08 0.9;1 1" dur="0.5s" begin="0s" repeatCount="indefinite"/><g transform="translate(-296 -246)"><path d="M296 246 C286.76 239.4 293.228 230.6 296 224 C298.772 230.6 305.24 239.4 296 246 Z" fill="#F97316"/><path d="M296 246 C291.38 240.5 294.614 235 296 231.04 C297.386 235 300.62 240.5 296 246 Z" fill="#FDE047"/></g></g></g></g>
+<defs><filter id="dso-match-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs></g>
+</svg>

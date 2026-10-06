@@ -112,3 +112,19 @@ Starter grants are unchanged. Every ID in `STARTER_COSMETIC_IDS` survives.
 5. **Validation**: every ID has art and vice versa, every slot covers all 5 rarities, recolor-duplicate guard, previews exist.
 6. **QA**: `/dev/cosmetics` and the contact sheet re-rendered. Dev pages, `render-*` scripts and Phaser presets updated to v2 IDs.
 7. **Order**: rig + closet + Nón (quality bar) → Màu, Mặt, Áo → Skin, Pet → Aura, Trail → migration + cleanup.
+
+## 6. Themed collections (2026-10-06)
+
+Five original duck collections, inspired by popular game skin-line vibes. They use no third-party names or likenesses. Each collection has 7 items: Màu, Mặt and Trail (rare), Nón, Pet and Aura (epic), and Áo (legendary).
+
+| Collection | Vibe |
+|---|---|
+| Sakura Spirit (Hoa Anh Linh) | Japanese spirit fantasy: sakura, kitsune, torii, indigo night |
+| Starlight Squad (Vệ Binh Sao) | Magical-girl team: pastel stars, ribbons, wands |
+| Neon Protocol | Red/black chrome cyberpunk |
+| Idol Pop (Thần Tượng) | Pop-idol stage: holographic, mic, spotlights |
+| Dusk Outlaw (Cao Bồi Hoàng Hôn) | Dark western: hellfire, halos, sulfur |
+
+- Catalog entries live in `lib/cosmetics/sets/<set>.ts` and art in `scripts/cosmetics/art/sets/<set>.ts`; the generator merges set art per slot.
+- SVG element ids are namespaced per set.
+- Preview a single set with `pnpm exec tsx tmp/qa/render-set.ts <set> out.png` (QA helper, not committed).

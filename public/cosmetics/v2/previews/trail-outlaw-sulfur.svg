@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-24 150 380 380" width="100%" height="100%" fill="none">
+<g transform="translate(84 430) scale(1.35) translate(-84 -430)"><g id="dso-sulfur"><defs><radialGradient id="dso-smoke" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FDBA74" stop-opacity="0.85"/><stop offset="0.45" stop-color="#9333EA" stop-opacity="0.7"/><stop offset="1" stop-color="#2A2233" stop-opacity="0"/></radialGradient></defs>
+<circle cx="78" cy="404" r="40" fill="url(#dso-smoke)"><animate attributeName="r" values="28;52;28" dur="2.4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" begin="0s"/><animateTransform attributeName="transform" type="translate" values="0 0; -10 -8; 0 0" dur="2.4s" repeatCount="indefinite" additive="sum" begin="0s"/></circle>
+<circle cx="36" cy="384" r="34" fill="url(#dso-smoke)"><animate attributeName="r" values="23.799999999999997;44.2;23.799999999999997" dur="2.4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" begin="0.8s"/><animateTransform attributeName="transform" type="translate" values="0 0; -10 -8; 0 0" dur="2.4s" repeatCount="indefinite" additive="sum" begin="0.8s"/></circle>
+<circle cx="-4" cy="364" r="28" fill="url(#dso-smoke)"><animate attributeName="r" values="19.599999999999998;36.4;19.599999999999998" dur="2.4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" begin="1.6s"/><animateTransform attributeName="transform" type="translate" values="0 0; -10 -8; 0 0" dur="2.4s" repeatCount="indefinite" additive="sum" begin="1.6s"/></circle>
+<circle cx="-36" cy="346" r="22" fill="url(#dso-smoke)"><animate attributeName="r" values="15.399999999999999;28.6;15.399999999999999" dur="2.4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" begin="2.2s"/><animateTransform attributeName="transform" type="translate" values="0 0; -10 -8; 0 0" dur="2.4s" repeatCount="indefinite" additive="sum" begin="2.2s"/></circle>
+<path d="M110 434 C70 424 20 428 -20 438 C20 444 70 446 110 440 Z" fill="#3A2A20" opacity="0.45"/>
+<g filter="url(#dso-ember-glow)"><g><circle cx="71.5" cy="422.2" r="3.4" fill="#FDE047"/><animateTransform attributeName="transform" type="translate" values="0 0;-12.2 -60" dur="1.98s" begin="-1.40s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.2;0.7;1" dur="1.98s" begin="-1.40s" repeatCount="indefinite"/></g><g><circle cx="50.5" cy="410.7" r="3.4" fill="#F97316"/><animateTransform attributeName="transform" type="translate" values="0 0;-2.6 -60" dur="1.97s" begin="-1.01s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.2;0.7;1" dur="1.97s" begin="-1.01s" repeatCount="indefinite"/></g><g><circle cx="52.3" cy="389.8" r="3.5" fill="#F87171"/><animateTransform attributeName="transform" type="translate" values="0 0;-3.4 -60" dur="2.04s" begin="-0.33s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.2;0.7;1" dur="2.04s" begin="-0.33s" repeatCount="indefinite"/></g><g><circle cx="-3.0" cy="388.9" r="3.2" fill="#FDE047"/><animateTransform attributeName="transform" type="translate" values="0 0;22.2 -60" dur="1.88s" begin="-0.28s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.2;0.7;1" dur="1.88s" begin="-0.28s" repeatCount="indefinite"/></g><g><circle cx="106.1" cy="427.9" r="2.3" fill="#F97316"/><animateTransform attributeName="transform" type="translate" values="0 0;-28.2 -60" dur="1.49s" begin="-1.19s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.2;0.7;1" dur="1.49s" begin="-1.19s" repeatCount="indefinite"/></g><g><circle cx="3.0" cy="438.3" r="3.7" fill="#F87171"/><animateTransform attributeName="transform" type="translate" values="0 0;19.4 -60" dur="2.09s" begin="-2.03s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.2;0.7;1" dur="2.09s" begin="-2.03s" repeatCount="indefinite"/></g><g><circle cx="106.5" cy="402.9" r="3.9" fill="#FDE047"/><animateTransform attributeName="transform" type="translate" values="0 0;-28.4 -60" dur="2.22s" begin="-0.85s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.2;0.7;1" dur="2.22s" begin="-0.85s" repeatCount="indefinite"/></g><g><circle cx="-7.9" cy="400.3" r="2.6" fill="#F97316"/><animateTransform attributeName="transform" type="translate" values="0 0;24.4 -60" dur="1.63s" begin="-0.55s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.2;0.7;1" dur="1.63s" begin="-0.55s" repeatCount="indefinite"/></g></g>
+<defs><filter id="dso-ember-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs></g></g><ellipse cx="252" cy="436" rx="170" ry="30" fill="#100A20" opacity="0.28"/><!-- Base Duck Body -->
+  <!-- Feet -->
+  <path d="M178 402 c2 18 -8 30 -30 40 c24 6 48 0 64 -18" fill="none" stroke="#FF9B42" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M178 402 c2 18 -8 30 -30 40 c24 6 48 0 64 -18" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.3"/>
+  <path d="M238 386 c2 18 -8 30 -30 40 c24 4 46 0 62 -16" fill="none" stroke="#FF9B42" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M238 386 c2 18 -8 30 -30 40 c24 4 46 0 62 -16" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.3"/>
+
+  <!-- Tail Feathers -->
+  <path d="M94 322 c-18 -16 -30 -36 -34 -58 c28 8 52 20 70 34" fill="#FFD84D" stroke="#1B132B" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Main Torso Body -->
+  <path d="M80 328 c0 -72 70 -114 164 -110 c92 2 156 44 166 102 c14 68 -52 102 -166 98 c-108 -2 -164 -34 -164 -90 Z" fill="#FFD84D" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+  
+  <!-- Torso Shadow Form -->
+  <path d="M84 340 c10 42 60 72 150 72 c74 0 134 -20 162 -54 c-22 56 -86 82 -168 80 c-94 -2 -144 -36 -144 -98 Z" fill="#E5A812" opacity="0.55"/>
+
+  <!-- Head & Neck -->
+  <path d="M212 216 c-10 -62 14 -126 66 -158 c54 -34 118 -16 150 30 c36 50 20 118 -20 156 c-44 44 -118 54 -166 18 c-16 -12 -26 -28 -30 -46 Z" fill="#FFD84D" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+
+  <!-- Head Highlight & Shadow Form -->
+  <path d="M296 74 c34 -20 72 -14 96 14 c16 18 18 42 8 66 c-4 -28 -24 -56 -62 -66 c-18 -4 -32 -2 -42 -14 Z" fill="#FFF1A8" opacity="0.75"/>
+  <path d="M216 220 c6 14 18 24 34 32 c-16 -8 -26 -18 -34 -32 Z" fill="#E5A812" opacity="0.6"/>
+
+  <!-- Wing Silhouette & Highlight -->
+  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="#FFF1A8" opacity="0.4"/>
+  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+
+  
+  <!-- Cheeks / Blush (Soft accent) -->
+  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.45"/>
+
+  <!-- Left Eye -->
+  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
+  <ellipse cx="330" cy="152" rx="11" ry="18" fill="#1B132B"/>
+  <circle cx="326" cy="144" r="5" fill="#FFFDF4"/>
+
+  <!-- Right Eye -->
+  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
+  <ellipse cx="390" cy="156" rx="9" ry="16" fill="#1B132B"/>
+  <circle cx="388" cy="150" r="4" fill="#FFFDF4"/>
+
+  <!-- Orange Beak -->
+  <path d="M354 186 c34 -2 68 8 110 22 c18 6 18 22 0 32 c-40 20 -84 24 -118 10 c-20 -8 -24 -28 -10 -46 c6 -8 12 -14 18 -18 Z" fill="#FF9B42" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+  <!-- Beak Top Highlight -->
+  <path d="M362 192 c28 0 54 8 84 18" stroke="#FFD099" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <!-- Beak Smile Crease & Shadow -->
+  <path d="M342 230 c38 10 78 6 120 -10" stroke="#C95E24" stroke-width="8" stroke-linecap="round" fill="none"/>
+</svg>

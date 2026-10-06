@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="150 -56 380 380" width="100%" height="100%" fill="none">
+<ellipse cx="252" cy="436" rx="170" ry="30" fill="#100A20" opacity="0.28"/><!-- Base Duck Body -->
+  <!-- Feet -->
+  <path d="M178 402 c2 18 -8 30 -30 40 c24 6 48 0 64 -18" fill="none" stroke="#FF9B42" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M178 402 c2 18 -8 30 -30 40 c24 6 48 0 64 -18" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.3"/>
+  <path d="M238 386 c2 18 -8 30 -30 40 c24 4 46 0 62 -16" fill="none" stroke="#FF9B42" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M238 386 c2 18 -8 30 -30 40 c24 4 46 0 62 -16" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.3"/>
+
+  <!-- Tail Feathers -->
+  <path d="M94 322 c-18 -16 -30 -36 -34 -58 c28 8 52 20 70 34" fill="#FFD84D" stroke="#1B132B" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Main Torso Body -->
+  <path d="M80 328 c0 -72 70 -114 164 -110 c92 2 156 44 166 102 c14 68 -52 102 -166 98 c-108 -2 -164 -34 -164 -90 Z" fill="#FFD84D" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+  
+  <!-- Torso Shadow Form -->
+  <path d="M84 340 c10 42 60 72 150 72 c74 0 134 -20 162 -54 c-22 56 -86 82 -168 80 c-94 -2 -144 -36 -144 -98 Z" fill="#E5A812" opacity="0.55"/>
+
+  <!-- Head & Neck -->
+  <path d="M212 216 c-10 -62 14 -126 66 -158 c54 -34 118 -16 150 30 c36 50 20 118 -20 156 c-44 44 -118 54 -166 18 c-16 -12 -26 -28 -30 -46 Z" fill="#FFD84D" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+
+  <!-- Head Highlight & Shadow Form -->
+  <path d="M296 74 c34 -20 72 -14 96 14 c16 18 18 42 8 66 c-4 -28 -24 -56 -62 -66 c-18 -4 -32 -2 -42 -14 Z" fill="#FFF1A8" opacity="0.75"/>
+  <path d="M216 220 c6 14 18 24 34 32 c-16 -8 -26 -18 -34 -32 Z" fill="#E5A812" opacity="0.6"/>
+
+  <!-- Wing Silhouette & Highlight -->
+  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="#FFF1A8" opacity="0.4"/>
+  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+
+  
+  <!-- Cheeks / Blush (Soft accent) -->
+  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.45"/>
+
+  <!-- Left Eye -->
+  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
+  <ellipse cx="330" cy="152" rx="11" ry="18" fill="#1B132B"/>
+  <circle cx="326" cy="144" r="5" fill="#FFFDF4"/>
+
+  <!-- Right Eye -->
+  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
+  <ellipse cx="390" cy="156" rx="9" ry="16" fill="#1B132B"/>
+  <circle cx="388" cy="150" r="4" fill="#FFFDF4"/>
+
+  <!-- Orange Beak -->
+  <path d="M354 186 c34 -2 68 8 110 22 c18 6 18 22 0 32 c-40 20 -84 24 -118 10 c-20 -8 -24 -28 -10 -46 c6 -8 12 -14 18 -18 Z" fill="#FF9B42" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+  <!-- Beak Top Highlight -->
+  <path d="M362 192 c28 0 54 8 84 18" stroke="#FFD099" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <!-- Beak Smile Crease & Shadow -->
+  <path d="M342 230 c38 10 78 6 120 -10" stroke="#C95E24" stroke-width="8" stroke-linecap="round" fill="none"/><g id="npr-helm"><defs><linearGradient id="npr-helm-metal" x1="1" y1="0" x2="0.2" y2="1"><stop offset="0" stop-color="#D2CED6"/><stop offset="0.35" stop-color="#3A3344"/><stop offset="0.62" stop-color="#1B1722"/><stop offset="0.78" stop-color="#91859E"/><stop offset="1" stop-color="#000000"/></linearGradient><filter id="npr-helm-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter><linearGradient id="npr-helm-vent" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FF2E4D"><animate attributeName="stop-color" values="#FF2E4D;#FFE4E6;#FF2E4D" dur="1.4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/></stop><stop offset="1" stop-color="#B91C2C"/></linearGradient></defs>
+<path d="M300 34 L238 -10 L262 44 Z" fill="#1E1925" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M296 34 L246 0 L264 38 Z" fill="#FF2E4D" opacity="0.9"/>
+<path d="M226 104 C222 50 286 14 350 16 C414 18 446 54 442 100 C380 84 290 86 226 104 Z" fill="url(#npr-helm-metal)" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<clipPath id="npr-helm-c"><path d="M226 104 C222 50 286 14 350 16 C414 18 446 54 442 100 C380 84 290 86 226 104 Z"/></clipPath><g clip-path="url(#npr-helm-c)"><path d="M218 108 C228 66 254 38 290 24 C266 56 258 84 260 108 Z" fill="#16121F" opacity="0.7"/><linearGradient id="npr-helm-sweep" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/><stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.6"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient><rect x="160" y="-10" width="34" height="140" fill="url(#npr-helm-sweep)" transform="skewX(-22)"><animateTransform attributeName="transform" type="translate" values="0 0;320 0;320 0" keyTimes="0;0.45;1" dur="2.6s" begin="0s" repeatCount="indefinite" additive="sum"/></rect></g>
+<path d="M330 18 C326 44 324 68 328 90 M380 22 C390 46 396 70 396 88" fill="none" stroke="#1B132B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+<g filter="url(#npr-helm-glow)"><path d="M360 44 h12 v22 h-12 Z" fill="url(#npr-helm-vent)" stroke="#1B132B" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/><path d="M378 48 h12 v22 h-12 Z" fill="url(#npr-helm-vent)" stroke="#1B132B" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/><path d="M396 52 h12 v22 h-12 Z" fill="url(#npr-helm-vent)" stroke="#1B132B" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/></g>
+<path d="M222 110 C282 88 380 82 448 104 L446 90 C380 70 282 76 224 96 Z" fill="#16121F" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M240 104 C300 88 380 84 436 98" fill="none" stroke="#FF2E4D" stroke-width="3" stroke-linecap="round" stroke-dasharray="10 8"><animate attributeName="stroke-dashoffset" values="0;-36" dur="0.8s" repeatCount="indefinite" calcMode="linear" begin="0s"/></path>
+<path d="M420 36 L448 0" fill="none" stroke="#1B132B" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M420 36 L448 0" fill="none" stroke="#4A4258" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<g filter="url(#npr-helm-glow)"><circle cx="448" cy="0" r="6" fill="#FF2E4D"><animate attributeName="opacity" values="0.3;1;0.3" dur="1s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/></circle></g>
+<circle cx="448" cy="0" r="8" fill="none" stroke="#FF2E4D" stroke-width="2"><animate attributeName="r" values="8;20" dur="1s" repeatCount="indefinite" calcMode="linear"/><animate attributeName="opacity" values="0.9;0" dur="1s" repeatCount="indefinite" calcMode="linear"/></circle>
+<g transform="translate(300 40)"><g><animateTransform attributeName="transform" type="scale" values="0;1.15;0;0" keyTimes="0;0.18;0.4;1" dur="2.6s" begin="0.8s" repeatCount="indefinite"/><g transform="translate(-300 -40)"><g><path d="M300 33 Q301.54 38.46 307 40 Q301.54 41.54 300 47 Q298.46 41.54 293 40 Q298.46 38.46 300 33 Z" fill="#FFE4E6"/><animateTransform attributeName="transform" type="rotate" values="0 300 40;90 300 40" dur="2.6s" begin="0.8s" repeatCount="indefinite"/></g></g></g></g></g>
+</svg>

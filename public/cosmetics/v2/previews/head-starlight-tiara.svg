@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="150 -56 380 380" width="100%" height="100%" fill="none">
+<ellipse cx="252" cy="436" rx="170" ry="30" fill="#100A20" opacity="0.28"/><!-- Base Duck Body -->
+  <!-- Feet -->
+  <path d="M178 402 c2 18 -8 30 -30 40 c24 6 48 0 64 -18" fill="none" stroke="#FF9B42" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M178 402 c2 18 -8 30 -30 40 c24 6 48 0 64 -18" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.3"/>
+  <path d="M238 386 c2 18 -8 30 -30 40 c24 4 46 0 62 -16" fill="none" stroke="#FF9B42" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M238 386 c2 18 -8 30 -30 40 c24 4 46 0 62 -16" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.3"/>
+
+  <!-- Tail Feathers -->
+  <path d="M94 322 c-18 -16 -30 -36 -34 -58 c28 8 52 20 70 34" fill="#FFD84D" stroke="#1B132B" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Main Torso Body -->
+  <path d="M80 328 c0 -72 70 -114 164 -110 c92 2 156 44 166 102 c14 68 -52 102 -166 98 c-108 -2 -164 -34 -164 -90 Z" fill="#FFD84D" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+  
+  <!-- Torso Shadow Form -->
+  <path d="M84 340 c10 42 60 72 150 72 c74 0 134 -20 162 -54 c-22 56 -86 82 -168 80 c-94 -2 -144 -36 -144 -98 Z" fill="#E5A812" opacity="0.55"/>
+
+  <!-- Head & Neck -->
+  <path d="M212 216 c-10 -62 14 -126 66 -158 c54 -34 118 -16 150 30 c36 50 20 118 -20 156 c-44 44 -118 54 -166 18 c-16 -12 -26 -28 -30 -46 Z" fill="#FFD84D" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+
+  <!-- Head Highlight & Shadow Form -->
+  <path d="M296 74 c34 -20 72 -14 96 14 c16 18 18 42 8 66 c-4 -28 -24 -56 -62 -66 c-18 -4 -32 -2 -42 -14 Z" fill="#FFF1A8" opacity="0.75"/>
+  <path d="M216 220 c6 14 18 24 34 32 c-16 -8 -26 -18 -34 -32 Z" fill="#E5A812" opacity="0.6"/>
+
+  <!-- Wing Silhouette & Highlight -->
+  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="#FFF1A8" opacity="0.4"/>
+  <path d="M136 316 c32 -40 90 -50 138 -24 c-14 50 -76 78 -132 58" fill="none" stroke="#1B132B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+
+  
+  <!-- Cheeks / Blush (Soft accent) -->
+  <circle cx="270" cy="190" r="14" fill="#FF78A8" opacity="0.45"/>
+
+  <!-- Left Eye -->
+  <ellipse cx="320" cy="138" rx="42" ry="50" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
+  <ellipse cx="330" cy="152" rx="11" ry="18" fill="#1B132B"/>
+  <circle cx="326" cy="144" r="5" fill="#FFFDF4"/>
+
+  <!-- Right Eye -->
+  <ellipse cx="382" cy="144" rx="32" ry="42" fill="#FFFDF4" stroke="#1B132B" stroke-width="8"/>
+  <ellipse cx="390" cy="156" rx="9" ry="16" fill="#1B132B"/>
+  <circle cx="388" cy="150" r="4" fill="#FFFDF4"/>
+
+  <!-- Orange Beak -->
+  <path d="M354 186 c34 -2 68 8 110 22 c18 6 18 22 0 32 c-40 20 -84 24 -118 10 c-20 -8 -24 -28 -10 -46 c6 -8 12 -14 18 -18 Z" fill="#FF9B42" stroke="#1B132B" stroke-width="14" stroke-linejoin="round"/>
+  <!-- Beak Top Highlight -->
+  <path d="M362 192 c28 0 54 8 84 18" stroke="#FFD099" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <!-- Beak Smile Crease & Shadow -->
+  <path d="M342 230 c38 10 78 6 120 -10" stroke="#C95E24" stroke-width="8" stroke-linecap="round" fill="none"/><g id="sls-tiara"><defs><linearGradient id="sls-tiara-gold" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFBEA"/><stop offset="0.45" stop-color="#FDE68A"/><stop offset="1" stop-color="#E0A21B"/></linearGradient><filter id="sls-tiara-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<g transform="translate(244 92)"><g><animateTransform attributeName="transform" type="rotate" values="-8;8;-8" dur="2.4s" repeatCount="indefinite" additive="sum" begin="0s" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/><g transform="translate(-244 -92)"><path d="M246 88 C218 84 196 98 182 122 C200 118 214 116 228 120 C222 108 230 98 246 100 Z" fill="#F9A8D4" stroke="#1B132B" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/><path d="M232 96 C214 98 200 108 190 118 C204 114 216 112 226 114 Z" fill="#FBCFE8" opacity="0.9"/></g></g></g>
+<g transform="translate(244 96)"><g><animateTransform attributeName="transform" type="rotate" values="-10;10;-10" dur="2.8s" repeatCount="indefinite" additive="sum" begin="0.6s" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/><g transform="translate(-244 -96)"><path d="M244 98 C222 106 206 126 200 152 C214 140 228 134 240 134 C234 122 238 108 250 104 Z" fill="#7DD3FC" stroke="#1B132B" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/></g></g></g>
+<path d="M234 106 C286 82 380 76 444 100 L442 80 C380 60 286 66 236 86 Z" fill="url(#sls-tiara-gold)" stroke="#1B132B" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+<g transform="translate(346 64) scale(1.45) translate(-346 -64)"><path d="M340 80 C306 74 288 44 300 10 C308 32 326 44 350 46 C368 46 382 38 392 26 C390 60 368 84 340 80 Z" fill="url(#sls-tiara-gold)" stroke="#1B132B" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M314 30 C318 44 330 54 348 56 C332 58 318 48 314 30 Z" fill="#FFFBEA" opacity="0.8"/><g filter="url(#sls-tiara-glow)"><g transform="translate(346 64)"><g><animateTransform attributeName="transform" type="scale" values="1;1.2;1" dur="1.6s" repeatCount="indefinite" additive="sum" begin="0s" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/><g transform="translate(-346 -64)"><path d="M346 72.1 C333.4 63.1 338.8 53.2 346 59.95 C353.2 53.2 358.6 63.1 346 72.1 Z" fill="#FF5FA2" stroke="#1B132B" stroke-width="3.5" stroke-linejoin="round"/></g></g></g></g></g>
+<circle cx="276" cy="92" r="5" fill="#7DD3FC" stroke="#1B132B" stroke-width="3"/>
+<circle cx="410" cy="88" r="5" fill="#C4B5FD" stroke="#1B132B" stroke-width="3"/>
+<clipPath id="sls-tiara-c"><path d="M234 104 C286 82 380 76 444 98 L442 84 C380 64 286 70 236 90 Z"/></clipPath><g clip-path="url(#sls-tiara-c)"><linearGradient id="sls-tiara-sweep" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/><stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.9"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient><rect x="180" y="40" width="30" height="80" fill="url(#sls-tiara-sweep)" transform="skewX(-22)"><animateTransform attributeName="transform" type="translate" values="0 0;300 0;300 0" keyTimes="0;0.45;1" dur="2.4s" begin="0s" repeatCount="indefinite" additive="sum"/></rect></g>
+<g filter="url(#sls-tiara-glow)"><g><path d="M0.0 -8.0 L2.1 -2.9 L7.6 -2.5 L3.4 1.1 L4.7 6.5 L0.0 3.6 L-4.7 6.5 L-3.4 1.1 L-7.6 -2.5 L-2.1 -2.9 Z" fill="#FFFBEA" stroke="#1B132B" stroke-width="2.5" stroke-linejoin="round"/><animateMotion dur="2.6s" begin="0s" repeatCount="indefinite" path="M340 40 m-110 0 a110 30 0 1 0 220 0 a110 30 0 1 0 -220 0"/></g><g><path d="M0.0 -8.0 L2.1 -2.9 L7.6 -2.5 L3.4 1.1 L4.7 6.5 L0.0 3.6 L-4.7 6.5 L-3.4 1.1 L-7.6 -2.5 L-2.1 -2.9 Z" fill="#FFFBEA" stroke="#1B132B" stroke-width="2.5" stroke-linejoin="round"/><animateMotion dur="2.6s" begin="-1.3s" repeatCount="indefinite" path="M340 40 m-110 0 a110 30 0 1 0 220 0 a110 30 0 1 0 -220 0"/></g></g>
+<g transform="translate(392 22)"><g><animateTransform attributeName="transform" type="scale" values="0;1.15;0;0" keyTimes="0;0.18;0.4;1" dur="2.4s" begin="0.8s" repeatCount="indefinite"/><g transform="translate(-392 -22)"><g><path d="M392 13 Q393.98 20.02 401 22 Q393.98 23.98 392 31 Q390.02 23.98 383 22 Q390.02 20.02 392 13 Z" fill="#FFFBEA"/><animateTransform attributeName="transform" type="rotate" values="0 392 22;90 392 22" dur="2.4s" begin="0.8s" repeatCount="indefinite"/></g></g></g></g>
+<g transform="translate(286 30)"><g><animateTransform attributeName="transform" type="scale" values="0;1.15;0;0" keyTimes="0;0.18;0.4;1" dur="2.4s" begin="1.6s" repeatCount="indefinite"/><g transform="translate(-286 -30)"><g><path d="M286 23 Q287.54 28.46 293 30 Q287.54 31.54 286 37 Q284.46 31.54 279 30 Q284.46 28.46 286 23 Z" fill="#FFFBEA"/><animateTransform attributeName="transform" type="rotate" values="0 286 30;90 286 30" dur="2.4s" begin="1.6s" repeatCount="indefinite"/></g></g></g></g></g>
+</svg>

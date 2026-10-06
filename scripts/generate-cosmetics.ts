@@ -12,8 +12,9 @@ import { HEAD_ART } from './cosmetics/art/head'
 import { OUTFIT_ART } from './cosmetics/art/outfit'
 import { PET_ART } from './cosmetics/art/pet'
 import { TRAIL_ART } from './cosmetics/art/trail'
+import { SET_ARTS } from './cosmetics/art/sets'
 
-export const ART_BY_SLOT: Partial<Record<CosmeticSlot, Record<string, () => string>>> = {
+const BASE_ART: Partial<Record<CosmeticSlot, Record<string, () => string>>> = {
   bodyColor: BODY_COLOR_ART,
   bodySkin: BODY_SKIN_ART,
   face: FACE_ART,
@@ -23,6 +24,11 @@ export const ART_BY_SLOT: Partial<Record<CosmeticSlot, Record<string, () => stri
   aura: AURA_ART,
   trail: TRAIL_ART,
 }
+
+/** Per-slot art merged with every themed set's art. */
+export const ART_BY_SLOT: Partial<Record<CosmeticSlot, Record<string, () => string>>> = Object.fromEntries(
+  Object.entries(BASE_ART).map(([slot, art]) => [slot, Object.assign({}, art, ...SET_ARTS.map((set) => set[slot as CosmeticSlot] ?? {}))]),
+)
 
 export function svgFrame(content: string, viewBox = AVATAR_VIEWBOX) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" width="100%" height="100%" fill="none">\n${content}\n</svg>\n`

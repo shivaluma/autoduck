@@ -1,4 +1,6 @@
-import { SPRITE_SLOTS, type CosmeticDefinition } from './types'
+import type { CosmeticDefinition } from './types'
+import { cosmetic } from './define'
+import { SET_CATALOG } from './sets'
 
 /**
  * Duck Closet v2 catalog — every item is hand-designed and its rarity is set by its art budget
@@ -6,39 +8,7 @@ import { SPRITE_SLOTS, type CosmeticDefinition } from './types'
  * `pnpm cosmetics:generate` after editing either side and `pnpm cosmetics:validate` to check them.
  */
 
-type Options = Partial<Pick<CosmeticDefinition, 'color' | 'animation' | 'tags' | 'shopEligible' | 'gachaEligible'>>
-
-const ANCHORS: Record<CosmeticDefinition['slot'], CosmeticDefinition['anchor']> = {
-  bodyColor: 'body', bodySkin: 'body', face: 'face', head: 'head', neck: 'neck', outfit: 'body',
-  back: 'back', pet: 'petRight', aura: 'auraCenter', trail: 'tail', finish: 'auraCenter', nameplate: 'body',
-}
-
-const cosmetic = (
-  id: string,
-  name: string,
-  slot: CosmeticDefinition['slot'],
-  rarity: CosmeticDefinition['rarity'],
-  collection: string,
-  options: Options = {},
-): CosmeticDefinition => ({
-  id,
-  name,
-  slot,
-  rarity,
-  collection,
-  anchor: ANCHORS[slot],
-  asset: `/cosmetics/v2/${slot}/${id}.svg`,
-  previewAsset: `/cosmetics/v2/previews/${id}.svg`,
-  shopEligible: true,
-  gachaEligible: true,
-  tags: [collection.toLowerCase().replace(/[^a-z0-9]+/g, '-'), slot],
-  version: 2,
-  animation: rarity === 'epic' || rarity === 'legendary' ? 'idle' : undefined,
-  spriteAsset: SPRITE_SLOTS.includes(slot) ? `/cosmetics/v2/sprites/${id}.png` : undefined,
-  ...options,
-})
-
-export const COSMETIC_CATALOG: CosmeticDefinition[] = [
+const CORE_CATALOG: CosmeticDefinition[] = [
   // Màu
   cosmetic('body-sunshine', 'Sunshine', 'bodyColor', 'common', 'Pond Basics', { color: '#FFD84D' }),
   cosmetic('body-tangerine', 'Tangerine', 'bodyColor', 'common', 'Pond Basics', { color: '#FF9B42' }),
@@ -185,6 +155,8 @@ export const COSMETIC_CATALOG: CosmeticDefinition[] = [
   cosmetic('trail-dragon-sparks', 'Dragon Sparks', 'trail', 'epic', 'Pond Royalty'),
   cosmetic('trail-golden-water', 'Golden Wake', 'trail', 'legendary', 'Pond Royalty'),
 ]
+
+export const COSMETIC_CATALOG: CosmeticDefinition[] = [...CORE_CATALOG, ...SET_CATALOG]
 
 export const COSMETIC_BY_ID = new Map(COSMETIC_CATALOG.map((item) => [item.id, item]))
 
