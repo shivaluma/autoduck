@@ -15,6 +15,8 @@ import {
 } from './items/engine'
 import { tickAutoUseDecide, tickAutoUseExecute } from './auto-use/arbiter'
 import { buildRaceObjectiveContext } from './auto-use/objective'
+import { noteBrainEvent } from './auto-use/brain'
+import type { RaceObjectiveContext } from './auto-use/types'
 import {
   announcePickupWorld,
   applyRecordedWildInputs,
@@ -49,6 +51,7 @@ export interface DuckPhysicsState {
 
 export interface RaceSimulationState {
   config: RaceConfig
+  autoObjective?: RaceObjectiveContext
   track: RaceTrack
   tick: number
   ducks: DuckPhysicsState[]
@@ -82,6 +85,8 @@ export interface SimulationOptions {
   phaseProfile?: SimulationPhaseProfile
   /** Balance tooling only (never set for official races): override the loot a duck rolls from regular boxes. */
   lootOverride?: WildLootOverride
+  /** Balance tooling only: these ducks play with the Chaos-blind, personality-free brain. */
+  aiAblationPlayerIds?: readonly string[]
 }
 
 function event(state: RaceSimulationState, value: Omit<RaceEvent, 'raceId' | 'tick' | 'timestampWithinRaceMs'>): RaceEvent {
@@ -94,6 +99,8 @@ function event(state: RaceSimulationState, value: Omit<RaceEvent, 'raceId' | 'ti
 }
 
 function emitEvent(state: RaceSimulationState, value: Omit<RaceEvent, 'raceId' | 'tick' | 'timestampWithinRaceMs'>) {
+  // Race memory (grudges) must see every hostile event, recorded or not.
+  noteBrainEvent(state.itemState?.brains, value.type, value.sourcePlayerId, value.targetPlayerId, state.tick, state.config.tickRate)
   if (!state.recordEvents && !state.onEvent) return
   const raceEvent = event(state, value)
   if (state.recordEvents) state.events.push(raceEvent)
@@ -198,7 +205,14 @@ export function createSimulation(config: RaceConfig, options: SimulationOptions 
     lastCollisionEventTick: new Map(),
     phaseProfile: options.phaseProfile,
   }
+  for (const playerId of options.aiAblationPlayerIds ?? []) {
+    const brain = state.itemState.brains?.get(playerId)
+    if (brain) brain.ablated = true
+  }
   emitEvent(state, { type: 'RACE_STARTED', metadata: { playerCount: ducks.length } })
+  for (const [playerId, brain] of [...(state.itemState.brains ?? [])].sort(([left], [right]) => left.localeCompare(right))) {
+    emitEvent(state, { type: 'DUCK_TEMPERAMENT', sourcePlayerId: playerId, metadata: { temperament: brain.temperament } })
+  }
   announcePickupWorld(state.pickupState, (type, sourcePlayerId, targetPlayerId, metadata = {}) => {
     emitEvent(state, { type, sourcePlayerId, targetPlayerId, metadata })
   })
@@ -448,7 +462,7 @@ export function stepSimulation(state: RaceSimulationState) {
       emitEvent(state, { type, sourcePlayerId, targetPlayerId, metadata })
     },
   }
-  const autoObjective = buildRaceObjectiveContext(state.config)
+  const autoObjective = state.autoObjective ??= buildRaceObjectiveContext(state.config)
   let phaseStart = profile ? performance.now() : 0
   tickAutoUseExecute(autoUseInput, autoObjective)
   mark('autoUseExecute', phaseStart)

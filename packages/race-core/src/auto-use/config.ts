@@ -8,6 +8,20 @@ export const AUTO_USE_CONFIG = {
   bananaPredictionHorizonSeconds: 1,
   // Target score for an attack that would steal a speed duck's momentum.
   momentumStealValue: 8,
+  brain: {
+    // Max opportunity cost (score points) of firing a prep item long before its planned window.
+    holdCostScale: 60,
+    // Progress over which the hold cost ramps down to zero as the planned window approaches.
+    holdRampProgress: 0.15,
+    // Score shift for attacks per unit of aggression above/below neutral (0.5).
+    aggressionScale: 8,
+    // Bonus for speed/attack items when the duck is in a final-stretch duel for first.
+    clutchDuelBonus: 20,
+    // Bonus once the duck is stuck in the loser set late in the race.
+    desperationBonus: 10,
+    // Minimum ticks between two announced intents of one duck.
+    intentCooldownTicks: 60,
+  },
   thresholds: {
     early: 72,
     mid: 64,

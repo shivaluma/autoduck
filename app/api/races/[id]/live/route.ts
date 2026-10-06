@@ -69,6 +69,7 @@ export async function GET(
         'WILD_ITEM_GRANTED', 'INSTANT_PICKUP_TRIGGERED', 'MINI_ROCKET_FIRED', 'MINI_ROCKET_HIT', 'MINI_ROCKET_BLOCKED',
         'WILD_BANANA_DROPPED', 'WILD_BANANA_HIT', 'WILD_BANANA_BLOCKED', 'MINI_BUBBLE_ACTIVATED', 'MINI_BUBBLE_BLOCKED',
         'WILD_HORN_USED', 'WILD_FEATHER_USED', 'WILD_FEATHER_DODGED', 'HAZARD_HIT', 'HAZARD_DODGED', 'GOLDEN_BOX_COLLECTED', 'DUCK_FINISHED',
+        'AI_INTENT', 'MOMENTUM_STOLEN', 'GUARD_SURGE',
       ])
       const syncEngineEvents = new Set(['WILD_ITEM_MANUAL_INPUT'])
       const onEngineEvent = (payload: { raceId: string; tick: number; type?: string; sourcePlayerId?: string; targetPlayerId?: string; metadata?: unknown }) => {

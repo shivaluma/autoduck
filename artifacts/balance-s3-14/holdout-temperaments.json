@@ -1,0 +1,36 @@
+{
+  "mode": "NORMAL",
+  "races": 3200,
+  "start": 50001,
+  "players": 8,
+  "rows": [
+    {
+      "temperament": "AGGRESSIVE",
+      "ducks": 6414,
+      "winPct": 12.25,
+      "loserPct": 25.29,
+      "avgRank": 4.525
+    },
+    {
+      "temperament": "TACTICIAN",
+      "ducks": 6396,
+      "winPct": 12.95,
+      "loserPct": 24.03,
+      "avgRank": 4.459
+    },
+    {
+      "temperament": "OPPORTUNIST",
+      "ducks": 6323,
+      "winPct": 12.41,
+      "loserPct": 26.27,
+      "avgRank": 4.545
+    },
+    {
+      "temperament": "SHOWMAN",
+      "ducks": 6467,
+      "winPct": 12.39,
+      "loserPct": 24.43,
+      "avgRank": 4.471
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 import type { RaceItemId, WildItemId } from '../../../race-protocol/src'
 import type { ChaosRuleId } from '../chaos'
+import type { ChaosUtility } from './chaos-utility'
+import type { AiIntent } from './brain'
 
 export type AutoUseReason =
   | 'REACTIVE_DEFENSE'
@@ -21,6 +23,8 @@ export interface AutoUseCandidate {
   reason: AutoUseReason
   bypassThreshold?: boolean
   wildItemInstanceId?: string
+  /** Why the brain wants this (shown as an AI_INTENT event when it fires). */
+  intent?: AiIntent
 }
 
 export type AutoUseCandidateDraft = Omit<AutoUseCandidate, 'playerId'>
@@ -37,4 +41,8 @@ export interface RaceObjectiveContext {
   positionImprovementValue: (playerId: string, fromRank: number, toRank: number) => number
   offensiveTargetRankBonus: (sourceId: string, targetRank: number) => number
   offensiveTargetPenalty: (sourceId: string, targetId: string) => number
+  /** Chaos-accurate loss risk and action values (see chaos-utility.ts). */
+  chaos: ChaosUtility
+  /** Rank-cutoff view without team/bounty scoring, used by ablated brains (balance tooling). */
+  naiveChaos: ChaosUtility
 }

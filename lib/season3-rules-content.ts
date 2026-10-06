@@ -159,7 +159,7 @@ export const LOADOUT_CONFIG = {
       cost: 2,
       category: 'major' as const,
       itemClass: 'DEFENSE' as const,
-      description: 'Bong bóng phản xạ: tự bung khi Tên Lửa/Chuối trang bị đầu tiên sắp trúng (trừ khi đang bị Câm Lặng) và chặn hoàn toàn; khi đang bật cũng vô hiệu Còi và đồ nhặt. Chặn thành công nhận Guard Surge +8% trong 1s. Cồng kềnh: chậm 0.3% khi chưa dùng.',
+      description: 'Bong bóng phản xạ: tự bung khi Tên Lửa/Chuối trang bị đầu tiên sắp trúng (trừ khi đang bị Câm Lặng) và chặn hoàn toàn; khi đang bật cũng vô hiệu Còi và đồ nhặt. Chặn thành công nhận Guard Surge +8% trong 1s. Cồng kềnh: chậm 0.5% khi chưa dùng.',
     },
     {
       id: 'HOMING_ROCKET',
@@ -168,7 +168,7 @@ export const LOADOUT_CONFIG = {
       cost: 2,
       category: 'major' as const,
       itemClass: 'ATTACK' as const,
-      description: 'Bắn tên lửa tầm nhiệt nhắm đối thủ phía trước, triệt tiêu tăng tốc và hãm tốc còn 12% trong 0.95s rồi 50% trong 0.65s (1 lần/trận). Trúng vịt Tốc độ (đang boost hoặc còn Nitro) sẽ cướp đà +25% trong 2.7s.',
+      description: 'Bắn tên lửa tầm nhiệt nhắm đối thủ phía trước, triệt tiêu tăng tốc và hãm tốc còn 12% trong 0.95s rồi 50% trong 0.65s (1 lần/trận). Trúng vịt Tốc độ (đang boost hoặc còn Nitro) sẽ cướp đà +20% trong 2.3s.',
     },
     {
       id: 'DRAFT_FIN',
@@ -333,8 +333,8 @@ export const HAZARDS_LIST = [
 export const RACE_ACTION_TIPS = [
   {
     icon: '🤖',
-    title: 'Vịt Tự Động Dùng Đồ Thông Minh (Auto-use)',
-    detail: 'Bạn không cần phải canh nút bấm khi xem đua. Vịt được trang bị AI thông minh tự nhận biết thời cơ tốt nhất để dùng item mang theo lẫn đồ nhặt được trên đường.',
+    title: 'Mỗi Chú Vịt Có Một Bộ Não Riêng',
+    detail: 'Vịt tự dùng đồ theo tính cách được bốc ngẫu nhiên mỗi trận: 🔥 Hổ Báo ra đòn sớm và thù dai, 🧠 Quân Sư ôm đồ chờ thời, 🦊 Cáo Già chuyên trừng phạt vịt đang bứt tốc, 🎭 Ngôi Sao để dành bài tẩy cho chặng cuối. Vịt hiểu luật của lá bài Chaos tuần này (đồng đội, kẻ bị truy nã, vạch cắt), nhớ ai vừa đánh mình và báo ý đồ ngay trên đường đua. Mọi tính cách đều được cân bằng để có tỉ lệ thắng ngang nhau.',
   },
   {
     icon: '🛡️',

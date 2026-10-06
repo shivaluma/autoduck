@@ -21,6 +21,7 @@ import {
 import { raceConfigSchema, type RaceConfig, type RaceEventType, type RaceItemId } from '../packages/race-protocol/src'
 import { createRiverTrack } from '../packages/race-core/src/track'
 import { createPickupRaceState } from '../packages/race-core/src/pickups/engine'
+import { newBrain } from '../packages/race-core/src/auto-use/brain'
 
 function defense(items: RaceItemId[]): DuckItemRuntime {
   return {
@@ -329,6 +330,8 @@ test('Shock Absorber mitigates the first Rocket hit with lighter stagger and rec
     { playerId: '2', itemIds: ['HOMING_ROCKET', 'BANANA'] },
   ])
   const state = createItemRaceState(raceConfig)
+  // Pin the attacker's temperament: a patient seeded brain would (correctly) hold the rocket here.
+  state.brains!.set('2', newBrain('2', 'AGGRESSIVE'))
   const ducks = [duck('1', 0.48, 1), duck('2', 0.4, 2)]
   const events: RaceEventType[] = []
   for (let tick = 1; tick <= 260; tick += 1) {

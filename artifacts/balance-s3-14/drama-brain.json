@@ -1,0 +1,19 @@
+{
+  "mode": "NORMAL",
+  "races": 300,
+  "start": 1,
+  "leadChangesPerRace": 4.243,
+  "lateLeadChangesPerRace": 0.687,
+  "winnerNotLeaderAt90Pct": 36.3,
+  "avgWinMarginMs": 517.427,
+  "photoFinishPct": 19,
+  "attacksPerRace": 11.183,
+  "rocketHitPct": 77.4,
+  "rocketBlockedPct": 22.6,
+  "bananaHitPct": 54.5,
+  "bananaExpiredPct": 11.2,
+  "hornTargetsPerUse": 3.83,
+  "unusedPrepItemsPerRace": 0.117,
+  "lastStretchItemUsePct": 4.2,
+  "intentsPerRace": 7.457
+}

@@ -7,6 +7,8 @@ import { itemSpeedMultiplier, slipstreamReady } from '../items/engine'
 import type { PickupRaceState } from '../pickups/engine'
 import { AUTO_USE_CONFIG } from './config'
 import type { AutoUseCandidate, AutoUseCandidateDraft, RaceObjectiveContext } from './types'
+import { NEUTRAL_TRAITS, grudgeWeight, type AiIntent, type DuckBrain, type TemperamentTraits } from './brain'
+import { DIRECTOR_CONFIG, readRace } from './director'
 
 export interface EvaluationContext {
   tick: number
@@ -64,7 +66,7 @@ function dynamicThreshold(ctx: EvaluationContext) {
   if (progress >= AUTO_USE_CONFIG.progressFinal) threshold = AUTO_USE_CONFIG.thresholds.finalStretch
   else if (progress >= AUTO_USE_CONFIG.progressLate) threshold = AUTO_USE_CONFIG.thresholds.late
   else if (progress >= AUTO_USE_CONFIG.progressMid) threshold = AUTO_USE_CONFIG.thresholds.mid
-  if (ctx.objective.isCurrentlyLosing(ctx.playerId, duckById(ctx.ducks, ctx.playerId).currentRank)) threshold -= 10
+  threshold -= Math.round(lossRisk(ctx) * 12)
   const runtime = ctx.itemState.byPlayer.get(ctx.playerId)!
   if (runtime.wildItem && ctx.secondsUntilNextPickupZone < 2) threshold -= 15
   if (runtime.wildItem && ctx.secondsUntilNextPickupZone < 1) threshold -= 10
@@ -83,6 +85,80 @@ function inventoryPressure(ctx: EvaluationContext) {
 
 function predictLateral(duck: ItemDuckState, horizonSeconds: number) {
   return duck.lateralOffset + duck.lateralVelocity * horizonSeconds
+}
+
+function chaosIntent(ctx: EvaluationContext): AiIntent {
+  const mode = chaosOf(ctx).chaosMode
+  if (mode === 'DUO' || mode === 'CONSTRUCTORS') return 'TEAM_PLAY'
+  if (mode === 'BOUNTY_HUNT') return 'BOUNTY'
+  return 'DESPERATE'
+}
+
+function brainOf(ctx: EvaluationContext): DuckBrain | undefined {
+  const brain = ctx.itemState.brains?.get(ctx.playerId)
+  return brain?.ablated ? undefined : brain
+}
+
+function chaosOf(ctx: EvaluationContext) {
+  return ctx.itemState.brains?.get(ctx.playerId)?.ablated ? ctx.objective.naiveChaos : ctx.objective.chaos
+}
+
+function traitsOf(ctx: EvaluationContext): TemperamentTraits {
+  return brainOf(ctx)?.traits ?? NEUTRAL_TRAITS
+}
+
+/** Chaos-accurate loss risk (0..1) for the evaluating duck. */
+function lossRisk(ctx: EvaluationContext) {
+  return chaosOf(ctx).lossRisk(ctx.playerId, ctx.ducks)
+}
+
+/** Danger (0..100): loss risk, plus being squeezed in a pack, plus lateness. */
+function dangerOf(ctx: EvaluationContext, duck: ItemDuckState) {
+  const risk = lossRisk(ctx)
+  let gapAhead = Infinity
+  let gapBehind = Infinity
+  for (const other of ctx.ducks) {
+    if (other.finished || other.playerId === duck.playerId) continue
+    if (other.progress >= duck.progress) gapAhead = Math.min(gapAhead, other.progress - duck.progress)
+    else gapBehind = Math.min(gapBehind, duck.progress - other.progress)
+  }
+  const squeeze = gapAhead < 0.008 && gapBehind < 0.008 ? 15 : gapAhead < 0.015 ? 8 : 0
+  return clamp(risk * 80 + squeeze + (duck.progress > 0.75 ? 10 : 0), 0, 100)
+}
+
+function isDesperate(ctx: EvaluationContext, duck: ItemDuckState) {
+  return duck.progress >= DIRECTOR_CONFIG.desperationProgress && lossRisk(ctx) >= DIRECTOR_CONFIG.desperationRisk
+}
+
+/** How many places `target` is likely to lose if slowed for `slowDistance` (progress units). */
+function estimateDrop(ctx: EvaluationContext, target: ItemDuckState, slowDistance: number) {
+  let drop = 0
+  for (const other of ctx.ducks) {
+    if (other.finished || other.playerId === target.playerId) continue
+    if (other.progress < target.progress && target.progress - other.progress <= slowDistance) drop++
+  }
+  return drop
+}
+
+/** Chaos utility of knocking `target` back `drop` places (and climbing `selfGain`), ≈ -100..100. */
+function chaosTargetValue(ctx: EvaluationContext, target: ItemDuckState, drop: number, selfGain = 0) {
+  return chaosOf(ctx).actionValue(ctx.playerId, ctx.ducks, selfGain, target.playerId, drop)
+}
+
+/** Grudge, rivalry, runaway-leader and bounty pull toward a target, with the intent that explains it. */
+function socialTargetBonus(ctx: EvaluationContext, target: ItemDuckState): { bonus: number; intent: AiIntent | undefined } {
+  const brain = brainOf(ctx)
+  const traits = traitsOf(ctx)
+  const options: Array<[number, AiIntent]> = []
+  const grudge = grudgeWeight(brain, target.playerId, ctx.tick, ctx.tickRate)
+  if (grudge > 0.2) options.push([traits.vengeance * 10 * Math.min(2, grudge), 'RETALIATING'])
+  if (brain?.rivalId === target.playerId) options.push([4 + traits.aggression * 4, 'RIVALRY'])
+  if (readRace(ctx.ducks).runawayLeaderId === target.playerId) options.push([2 + traits.aggression * 5, 'HUNTING'])
+  if (chaosOf(ctx).wantedPlayerId === target.playerId) options.push([0, 'BOUNTY'])
+  if (options.length === 0) return { bonus: 0, intent: undefined }
+  const bonus = options.reduce((sum, [value]) => sum + value, 0)
+  const intent = options.sort((left, right) => right[0] - left[0])[0]![1]
+  return { bonus, intent }
 }
 
 function bananaIntersectionScore(source: ItemDuckState, target: ItemDuckState, horizonSeconds: number) {
@@ -140,7 +216,7 @@ function rocketTargets(ctx: EvaluationContext, kind: 'PREP' | 'WILD', preferredT
   const eligible = ctx.ducks.filter(target => !target.finished && target.playerId !== source.playerId
     && target.progress > source.progress && !ctx.ghostPlayerIds.has(target.playerId)
     && !ctx.objective.isTeammate(source.playerId, target.playerId))
-  type ScoredTarget = { target: ItemDuckState; score: number; forecast: RocketImpactForecast }
+  type ScoredTarget = { target: ItemDuckState; score: number; forecast: RocketImpactForecast; intent?: AiIntent }
   let best: ScoredTarget | undefined
   let preferred: ScoredTarget | undefined
   for (const target of eligible) {
@@ -174,6 +250,9 @@ function rocketTargets(ctx: EvaluationContext, kind: 'PREP' | 'WILD', preferredT
     // Active bubble or unspent prep bubble provides hard block (damage probability = 0)
     const hasActiveBubble = (targetRuntime.bubbleAvailable && (targetRuntime.bubbleUntilTick === undefined || impactTick < targetRuntime.bubbleUntilTick))
       || (targetRuntime.wildBubbleAvailable && impactTick < (targetRuntime.wildBubbleUntilTick ?? 0))
+    // Deliberately keeps the reaction-time model even though a packed Bubble reflexes: perfect Bubble
+    // knowledge makes attackers ignore Defense entirely and pile onto Speed, breaking the class counter loop
+    // (measured in docs/balance/S3.14.md).
     const hasPrepBubbleInInventory = hasUnusedPrep(targetRuntime, 'BUBBLE_SHIELD')
       && Math.max(ctx.tick, targetRuntime.silencedUntilTick) + Math.ceil(AUTO_USE_CONFIG.reactionDelayMaxSeconds * ctx.tickRate) < impactTick
     const hasBubbleProtection = hasActiveBubble || hasPrepBubbleInInventory
@@ -207,7 +286,7 @@ function rocketTargets(ctx: EvaluationContext, kind: 'PREP' | 'WILD', preferredT
       const pressure = inventoryPressure(ctx)
       const isEndGame = source.progress >= ITEM_BALANCE.autoUse.endGameBurnProgress
       const isOnlyTargetAhead = eligible.length <= 1
-      const isLosing = ctx.objective.isCurrentlyLosing(source.playerId, source.currentRank)
+      const isLosing = lossRisk(ctx) >= 0.5
 
       let rawStrip = 6
       if (pressure > 0 || isEndGame) {
@@ -220,21 +299,25 @@ function rocketTargets(ctx: EvaluationContext, kind: 'PREP' | 'WILD', preferredT
       shieldStripValue = rawStrip * hitConfidence
     }
 
-    // Objective Value
+    // Objective Value: what the hit is worth under the actual Chaos rule (team, bounty and cut lines
+    // included), plus the brain's social pull toward grudges, rivals and runaway leaders.
     let objectiveValue = 0
     objectiveValue += ctx.objective.opponentThreat(source.playerId, target.playerId) * 8
     objectiveValue += clamp((maxDistance - gap) / maxDistance * 12, 0, 12)
     if (gap > 0.02 && gap < maxDistance * 0.75) objectiveValue += 10
 
-    // Only award rank advancement bonus if not REVERSE mode
-    if (ctx.objective.mode !== 'REVERSE' && ctx.objective.isCurrentlyLosing(source.playerId, source.currentRank) && target.currentRank === source.currentRank - 1) {
-      objectiveValue += 32 * damageProbability
-    }
-    objectiveValue += ctx.objective.offensiveTargetRankBonus(source.playerId, target.currentRank)
+    const slowDistance = slowCost(impactConfig) * defenseMitigation * baseSpeed()
+    // The steal's own climb is already priced by momentumStealValue; counting it here too made every
+    // at-risk attacker fixate on Nitro carriers.
+    const chaosValue = chaosTargetValue(ctx, target, estimateDrop(ctx, target, slowDistance)) * damageProbability * hitConfidence
+    objectiveValue += clamp(chaosValue * 0.6, -20, 40)
+    const social = socialTargetBonus(ctx, target)
+    objectiveValue += social.bonus * Math.max(0.25, damageProbability)
 
     if (source.progress >= AUTO_USE_CONFIG.progressLate) objectiveValue += 12
 
-    let totalScore = objectiveValue + expectedDamageValue + expectedBoostBreakValue + momentumStealValue + shieldStripValue - penalty
+    const opportunism = 0.8 + traitsOf(ctx).opportunism * 0.4
+    let totalScore = objectiveValue + expectedDamageValue + (expectedBoostBreakValue + momentumStealValue) * opportunism + shieldStripValue - penalty
 
     if (source.progress >= ITEM_BALANCE.autoUse.endGameBurnProgress) {
       totalScore = Math.max(totalScore, 20 + clamp((maxDistance - gap) / maxDistance * 10, 0, 10))
@@ -243,6 +326,7 @@ function rocketTargets(ctx: EvaluationContext, kind: 'PREP' | 'WILD', preferredT
     const entry: ScoredTarget = {
       target,
       score: totalScore,
+      intent: social.intent ?? (chaosValue >= 15 && chaosOf(ctx).chaosMode !== 'NORMAL' ? chaosIntent(ctx) : undefined),
       forecast: {
         timeToImpact: tti,
         hitConfidence,
@@ -329,7 +413,7 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
   if (ctx.tick < runtime.silencedUntilTick) return []
   const duck = duckById(ctx.ducks, ctx.playerId)
   const candidates: AutoUseCandidateDraft[] = []
-  const danger = ctx.objective.dangerScore(duck.playerId, duck.currentRank, duck.progress, ctx.ducks)
+  const danger = dangerOf(ctx, duck)
   const pressure = inventoryPressure(ctx)
 
   if (hasUnusedPrep(runtime, 'NITRO') && duck.progress >= ITEM_BALANCE.nitro.armProgress) {
@@ -364,15 +448,13 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
         score -= 25
       }
 
-      // 2. Safety Value: Urgent burst to escape loser zone in standard/cutline chaos
-      const isLosing = ctx.objective.isCurrentlyLosing(duck.playerId, duck.currentRank)
+      // 2. Safety Value: what the overtakes are worth under the actual Chaos rule (escaping the
+      // loser set, keeping a teammate's average up, pushing past the Wanted duck...).
+      const isLosing = chaosOf(ctx).isLosingNow(duck.playerId, ctx.ducks)
       if (isLosing) {
-        const ducksNeededToEscape = duck.currentRank - ctx.objective.loserCutoff + 1
-        if (possibleOvertakes >= ducksNeededToEscape) {
-          score += 55
-        } else {
-          score += 35
-        }
+        // Escaping counts only if the overtakes actually leave the (Chaos-accurate) loser set.
+        const escapes = chaosOf(ctx).actionValue(duck.playerId, ctx.ducks, possibleOvertakes) >= 50
+        score += escapes ? 55 : 35
       } else if (danger > 50) {
         score += 18
       }
@@ -447,7 +529,7 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
     const ahead = runtime.draftTargetPlayerId ? duckById(ctx.ducks, runtime.draftTargetPlayerId) : null
     let score = 30
     if (ahead && ahead.currentRank === duck.currentRank - 1) score += 35
-    if (ctx.objective.isCurrentlyLosing(duck.playerId, duck.currentRank)) score += 20
+    if (lossRisk(ctx) >= 0.5) score += 20
     if (duck.progress >= AUTO_USE_CONFIG.progressLate) score += 12
     score += endGameBurnScore(duck.progress, 'PREP')
     score += pressure * 0.1
@@ -468,7 +550,7 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
       let score = 0
       if (duck.currentRank >= activeCount - 1) score += 28
       if (duck.currentRank >= Math.ceil(activeCount * 0.75)) score += 18
-      if (ctx.objective.isCurrentlyLosing(duck.playerId, duck.currentRank)) score += 22
+      if (lossRisk(ctx) >= 0.5) score += 22
       if (isLateSprint) score += 30
       score += endGameBurnScore(duck.progress, 'PREP')
       score += pressure * 0.12
@@ -500,6 +582,7 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
         score: best.score + danger * 0.15 + pressure * 0.1,
         targetPlayerId: best.target.playerId,
         reason: 'OBJECTIVE',
+        intent: best.intent,
       })
     }
   }
@@ -555,6 +638,7 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
     ? Math.max(0.15, ITEM_BALANCE.horn.armProgress - 0.03)
     : ITEM_BALANCE.horn.armProgress
   if (hasUnusedPrep(runtime, 'QUACK_HORN') && duck.progress >= hornArmProgress) {
+    let hornIntent: AiIntent | undefined
     let netValue = 0
     let targetsCount = 0
     let hasTeammateInRadius = false
@@ -585,7 +669,12 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
       } else {
         netValue += impact * 10
       }
-      netValue += ctx.objective.offensiveTargetRankBonus(duck.playerId, target.currentRank) * 0.25
+      const hornChaos = chaosTargetValue(ctx, target, estimateDrop(ctx, target, 0.006))
+      // Horn hits several ducks at once: keep its Chaos/social pull small or it becomes a precision steal.
+      netValue += clamp(hornChaos * 0.15, -4, 6)
+      const hornSocial = socialTargetBonus(ctx, target)
+      netValue += hornSocial.bonus * 0.2
+      if (hornSocial.intent && !hornIntent) hornIntent = hornSocial.intent
 
       // Horn breaks active speed-item boosts and steals speed ducks' momentum (Shock Absorber only softens it).
       if (targetRuntime && !targetRuntime.shockAbsorberAvailable && ctx.tick < targetRuntime.boostUntilTick && targetRuntime.boostMultiplier > 1 && targetRuntime.activeSpeedItemId) {
@@ -632,6 +721,7 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
           action: 'USE',
           score: clamp(netValue, 0, 100) + endGameBurnScore(duck.progress, 'PREP') + pressure * 0.05,
           reason: 'OPPORTUNITY',
+          intent: hornIntent,
         })
       }
     }
@@ -644,7 +734,7 @@ export function evaluatePrepCandidates(ctx: EvaluationContext): AutoUseCandidate
     if (duck.progress >= ITEM_BALANCE.bubbleShield.endGameBurnProgress) {
       score += 35
     }
-    if (ctx.objective.isCurrentlyLosing(duck.playerId, duck.currentRank) && duck.progress >= 0.50) score += 15
+    if (lossRisk(ctx) >= 0.5 && duck.progress >= 0.50) score += 15
     if (duck.progress >= AUTO_USE_CONFIG.progressFinal) score += 30
     score += endGameBurnScore(duck.progress, 'PREP')
     score += pressure * 0.1
@@ -671,7 +761,7 @@ export function evaluateWildCandidates(ctx: EvaluationContext): AutoUseCandidate
   if (!wild) return []
   const duck = duckById(ctx.ducks, ctx.playerId)
   const pressure = inventoryPressure(ctx)
-  const danger = ctx.objective.dangerScore(duck.playerId, duck.currentRank, duck.progress, ctx.ducks)
+  const danger = dangerOf(ctx, duck)
   const candidates: AutoUseCandidateDraft[] = []
   const itemId = wild.itemId
 
@@ -686,6 +776,7 @@ export function evaluateWildCandidates(ctx: EvaluationContext): AutoUseCandidate
         score: best.score + danger * 0.2 + pressure * 0.35,
         targetPlayerId: best.target.playerId,
         reason: pressure > 0 ? 'INVENTORY_PRESSURE' : 'OBJECTIVE',
+        intent: best.intent,
         wildItemInstanceId: wild.instanceId,
       })
     } else if (duck.progress >= PICKUP_BALANCE.autoUse.forceBurnProgress || pressure >= 20 || duck.currentRank === 1) {
@@ -820,7 +911,8 @@ export function evaluateWildCandidates(ctx: EvaluationContext): AutoUseCandidate
       } else {
         netValue += impact * 8
       }
-      netValue += ctx.objective.offensiveTargetRankBonus(duck.playerId, target.currentRank) * 0.22
+      netValue += clamp(chaosTargetValue(ctx, target, estimateDrop(ctx, target, 0.005)) * 0.15, -4, 6)
+      netValue += socialTargetBonus(ctx, target).bonus * 0.2
 
       if (targetRuntime && ctx.tick < targetRuntime.boostUntilTick && targetRuntime.boostMultiplier > 1 && targetRuntime.activeSpeedItemId !== 'NITRO') {
         netValue += 16
@@ -883,6 +975,48 @@ export function decideReactiveAutoItemAction(ctx: EvaluationContext): AutoUseCan
   return reactive.sort((left, right) => right.score - left.score || left.itemKey.localeCompare(right.itemKey))[0]!
 }
 
+const SPEED_PREP_ITEMS = new Set<string>(['NITRO', 'DRAFT_FIN', 'PADDLE_BURST'])
+
+/**
+ * Opportunity cost of using a prep item before the temperament's planned window. Box items are
+ * never held (they block the next box). Danger and desperation erase patience.
+ */
+export function holdCost(ctx: EvaluationContext, candidate: Pick<AutoUseCandidate, 'itemId' | 'source'>) {
+  if (candidate.source !== 'PREP') return 0
+  const duck = duckById(ctx.ducks, ctx.playerId)
+  const traits = traitsOf(ctx)
+  const window = traits.plannedWindow[candidate.itemId as RaceItemId]
+  if (window === undefined || duck.progress >= window || isDesperate(ctx, duck)) return 0
+  // Full cost until the last stretch before the window, then a short ramp so the plan does not snap.
+  const earliness = Math.min(1, (window - duck.progress) / AUTO_USE_CONFIG.brain.holdRampProgress)
+  return traits.patience * AUTO_USE_CONFIG.brain.holdCostScale * earliness * (1 - lossRisk(ctx))
+}
+
+/** Candidate score as this duck's brain sees it (temperament, drama, plan). */
+export function brainScore(ctx: EvaluationContext, candidate: AutoUseCandidate) {
+  if (candidate.bypassThreshold || candidate.action === 'DISCARD') return candidate.score
+  const duck = duckById(ctx.ducks, ctx.playerId)
+  const traits = traitsOf(ctx)
+  const offensive = isOffensiveAutoItem(String(candidate.itemId))
+  let score = candidate.score
+  if (offensive) score += (traits.aggression - 0.5) * AUTO_USE_CONFIG.brain.aggressionScale
+  if ((offensive || SPEED_PREP_ITEMS.has(String(candidate.itemId))) && readRace(ctx.ducks).duelIds.includes(ctx.playerId)) {
+    score += traits.clutch * AUTO_USE_CONFIG.brain.clutchDuelBonus
+  }
+  if (isDesperate(ctx, duck)) score += AUTO_USE_CONFIG.brain.desperationBonus
+  return score - holdCost(ctx, candidate)
+}
+
+/** The intent a fired candidate expresses, for the AI_INTENT event. */
+export function candidateIntent(ctx: EvaluationContext, candidate: AutoUseCandidate): AiIntent | undefined {
+  if (candidate.intent) return candidate.intent
+  const duck = duckById(ctx.ducks, ctx.playerId)
+  if (readRace(ctx.ducks).duelIds.includes(ctx.playerId)) return 'CLUTCH'
+  if (isDesperate(ctx, duck)) return 'DESPERATE'
+  if (SPEED_PREP_ITEMS.has(String(candidate.itemId)) && duck.currentRank === 1) return 'BREAKAWAY'
+  return undefined
+}
+
 export function decideOffensiveAutoItemAction(ctx: EvaluationContext): AutoUseCandidate | null {
   const attach = (candidate: AutoUseCandidateDraft): AutoUseCandidate => ({ ...candidate, playerId: ctx.playerId })
   const candidates = [
@@ -890,9 +1024,18 @@ export function decideOffensiveAutoItemAction(ctx: EvaluationContext): AutoUseCa
     ...evaluateWildCandidates(ctx),
   ].map(attach)
   if (candidates.length === 0) return null
-  const best = candidates.sort((left, right) => right.score - left.score || left.itemKey.localeCompare(right.itemKey))[0]!
   const threshold = dynamicThreshold(ctx)
-  if (best.bypassThreshold || best.score >= threshold) return best
+  const scored = candidates
+    .map((candidate) => ({ candidate, score: brainScore(ctx, candidate) }))
+    .sort((left, right) => right.score - left.score || left.candidate.itemKey.localeCompare(right.candidate.itemKey))
+  const best = scored[0]!
+  if (best.candidate.bypassThreshold || best.score >= threshold) return { ...best.candidate, score: best.score }
+  // Ready but deliberately saved for the planned window: remember it so the duck can announce the plan.
+  const brain = brainOf(ctx)
+  if (brain) {
+    const held = scored.find(({ candidate }) => candidate.score >= threshold && holdCost(ctx, candidate) > 0)
+    brain.heldItemId = held ? held.candidate.itemId as RaceItemId : brain.heldItemId
+  }
   return null
 }
 
@@ -918,7 +1061,7 @@ export function revalidatePendingAction(ctx: EvaluationContext, pending: AutoUse
     pending.targetPlayerId = resolvedTarget
   }
   const threshold = dynamicThreshold(ctx)
-  return fresh.score >= threshold * 0.85
+  return brainScore(ctx, { ...fresh, playerId: ctx.playerId }) >= threshold * 0.85
 }
 
 export { dynamicThreshold }

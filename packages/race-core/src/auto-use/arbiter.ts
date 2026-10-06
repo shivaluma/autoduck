@@ -7,7 +7,9 @@ import { AUTO_USE_CONFIG } from './config'
 import { ghostPlayerIdsFromConfig } from '../ghost'
 import { buildRaceObjectiveContext } from './objective'
 import type { RaceObjectiveContext } from './types'
+import { noteNeighbours, type AiIntent } from './brain'
 import {
+  candidateIntent,
   decideOffensiveAutoItemAction,
   decideReactiveAutoItemAction,
   isOffensiveAutoItem,
@@ -28,9 +30,23 @@ function secondsUntilNextPickupZone(duck: ItemDuckState, track: RaceTrack) {
   return Math.max(0, (upcoming - duck.progress) * 60)
 }
 
-function reactionDelayTicks(config: RaceConfig, playerId: string, tick: number, tickRate: number) {
+function reactionDelayTicks(config: RaceConfig, playerId: string, tick: number, tickRate: number, reactionScale = 1) {
   const rng = createRaceRng(config.seed, `auto-use-delay:${config.raceId}:${playerId}:${tick}`)
-  return Math.round(rng.range(AUTO_USE_CONFIG.reactionDelayMinSeconds, AUTO_USE_CONFIG.reactionDelayMaxSeconds) * tickRate)
+  return Math.round(rng.range(AUTO_USE_CONFIG.reactionDelayMinSeconds, AUTO_USE_CONFIG.reactionDelayMaxSeconds) * reactionScale * tickRate)
+}
+
+/** Announces a brain's intent (rate-limited per duck) so the timeline and commentary can explain it. */
+function announceIntent(input: AutoUseTickInput, playerId: string, intent: AiIntent, itemId: string | null, targetPlayerId: string | null, force = false) {
+  const brain = input.itemState.brains?.get(playerId)
+  if (!brain) return
+  const same = brain.intent === intent && brain.intentTargetId === targetPlayerId && brain.intentItemId === itemId
+  if (same) return
+  if (!force && input.tick - brain.lastIntentTick < AUTO_USE_CONFIG.brain.intentCooldownTicks) return
+  brain.intent = intent
+  brain.intentTargetId = targetPlayerId
+  brain.intentItemId = itemId
+  brain.lastIntentTick = input.tick
+  input.emitItem('AI_INTENT', playerId, targetPlayerId ?? undefined, { intent, itemId, temperament: brain.temperament })
 }
 
 function cooldownTicks(config: RaceConfig, playerId: string, tick: number, tickRate: number) {
@@ -82,7 +98,9 @@ function buildEvalContext(input: AutoUseTickInput, duck: ItemDuckState, objectiv
 function queueDecision(input: AutoUseTickInput, duck: ItemDuckState, decision: NonNullable<ReturnType<typeof decideOffensiveAutoItemAction>>) {
   const runtime = input.itemState.byPlayer.get(duck.playerId)!
   runtime.pendingAutoAction = decision
-  runtime.pendingAutoActionExecuteTick = input.tick + reactionDelayTicks(input.config, duck.playerId, input.tick, input.tickRate)
+  const reactingBrain = input.itemState.brains?.get(duck.playerId)
+  const reactionScale = reactingBrain && !reactingBrain.ablated ? reactingBrain.traits.reactionScale : 1
+  runtime.pendingAutoActionExecuteTick = input.tick + reactionDelayTicks(input.config, duck.playerId, input.tick, input.tickRate, reactionScale)
 }
 
 function processPendingAction(input: AutoUseTickInput, duck: ItemDuckState, evalCtx: ReturnType<typeof buildEvalContext>) {
@@ -114,7 +132,13 @@ function processPendingAction(input: AutoUseTickInput, duck: ItemDuckState, eval
     executeMetadata,
     input.config,
   )
-  if (executed) finishAction(input, duck.playerId, isOffensiveAutoItem(String(pending.itemId)))
+  if (executed) {
+    finishAction(input, duck.playerId, isOffensiveAutoItem(String(pending.itemId)))
+    const brain = input.itemState.brains?.get(duck.playerId)
+    if (brain && brain.heldItemId === pending.itemId) brain.heldItemId = null
+    const intent = pending.reason === 'REACTIVE_DEFENSE' ? undefined : candidateIntent(evalCtx, pending)
+    if (intent) announceIntent(input, duck.playerId, intent, String(pending.itemId), pending.targetPlayerId ?? null, true)
+  }
   return true
 }
 
@@ -144,9 +168,12 @@ function processDuckDecide(input: AutoUseTickInput, duck: ItemDuckState, objecti
 
   const onDecisionTick = input.tick >= runtime.nextAutoDecisionTick
   const evalCtx = buildEvalContext(input, duck, objective)
+  const brain = input.itemState.brains?.get(duck.playerId)
+  if (brain && onDecisionTick) noteNeighbours(brain, input.ducks, duck)
   const decision = decideOffensiveAutoItemAction(evalCtx)
   if (!decision) {
     if (onDecisionTick) runtime.nextAutoDecisionTick = input.tick + AUTO_USE_CONFIG.decisionIntervalTicks
+    if (brain?.heldItemId && brain.intentItemId !== brain.heldItemId) announceIntent(input, duck.playerId, 'HOLDING', brain.heldItemId, null)
     return
   }
 

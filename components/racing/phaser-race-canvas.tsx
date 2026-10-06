@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useId, useRef } from 'react'
+import { intentCopy } from '@/lib/racing/ai-intent-copy'
 import type PhaserType from 'phaser'
 import { createSimulation, itemActivationForEvent, queueWildItemInput, snapshotRaceWorld, stepSimulation } from '@/packages/race-core/src'
 import { createRiverTrack } from '@/packages/race-core/src/track'
@@ -10,6 +11,18 @@ import { COSMETIC_BY_ID, STARTER_COSMETIC_IDS } from '@/lib/cosmetics/catalog'
 import { AVATAR_FRAME, COSMETIC_LAYER_ORDER, MOTION_SPRITE, type DuckAppearance } from '@/lib/cosmetics/types'
 import { ITEM_ICON_BY_ID } from '@/lib/race-fx/manifest'
 import { bankPoint, callout, createParticleTextures, createRaceFxAnims, decorKey, iconKey, loopSprite, playFx, preloadRaceFx, seededRandom, type CalloutTone } from './race-fx'
+
+// Short comic shouts over a duck when its brain commits to a dramatic plan.
+const INTENT_SHOUTS: Record<string, { label: string; tone: CalloutTone }> = {
+  RETALIATING: { label: 'PAYBACK!', tone: 'fire' },
+  HUNTING: { label: 'GET THE LEADER!', tone: 'fire' },
+  RIVALRY: { label: 'RIVAL!', tone: 'pink' },
+  BOUNTY: { label: 'BOUNTY!', tone: 'gold' },
+  TEAM_PLAY: { label: 'FOR THE TEAM!', tone: 'ice' },
+  DESPERATE: { label: 'ALL IN!', tone: 'fire' },
+  CLUTCH: { label: 'CLUTCH!', tone: 'gold' },
+  HOLDING: { label: '…WAIT FOR IT', tone: 'gray' },
+}
 
 export type PlayerLabel = {
   playerId: string
@@ -855,6 +868,20 @@ export function PhaserRaceCanvas({
             if (view) playFx(this, key, view.root.x, view.root.y, { size, tint })
           }
 
+          if (type === 'AI_INTENT') {
+            const shout = INTENT_SHOUTS[String(raceEvent.metadata.intent)]
+            if (shout) say(source, shout.label, shout.tone, 20)
+            return
+          }
+          if (type === 'MOMENTUM_STOLEN') {
+            say(source, 'STEAL!', 'nitro', 22)
+            return
+          }
+          if (type === 'GUARD_SURGE' && !raceEvent.metadata.glide) {
+            say(source, 'GUARD!', 'green', 20)
+            return
+          }
+
           if (type === 'HORN_USED' || type === 'WILD_HORN_USED') {
             fx(source, 'horn-wave', type === 'HORN_USED' ? 230 : 190)
             say(source, 'QUACK!', 'gold', 26)
@@ -1058,15 +1085,15 @@ export function PhaserRaceCanvas({
               ? `🛡️ ${target} đang miễn nhiễm!`
               : `🛡️ ${target} né được Chuối`,
             NITRO_STARTED: `⚡ ${source} NITRO (+25%)!`,
-            DRAFT_FIN_STARTED: `🦈 ${source} DRAFT FIN (+20%)!`,
-            PADDLE_BURST_STARTED: `🛶 ${source} PADDLE BURST (+18%)!`,
-            TAILWIND_STARTED: `🌊 ${source} THUẬN GIÓ (+20%)!`,
-            MAGNET_STARTED: `🧲 ${source} NAM CHÂM HÚT TỐC (+18%)!`,
+            DRAFT_FIN_STARTED: `🦈 ${source} DRAFT FIN (+21%)!`,
+            PADDLE_BURST_STARTED: `🛶 ${source} PADDLE BURST (+15%)!`,
+            TAILWIND_STARTED: `🌊 ${source} THUẬN GIÓ (+7%)!`,
+            MAGNET_STARTED: `🧲 ${source} NAM CHÂM HÚT TỐC (+12%)!`,
             BOOST_BROKEN: `💥 ${source} BỊ BẺ GÃY TĂNG TỐC!`,
             SHOCK_ABSORBER_PROC: `🦺 ${target || source} kích hoạt Áo Chống Sốc`,
             HORN_USED: `🔊 ${source} THỔI CÒI! Khóa item đối thủ`,
             ITEM_SILENCED: `🔇 ${source} bị Câm Lặng (${raceEvent.metadata.durationSeconds ?? 0.5}s)`,
-            PREDATOR_RUSH_STARTED: `🔥 ${source} PREDATOR RUSH (+20% tốc độ)!`,
+            PREDATOR_RUSH_STARTED: `🔥 ${source} PREDATOR RUSH (+10% tốc độ)!`,
             FEATHER_DODGED: `🪶 ${source} NÉ ĐÒN BẰNG LÔNG VŨ!`,
             BUBBLE_SHIELD_ACTIVATED: `🫧 ${source} bật Khiên Bong Bóng`,
             BUBBLE_SHIELD_EXPIRED: `🫧 ${source} Khiên hết hạn`,
@@ -1096,6 +1123,9 @@ export function PhaserRaceCanvas({
             HAZARD_DODGED: `🪽 ${source} né chướng ngại vật!`,
             GOLDEN_BOX_COLLECTED: `🪙 ${source} NHẶT ĐƯỢC HỘP VÀNG (+1 QP)!`,
             BOOST_GATE_PASSED: `⚡ ${source} qua Cổng ${String(raceEvent.metadata.label ?? 'Boost')}`,
+            MOMENTUM_STOLEN: `🌀 ${source} CƯỚP ĐÀ của ${target}!`,
+            GUARD_SURGE: `🛡️ ${source} hóa giải đòn → Guard Surge!`,
+            AI_INTENT: `${intentCopy(raceEvent.metadata.intent, source ?? '', target ?? '', '').icon} ${intentCopy(raceEvent.metadata.intent, source ?? '', target ?? '', String(raceEvent.metadata.itemId ?? '').replaceAll('_', ' ')).title}`,
           }
           const message = messages[raceEvent.type]
           audio.raceEvent(raceEvent.type)
@@ -1265,6 +1295,7 @@ export function PhaserRaceCanvas({
           'WILD_ITEM_GRANTED', 'INSTANT_PICKUP_TRIGGERED', 'MINI_ROCKET_FIRED', 'MINI_ROCKET_HIT', 'MINI_ROCKET_BLOCKED',
           'WILD_BANANA_DROPPED', 'WILD_BANANA_HIT', 'WILD_BANANA_BLOCKED', 'MINI_BUBBLE_ACTIVATED', 'MINI_BUBBLE_BLOCKED',
           'WILD_HORN_USED', 'WILD_FEATHER_USED', 'WILD_FEATHER_DODGED', 'HAZARD_HIT', 'HAZARD_DODGED', 'GOLDEN_BOX_COLLECTED', 'DUCK_FINISHED',
+          'AI_INTENT', 'MOMENTUM_STOLEN', 'GUARD_SURGE',
         ])
         source = new EventSource(`/api/races/${raceId}/live`)
         source.addEventListener('finished', () => {

@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import type { RaceEvent, RaceItemId, WildItemId } from '@/packages/race-protocol/src'
 import { Season3Avatar } from '@/components/season3-avatar'
+import { intentCopy, temperamentLabel, TEMPERAMENT_COPY } from '@/lib/racing/ai-intent-copy'
 
 export type TimelinePlayer = {
   playerId: string
@@ -12,7 +13,7 @@ export type TimelinePlayer = {
   isGhost?: boolean
 }
 
-type EventCategory = 'all' | 'combat' | 'speed' | 'pickup' | 'finish'
+type EventCategory = 'all' | 'combat' | 'speed' | 'pickup' | 'finish' | 'mind'
 
 const ITEM_NAME_MAP: Record<string, string> = {
   BUBBLE_SHIELD: 'Khiên Bong Bóng 🫧',
@@ -398,6 +399,52 @@ export function formatEventDetails(
       }
     }
 
+    case 'DUCK_TEMPERAMENT': {
+      const copy = TEMPERAMENT_COPY[String(event.metadata.temperament)]
+      return {
+        icon: copy?.icon ?? '🧠',
+        title: `${sourceName} mang tính cách ${temperamentLabel(event.metadata.temperament)}`,
+        description: copy?.blurb ?? '',
+        category: 'mind',
+        tone: 'text-violet-200 border-violet-500/30 bg-violet-500/10',
+      }
+    }
+
+    case 'AI_INTENT': {
+      const copy = intentCopy(event.metadata.intent, sourceName, targetName, itemName)
+      const temperament = temperamentLabel(event.metadata.temperament)
+      return {
+        icon: copy.icon,
+        title: copy.title,
+        description: temperament ? `${copy.description} (${temperament})` : copy.description,
+        category: 'mind',
+        tone: 'text-violet-300 border-violet-500/30 bg-violet-500/10',
+      }
+    }
+
+    case 'MOMENTUM_STOLEN': {
+      const percent = Math.round((Number(event.metadata.multiplier ?? 1) - 1) * 100)
+      return {
+        icon: '🌀',
+        title: `${sourceName} cướp đà của ${targetName}!`,
+        description: `Đòn tấn công trúng vịt Tốc độ: ${sourceName} nhận +${percent}% tốc độ trong ${Number(event.metadata.durationSeconds ?? 0).toFixed(1)}s.`,
+        category: 'combat',
+        tone: 'text-fuchsia-300 border-fuchsia-500/30 bg-fuchsia-500/10',
+      }
+    }
+
+    case 'GUARD_SURGE': {
+      const percent = Math.round((Number(event.metadata.multiplier ?? 1) - 1) * 100)
+      const defense = ITEM_NAME_MAP[String(event.metadata.defenseItemId ?? '')] ?? 'phòng thủ'
+      return {
+        icon: '🛡️',
+        title: event.metadata.glide ? `${sourceName} lướt gió bằng ${defense}` : `${sourceName} hóa giải đòn → Guard Surge!`,
+        description: `${defense} chuyển thành +${percent}% tốc độ trong ${Number(event.metadata.durationSeconds ?? 0).toFixed(1)}s.`,
+        category: 'combat',
+        tone: 'text-emerald-300 border-emerald-500/30 bg-emerald-500/10',
+      }
+    }
+
     case 'CHAOS_RESOLVED':
       return {
         icon: '🃏',
@@ -497,12 +544,13 @@ export function RaceEventTimeline({
 
   // Count categories
   const counts = useMemo(() => {
-    const res = { all: parsedEvents.length, combat: 0, speed: 0, pickup: 0, finish: 0 }
+    const res = { all: parsedEvents.length, combat: 0, speed: 0, pickup: 0, finish: 0, mind: 0 }
     for (const e of parsedEvents) {
       if (e.category === 'combat') res.combat++
       else if (e.category === 'speed') res.speed++
       else if (e.category === 'pickup') res.pickup++
       else if (e.category === 'finish') res.finish++
+      else if (e.category === 'mind') res.mind++
     }
     return res
   }, [parsedEvents])
@@ -589,6 +637,15 @@ export function RaceEventTimeline({
             }`}
           >
             🏁 Cán đích ({counts.finish})
+          </button>
+          <button
+            type="button"
+            onClick={() => setCategory('mind')}
+            className={`rounded-lg px-3 py-1 font-black transition ${
+              category === 'mind' ? 'bg-violet-400 text-[var(--color-ggd-outline)]' : 'bg-black/30 text-white/60 hover:text-white'
+            }`}
+          >
+            🧠 Mưu kế ({counts.mind})
           </button>
         </div>
       )}

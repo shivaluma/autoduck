@@ -96,7 +96,7 @@ export const ITEM_BALANCE = {
     durationSeconds: 4.5,
     endGameBurnProgress: 0.90,
     // SPEED > DEFENSE: a packed bubble is bulky; the duck swims this much slower until it is spent.
-    packedDragMultiplier: 0.997,
+    packedDragMultiplier: 0.995,
     burstMultiplier: 1.08,
     burstDurationSeconds: 1.2,
   },
@@ -113,8 +113,8 @@ export const ITEM_BALANCE = {
   // Class counter loop: DEFENSE > ATTACK > SPEED > DEFENSE.
   counter: {
     // ATTACK > SPEED: a prep attack that breaks a speed-item boost steals its momentum.
-    momentumStealMultiplier: 1.25,
-    momentumStealSeconds: 2.7,
+    momentumStealMultiplier: 1.20,
+    momentumStealSeconds: 2.3,
     // Horn blasts several ducks at once, so its steal is shorter.
     hornMomentumStealSeconds: 1.5,
     // When the stolen momentum is an unspent speed item, its next boost runs this fraction of its duration.

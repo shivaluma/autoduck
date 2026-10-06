@@ -1,0 +1,76 @@
+{
+  "seeds": 600,
+  "start": 60001,
+  "rows": [
+    {
+      "mode": "NORMAL",
+      "races": 600,
+      "loserPctBrain": 22.8,
+      "loserPctAblated": 24,
+      "deltaPts": -1.2,
+      "ci95Pts": "[-4.1, 1.8]",
+      "winPctBrain": 14.2,
+      "winPctAblated": 11.7
+    },
+    {
+      "mode": "BOUNTY_HUNT",
+      "races": 600,
+      "loserPctBrain": 25.5,
+      "loserPctAblated": 26.5,
+      "deltaPts": -1,
+      "ci95Pts": "[-4.0, 2.0]",
+      "winPctBrain": 14,
+      "winPctAblated": 12.8
+    },
+    {
+      "mode": "DUO",
+      "races": 600,
+      "loserPctBrain": 26.2,
+      "loserPctAblated": 27.2,
+      "deltaPts": -1,
+      "ci95Pts": "[-4.5, 2.5]",
+      "winPctBrain": 13.2,
+      "winPctAblated": 11.8
+    },
+    {
+      "mode": "CONSTRUCTORS",
+      "races": 600,
+      "loserPctBrain": 58,
+      "loserPctAblated": 57.2,
+      "deltaPts": 0.8,
+      "ci95Pts": "[-2.7, 4.3]",
+      "winPctBrain": 9.8,
+      "winPctAblated": 9
+    },
+    {
+      "mode": "CUT_LINE",
+      "races": 600,
+      "loserPctBrain": 47,
+      "loserPctAblated": 48.2,
+      "deltaPts": -1.2,
+      "ci95Pts": "[-4.2, 1.9]",
+      "winPctBrain": 13.3,
+      "winPctAblated": 13.3
+    },
+    {
+      "mode": "TRIPLE_ELIMINATION",
+      "races": 600,
+      "loserPctBrain": 35.7,
+      "loserPctAblated": 37,
+      "deltaPts": -1.3,
+      "ci95Pts": "[-4.9, 2.2]",
+      "winPctBrain": 12.7,
+      "winPctAblated": 11.5
+    },
+    {
+      "mode": "REVERSE",
+      "races": 600,
+      "loserPctBrain": 26.7,
+      "loserPctAblated": 25.7,
+      "deltaPts": 1,
+      "ci95Pts": "[-2.1, 4.1]",
+      "winPctBrain": 16.3,
+      "winPctAblated": 13.5
+    }
+  ]
+}

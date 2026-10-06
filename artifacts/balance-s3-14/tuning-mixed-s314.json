@@ -1,0 +1,140 @@
+{
+  "balanceVersion": "S3.14",
+  "seeds": 1200,
+  "start": 9001,
+  "players": 8,
+  "pickups": true,
+  "lobbies": [
+    "MIXED"
+  ],
+  "result": {
+    "MIXED": {
+      "NITRO + DRAFT_FIN": {
+        "wins": 149,
+        "top3": 429,
+        "bottom2": 366,
+        "rankSum": 5634,
+        "n": 1200
+      },
+      "NITRO + PADDLE_BURST": {
+        "wins": 124,
+        "top3": 406,
+        "bottom2": 391,
+        "rankSum": 5805,
+        "n": 1200
+      },
+      "NITRO + FEATHER": {
+        "wins": 159,
+        "top3": 440,
+        "bottom2": 380,
+        "rankSum": 5625,
+        "n": 1200
+      },
+      "NITRO + SHOCK_ABSORBER": {
+        "wins": 166,
+        "top3": 477,
+        "bottom2": 288,
+        "rankSum": 5305,
+        "n": 1200
+      },
+      "NITRO + BANANA": {
+        "wins": 115,
+        "top3": 353,
+        "bottom2": 411,
+        "rankSum": 6057,
+        "n": 1200
+      },
+      "NITRO + QUACK_HORN": {
+        "wins": 112,
+        "top3": 360,
+        "bottom2": 439,
+        "rankSum": 6086,
+        "n": 1200
+      },
+      "BUBBLE_SHIELD + DRAFT_FIN": {
+        "wins": 137,
+        "top3": 494,
+        "bottom2": 228,
+        "rankSum": 5087,
+        "n": 1200
+      },
+      "BUBBLE_SHIELD + PADDLE_BURST": {
+        "wins": 141,
+        "top3": 471,
+        "bottom2": 249,
+        "rankSum": 5174,
+        "n": 1200
+      },
+      "BUBBLE_SHIELD + FEATHER": {
+        "wins": 159,
+        "top3": 534,
+        "bottom2": 192,
+        "rankSum": 4799,
+        "n": 1200
+      },
+      "BUBBLE_SHIELD + SHOCK_ABSORBER": {
+        "wins": 164,
+        "top3": 503,
+        "bottom2": 212,
+        "rankSum": 4986,
+        "n": 1200
+      },
+      "BUBBLE_SHIELD + BANANA": {
+        "wins": 136,
+        "top3": 441,
+        "bottom2": 266,
+        "rankSum": 5313,
+        "n": 1200
+      },
+      "BUBBLE_SHIELD + QUACK_HORN": {
+        "wins": 148,
+        "top3": 456,
+        "bottom2": 243,
+        "rankSum": 5201,
+        "n": 1200
+      },
+      "HOMING_ROCKET + DRAFT_FIN": {
+        "wins": 157,
+        "top3": 453,
+        "bottom2": 292,
+        "rankSum": 5343,
+        "n": 1200
+      },
+      "HOMING_ROCKET + PADDLE_BURST": {
+        "wins": 158,
+        "top3": 455,
+        "bottom2": 319,
+        "rankSum": 5406,
+        "n": 1200
+      },
+      "HOMING_ROCKET + FEATHER": {
+        "wins": 157,
+        "top3": 471,
+        "bottom2": 313,
+        "rankSum": 5335,
+        "n": 1200
+      },
+      "HOMING_ROCKET + SHOCK_ABSORBER": {
+        "wins": 220,
+        "top3": 539,
+        "bottom2": 240,
+        "rankSum": 4907,
+        "n": 1200
+      },
+      "HOMING_ROCKET + BANANA": {
+        "wins": 164,
+        "top3": 443,
+        "bottom2": 308,
+        "rankSum": 5425,
+        "n": 1200
+      },
+      "HOMING_ROCKET + QUACK_HORN": {
+        "wins": 165,
+        "top3": 442,
+        "bottom2": 316,
+        "rankSum": 5466,
+        "n": 1200
+      }
+    }
+  }
+}

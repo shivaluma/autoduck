@@ -1,6 +1,7 @@
 import type { RaceConfig } from '../../../race-protocol/src'
 import type { ChaosRuleId } from '../chaos'
 import type { RaceObjectiveContext } from './types'
+import { ChaosUtility } from './chaos-utility'
 
 function loserCutoffForMode(mode: ChaosRuleId, playerCount: number) {
   switch (mode) {
@@ -28,6 +29,8 @@ export function buildRaceObjectiveContext(config: RaceConfig): RaceObjectiveCont
   }
 
   return {
+    chaos: new ChaosUtility(config),
+    naiveChaos: new ChaosUtility(mode === 'BOUNTY_HUNT' || mode === 'DUO' || mode === 'CONSTRUCTORS' ? { ...config, chaosConfig: undefined } : config),
     mode,
     playerCount,
     loserCutoff: loserCutoffForMode(mode, playerCount),

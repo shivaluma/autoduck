@@ -16,6 +16,7 @@ export interface ItemDuckState {
 }
 
 import type { AutoUseCandidate } from '../auto-use/types'
+import { createDuckBrains, type DuckBrain } from '../auto-use/brain'
 
 export interface DuckItemRuntime extends ItemDefenseState {
   itemIds: RaceItemId[]
@@ -110,6 +111,8 @@ export interface ItemRaceState {
   tuning: Required<RaceItemTuning>
   ghostPlayerIds: Set<string>
   teammatesByPlayer?: Map<string, Set<string>>
+  /** Auto-use brains (temperament + race memory), seeded from the race config. */
+  brains?: Map<string, DuckBrain>
 }
 
 type EmitItemEvent = (type: RaceEventType, sourcePlayerId?: string, targetPlayerId?: string, metadata?: Record<string, unknown>) => void
@@ -125,6 +128,7 @@ export function createItemRaceState(config: RaceConfig): ItemRaceState {
   }
   return {
     teammatesByPlayer,
+    brains: createDuckBrains(config),
     byPlayer: new Map(config.players.map((player) => {
       const itemIds = [...(loadoutByPlayer.get(player.playerId) ?? [])]
       return [player.playerId, {
