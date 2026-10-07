@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%" fill="none">
+<g id="d-penguin"><path d="M14 100 C20 86 44 82 64 82 C88 82 110 86 114 100 C108 114 84 118 64 118 C42 118 18 114 14 100 Z" fill="#E0F7FF" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M64 14 C84 14 92 36 92 60 C92 86 82 100 64 100 C46 100 36 86 36 60 C36 36 44 14 64 14 Z" fill="#1E293B" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M64 36 C78 36 82 54 82 68 C82 86 76 94 64 94 C52 94 46 86 46 68 C46 54 50 36 64 36 Z" fill="#F8FAFC"/>
+<circle cx="56" cy="32" r="4" fill="#FFFFFF"/>
+<circle cx="72" cy="32" r="4" fill="#FFFFFF"/>
+<circle cx="57" cy="32" r="2" fill="#1B132B"/>
+<circle cx="71" cy="32" r="2" fill="#1B132B"/>
+<path d="M56 40 L64 48 L72 40 Z" fill="#FB923C" stroke="#1B132B" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M48 98 H60 V104 H48 Z" fill="#FB923C" stroke="#1B132B" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" rx="3"/>
+<path d="M68 98 H80 V104 H68 Z" fill="#FB923C" stroke="#1B132B" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" rx="3"/></g>
+</svg>

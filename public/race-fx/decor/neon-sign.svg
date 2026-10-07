@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%" fill="none">
+<g id="d-neon-sign"><defs><filter id="d-neon-sign-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<path d="M32 70 H42 V122 H32 Z" fill="#2A2350" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M86 70 H96 V122 H86 Z" fill="#2A2350" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M18 14 H110 A8 8 0 0 1 118 22 V68 A8 8 0 0 1 110 76 H18 A8 8 0 0 1 10 68 V22 A8 8 0 0 1 18 14 Z" fill="#140F2E" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<g filter="url(#d-neon-sign-glow)">
+<path d="M22 24 H106 V66 H22 Z" fill="none" stroke="#FF2BD6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M28 58 C28 50 36 48 42 52 C40 42 46 34 54 36 C60 38 60 46 56 50 C62 54 62 62 56 64 H34 C30 64 28 62 28 58 Z" fill="none" stroke="#22E9FF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M58 40 L68 42 L58 46" fill="none" stroke="#FDE047" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="53" cy="40" r="2.5" fill="#22E9FF"/>
+<path d="M88 30 L80 44 H90 L82 58" fill="none" stroke="#FDE047" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</g></g>
+</svg>

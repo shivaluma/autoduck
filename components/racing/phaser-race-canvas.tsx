@@ -10,6 +10,7 @@ import { RaceAudioSystem } from './race-audio'
 import { COSMETIC_BY_ID, STARTER_COSMETIC_IDS } from '@/lib/cosmetics/catalog'
 import { AVATAR_FRAME, COSMETIC_LAYER_ORDER, MOTION_SPRITE, type DuckAppearance } from '@/lib/cosmetics/types'
 import { ITEM_ICON_BY_ID } from '@/lib/race-fx/manifest'
+import { RACE_THEMES, pickRaceTheme, pickWeighted, type RaceThemeId } from '@/lib/race-fx/themes'
 import { bankPoint, callout, createParticleTextures, createRaceFxAnims, decorKey, iconKey, loopSprite, playFx, preloadRaceFx, seededRandom, type CalloutTone } from './race-fx'
 
 // Short comic shouts over a duck when its brain commits to a dramatic plan.
@@ -143,6 +144,7 @@ export function PhaserRaceCanvas({
   onLiveFinished,
   chaosType,
   debugPickups = false,
+  theme,
 }: {
   raceId: number
   players: PlayerLabel[]
@@ -157,6 +159,8 @@ export function PhaserRaceCanvas({
   onLiveFinished?: () => void
   chaosType?: string
   debugPickups?: boolean
+  /** Forces a canvas theme; by default each race gets a random one seeded by its id. */
+  theme?: RaceThemeId
 }) {
   const parentId = `duck-race-${useId().replace(/:/g, '')}`
   const serializedPlayers = JSON.stringify(players)
@@ -200,6 +204,8 @@ export function PhaserRaceCanvas({
       const scenePlayers = JSON.parse(serializedPlayers) as PlayerLabel[]
       const reducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
       const mobileViewport = typeof window !== 'undefined' && window.innerWidth < 640
+      const raceTheme = theme ? RACE_THEMES[theme] : pickRaceTheme(raceId)
+      const themeBackground = `#${raceTheme.background.toString(16).padStart(6, '0')}`
       let markSceneReady: () => void = () => {}
       const sceneReady = new Promise<void>((resolve) => { markSceneReady = resolve })
 
@@ -288,17 +294,18 @@ export function PhaserRaceCanvas({
         }
 
         create() {
-          this.cameras.main.setBackgroundColor('#2f7a46')
+          this.cameras.main.setBackgroundColor(themeBackground)
           this.cameras.main.setBounds(-250, -850, track.length + 500, 1700)
           createParticleTextures(this)
           createRaceFxAnims(this)
           this.createBurstEmitters()
           this.drawRiver()
           this.drawBoostGates()
+          this.drawAtmosphere()
           if (debugPickups) this.drawPickupDebug()
           scenePlayers.forEach((player, index) => this.createDuck(player, index))
           const chaosLabel = chaosType ?? clientSimConfig?.chaosConfig?.type
-          this.add.text(18, 16, `${replayConfig ? '↻ REPLAY' : clientSimConfig ? '● LIVE' : '● LIVE'}${chaosLabel ? ` · 🎴 ${chaosLabel.replaceAll('_', ' ')}` : ''}`, {
+          this.add.text(18, 16, `${replayConfig ? '↻ REPLAY' : clientSimConfig ? '● LIVE' : '● LIVE'} · ${raceTheme.emoji} ${raceTheme.name.toUpperCase()}${chaosLabel ? ` · 🎴 ${chaosLabel.replaceAll('_', ' ')}` : ''}`, {
             color: replayConfig ? '#ffcc00' : '#3dff8f', fontFamily: 'sans-serif', fontSize: '18px', fontStyle: 'bold',
             backgroundColor: '#100b20cc', padding: { x: 12, y: 8 },
           }).setScrollFactor(0).setDepth(1000)
@@ -332,23 +339,31 @@ export function PhaserRaceCanvas({
             for (let i = 0; i <= STEPS; i += 1) { const p = sample(i / STEPS, lateral); if (i === 0) g.moveTo(p.x, p.y); else g.lineTo(p.x, p.y) }
             g.strokePath()
           }
-          // Grass meadow with darker tufts so the river sits in a place, not a void.
-          const rand = seededRandom(7)
-          const meadow = this.add.graphics().setDepth(1)
-          for (let i = 0; i < 520; i += 1) {
-            const side = rand() < 0.5 ? -1 : 1
-            const point = sample(rand(), side * (1.25 + rand() * 3.2))
-            meadow.fillStyle(rand() < 0.5 ? 0x2b6b3d : 0x3f8a4f, 0.55).fillEllipse(point.x, point.y, 26 + rand() * 50, 12 + rand() * 20)
+          const { ground, bank, water, foam, currents: current } = raceTheme
+          if (ground.style === 'tufts') {
+            // Ground tufts so the river sits in a place, not a void.
+            const rand = seededRandom(7)
+            const meadow = this.add.graphics().setDepth(1)
+            for (let i = 0; i < 520; i += 1) {
+              const side = rand() < 0.5 ? -1 : 1
+              const point = sample(rand(), side * (1.25 + rand() * 3.2))
+              meadow.fillStyle(ground.colors[Math.floor(rand() * ground.colors.length)]!, ground.alpha).fillEllipse(point.x, point.y, 26 + rand() * 50, 12 + rand() * 20)
+            }
+          } else {
+            this.drawCityGrid(ground)
           }
-          // Sandy banks → deep water → bright channel, with a foam edge.
-          band(-1.16, -0.96, 0xe9d49a); band(0.96, 1.16, 0xe9d49a)
-          edge(-1.16, 0x9a7b43, 5, 0.9, 3); edge(1.16, 0x9a7b43, 5, 0.9, 3)
-          band(-1, 1, 0x1a78ab)
-          band(-0.78, 0.78, 0x2493c7, 0.85)
-          band(-0.42, 0.42, 0x34a8da, 0.55)
-          edge(-0.97, 0xe6fbff, 5, 0.75, 4); edge(0.97, 0xe6fbff, 5, 0.75, 4)
-          edge(-0.9, 0xbdefff, 2, 0.4, 4); edge(0.9, 0xbdefff, 2, 0.4, 4)
-          const currents = this.add.graphics().setDepth(5).setAlpha(0.16).lineStyle(3, 0xb8f4ff, 1)
+          // Banks → deep water → bright channel, with a foam edge.
+          band(-bank.outer, -0.96, bank.fill); band(0.96, bank.outer, bank.fill)
+          if (bank.glow !== undefined) { edge(-bank.outer, bank.glow, 16, 0.22, 3); edge(bank.outer, bank.glow, 16, 0.22, 3) }
+          edge(-bank.outer, bank.edge, 5, 0.9, 3); edge(bank.outer, bank.edge, 5, 0.9, 3)
+          band(-1, 1, water[0])
+          band(-0.78, 0.78, water[1], 0.85)
+          band(-0.42, 0.42, water[2], 0.55)
+          if (foam.glow) { edge(-0.97, foam.edge, 14, 0.25, 4); edge(0.97, foam.edge, 14, 0.25, 4) }
+          edge(-0.97, foam.edge, 5, 0.75, 4); edge(0.97, foam.edge, 5, 0.75, 4)
+          edge(-0.9, foam.inner, 2, 0.4, 4); edge(0.9, foam.inner, 2, 0.4, 4)
+          const currents = this.add.graphics().setDepth(5).setAlpha(current.alpha).lineStyle(3, current.color, 1)
+          if (current.additive) currents.setBlendMode(Phaser.BlendModes.ADD)
           for (let lane = -2; lane <= 2; lane += 1) {
             for (let dash = 0; dash < 70; dash += 1) {
               const a = track.sample(dash / 70, lane * 0.22)
@@ -373,7 +388,7 @@ export function PhaserRaceCanvas({
             this.add.particles(0, 0, 'p-spark', {
               emitZone: { type: 'random' as const, source: glintSource },
               lifespan: { min: 500, max: 900 }, scale: { start: 0.55, end: 0 }, alpha: { start: 0.85, end: 0 },
-              frequency: mobileViewport ? 90 : 45, quantity: 1, tint: [0xffffff, 0xd9f6ff],
+              frequency: mobileViewport ? 90 : 45, quantity: 1, tint: raceTheme.glints,
             }).setDepth(6)
           }
         }
@@ -384,14 +399,59 @@ export function PhaserRaceCanvas({
             for (const side of [-1, 1]) {
               if (rand() < 0.45) continue
               const onBank = rand() < 0.55
-              const point = bankPoint(track, progress + rand() * 0.008, side * (onBank ? 1.26 + rand() * 0.5 : 0.8 + rand() * 0.08))
-              const key = onBank ? (rand() < 0.6 ? decorKey('reeds') : decorKey('rock')) : (rand() < 0.7 ? decorKey('lilypad') : decorKey('lotus'))
+              const point = bankPoint(track, progress + rand() * 0.008, side * (onBank ? raceTheme.bank.outer + 0.1 + rand() * 0.5 : 0.8 + rand() * 0.08))
+              const piece = pickWeighted(onBank ? raceTheme.decor.bank : raceTheme.decor.water, rand())
+              const key = decorKey(piece.key)
               if (!this.textures.exists(key)) continue
-              const size = onBank ? 54 + rand() * 40 : 22 + rand() * 12
-              const decor = this.add.image(point.x, point.y, key).setDisplaySize(size, size).setDepth(onBank ? 8 : 7).setAngle(onBank ? 0 : rand() * 360)
-              if (!onBank && !reducedMotion) this.tweens.add({ targets: decor, angle: decor.angle + 8, y: point.y - 2, duration: 1600 + rand() * 900, yoyo: true, repeat: -1, ease: 'Sine.InOut' })
+              const size = piece.size[0] + rand() * (piece.size[1] - piece.size[0])
+              const spin = !onBank && piece.spin
+              const decor = this.add.image(point.x, point.y, key).setDisplaySize(size, size).setDepth(onBank ? 8 : 7).setAngle(onBank ? 0 : spin ? rand() * 360 : 0)
+              if (!onBank && !reducedMotion) this.tweens.add({ targets: decor, angle: decor.angle + (spin ? 8 : 4), y: point.y - 2, duration: 1600 + rand() * 900, yoyo: true, repeat: -1, ease: 'Sine.InOut' })
             }
           }
+        }
+
+        /** Neon theme ground: a glowing city grid with scattered window lights instead of grass. */
+        private drawCityGrid(ground: { minor: number; major: number; lights: number[] }) {
+          const CELL = 96
+          const minX = -250
+          const maxX = track.length + 250
+          const minY = -850
+          const maxY = 850
+          const grid = this.add.graphics().setDepth(1)
+          for (let x = minX, index = 0; x <= maxX; x += CELL, index += 1) {
+            grid.lineStyle(index % 4 ? 2 : 3, index % 4 ? ground.minor : ground.major, index % 4 ? 0.55 : 0.45).lineBetween(x, minY, x, maxY)
+          }
+          for (let y = minY, index = 0; y <= maxY; y += CELL, index += 1) {
+            grid.lineStyle(index % 4 ? 2 : 3, index % 4 ? ground.minor : ground.major, index % 4 ? 0.55 : 0.45).lineBetween(minX, y, maxX, y)
+          }
+          const rand = seededRandom(11)
+          const lights = this.add.graphics().setDepth(1).setBlendMode(Phaser.BlendModes.ADD)
+          for (let i = 0; i < 420; i += 1) {
+            const side = rand() < 0.5 ? -1 : 1
+            const point = bankPoint(track, rand(), side * (1.3 + rand() * 3.2))
+            lights.fillStyle(ground.lights[Math.floor(rand() * ground.lights.length)]!, 0.35 + rand() * 0.4).fillRect(point.x, point.y, 5 + rand() * 6, 4 + rand() * 4)
+          }
+        }
+
+        /** Screen-space weather. Spawns over an oversized area so it still covers the view when the camera zooms out. */
+        private drawAtmosphere() {
+          const { width, height } = this.scale
+          const { ambient } = raceTheme
+          if (!ambient || reducedMotion) return
+          const falling = ambient.spawn === 'fall'
+          this.add.particles(0, 0, ambient.texture, {
+            x: { min: -width * 0.4, max: width * 1.4 },
+            y: falling ? -height * 0.35 : { min: -height * 0.3, max: height * 1.3 },
+            speedX: { min: ambient.speedX[0], max: ambient.speedX[1] },
+            speedY: { min: ambient.speedY[0], max: ambient.speedY[1] },
+            scale: { min: ambient.scale[0], max: ambient.scale[1] },
+            alpha: falling ? ambient.alpha : { values: [0, ambient.alpha, ambient.alpha, 0] },
+            rotate: ambient.rotate === 'spin' ? { start: 0, end: 540 } : ambient.rotate ?? 0,
+            lifespan: ambient.lifespan, frequency: ambient.frequency * (mobileViewport ? 2 : 1), quantity: 1,
+            tint: ambient.tint,
+            blendMode: ambient.additive ? Phaser.BlendModes.ADD : Phaser.BlendModes.NORMAL,
+          }).setScrollFactor(0).setDepth(985)
         }
 
         private drawStartFinish() {
@@ -598,7 +658,7 @@ export function PhaserRaceCanvas({
             follow: root, followOffset: { x: -30, y: 22 },
             lifespan: { min: 420, max: 760 }, speedX: { min: -70, max: -25 }, speedY: { min: -16, max: 16 },
             scale: { start: 0.38, end: 1.05 }, alpha: { start: 0.55, end: 0 },
-            frequency: WAKE_IDLE_MS, quantity: 1,
+            frequency: WAKE_IDLE_MS, quantity: 1, ...(raceTheme.wakeTint ? { tint: raceTheme.wakeTint } : {}),
           }).setDepth(95)
 
           if (player.isGhost) {
@@ -1201,7 +1261,7 @@ export function PhaserRaceCanvas({
       let liveScene: DuckRaceScene | null = null
       void sceneReady.then(() => { liveScene = scene })
       game = new Phaser.Game({
-        type: Phaser.AUTO, parent: parentId, backgroundColor: '#2f7a46', width: mobileViewport ? 720 : 1280, height: mobileViewport ? 720 : 640, scene,
+        type: Phaser.AUTO, parent: parentId, backgroundColor: themeBackground, width: mobileViewport ? 720 : 1280, height: mobileViewport ? 720 : 640, scene,
         render: { antialias: true, roundPixels: false },
         scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
         fps: { target: clientSimConfig ? 60 : 30 },
@@ -1333,7 +1393,7 @@ export function PhaserRaceCanvas({
       game?.destroy(true)
       audio.close()
     }
-  }, [chaosType, debugPickups, parentId, raceId, serializedLiveConfig, serializedManualInputs, serializedPlayers, serializedReplayConfig])
+  }, [chaosType, debugPickups, parentId, raceId, serializedLiveConfig, serializedManualInputs, serializedPlayers, serializedReplayConfig, theme])
 
   return (
     <div className="overflow-hidden rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[#2f7a46] shadow-2xl">

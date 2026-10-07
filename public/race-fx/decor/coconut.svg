@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%" fill="none">
+<g id="d-coconut"><path d="M64 18 A46 46 0 1 1 63.9 18 Z" fill="#7C4A2D" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M36 46 C44 30 60 26 74 28 C58 34 46 44 40 60 Z" fill="#A16207" opacity="0.8"/>
+<path d="M40 80 C52 88 70 90 88 82 M34 64 C48 74 76 76 94 66" fill="none" stroke="#5B3420" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="54" cy="50" r="5" fill="#3B2416"/>
+<circle cx="72" cy="50" r="5" fill="#3B2416"/>
+<circle cx="63" cy="64" r="5" fill="#3B2416"/></g>
+</svg>

@@ -45,6 +45,7 @@ export function createParticleTextures(scene: PhaserType.Scene) {
     g.moveTo(10, 0).lineTo(13, 7).lineTo(20, 10).lineTo(13, 13).lineTo(10, 20).lineTo(7, 13).lineTo(0, 10).lineTo(7, 7).closePath().fillPath()
   })
   make('p-streak', 32, (g) => { g.fillStyle(0xffffff, 0.9).fillRoundedRect(0, 14, 32, 4, 2) })
+  make('p-petal', 20, (g) => { g.fillStyle(0xffffff, 1).fillEllipse(10, 10, 18, 10); g.fillStyle(0xffffff, 0.6).fillEllipse(7, 9, 8, 4) })
 }
 
 export interface FxOptions {

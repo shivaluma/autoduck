@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%" fill="none">
+<g id="d-petals"><path transform="rotate(20 44 46)" d="M44 62 C30 50 34 32 42 30 L44 36 L46 30 C54 32 58 50 44 62 Z" fill="#F9A8D4" stroke="#1B132B" stroke-width="6" stroke-linejoin="round"/>
+<path transform="rotate(110 78 40)" d="M78 56 C64 44 68 26 76 24 L78 30 L80 24 C88 26 92 44 78 56 Z" fill="#FBCFE8" stroke="#1B132B" stroke-width="6" stroke-linejoin="round"/>
+<path transform="rotate(200 86 76)" d="M86 92 C72 80 76 62 84 60 L86 66 L88 60 C96 62 100 80 86 92 Z" fill="#F9A8D4" stroke="#1B132B" stroke-width="6" stroke-linejoin="round"/>
+<path transform="rotate(290 50 84)" d="M50 100 C36 88 40 70 48 68 L50 74 L52 68 C60 70 64 88 50 100 Z" fill="#FBCFE8" stroke="#1B132B" stroke-width="6" stroke-linejoin="round"/>
+<path transform="rotate(60 64 62)" d="M64 78 C50 66 54 48 62 46 L64 52 L66 46 C74 48 78 66 64 78 Z" fill="#F9A8D4" stroke="#1B132B" stroke-width="6" stroke-linejoin="round"/>
+<path d="M96 100 C104 92 116 94 118 104 C108 110 100 108 96 100 Z" fill="#4ADE80" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/></g>
+</svg>

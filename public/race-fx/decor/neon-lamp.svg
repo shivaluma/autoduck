@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%" fill="none">
+<g id="d-neon-lamp"><defs><filter id="d-neon-lamp-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter><radialGradient id="d-neon-lamp-halo" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#22E9FF" stop-opacity="0.65"/><stop offset="1" stop-color="#22E9FF" stop-opacity="0"/></radialGradient></defs>
+<circle cx="86" cy="46" r="36" fill="url(#d-neon-lamp-halo)"/>
+<path d="M62 116 V46 C62 32 68 26 82 26" fill="none" stroke="#1B132B" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M62 116 V46 C62 32 68 26 82 26" fill="none" stroke="#4C3F8F" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M66 18 H108 L100 38 H74 Z" fill="#4C3F8F" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+<g filter="url(#d-neon-lamp-glow)"><path d="M80 42 H94" fill="none" stroke="#22E9FF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M58 64 V100" fill="none" stroke="#FF2BD6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></g>
+<path d="M44 112 H76 V122 H44 Z" fill="#2A2350" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round" rx="3"/></g>
+</svg>

@@ -57,7 +57,14 @@ export const RACE_FX_ICONS = [
 
 export type RaceFxIconKey = typeof RACE_FX_ICONS[number]
 
-export const RACE_FX_DECOR = ['lilypad', 'lotus', 'reeds', 'rock'] as const
+export const RACE_FX_DECOR = [
+  'lilypad', 'lotus', 'reeds', 'rock',
+  // Theme decor (lib/race-fx/themes.ts)
+  'neon-lamp', 'neon-sign', 'neon-roof', 'neon-buoy',
+  'sakura-tree', 'stone-lantern', 'koi', 'petal-raft',
+  'snow-pine', 'snowman', 'ice-floe', 'penguin',
+  'palm', 'tiki-torch', 'hibiscus', 'coconut',
+] as const
 
 /** Lobby/web UI icons, drawn in the same style as the race art. */
 export const UI_ICONS = [

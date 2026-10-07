@@ -42,17 +42,18 @@ export default function RaceFxGalleryPage() {
             label(x, iconY + 28, icon)
           })
           RACE_FX_DECOR.forEach((decor, index) => {
-            const x = 900 + index * 90
-            this.add.image(x, iconY, decorKey(decor)).setDisplaySize(70, 70)
-            label(x, iconY + 40, decor)
+            const x = 70 + (index % 10) * 130
+            const y = 780 + Math.floor(index / 10) * 120
+            this.add.image(x, y, decorKey(decor)).setDisplaySize(80, 80)
+            label(x, y + 46, decor)
           })
           const tones = ['fire', 'nitro', 'gold', 'ice', 'green', 'pink', 'gray'] as const
           const words = ['BOOM!', 'NITRO!', '+1 QP', 'BLOCKED!', 'DODGE!', 'SLIP!', 'MUTED']
-          this.time.addEvent({ delay: 1400, loop: true, callback: () => tones.forEach((tone, index) => callout(this, 120 + index * 170, 690, words[index]!, tone, false)) })
+          this.time.addEvent({ delay: 1400, loop: true, callback: () => tones.forEach((tone, index) => callout(this, 120 + index * 170, 680, words[index]!, tone, false)) })
         }
       }
       game = new Phaser.Game({
-        type: Phaser.AUTO, parent: parentId, backgroundColor: '#0f2233', width: 1400, height: 740, scene: Gallery,
+        type: Phaser.AUTO, parent: parentId, backgroundColor: '#0f2233', width: 1400, height: 1000, scene: Gallery,
         scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
       })
     })
@@ -63,7 +64,7 @@ export default function RaceFxGalleryPage() {
     <main className="min-h-screen bg-[#0b1a28] p-6 text-white">
       <h1 className="font-display text-3xl">Race FX gallery</h1>
       <p className="mb-4 text-sm text-white/60">Loops play continuously; ↻ one-shots re-fire every 1.6s. Regenerate assets with <code>pnpm race:fx</code>.</p>
-      <div id={parentId} className="aspect-[1400/740] w-full overflow-hidden rounded-2xl border-2 border-white/10" />
+      <div id={parentId} className="aspect-[1400/1000] w-full overflow-hidden rounded-2xl border-2 border-white/10" />
     </main>
   )
 }

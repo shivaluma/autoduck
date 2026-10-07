@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%" fill="none">
+<g id="d-hibiscus"><path transform="rotate(0 64 64)" d="M64 64 C44 52 40 22 56 14 C62 12 64 18 64 18 C64 18 66 12 72 14 C88 22 84 52 64 64 Z" fill="#F43F5E" stroke="#1B132B" stroke-width="6" stroke-linejoin="round"/>
+<path transform="rotate(72 64 64)" d="M64 64 C44 52 40 22 56 14 C62 12 64 18 64 18 C64 18 66 12 72 14 C88 22 84 52 64 64 Z" fill="#F43F5E" stroke="#1B132B" stroke-width="6" stroke-linejoin="round"/>
+<path transform="rotate(144 64 64)" d="M64 64 C44 52 40 22 56 14 C62 12 64 18 64 18 C64 18 66 12 72 14 C88 22 84 52 64 64 Z" fill="#F43F5E" stroke="#1B132B" stroke-width="6" stroke-linejoin="round"/>
+<path transform="rotate(216 64 64)" d="M64 64 C44 52 40 22 56 14 C62 12 64 18 64 18 C64 18 66 12 72 14 C88 22 84 52 64 64 Z" fill="#F43F5E" stroke="#1B132B" stroke-width="6" stroke-linejoin="round"/>
+<path transform="rotate(288 64 64)" d="M64 64 C44 52 40 22 56 14 C62 12 64 18 64 18 C64 18 66 12 72 14 C88 22 84 52 64 64 Z" fill="#F43F5E" stroke="#1B132B" stroke-width="6" stroke-linejoin="round"/>
+<circle cx="64" cy="64" r="14" fill="#BE123C"/>
+<path d="M64 64 L86 44" fill="none" stroke="#FDE047" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="88" cy="42" r="5" fill="#FDE047" stroke="#1B132B" stroke-width="3"/></g>
+</svg>

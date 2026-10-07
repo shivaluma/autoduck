@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%" fill="none">
+<g id="d-neon-roof"><defs><filter id="d-neon-roof-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<path d="M14 14 H114 V114 H14 Z" fill="#1E1846" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round" rx="6"/>
+<path d="M24 24 H104 V104 H24 Z" fill="#2A2160"/>
+<g filter="url(#d-neon-roof-glow)"><path d="M20 20 H108 V108 H20 Z" fill="none" stroke="#FF2BD6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="34" y="36" width="9" height="9" rx="2" fill="#22E9FF"/><rect x="50" y="36" width="9" height="9" rx="2" fill="#FDE047"/><rect x="34" y="52" width="9" height="9" rx="2" fill="#FF2BD6"/><rect x="50" y="52" width="9" height="9" rx="2" fill="#22E9FF"/><rect x="34" y="68" width="9" height="9" rx="2" fill="#22E9FF"/><rect x="50" y="84" width="9" height="9" rx="2" fill="#FF2BD6"/><rect x="34" y="84" width="9" height="9" rx="2" fill="#FDE047"/></g>
+<path d="M68 36 H98 V62 H68 Z" fill="#3B2F6E" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round" rx="3"/>
+<path d="M72 44 H94 M72 50 H94 M72 56 H94" fill="none" stroke="#140F2E" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M70 74 H98 V98 H70 Z" fill="#3B2F6E" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round" rx="14"/>
+<circle cx="84" cy="86" r="6" fill="#140F2E"/></g>
+</svg>

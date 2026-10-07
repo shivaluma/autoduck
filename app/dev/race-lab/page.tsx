@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PhaserRaceCanvas, type ReplayInspection } from '@/components/racing/phaser-race-canvas'
 import { Switch } from '@/components/ui/switch'
+import { RACE_THEMES, RACE_THEME_IDS, type RaceThemeId } from '@/lib/race-fx/themes'
 import { WILD_ITEM_CATALOG } from '@/packages/race-core/src'
 import {
   DEFAULT_TRACK_VERSION,
@@ -76,6 +77,7 @@ export default function RaceLabPage() {
   const [runKey, setRunKey] = useState(0)
   const [paused, setPaused] = useState(false)
   const [speed, setSpeed] = useState<1 | 2 | 4>(1)
+  const [canvasTheme, setCanvasTheme] = useState<RaceThemeId | ''>('')
   const [snapshot, setSnapshot] = useState<ReplayInspection | null>(null)
   const [events, setEvents] = useState<RaceEvent[]>([])
   const lastInspectionTick = useRef(0)
@@ -188,6 +190,7 @@ export default function RaceLabPage() {
     <section className="grid gap-4 rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-5 lg:grid-cols-4">
       <label className="text-sm font-black">DUCKS<input type="number" min={2} max={16} value={playerCount} onChange={(event) => setPlayerCount(Math.max(2, Math.min(16, Number(event.target.value))))} className="mt-2 w-full rounded-xl bg-black/30 px-3 py-2" /></label>
       <label className="text-sm font-black">CHAOS<select value={chaos} onChange={(event) => setChaos(event.target.value as typeof chaos)} className="mt-2 w-full rounded-xl bg-black/30 px-3 py-2">{CHAOS_TYPES.map((type) => <option key={type}>{type}</option>)}</select></label>
+      <label className="text-sm font-black">THEME<select value={canvasTheme} onChange={(event) => setCanvasTheme(event.target.value as RaceThemeId | '')} className="mt-2 w-full rounded-xl bg-black/30 px-3 py-2"><option value="">🎲 Random per race</option>{RACE_THEME_IDS.map((id) => <option key={id} value={id}>{RACE_THEMES[id].emoji} {RACE_THEMES[id].name}</option>)}</select></label>
       <label className="text-sm font-black lg:col-span-2">SEED<div className="mt-2 flex gap-2"><input value={seed} onChange={(event) => setSeed(event.target.value.trim())} className="min-w-0 flex-1 rounded-xl bg-black/30 px-3 py-2 font-mono text-xs" /><button onClick={() => setSeed(randomSeed())} className="rounded-xl border-2 border-white/20 px-3">RANDOM</button></div></label>
       <label className="text-sm font-black">⚡ NITRO {nitro.toFixed(2)}×<input type="range" min="1" max="1.2" step="0.01" value={nitro} onChange={(event) => setNitro(Number(event.target.value))} className="mt-3 w-full" /></label>
       <label className="text-sm font-black">🚀 ROCKET {rocketSlow.toFixed(2)}×<input type="range" min="0.75" max="1" step="0.01" value={rocketSlow} onChange={(event) => setRocketSlow(Number(event.target.value))} className="mt-3 w-full" /></label>
@@ -208,7 +211,7 @@ export default function RaceLabPage() {
 
     {activeConfig && <>
       <div className="flex flex-wrap items-center gap-2"><button onClick={() => setPaused((value) => !value)} className="rounded-xl border-2 border-white/20 px-4 py-2 font-black">{paused ? '▶ RESUME' : '⏸ PAUSE'}</button>{([1, 2, 4] as const).map((value) => <button key={value} onClick={() => setSpeed(value)} className={`rounded-xl px-4 py-2 font-black ${speed === value ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' : 'border-2 border-white/20'}`}>{value}×</button>)}<button onClick={start} className="rounded-xl border-2 border-[var(--color-ggd-neon-green)] px-4 py-2 font-black text-[var(--color-ggd-neon-green)]">↻ REPLAY</button><span className="ml-auto text-sm text-white/60">Tick {snapshot?.tick ?? 0} · {snapshot?.finished ? 'FINISHED' : paused ? 'PAUSED' : 'RUNNING'}</span></div>
-      <PhaserRaceCanvas key={runKey} raceId={-runKey} players={canvasPlayers} replayConfig={activeConfig} replaySpeed={speed} replayPaused={paused} onReplayInspect={inspect} debugPickups />
+      <PhaserRaceCanvas key={runKey} raceId={-runKey} players={canvasPlayers} replayConfig={activeConfig} replaySpeed={speed} replayPaused={paused} onReplayInspect={inspect} debugPickups theme={canvasTheme || undefined} />
       <section className="grid gap-4 lg:grid-cols-2"><div className="rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-4"><h2 className="font-display text-2xl">State inspector</h2><div className="mt-3 space-y-2">{snapshot?.ducks.map((duck) => <div key={duck.playerId} className="flex items-center gap-3 rounded-xl bg-black/20 px-3 py-2 text-sm"><b className="w-6">#{duck.rank}</b><span className="flex-1">{players.find((player) => player.playerId === duck.playerId)?.name}</span><span>{(duck.progress * 100).toFixed(1)}%</span><span className="text-white/50">{duck.wildItem ? `🎒 ${WILD_ITEM_CATALOG.find((item) => item.id === duck.wildItem?.itemId)?.icon}` : duck.activeEffects.join(', ') || '—'} · 📦 {duck.regularPickupCount}</span></div>)}</div></div><div className="max-h-[420px] overflow-auto rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-4"><h2 className="font-display text-2xl">Event log · {events.length}</h2><div className="mt-3 space-y-1 font-mono text-xs">{[...events].reverse().map((event, index) => <div key={`${event.tick}-${event.type}-${index}`} className="rounded-lg bg-black/20 px-3 py-2"><span className="text-white/45">{event.tick}</span> · {event.type} · {event.sourcePlayerId ?? '—'}{event.targetPlayerId ? ` → ${event.targetPlayerId}` : ''}</div>)}</div></div></section>
     </>}
   </main>

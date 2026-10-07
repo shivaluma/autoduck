@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%" fill="none">
+<g id="d-tiki"><defs><radialGradient id="d-tiki-halo" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FDBA74" stop-opacity="0.6"/><stop offset="1" stop-color="#FDBA74" stop-opacity="0"/></radialGradient></defs>
+<circle cx="64" cy="26" r="30" fill="url(#d-tiki-halo)"/>
+<path d="M58 52 H70 V124 H58 Z" fill="#B45309" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M58 70 H70 M58 88 H70 M58 106 H70" fill="none" stroke="#78350F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M46 40 H82 L76 58 H52 Z" fill="#92400E" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M50 46 L78 52 M52 52 L76 46" fill="none" stroke="#FDE68A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M64 8 C52 20 50 32 56 40 H72 C78 32 76 20 64 8 Z" fill="#F97316" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M64 20 C58 28 58 34 60 40 H68 C70 34 70 28 64 20 Z" fill="#FDE047"/></g>
+</svg>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%" fill="none">
+<g id="d-neon-buoy"><defs><filter id="d-neon-buoy-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<circle cx="64" cy="64" r="52" fill="none" stroke="#22E9FF" stroke-width="3" opacity="0.35"/>
+<path d="M64 22 A42 42 0 1 1 63.9 22 Z" fill="#1B1640" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<g filter="url(#d-neon-buoy-glow)"><circle cx="64" cy="64" r="28" fill="none" stroke="#FF2BD6" stroke-width="6"/><circle cx="64" cy="64" r="9" fill="#22E9FF"/></g></g>
+</svg>

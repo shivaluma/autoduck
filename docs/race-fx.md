@@ -13,6 +13,15 @@ Visual layer of the Phaser race canvas (`components/racing/phaser-race-canvas.ts
 
 ## In the canvas (`components/racing/race-fx.ts`)
 - **World:** grass meadow, sand banks, layered water, sun glints (particles near the camera), seeded decor, checkered start/finish, boost gates with chasing chevrons.
+- **Themes** (`lib/race-fx/themes.ts`): each race picks one at random, seeded by its race id (`pickRaceTheme`) so live viewers and replays agree. A theme sets the ground (tufts or a neon city grid), bank and water colours, foam, currents, glint/wake tints, weighted bank/water decor and optional screen-space weather. Purely visual, so no balance bump. Force one with the canvas `theme` prop or the THEME picker in `/dev/race-lab`.
+
+  | Theme | Look | Weather |
+  |---|---|---|
+  | 🌿 Duck Pond | the original meadow river | — |
+  | 🌃 Neon Canal | night city grid, magenta/cyan neon banks, lamps, signs, rooftops, buoys | neon rain |
+  | 🌸 Sakura Garden | jade water, stone banks, cherry trees, lanterns, koi, petal rafts | falling petals |
+  | ❄️ Aurora Glacier | snowfield, ice banks, snowy pines, snowmen, ice floes, penguins | snowfall |
+  | 🌴 Sunset Lagoon | turquoise shallows, wide beach, palms, tiki torches, hibiscus, coconuts | golden motes |
 - **Ducks:**
   - bob on the water, lean into turns, foam wake particles (busier while boosting)
   - medal rank badges and icon loadout badges (used items pop away)

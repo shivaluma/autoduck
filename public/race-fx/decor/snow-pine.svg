@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%" fill="none">
+<g id="d-pine"><path d="M58 104 H70 V124 H58 Z" fill="#7C4A2D" stroke="#1B132B" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M30 108 L64 44 L98 108 Z" fill="#166534" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M22 80 L64 32 L106 80 Z" fill="#166534" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M14 54 L64 20 L114 54 Z" fill="#166534" stroke="#1B132B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M48.7 72.8 L64 44 L79.3 72.8 C70.8 79.2 57.2 77.28 48.7 72.8 Z" fill="#FFFFFF"/>
+<path d="M45.099999999999994 53.599999999999994 L64 32 L82.9 53.599999999999994 C72.4 58.4 55.6 56.96 45.099999999999994 53.599999999999994 Z" fill="#FFFFFF"/>
+<path d="M41.5 35.3 L64 20 L86.5 35.3 C74 38.7 54 37.68 41.5 35.3 Z" fill="#FFFFFF"/>
+<path d="M30 108 C44 102 60 106 70 104 C82 102 92 104 98 108 Z" fill="#FFFFFF" opacity="0.9"/></g>
+</svg>
