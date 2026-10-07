@@ -85,6 +85,8 @@ export default function RaceLabPage() {
   const players = useMemo(() => Array.from({ length: playerCount }, (_, index) => ({
     playerId: `lab-duck-${index + 1}`,
     name: `Dzịt ${index + 1}`,
+    // Every other duck gets a photo-style avatar so the bankside crowd previews both faces and the initials fallback.
+    avatarUrl: index % 2 === 0 ? `https://api.dicebear.com/9.x/avataaars/svg?seed=lab-${index + 1}` : null,
   })), [playerCount])
 
   const selectedChoices = useMemo(() => new Map(players.map((player, index) => [player.playerId, choices[player.playerId] ?? {

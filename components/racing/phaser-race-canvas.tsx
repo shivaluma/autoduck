@@ -7,6 +7,7 @@ import { createSimulation, itemActivationForEvent, queueWildItemInput, snapshotR
 import { createRiverTrack } from '@/packages/race-core/src/track'
 import { type DuckSnapshot, type RaceConfig, type RaceEvent, type RaceItemId, type RecordedWildItemInput, type StateSnapshotMessage, type WildItemId } from '@/packages/race-protocol/src'
 import { RaceAudioSystem } from './race-audio'
+import { createCrowd, planCrowd, preloadCrowdAvatars } from './race-crowd'
 import { COSMETIC_BY_ID, STARTER_COSMETIC_IDS } from '@/lib/cosmetics/catalog'
 import { AVATAR_FRAME, COSMETIC_LAYER_ORDER, MOTION_SPRITE, type DuckAppearance } from '@/lib/cosmetics/types'
 import { ITEM_ICON_BY_ID } from '@/lib/race-fx/manifest'
@@ -205,6 +206,8 @@ export function PhaserRaceCanvas({
       const reducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
       const mobileViewport = typeof window !== 'undefined' && window.innerWidth < 640
       const raceTheme = theme ? RACE_THEMES[theme] : pickRaceTheme(raceId)
+      const crowdPlayers = scenePlayers.filter((player) => !player.isGhost)
+      const crowdPlan = planCrowd(track, crowdPlayers.length, raceTheme.bank.outer, 53)
       const themeBackground = `#${raceTheme.background.toString(16).padStart(6, '0')}`
       let markSceneReady: () => void = () => {}
       const sceneReady = new Promise<void>((resolve) => { markSceneReady = resolve })
@@ -244,6 +247,7 @@ export function PhaserRaceCanvas({
         private focusUntil = 0
         private pendingWorld: Pick<StateSnapshotMessage, 'ducks' | 'pickups' | 'hazards' | 'rockets' | 'bananas'> | null = null
         private lastAppliedSnapshotTick = -1
+        private crowd: ReturnType<typeof createCrowd> | null = null
 
         queueWorld(world: Pick<StateSnapshotMessage, 'ducks' | 'pickups' | 'hazards' | 'rockets' | 'bananas'>, tick: number) {
           if (tick <= this.lastAppliedSnapshotTick) return
@@ -259,6 +263,7 @@ export function PhaserRaceCanvas({
           })
 
           preloadRaceFx(this)
+          preloadCrowdAvatars(this, crowdPlayers)
 
           const cosmeticsToLoad = new Set<string>()
 
@@ -304,6 +309,7 @@ export function PhaserRaceCanvas({
           this.drawAtmosphere()
           if (debugPickups) this.drawPickupDebug()
           scenePlayers.forEach((player, index) => this.createDuck(player, index))
+          this.crowd = createCrowd(this, { track, players: crowdPlayers, plan: crowdPlan, reducedMotion })
           const chaosLabel = chaosType ?? clientSimConfig?.chaosConfig?.type
           this.add.text(18, 16, `${replayConfig ? '↻ REPLAY' : clientSimConfig ? '● LIVE' : '● LIVE'} · ${raceTheme.emoji} ${raceTheme.name.toUpperCase()}${chaosLabel ? ` · 🎴 ${chaosLabel.replaceAll('_', ' ')}` : ''}`, {
             color: replayConfig ? '#ffcc00' : '#3dff8f', fontFamily: 'sans-serif', fontSize: '18px', fontStyle: 'bold',
@@ -403,6 +409,8 @@ export function PhaserRaceCanvas({
               const piece = pickWeighted(onBank ? raceTheme.decor.bank : raceTheme.decor.water, rand())
               const key = decorKey(piece.key)
               if (!this.textures.exists(key)) continue
+              // Keep trees and rocks out of the bankside crowds.
+              if (onBank && crowdPlan.spans.some((span) => span.side === side && progress + 0.004 > span.from - 0.012 && progress + 0.004 < span.to + 0.012)) continue
               const size = piece.size[0] + rand() * (piece.size[1] - piece.size[0])
               const spin = !onBank && piece.spin
               const decor = this.add.image(point.x, point.y, key).setDisplaySize(size, size).setDepth(onBank ? 8 : 7).setAngle(onBank ? 0 : spin ? rand() * 360 : 0)
@@ -1220,7 +1228,7 @@ export function PhaserRaceCanvas({
           }
         }
 
-        update(_time: number, delta: number) {
+        update(time: number, delta: number) {
           if (this.pendingWorld) {
             this.applyWorld(this.pendingWorld)
             this.pendingWorld = null
@@ -1245,6 +1253,10 @@ export function PhaserRaceCanvas({
           if (positions.length === 0) return
           const averageX = positions.reduce((sum, point) => sum + point.x, 0) / positions.length
           const averageY = positions.reduce((sum, point) => sum + point.y, 0) / positions.length
+          if (this.crowd) {
+            const duckPositions = new Map([...this.duckViews].map(([playerId, view]) => [playerId, view.root] as const))
+            this.crowd.update(time, this.cameras.main, duckPositions, { x: averageX, y: averageY })
+          }
           const spread = Math.max(...positions.map((point) => point.x)) - Math.min(...positions.map((point) => point.x))
           const camera = this.cameras.main
           const focus = this.time.now < this.focusUntil && this.focusPlayerId ? this.duckViews.get(this.focusPlayerId) : null

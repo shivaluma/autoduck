@@ -22,6 +22,7 @@ Visual layer of the Phaser race canvas (`components/racing/phaser-race-canvas.ts
   | 🌸 Sakura Garden | jade water, stone banks, cherry trees, lanterns, koi, petal rafts | falling petals |
   | ❄️ Aurora Glacier | snowfield, ice banks, snowy pines, snowmen, ice floes, penguins | snowfall |
   | 🌴 Sunset Lagoon | turquoise shallows, wide beach, palms, tiki torches, hibiscus, coconuts | golden motes |
+- **Crowd** (`components/racing/race-crowd.ts`): cartoon fans along both banks whose faces are the competitors' real avatars (`avatarUrl`, ghosts excluded). Avatars are loaded over XHR; when a host blocks CORS or the image 404s, the fan gets an initials face instead. The layout is seeded (`planCrowd`), and bank decor is kept out of crowd spans. Fans sway and clap while they wait, raise their arms as the pack passes, and jump and throw confetti when their own duck goes by. With reduced motion they stand still.
 - **Ducks:**
   - bob on the water, lean into turns, foam wake particles (busier while boosting)
   - medal rank badges and icon loadout badges (used items pop away)
