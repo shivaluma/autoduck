@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Fredoka, Nunito, Quicksand, Be_Vietnam_Pro } from "next/font/google";
+import { Baloo_2, Nunito, Quicksand, Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
 
-const fredoka = Fredoka({
+// Display font. Must ship a Vietnamese subset (Fredoka didn't, so diacritics fell back glyph-by-glyph).
+const baloo = Baloo_2({
   variable: "--font-boogaloo",
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "600", "700"],
+  subsets: ["latin", "latin-ext", "vietnamese"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 const nunito = Nunito({
@@ -42,7 +43,7 @@ export default function RootLayout({
   return (
     <html lang="vi" className="dark">
       <body
-        className={`${fredoka.variable} ${nunito.variable} ${quicksand.variable} ${beVietnam.variable} antialiased`}
+        className={`${baloo.variable} ${nunito.variable} ${quicksand.variable} ${beVietnam.variable} antialiased`}
       >
         {children}
       </body>
