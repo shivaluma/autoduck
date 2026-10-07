@@ -41,9 +41,11 @@ const faceKey = (playerId: string) => `crowd-face-${playerId}`
 export function preloadCrowdAvatars(scene: PhaserType.Scene, players: CrowdPlayer[]) {
   for (const player of players) {
     if (!player.avatarUrl || scene.textures.exists(avatarKey(player.playerId))) continue
-    // XHR-loaded, so a host without CORS just errors out here (→ initials) instead of tainting WebGL.
-    if (/\.svg(\?|$)|\/svg(\?|$)/i.test(player.avatarUrl)) scene.load.svg(avatarKey(player.playerId), player.avatarUrl, { width: FACE_SIZE * 2, height: FACE_SIZE * 2 })
-    else scene.load.image(avatarKey(player.playerId), player.avatarUrl)
+    // Real players (numeric user ids) load through our same-origin proxy: Google/Slack/R2 avatars send no
+    // CORS headers, so WebGL can't read them directly. Anything that still fails falls back to initials.
+    const url = /^\d+$/.test(player.playerId) ? `/api/avatars/${player.playerId}` : player.avatarUrl
+    if (/\.svg(\?|$)|\/svg(\?|$)/i.test(player.avatarUrl)) scene.load.svg(avatarKey(player.playerId), url, { width: FACE_SIZE * 2, height: FACE_SIZE * 2 })
+    else scene.load.image(avatarKey(player.playerId), url)
   }
 }
 
