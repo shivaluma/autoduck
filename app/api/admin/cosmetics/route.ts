@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { randomUUID } from '@/lib/test-ids'
 import { prisma } from '@/lib/db'
 import { COSMETIC_BY_ID, COSMETIC_CATALOG } from '@/lib/cosmetics/catalog'
 import { applyQuackTransaction } from '@/lib/cosmetics/economy'
@@ -77,7 +78,7 @@ export async function POST(request: Request) {
     if (!player || !Number.isInteger(body.amount) || body.amount === 0) return NextResponse.json({ error: 'Player/amount không hợp lệ' }, { status: 400 })
     try {
       await prisma.$transaction(async (tx: typeof prisma) => {
-        await applyQuackTransaction(tx, { seasonPlayerId: player.id, amount: body.amount!, reason: 'ADMIN_ADJUSTMENT', idempotencyKey: `admin:${crypto.randomUUID()}`, metadata: { actor: 'host' } })
+        await applyQuackTransaction(tx, { seasonPlayerId: player.id, amount: body.amount!, reason: 'ADMIN_ADJUSTMENT', idempotencyKey: `admin:${randomUUID()}`, metadata: { actor: 'host' } })
         await tx.cosmeticAdminEvent.create({ data: { action: 'ADJUST_QP', actor: 'host', playerId: player.id, metadataJson: JSON.stringify({ amount: body.amount }) } })
       })
       return NextResponse.json({ ok: true })
