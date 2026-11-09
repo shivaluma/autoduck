@@ -43,6 +43,10 @@ next-env.d.ts
 # database
 prisma/dev.db
 prisma/dev.db-journal
+# pre-migrate backups (scripts/ops/backup.mjs): full DB copies incl. access tokens
+prisma/backups/
+backups/
+pre-migrate-*.db*
 
 # generated
 prisma/generated/

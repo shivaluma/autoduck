@@ -36,6 +36,10 @@ RUN pnpm build
 # --- Stage 3: Runner (Playwright for browser automation) ---
 FROM mcr.microsoft.com/playwright:v1.59.1-noble AS runner
 
+# sqlite3 CLI for on-box runbooks (`sqlite3 ... ".backup ..."`, never cp).
+RUN apt-get update && apt-get install -y --no-install-recommends sqlite3 \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN npm install -g prisma@7.7.0 tsx@4.21.0 dotenv@17.4.2
 
 WORKDIR /app
