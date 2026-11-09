@@ -4,14 +4,24 @@
 //! rule "who loses if the ranking looks like this?" and compares the current
 //! ranking with the projected one.
 //!
-//! Phase A keeps the ranking memo as a **plain field** with the TS hit/miss
-//! condition: `observe` reuses `snapshot` while the ranking fingerprint
-//! (`ducks.length + Σ progress·(index + 1.618) + (finished ? 7 : 0)`)
-//! compares `===` equal (so a NaN fingerprint never hits). A hit can return a
-//! ranking built from older `currentRank`s; that staleness is TS behaviour.
-//! The TS `outcomeCache` memoises a pure function of the order, so it is not
-//! modelled. `Math.exp` (`:107,131`) goes through [`EngineMath::exp`].
+//! Phase A keeps both memos as **plain fields** with the TS hit/miss
+//! conditions:
+//!
+//! - `observe` reuses `snapshot` while the ranking fingerprint
+//!   (`ducks.length + Σ progress·(index + 1.618) + (finished ? 7 : 0)`, over
+//!   `ducks` in array order) compares `===` equal, so a NaN fingerprint never
+//!   hits. The fingerprint ignores `currentRank`, so a hit can return an
+//!   order built from older ranks (ranks are recomputed after the auto-use
+//!   decide phase, so the reuse lags by one phase); that staleness is TS
+//!   behaviour.
+//! - `outcomeCache` is keyed by `order.join('|')` (two orders can share a key
+//!   when an id contains `|`; the first one's outcome is then reused, as in
+//!   TS). It is cleared on every snapshot rebuild and, when it already holds
+//!   more than 512 entries, right before an insert.
+//!
+//! `Math.exp` (`:107,131`) goes through [`EngineMath::exp`].
 
+use alloc::collections::BTreeMap;
 use alloc::string::String;
 use alloc::vec::Vec;
 
@@ -57,17 +67,42 @@ impl RankingSnapshot {
     }
 }
 
-/// One `outcome(order)` (`:64-89`).
+/// The cap above which `outcomeCache` is cleared before an insert (`:82`).
+const OUTCOME_CACHE_LIMIT: usize = 512;
+
+/// One `outcome(order)` value (`:64-89`).
+#[derive(Clone, Debug, PartialEq)]
 struct Outcome {
+    /// `losers` (a `Set`; only membership is read).
     losers: Vec<String>,
-    /// `finalOrder` when the rule returned `finalStandings`.
-    final_order: Option<Vec<String>>,
+    /// `finalOrder`: `result.finalStandings` when the rule returned them,
+    /// otherwise the order the outcome was computed for. `finalIndex` is
+    /// `new Map(finalOrder.map((id, index) => [id, index]))`, so a lookup
+    /// takes the last occurrence.
+    final_order: Vec<String>,
 }
 
 impl Outcome {
     fn is_loser(&self, player_id: &str) -> bool {
         self.losers.iter().any(|id| id == player_id)
     }
+
+    /// `finalIndex.get(playerId)`.
+    fn final_index(&self, player_id: &str) -> Option<usize> {
+        self.final_order.iter().rposition(|id| id == player_id)
+    }
+}
+
+/// `order.join('|')`, the `outcomeCache` key.
+fn outcome_key(order: &[PlayerId]) -> String {
+    let mut key = String::new();
+    for (index, id) in order.iter().enumerate() {
+        if index > 0 {
+            key.push('|');
+        }
+        key.push_str(id.as_str());
+    }
+    key
 }
 
 /// `ChaosUtility` (`chaos-utility.ts:32-171`).
@@ -81,6 +116,8 @@ pub struct ChaosUtility {
     pub groups: Vec<Vec<PlayerId>>,
     /// The ranking memo (`private snapshot`).
     snapshot: Option<RankingSnapshot>,
+    /// `private outcomeCache` (a `Map`; only lookups and `size` are used).
+    outcome_cache: BTreeMap<String, Outcome>,
 }
 
 /// `moved(order, from, to)` (`:174-179`).
@@ -124,6 +161,7 @@ impl ChaosUtility {
             target_player_id: chaos.target_player_id.clone(),
             groups: chaos.groups.clone(),
             snapshot: None,
+            outcome_cache: BTreeMap::new(),
         }
     }
 
@@ -174,11 +212,27 @@ impl ChaosUtility {
                 .collect(),
         };
         self.snapshot = Some(snapshot.clone());
+        self.outcome_cache.clear();
         snapshot
     }
 
-    /// `outcome(order)` (`:64-89`).
-    fn outcome(&self, order: &[PlayerId]) -> Outcome {
+    /// `outcome(order)` (`:62-85`), memoised in `outcomeCache`.
+    fn outcome(&mut self, order: &[PlayerId]) -> &Outcome {
+        let key = outcome_key(order);
+        if !self.outcome_cache.contains_key(&key) {
+            let value = self.compute_outcome(order);
+            if self.outcome_cache.len() > OUTCOME_CACHE_LIMIT {
+                self.outcome_cache.clear();
+            }
+            self.outcome_cache.insert(key.clone(), value);
+        }
+        self.outcome_cache.get(&key).expect("inserted above")
+    }
+
+    /// The uncached body of `outcome(order)`.
+    fn compute_outcome(&self, order: &[PlayerId]) -> Outcome {
+        let order_ids =
+            || -> Vec<String> { order.iter().map(|id| String::from(id.as_str())).collect() };
         let last_two = || -> Vec<String> {
             order[order.len().saturating_sub(2)..]
                 .iter()
@@ -188,13 +242,13 @@ impl ChaosUtility {
         if self.mode == ChaosType::BountyHunt && self.target_player_id.is_none() {
             return Outcome {
                 losers: last_two(),
-                final_order: None,
+                final_order: order_ids(),
             };
         }
         if matches!(self.mode, ChaosType::Duo | ChaosType::Constructors) && self.groups.is_empty() {
             return Outcome {
                 losers: last_two(),
-                final_order: None,
+                final_order: order_ids(),
             };
         }
         let raw: Vec<RawChaosEntry<'_>> = order
@@ -220,26 +274,25 @@ impl ChaosUtility {
         match resolve_chaos_rule(self.mode, &raw, &prepared) {
             Ok(result) => Outcome {
                 losers: result.loser_player_ids,
-                final_order: result.final_standings,
+                // `if (result.finalStandings) finalOrder = result.finalStandings`
+                final_order: result.final_standings.unwrap_or_else(order_ids),
             },
             // `catch { losers = new Set(order.slice(-2)) }`
             Err(_) => Outcome {
                 losers: last_two(),
-                final_order: None,
+                final_order: order_ids(),
             },
         }
     }
 
     /// `utility(order, playerId)` (`:91-96`).
-    fn utility(&self, order: &[PlayerId], player_id: &str) -> f64 {
-        let outcome = self.outcome(order);
+    fn utility(&mut self, order: &[PlayerId], player_id: &str) -> f64 {
         let n = js_max(1.0, index_f64(order.len()) - 1.0);
-        // `finalIndex = new Map(finalOrder.map((id, index) => [id, index]))`
-        let final_index = match &outcome.final_order {
-            Some(final_order) => final_order.iter().rposition(|id| id == player_id),
-            None => order.iter().rposition(|id| id.as_str() == player_id),
-        };
-        let index = final_index.map_or(index_f64(order.len()) - 1.0, index_f64);
+        let outcome = self.outcome(order);
+        // `finalIndex.get(playerId) ?? order.length - 1`
+        let index = outcome
+            .final_index(player_id)
+            .map_or(index_f64(order.len()) - 1.0, index_f64);
         let place = 1.0 - index / n;
         -(if outcome.is_loser(player_id) {
             LOSS_WEIGHT
@@ -250,7 +303,7 @@ impl ChaosUtility {
 
     /// `softUtility(order, playerId, snapshot)` (`:99-118`).
     fn soft_utility(
-        &self,
+        &mut self,
         order: &[PlayerId],
         player_id: &str,
         snapshot: &RankingSnapshot,

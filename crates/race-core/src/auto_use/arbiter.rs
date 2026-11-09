@@ -588,3 +588,12 @@ pub fn tick_auto_use_decide(
         }
     }
 }
+
+/// `tickAutoUseAI(input)` (`arbiter.ts:287-291`): execute then decide with a
+/// fresh objective (empty Chaos memos). The engine itself calls the split
+/// functions with the per-race `autoObjective`.
+pub fn tick_auto_use_ai(input: &mut AutoUseTickInput<'_, '_>) {
+    let mut objective = super::objective::build_race_objective_context(input.config);
+    tick_auto_use_execute(input, &mut objective);
+    tick_auto_use_decide(input, &mut objective);
+}
