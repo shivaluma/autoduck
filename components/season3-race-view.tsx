@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { RaceLiveView } from '@/app/race/[id]/race-live-view'
 import { RaceCelebration } from '@/components/race-celebration'
 import { Season3Avatar } from '@/components/season3-avatar'
 import { PhaserRaceCanvas, type ReplayInspection } from '@/components/racing/phaser-race-canvas'
@@ -185,7 +184,7 @@ export function Season3RaceView({ raceId }: { raceId: number }) {
           onLiveFinished={handleLiveFinished}
         />
       ) : (
-        <RaceLiveView raceId={raceId} season3Mode />
+        <section className="gx-panel p-6 text-center text-white/75">Đang chuẩn bị đường đua…</section>
       )}
 
       {/* Live Tabs: Standings & Live Events */}
@@ -276,14 +275,6 @@ export function Season3RaceView({ raceId }: { raceId: number }) {
         <RaceEventTimeline events={race.engine.events} players={racePlayers} />
       )}
       {resultTab === 'result' && <>
-      {/* Video Replay if available */}
-      {race.videoUrl && (
-        <section className="overflow-hidden rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-black">
-          <div className="border-b-2 border-white/10 px-5 py-4 font-black text-white">🎬 RACE REPLAY VIDEO</div>
-          <video src={race.videoUrl} controls playsInline className="w-full" />
-        </section>
-      )}
-
       {/* Official Final Rankings */}
       <section className="gx-panel overflow-hidden">
         <div className="border-b-2 border-white/10 px-5 py-4 font-black flex items-center justify-between">
