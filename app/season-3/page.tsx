@@ -15,6 +15,7 @@ import { RaceItemIcon } from '@/components/racing/race-item-icon'
 import { CosmeticDuck } from '@/components/cosmetics/cosmetic-duck'
 import { GameButton, GameLink, GamePanel, Progress, QuestRow, ResourcePill, UiIcon } from '@/components/game-ui'
 import type { UiIconName } from '@/lib/race-fx/manifest'
+import { filterOfficialRacers } from '@/lib/ghost-duck'
 
 /* eslint-disable @next/next/no-img-element -- decorative lily pad SVG */
 
@@ -280,6 +281,7 @@ export default function Season3Page() {
 
   const tokenQuery = token ? `?token=${encodeURIComponent(token)}` : ''
   const viewer = data.viewer
+  const rankedPlayers = filterOfficialRacers(data.players)
   const playerById = new Map(data.players.map((player) => [player.id, player]))
   const raceWeekOpen = Boolean(viewer && week?.status === 'open' && !week.viewerSkipped)
   const loadoutDone = week?.loadout.status === 'ready' || week?.loadout.status === 'auto'
@@ -513,10 +515,10 @@ export default function Season3Page() {
 
         {activeTab === 'rank' && (
           <>
-            <GamePanel tone="gold" icon="trophy" kicker="BẢNG XẾP HẠNG MÙA GIẢI" title="Danh hiệu Ao Dzịt" actions={<span className="gx-chip pl-2">{data.players.length} đấu thủ</span>}>
+            <GamePanel tone="gold" icon="trophy" kicker="BẢNG XẾP HẠNG MÙA GIẢI" title="Danh hiệu Ao Dzịt" actions={<span className="gx-chip pl-2">{rankedPlayers.length} đấu thủ</span>}>
               <div className="grid grid-cols-3 items-end gap-2 sm:gap-4">
                 {[1, 0, 2].map((place) => {
-                  const player = data.players[place]
+                  const player = rankedPlayers[place]
                   if (!player) return <div key={place} />
                   const heights = ['h-28', 'h-20', 'h-14']
                   const medal = ['bg-[linear-gradient(180deg,#fff3a6,#f2b627)]', 'bg-[linear-gradient(180deg,#f1f5f9,#94a3b8)]', 'bg-[linear-gradient(180deg,#fed7aa,#ea580c)]'][place]
@@ -532,7 +534,7 @@ export default function Season3Page() {
                 })}
               </div>
               <div className="mt-0 space-y-2 border-t-[3px] border-[var(--gx-ink)] pt-4">
-                {data.players.map((player, index) => {
+                {rankedPlayers.map((player, index) => {
                   const isMe = viewer && player.id === viewer.userId
                   return (
                     <Link key={player.id} href={`/season-3/duck/${player.id}${tokenQuery}`}
