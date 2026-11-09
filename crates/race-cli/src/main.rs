@@ -1,7 +1,7 @@
 //! `race-cli`: native tooling for the Rust engine (Phase 1).
 //!
-//! `corpus gen` is complete. `oracle diff` validates the trace host header
-//! and stops before the comparison (Phase 2). `oracle meta` checks Season meta
+//! `corpus gen` is complete. `oracle diff` runs the Rust engine against a TS
+//! oracle trace (needs `--features ts-compat`). `oracle meta` checks Season meta
 //! parity (needs `--features ts-compat`). `gate` is a stub that exits with
 //! status 2.
 
@@ -55,22 +55,51 @@ enum CorpusCommand {
         /// Root seed (decimal or 0x-hex); defaults to the fixed corpus seed.
         #[arg(long, value_parser = corpus::parse_seed, default_value_t = corpus::DEFAULT_ROOT_SEED)]
         seed: u64,
+        /// `full` (everything) or `core` (no loadouts, pickups or hazards;
+        /// run its oracle with `--ai-ablation all`).
+        #[arg(long, value_parser = corpus::Profile::parse, default_value = "full")]
+        profile: corpus::Profile,
     },
 }
 
 #[derive(Subcommand)]
 enum OracleCommand {
-    /// Compare per-tick state hashes with `scripts/oracle/dump-trace.ts` output.
-    ///
-    /// Phase 1 skeleton: validates the trace's host header and selects the
-    /// js_math host model; the comparison needs Phase 2's engine.
+    /// Run the Rust engine on a corpus and compare it tick by tick with a TS
+    /// oracle trace from `scripts/oracle/dump-trace.ts` (gate G1). Build with
+    /// `--features ts-compat`. On macOS run the oracle with
+    /// `node --no-use-std-math-pow` (the header is checked).
     Diff {
-        /// Trace from dump-trace.ts (`.jsonl` or `.jsonl.gz`).
+        /// Corpus from `corpus gen` (case = 0-based line).
         #[arg(long)]
-        trace: String,
+        corpus: Option<String>,
+        /// Trace from dump-trace.ts (`.jsonl` or `.jsonl.gz`). With
+        /// `--ts-cmd`, the trace is written here first.
+        #[arg(long)]
+        trace: Option<String>,
+        /// Command that runs the TS oracle; `--corpus <corpus> --out
+        /// <trace>` is appended (e.g. `node --no-use-std-math-pow --import
+        /// tsx scripts/oracle/dump-trace.ts`).
+        #[arg(long)]
+        ts_cmd: Option<String>,
         /// The linux-x64 oracle host has no FMA (Node can't report it).
         #[arg(long)]
         linux_x64_no_fma: bool,
+        /// How many failing cases to print.
+        #[arg(long, default_value_t = 20)]
+        show: usize,
+        /// Write a JSON report of every failing case here.
+        #[arg(long)]
+        report: Option<String>,
+        /// Instead of diffing, write the Rust `--full-at` dump of this case.
+        #[arg(long)]
+        dump_case: Option<u64>,
+        /// Output of `--dump-case` (default `case-<i>.rust.full.jsonl`).
+        #[arg(long)]
+        dump_out: Option<String>,
+        /// With `--dump-case`: the TS `--full-at` dump of the same case;
+        /// prints the first differing tick, fields and events.
+        #[arg(long)]
+        ts_full: Option<String>,
     },
     /// Check Season meta parity (Chaos rules and card draws, toggle-skip,
     /// auto-loadouts, validateLoadout, catalog) against the TS fixture from
@@ -93,8 +122,14 @@ fn not_implemented(name: &str) -> ExitCode {
 fn main() -> ExitCode {
     match Cli::parse().command {
         Command::Corpus {
-            command: CorpusCommand::Gen { count, out, seed },
-        } => match corpus::run_gen(count, &out, seed) {
+            command:
+                CorpusCommand::Gen {
+                    count,
+                    out,
+                    seed,
+                    profile,
+                },
+        } => match corpus::run_gen(count, &out, seed, profile) {
             Ok(()) => ExitCode::SUCCESS,
             Err(err) => {
                 eprintln!("race-cli corpus gen: {err:#}");
@@ -104,11 +139,29 @@ fn main() -> ExitCode {
         Command::Oracle {
             command:
                 OracleCommand::Diff {
+                    corpus,
                     trace,
+                    ts_cmd,
                     linux_x64_no_fma,
+                    show,
+                    report,
+                    dump_case,
+                    dump_out,
+                    ts_full,
                 },
-        } => match oracle::run_diff(&trace, linux_x64_no_fma) {
-            Ok(()) => ExitCode::SUCCESS,
+        } => match oracle::run_diff(&oracle::DiffOptions {
+            corpus,
+            trace,
+            ts_cmd,
+            linux_x64_no_fma,
+            show,
+            report,
+            dump_case,
+            dump_out,
+            ts_full,
+        }) {
+            Ok(true) => ExitCode::SUCCESS,
+            Ok(false) => ExitCode::FAILURE,
             Err(err) => {
                 eprintln!("race-cli oracle diff: {err:#}");
                 ExitCode::from(2)

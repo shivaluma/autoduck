@@ -16,6 +16,10 @@ frozen: nothing here changes it. These scripts run it and write traces that
 ```fish
 # 1. Corpus (deterministic; case i depends only on the root seed and i)
 cargo run -p race-cli --release -- corpus gen --count 2000 --out corpus.jsonl
+#    Phase 2 stage "core": no loadouts, pickups, golden box or hazards
+#    (same lobbies, seeds, ghosts and Chaos as `full`); trace it with
+#    `dump-trace.ts --ai-ablation all`
+cargo run -p race-cli --release -- corpus gen --count 300 --profile core --out core.jsonl
 
 # 2. Check every line against the TS raceConfigSchema (no simulation)
 node --import tsx scripts/oracle/dump-trace.ts --corpus corpus.jsonl --validate-only
@@ -27,6 +31,17 @@ node --import tsx scripts/oracle/dump-trace.ts --corpus corpus.jsonl --shard 0/4
 # 4. Full f64 bit dump of the first divergent case only
 node --import tsx scripts/oracle/dump-trace.ts --corpus corpus.jsonl --from 137 --limit 1 \
   --full-at 137 --full-out case-137.full.jsonl --out /dev/null
+
+# 5. Diff the Rust engine against the trace (gate G1). On macOS the oracle
+#    must run with `node --no-use-std-math-pow` (the header is checked).
+cargo run -p race-cli --release --features ts-compat -- oracle diff \
+  --corpus corpus.jsonl --trace trace.jsonl.gz [--report diff.json]
+#    or let it run the oracle: --ts-cmd "node --no-use-std-math-pow --import tsx scripts/oracle/dump-trace.ts"
+
+# 6. Rust side of one case in the --full-at format, compared field by field
+cargo run -p race-cli --release --features ts-compat -- oracle diff \
+  --corpus corpus.jsonl --trace trace.jsonl.gz --dump-case 137 \
+  --dump-out case-137.rust.jsonl --ts-full case-137.full.jsonl
 ```
 
 `dump-trace.ts` flags: `--corpus <path>` (or a positional path), `--out
@@ -34,7 +49,10 @@ node --import tsx scripts/oracle/dump-trace.ts --corpus corpus.jsonl --from 137 
 `--shard i/n` (keeps cases with `index % n == i`), `--max-ticks N` (default
 `CORE_BALANCE.maximumDurationSeconds * tickRate` = 5,400), `--hash-prefix-bytes
 N` (default 8), `--event-prefix-bytes N` (default 4), `--full-at <case>`,
-`--full-out <path>` and `--validate-only`. The case index is the 0-based line
+`--full-out <path>`, `--validate-only` and `--ai-ablation none|all` (`all`
+passes every player as `aiAblationPlayerIds`, so lane tactics are off; the
+header then carries `"aiAblation":"all"` and `race-cli oracle diff` runs the
+Rust engine with the same `SimOptions::ai_ablation`). The case index is the 0-based line
 number in the corpus, independent of `--from`/`--shard`. It exits 1 if any case
 failed and 2 on bad arguments.
 
@@ -68,7 +86,7 @@ Integer fields are always plain integers. TS would also accept `3.0` for
 
 The first line is the **host header**:
 `{"kind":"header", traceFormat, stateHashVersion, eventDigestVersion, platform,
-arch, node, v8, execArgv, nodeOptions, useStdMathPow}`. `Math.exp`/`Math.pow`
+arch, node, v8, execArgv, nodeOptions, useStdMathPow, aiAblation?}` (`aiAblation` only when not `none`). `Math.exp`/`Math.pow`
 depend on the host (see `docs/rewrite/phase1-notes.md`, `## math`), so
 `race-cli oracle diff` maps the header to a `js_math::V8Target` and refuses a
 host it can't model: darwin with the default `--use-std-math-pow` (run the

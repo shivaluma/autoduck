@@ -1,0 +1,1603 @@
+{
+"format": "sim-core-oracle-v1",
+"source": "scripts/oracle/dump-trace.ts on race-cli corpus gen (corpus-v1) with loadouts, pickupConfig and itemTuning removed",
+"host": {
+"platform": "darwin",
+"arch": "arm64",
+"node": "24.17.0",
+"v8": "13.6.233.17-node.49",
+"useStdMathPow": false
+},
+"cases": [
+{
+"case": 0,
+"config": "{\"raceId\":\"4062\",\"seed\":\"41f249093034b47806b85d1edfadf0397a1ff21a2fddbc528e7d2a60c2720a61\",\"tickRate\":60,\"players\":[{\"playerId\":\"1895\",\"name\":\"Trần Thị Bích Ngọc 0\"},{\"playerId\":\"748\",\"name\":\"ZZ Top 1\",\"isGhost\":false}]}",
+"finished": true,
+"finalTick": 3283,
+"maxTicks": 5400,
+"stateChainSha256": "0d7f5638a8ef34d7e93615e60cd013bb869be2fba038571d2c4cd5a5713c5c5f",
+"motionSha256": "743f57703554a9658b49a9caf4ecdda9f0c9bc1482b41cc3ad2de99d52d4e85b",
+"eventCount": 14,
+"eventsSha256": "a2c90629597ded40e8b3cd579fcbcc63cf0119a7f99a9584edca40fa57e8cae0",
+"standings": [
+{
+"playerId": "748",
+"rank": 1,
+"finishTimeBits": "40ea61402ff4f47d"
+},
+{
+"playerId": "1895",
+"rank": 2,
+"finishTimeBits": "40eab75ef32c796a"
+}
+]
+},
+{
+"case": 7,
+"config": "{\"raceId\":\"2587\",\"seed\":\"afb5b552a30cc3dacd00a16bea24b135279f5b77ee6c679f7d32514316e1cefb\",\"tickRate\":60,\"players\":[{\"playerId\":\"1451\",\"name\":\"Quack 0\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-5\\\",\\\"body\\\":\\\"body-36\\\"}\"},{\"playerId\":\"1962\",\"name\":\"back\\\\slash 1\"}],\"chaosConfig\":{\"type\":\"BOUNTY_HUNT\",\"targetPlayerId\":\"1451\"}}",
+"finished": true,
+"finalTick": 3312,
+"maxTicks": 5400,
+"stateChainSha256": "c9983b100864a7440c173a47d987ca300f1da8e5f1cfc00731f9ba4e25bee1f8",
+"motionSha256": "4e540720acd41e6a718596ee32ef484e98ebda81d9928fc16011ad0a8c5ce10a",
+"eventCount": 40,
+"eventsSha256": "3aa33f212466474d0515255c31c175a08a55cdecfd9536837926aec3a5100ee4",
+"standings": [
+{
+"playerId": "1451",
+"rank": 1,
+"finishTimeBits": "40eaea22f1275f3e"
+},
+{
+"playerId": "1962",
+"rank": 2,
+"finishTimeBits": "40eaf39983a29733"
+}
+]
+},
+{
+"case": 14,
+"config": "{\"raceId\":\"c18a16521365c267990cc28ca\",\"seed\":\"83465dccdb48faa72e5e4cdf4538487fc702e1889a2ebcb848723b177efa4570\",\"players\":[{\"playerId\":\"486\",\"name\":\"Vịt Bầu 0\"},{\"playerId\":\"524\",\"name\":\"\\\"Quote\\\" Duck 1\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-23\\\",\\\"body\\\":\\\"body-4\\\"}\"},{\"playerId\":\"520\",\"name\":\"Phở Bò 2\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-13\\\",\\\"body\\\":\\\"body-32\\\"}\"}],\"chaosConfig\":{\"type\":\"CONSTRUCTORS\",\"groups\":[[\"524\",\"520\"],[\"486\"]]}}",
+"finished": true,
+"finalTick": 3349,
+"maxTicks": 5400,
+"stateChainSha256": "d51550ed28e538cd643eb10b087623c27b0697ec3d2cc756c31604f345e79dc3",
+"motionSha256": "8fd748440edfe8143a7524fb6d0377ba436417f0e608a50f3cf7006ee3aaaa55",
+"eventCount": 52,
+"eventsSha256": "7127315ee679691aa956b411da8972811e92165e33a023f6c5852ae5086f60c5",
+"standings": [
+{
+"playerId": "520",
+"rank": 1,
+"finishTimeBits": "40eadd7287979af8"
+},
+{
+"playerId": "486",
+"rank": 2,
+"finishTimeBits": "40eb1ffe48763108"
+},
+{
+"playerId": "524",
+"rank": 3,
+"finishTimeBits": "40eb40975332e769"
+}
+]
+},
+{
+"case": 21,
+"config": "{\"raceId\":\"2508\",\"seed\":\"0ef6c4dd2eadb7b7d639f1b4c9da8ce11df91cad35d9103509b84677cdc4c355\",\"tickRate\":60,\"players\":[{\"playerId\":\"CZ96p:OfqY\",\"name\":\"a 0\"},{\"playerId\":\"Zbi\",\"name\":\"a 1\"},{\"playerId\":\"PUcxbGvcZi\",\"name\":\"Vịt Ma 👻\",\"isGhost\":true},{\"playerId\":\"TiEtiCsvGWx\",\"name\":\"Trần Thị Bích Ngọc 3\"}],\"chaosConfig\":{\"type\":\"CUT_LINE\"}}",
+"finished": true,
+"finalTick": 3407,
+"maxTicks": 5400,
+"stateChainSha256": "1be3d60ad165b67493c9308ac80a87c476e8361b1515a51d1126e30c45f1b7c3",
+"motionSha256": "86a53a7da389a0ec3a036e7a9294b145c8747c1db4abad077b44e5ee03aac336",
+"eventCount": 98,
+"eventsSha256": "69fafd5801232e4ba3833940dc7a421f410c3934a91e9ea31befbd797b7d0b74",
+"standings": [
+{
+"playerId": "Zbi",
+"rank": 1,
+"finishTimeBits": "40eb28cd0c4471bb"
+},
+{
+"playerId": "TiEtiCsvGWx",
+"rank": 2,
+"finishTimeBits": "40eb76dd5fd1b0e6"
+},
+{
+"playerId": "CZ96p:OfqY",
+"rank": 3,
+"finishTimeBits": "40ebb7e832446e91"
+}
+]
+},
+{
+"case": 28,
+"config": "{\"raceId\":\"2429\",\"seed\":\"e08f5c9843d7d0a6c816bf8932b4a210f520344ee07244b2f1bb8c9ef152449a\",\"tickRate\":60,\"players\":[{\"playerId\":\"1638\",\"name\":\"O'Brien 0\",\"isGhost\":false},{\"playerId\":\"1876\",\"name\":\"李雷 1\"},{\"playerId\":\"378\",\"name\":\"Lan 🦆 2\",\"isGhost\":false},{\"playerId\":\"1768\",\"name\":\"Phở Bò 3\"},{\"playerId\":\"1091\",\"name\":\"ZZ Top 4\"}],\"chaosConfig\":{\"type\":\"TRIPLE_ELIMINATION\",\"targetPlayerId\":null}}",
+"finished": true,
+"finalTick": 3348,
+"maxTicks": 5400,
+"stateChainSha256": "f9ff1223459037cb7e85eb9799ca6cc58194860101519eb2105b362a2f7f8f29",
+"motionSha256": "62248826f2af0a5493d524b1f04535b5d151ec19aa5a7a07317efe6aff0b33a9",
+"eventCount": 71,
+"eventsSha256": "49e10a235e65eaeda1a2164f8b635bc1e38b8386109cccf09227c25a2ae48a31",
+"standings": [
+{
+"playerId": "1876",
+"rank": 1,
+"finishTimeBits": "40eadf0a7be69757"
+},
+{
+"playerId": "1768",
+"rank": 2,
+"finishTimeBits": "40eb2061d136f378"
+},
+{
+"playerId": "1091",
+"rank": 3,
+"finishTimeBits": "40eb256f277b10b2"
+},
+{
+"playerId": "378",
+"rank": 4,
+"finishTimeBits": "40eb370fa5dd1ae1"
+},
+{
+"playerId": "1638",
+"rank": 5,
+"finishTimeBits": "40eb3eb747543b0d"
+}
+]
+},
+{
+"case": 35,
+"config": "{\"raceId\":\"2211\",\"seed\":\"884d3e0c4adaa906a6ffdbd509e83294e81e9db34000a634dbd63bf5f326524c\",\"protocolVersion\":\"1.0.0\",\"engineVersion\":\"1.2.0\",\"balanceVersion\":\"S3.15\",\"trackVersion\":\"river-01-v2\",\"pickupSpawnVersion\":\"pickups-v1\",\"wildItemBalanceVersion\":\"wild-items-v6\",\"hazardBalanceVersion\":\"hazards-v1\",\"tickRate\":60,\"players\":[{\"playerId\":\"304\",\"name\":\"Lan 🦆 0\"},{\"playerId\":\"1816\",\"name\":\"back\\\\slash 1\"},{\"playerId\":\"1496\",\"name\":\"Quack 2\"},{\"playerId\":\"1554\",\"name\":\"ZZ Top 3\"},{\"playerId\":\"781\",\"name\":\"Lan 🦆 4\"},{\"playerId\":\"233\",\"name\":\"Nguyễn Văn A 5\"}],\"chaosConfig\":{\"type\":\"DUO\",\"groups\":[[\"781\",\"304\"],[\"1496\",\"1816\"],[\"233\",\"1554\"]],\"targetPlayerId\":null}}",
+"finished": true,
+"finalTick": 3372,
+"maxTicks": 5400,
+"stateChainSha256": "18583d3a180d6e49111524014959ce3a97dc929c68e49f01a2a3714ef345653a",
+"motionSha256": "b1986698da6b0ef01ae3686991fa2993191e2fc10070ae613b854ac82ddf493b",
+"eventCount": 116,
+"eventsSha256": "06029897034e9d668c324f6c529766e530e86337fa6442f4aecae5a3bc25c628",
+"standings": [
+{
+"playerId": "1496",
+"rank": 1,
+"finishTimeBits": "40eaa87d25aee74a"
+},
+{
+"playerId": "1816",
+"rank": 2,
+"finishTimeBits": "40eae8368a42636b"
+},
+{
+"playerId": "304",
+"rank": 3,
+"finishTimeBits": "40eb0c6fa295700b"
+},
+{
+"playerId": "781",
+"rank": 4,
+"finishTimeBits": "40eb20f92903290b"
+},
+{
+"playerId": "1554",
+"rank": 5,
+"finishTimeBits": "40eb31724cab4d25"
+},
+{
+"playerId": "233",
+"rank": 6,
+"finishTimeBits": "40eb6fab3f95b93d"
+}
+]
+},
+{
+"case": 42,
+"config": "{\"raceId\":\"test-42-dc49\",\"seed\":\"bacda4d2278ee127479f64eea02a3913b1b74b29924a722d114bfac10140ba48\",\"protocolVersion\":\"1.0.0\",\"engineVersion\":\"1.2.0\",\"balanceVersion\":\"S3.15\",\"trackVersion\":\"river-01-v2\",\"pickupSpawnVersion\":\"pickups-v1\",\"wildItemBalanceVersion\":\"wild-items-v6\",\"hazardBalanceVersion\":\"hazards-v1\",\"tickRate\":60,\"players\":[{\"playerId\":\"_204\",\"name\":\"ZZ Top 0\"},{\"playerId\":\"u_128\",\"name\":\"Trần Thị Bích Ngọc 1\"},{\"playerId\":\"_288\",\"name\":\"Vịt Bầu 2\"},{\"playerId\":\"u_113\",\"name\":\"Phở Bò 3\"},{\"playerId\":\":267\",\"name\":\"Vịt Bầu 4\"},{\"playerId\":\"u_44\",\"name\":\"a 5\"},{\"playerId\":\"p:159\",\"name\":\"Trần Thị Bích Ngọc 6\"}],\"chaosConfig\":{\"type\":\"REVERSE\"}}",
+"finished": true,
+"finalTick": 3380,
+"maxTicks": 5400,
+"stateChainSha256": "934df4ae9bc3765878058f3c591b4af81a7abbad61711dda9411e930f4d1e905",
+"motionSha256": "1a695cdebd76d6ac29531a637249c449e3596a06054967e164f5e8dd5d224bcf",
+"eventCount": 214,
+"eventsSha256": "01cec2e5c22779df14f2633e67273f5712967d9f56a1fa140a89ecf1935639ce",
+"standings": [
+{
+"playerId": "u_128",
+"rank": 1,
+"finishTimeBits": "40eaa95ed611fb0f"
+},
+{
+"playerId": "p:159",
+"rank": 2,
+"finishTimeBits": "40eaf341754cf3a6"
+},
+{
+"playerId": ":267",
+"rank": 3,
+"finishTimeBits": "40eafcf32eb83832"
+},
+{
+"playerId": "u_113",
+"rank": 4,
+"finishTimeBits": "40eb291d25646f54"
+},
+{
+"playerId": "u_44",
+"rank": 5,
+"finishTimeBits": "40eb5df4ab2a4c75"
+},
+{
+"playerId": "_204",
+"rank": 6,
+"finishTimeBits": "40eb6ae406dd8b3f"
+},
+{
+"playerId": "_288",
+"rank": 7,
+"finishTimeBits": "40eb8130763fbc31"
+}
+]
+},
+{
+"case": 49,
+"config": "{\"raceId\":\"2969\",\"seed\":\"43d02878b9696783ad5d2541cd608880fd3a266718cfd78d1c1b6dc762ab8349\",\"players\":[{\"playerId\":\"P-98\",\"name\":\"a 0\"},{\"playerId\":\"_280\",\"name\":\"Nguyễn Văn A 1\"},{\"playerId\":\"p:119\",\"name\":\"李雷 2\"},{\"playerId\":\"P-132\",\"name\":\"O'Brien 3\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-12\\\",\\\"body\\\":\\\"body-39\\\"}\"},{\"playerId\":\"_243\",\"name\":\"Lan 🦆 4\",\"isGhost\":false},{\"playerId\":\"_124\",\"name\":\"a 5\",\"isGhost\":false},{\"playerId\":\"p:271\",\"name\":\"ZZ Top 6\"},{\"playerId\":\"p:230\",\"name\":\"Phở Bò 7\"}],\"chaosConfig\":{\"type\":\"NORMAL\",\"targetPlayerId\":null}}",
+"finished": true,
+"finalTick": 3368,
+"maxTicks": 5400,
+"stateChainSha256": "0a06a09696bf1d109855bd831e0d7c49916f1e64f07a3c0ca3e2659314cf1e1e",
+"motionSha256": "a5bf0441bb488b5c9a6056443c28d24133437ae01550c2475f7c035c6eb70e5f",
+"eventCount": 241,
+"eventsSha256": "be277872c197f26248874106257972fba8128e76398ec6d454ddd9a3b856fb2d",
+"standings": [
+{
+"playerId": "_124",
+"rank": 1,
+"finishTimeBits": "40eb0f21ecdf44b6"
+},
+{
+"playerId": "p:230",
+"rank": 2,
+"finishTimeBits": "40eb16e920e43cf3"
+},
+{
+"playerId": "P-132",
+"rank": 3,
+"finishTimeBits": "40eb19cf7da4fddb"
+},
+{
+"playerId": "p:271",
+"rank": 4,
+"finishTimeBits": "40eb22a2f0848094"
+},
+{
+"playerId": "_280",
+"rank": 5,
+"finishTimeBits": "40eb2315bf3fa238"
+},
+{
+"playerId": "_243",
+"rank": 6,
+"finishTimeBits": "40eb3b9b605c72c5"
+},
+{
+"playerId": "p:119",
+"rank": 7,
+"finishTimeBits": "40eb6014d7db1b10"
+},
+{
+"playerId": "P-98",
+"rank": 8,
+"finishTimeBits": "40eb6813085b6411"
+}
+]
+},
+{
+"case": 56,
+"config": "{\"raceId\":\"4958\",\"seed\":\"2d0d9ff5c0dd5769b8df2236ce7552d75dbd52f4e5d56127d89214bfb6f92980\",\"tickRate\":60,\"players\":[{\"playerId\":\"768\",\"name\":\"Lan 🦆 0\"},{\"playerId\":\"577\",\"name\":\"Quack 1\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-15\\\",\\\"body\\\":\\\"body-15\\\"}\"},{\"playerId\":\"367\",\"name\":\"Ünïcödé 2\"},{\"playerId\":\"230\",\"name\":\"李雷 3\"},{\"playerId\":\"656\",\"name\":\"Lan 🦆 4\"},{\"playerId\":\"1858\",\"name\":\"\\\"Quote\\\" Duck 5\",\"isGhost\":false},{\"playerId\":\"1885\",\"name\":\"O'Brien 6\"},{\"playerId\":\"811\",\"name\":\"李雷 7\"},{\"playerId\":\"1321\",\"name\":\"tab\\there 8\"}]}",
+"finished": true,
+"finalTick": 3436,
+"maxTicks": 5400,
+"stateChainSha256": "c429fe3f63dbc83921e7ac60e2bc9f98d1ca67eca11a3b19239a1ba817cd0d16",
+"motionSha256": "4aad3ea6d145a4f19489c2407238cd153cae87f4c9c3b29622517f103a889082",
+"eventCount": 308,
+"eventsSha256": "d19867125c815c8c8908f4b70ddcd86d64ec9f8bcb31548215ffac5be3e6726a",
+"standings": [
+{
+"playerId": "656",
+"rank": 1,
+"finishTimeBits": "40eae8cb66186ade"
+},
+{
+"playerId": "367",
+"rank": 2,
+"finishTimeBits": "40eaf5a4351cd972"
+},
+{
+"playerId": "768",
+"rank": 3,
+"finishTimeBits": "40eb02d43e85412a"
+},
+{
+"playerId": "230",
+"rank": 4,
+"finishTimeBits": "40eb3749f7c8ed96"
+},
+{
+"playerId": "577",
+"rank": 5,
+"finishTimeBits": "40eb6303c159d80c"
+},
+{
+"playerId": "1885",
+"rank": 6,
+"finishTimeBits": "40eb6c138fd5b556"
+},
+{
+"playerId": "1321",
+"rank": 7,
+"finishTimeBits": "40eb7f1522be9832"
+},
+{
+"playerId": "811",
+"rank": 8,
+"finishTimeBits": "40ebcbefb328fa43"
+},
+{
+"playerId": "1858",
+"rank": 9,
+"finishTimeBits": "40ebf48dbd937095"
+}
+]
+},
+{
+"case": 63,
+"config": "{\"raceId\":\"c1d89df787ea3e91736e77f3d\",\"seed\":\"d8671a453de071c351bb71f04e7945b868f7a6e2d0b05cfe759da23834df2e4c\",\"protocolVersion\":\"1.0.0\",\"engineVersion\":\"1.2.0\",\"balanceVersion\":\"S3.15\",\"trackVersion\":\"river-01-v2\",\"pickupSpawnVersion\":\"pickups-v1\",\"wildItemBalanceVersion\":\"wild-items-v6\",\"hazardBalanceVersion\":\"hazards-v1\",\"players\":[{\"playerId\":\"B5GvZvT\",\"name\":\"李雷 0\"},{\"playerId\":\"rSwEY\",\"name\":\"O'Brien 1\"},{\"playerId\":\"L1qK\",\"name\":\"Nguyễn Văn A 2\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-26\\\",\\\"body\\\":\\\"body-34\\\"}\"},{\"playerId\":\"4pkIEEEqa\",\"name\":\"Quack 3\"},{\"playerId\":\":Z0\",\"name\":\"Minh 4\"},{\"playerId\":\"k\",\"name\":\"ZZ Top 5\"},{\"playerId\":\"7kg\",\"name\":\"O'Brien 6\"},{\"playerId\":\"uIHIax\",\"name\":\"Trần Thị Bích Ngọc 7\"},{\"playerId\":\"EzyIYA\",\"name\":\"李雷 8\",\"isGhost\":false}],\"chaosConfig\":{\"type\":\"BOUNTY_HUNT\",\"targetPlayerId\":\"uIHIax\"}}",
+"finished": true,
+"finalTick": 3362,
+"maxTicks": 5400,
+"stateChainSha256": "6e37785f65a173d8410ba3c182baa5159737683b4142798d624be582b698ef37",
+"motionSha256": "1b758d16f9ddf29aa0ac64dd0321976cb9bd0c9ad36fb7fa23d9c6518f17314a",
+"eventCount": 212,
+"eventsSha256": "befa78473002602128557bcc2b7f3fd395c21d83783cb7579b47ab1d36bc65ff",
+"standings": [
+{
+"playerId": "k",
+"rank": 1,
+"finishTimeBits": "40eaf106cb6309e5"
+},
+{
+"playerId": "7kg",
+"rank": 2,
+"finishTimeBits": "40eb0197b1376410"
+},
+{
+"playerId": "B5GvZvT",
+"rank": 3,
+"finishTimeBits": "40eb035b9aea1f80"
+},
+{
+"playerId": ":Z0",
+"rank": 4,
+"finishTimeBits": "40eb2f32f65cd320"
+},
+{
+"playerId": "4pkIEEEqa",
+"rank": 5,
+"finishTimeBits": "40eb3389ba2ec810"
+},
+{
+"playerId": "uIHIax",
+"rank": 6,
+"finishTimeBits": "40eb33d9ed5852db"
+},
+{
+"playerId": "rSwEY",
+"rank": 7,
+"finishTimeBits": "40eb50f8f929c826"
+},
+{
+"playerId": "L1qK",
+"rank": 8,
+"finishTimeBits": "40eb54f68215da09"
+},
+{
+"playerId": "EzyIYA",
+"rank": 9,
+"finishTimeBits": "40eb5be92edd1dfc"
+}
+]
+},
+{
+"case": 70,
+"config": "{\"raceId\":\"688\",\"seed\":\"6f31417313c6dd7bd65c8a3113acc8b755ae6620fef9469265632555fa6f9cc4\",\"tickRate\":60,\"players\":[{\"playerId\":\"p:52\",\"name\":\"tab\\there 0\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-5\\\",\\\"body\\\":\\\"body-30\\\"}\"},{\"playerId\":\"p:85\",\"name\":\"Vịt Bầu 1\"},{\"playerId\":\"_233\",\"name\":\"a 2\"},{\"playerId\":\"p:8\",\"name\":\"Phở Bò 3\"},{\"playerId\":\"p:246\",\"name\":\"Nguyễn Văn A 4\"},{\"playerId\":\"p:193\",\"name\":\"Ünïcödé 5\"},{\"playerId\":\"P-255\",\"name\":\"Vịt Bầu 6\"},{\"playerId\":\"P-94\",\"name\":\"back\\\\slash 7\",\"isGhost\":false},{\"playerId\":\"P-133\",\"name\":\"\\\"Quote\\\" Duck 8\"},{\"playerId\":\"_292\",\"name\":\"Đức Anh 9\"}],\"chaosConfig\":{\"type\":\"CONSTRUCTORS\",\"groups\":[[\"P-94\",\"p:85\",\"_292\",\"p:52\",\"p:246\"],[\"P-255\",\"_233\",\"p:8\",\"P-133\",\"p:193\"]]}}",
+"finished": true,
+"finalTick": 3432,
+"maxTicks": 5400,
+"stateChainSha256": "08b234ccf42c8cd72c66c3293a3007527df2e9383e8e349aa94d69ad2ac31794",
+"motionSha256": "8cce435956ce1429a8bff6466b4f043326d210d8d529d66d75a76ad58d27caa2",
+"eventCount": 439,
+"eventsSha256": "45d981c81b2680cbe87b82c000bd457d17f0dbc9984d483a387891fc73342595",
+"standings": [
+{
+"playerId": "p:85",
+"rank": 1,
+"finishTimeBits": "40eaa9e440b44d25"
+},
+{
+"playerId": "p:52",
+"rank": 2,
+"finishTimeBits": "40eaf62a2777a31c"
+},
+{
+"playerId": "p:8",
+"rank": 3,
+"finishTimeBits": "40eb62c12cc931b8"
+},
+{
+"playerId": "P-94",
+"rank": 4,
+"finishTimeBits": "40eb9677fa59d778"
+},
+{
+"playerId": "p:246",
+"rank": 5,
+"finishTimeBits": "40eb9988f2ce2ea9"
+},
+{
+"playerId": "p:193",
+"rank": 6,
+"finishTimeBits": "40ebbfa7414343cd"
+},
+{
+"playerId": "_233",
+"rank": 7,
+"finishTimeBits": "40ebd66f99233d9f"
+},
+{
+"playerId": "P-133",
+"rank": 8,
+"finishTimeBits": "40ebe5298c20fff6"
+},
+{
+"playerId": "_292",
+"rank": 9,
+"finishTimeBits": "40ebe6b84e0ad25b"
+},
+{
+"playerId": "P-255",
+"rank": 10,
+"finishTimeBits": "40ebeca7de3a9a29"
+}
+]
+},
+{
+"case": 77,
+"config": "{\"raceId\":\"3570\",\"seed\":\"4c36e3a3bc0fcce9b3a5222d3db86ee6983436c4b79890a2a2ead5c61c3abeb4\",\"protocolVersion\":\"1.0.0\",\"engineVersion\":\"1.2.0\",\"balanceVersion\":\"S3.15\",\"trackVersion\":\"river-01-v2\",\"pickupSpawnVersion\":\"pickups-v1\",\"wildItemBalanceVersion\":\"wild-items-v6\",\"hazardBalanceVersion\":\"hazards-v1\",\"tickRate\":60,\"players\":[{\"playerId\":\"12M9vpg\",\"name\":\"back\\\\slash 0\"},{\"playerId\":\"NgCj\",\"name\":\"ZZ Top 1\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-25\\\",\\\"body\\\":\\\"body-37\\\"}\"},{\"playerId\":\"g8xl60A\",\"name\":\"Đức Anh 2\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-12\\\",\\\"body\\\":\\\"body-38\\\"}\"},{\"playerId\":\"7Q1v4\",\"name\":\"Ünïcödé 3\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-33\\\",\\\"body\\\":\\\"body-10\\\"}\"},{\"playerId\":\"Is6hbwHaHX\",\"name\":\"ZZ Top 4\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-17\\\",\\\"body\\\":\\\"body-17\\\"}\"},{\"playerId\":\"SdDGy6C\",\"name\":\"Ünïcödé 5\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-8\\\",\\\"body\\\":\\\"body-16\\\"}\"},{\"playerId\":\"afWAieBNt\",\"name\":\"Trần Thị Bích Ngọc 6\"},{\"playerId\":\"2z8VMDR\",\"name\":\"back\\\\slash 7\"},{\"playerId\":\"0K0\",\"name\":\"Quack 8\"},{\"playerId\":\"C:6y\",\"name\":\"O'Brien 9\"},{\"playerId\":\"OTALZ_Y\",\"name\":\"Trần Thị Bích Ngọc 10\"}],\"chaosConfig\":{\"type\":\"CUT_LINE\",\"targetPlayerId\":null}}",
+"finished": true,
+"finalTick": 3495,
+"maxTicks": 5400,
+"stateChainSha256": "355c5e52ab34e27b72b8ac8a9bf7220cba4689002522d4c13b104eab962a26a2",
+"motionSha256": "08f8158b371c32ed4451d5ff8eac9563d507c2f7123ffb8e6a494bf29a44330a",
+"eventCount": 715,
+"eventsSha256": "c2ffa41c10c391e41a3f66d04cc4273ef00468c46f86a9976274f9b38d056d21",
+"standings": [
+{
+"playerId": "afWAieBNt",
+"rank": 1,
+"finishTimeBits": "40eb94a1bf790442"
+},
+{
+"playerId": "OTALZ_Y",
+"rank": 2,
+"finishTimeBits": "40eb9b83e45c99d7"
+},
+{
+"playerId": "SdDGy6C",
+"rank": 3,
+"finishTimeBits": "40ebb40b7d1287e1"
+},
+{
+"playerId": "12M9vpg",
+"rank": 4,
+"finishTimeBits": "40ebd26da1a50bb6"
+},
+{
+"playerId": "7Q1v4",
+"rank": 5,
+"finishTimeBits": "40ebd3fc0b1ea244"
+},
+{
+"playerId": "2z8VMDR",
+"rank": 6,
+"finishTimeBits": "40ebeb9262141ead"
+},
+{
+"playerId": "0K0",
+"rank": 7,
+"finishTimeBits": "40ec02f4f5ae3627"
+},
+{
+"playerId": "Is6hbwHaHX",
+"rank": 8,
+"finishTimeBits": "40ec393bcb95a6b2"
+},
+{
+"playerId": "NgCj",
+"rank": 9,
+"finishTimeBits": "40ec42017df67099"
+},
+{
+"playerId": "C:6y",
+"rank": 10,
+"finishTimeBits": "40ec64479ab1bc84"
+},
+{
+"playerId": "g8xl60A",
+"rank": 11,
+"finishTimeBits": "40ec71003f7069e4"
+}
+]
+},
+{
+"case": 84,
+"config": "{\"raceId\":\"4813\",\"seed\":\"D89944048097B3785DBF9B0B537E5AA2DDBD22CB97BD235D1A75F9AFB354E139\",\"players\":[{\"playerId\":\"638\",\"name\":\"Ünïcödé 0\"},{\"playerId\":\"865\",\"name\":\"Lan 🦆 1\"},{\"playerId\":\"760\",\"name\":\"Nguyễn Văn A 2\"},{\"playerId\":\"698\",\"name\":\"ZZ Top 3\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-7\\\",\\\"body\\\":\\\"body-1\\\"}\"},{\"playerId\":\"1036\",\"name\":\"ZZ Top 4\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-12\\\",\\\"body\\\":\\\"body-26\\\"}\"},{\"playerId\":\"516\",\"name\":\"Trần Thị Bích Ngọc 5\"},{\"playerId\":\"1357\",\"name\":\"Lan 🦆 6\",\"isGhost\":false},{\"playerId\":\"1838\",\"name\":\"a 7\"},{\"playerId\":\"445\",\"name\":\"back\\\\slash 8\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-31\\\",\\\"body\\\":\\\"body-32\\\"}\"},{\"playerId\":\"861\",\"name\":\"\\\"Quote\\\" Duck 9\"},{\"playerId\":\"428\",\"name\":\"李雷 10\"},{\"playerId\":\"1811\",\"name\":\"Trần Thị Bích Ngọc 11\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-2\\\",\\\"body\\\":\\\"body-6\\\"}\"}],\"chaosConfig\":{\"type\":\"TRIPLE_ELIMINATION\"}}",
+"finished": true,
+"finalTick": 3485,
+"maxTicks": 5400,
+"stateChainSha256": "a814b5e577c4567b0ac602142fded1c95575945450f6a59e392c4838d0e8d683",
+"motionSha256": "31c8ca5c25fa0307f383163f4f098de9a25045f9c3c85825e5224edef87ce071",
+"eventCount": 710,
+"eventsSha256": "3a0d23404610d64d3aa4c0c3df4d1e8d9a3f5063bc690ef8985c9d6eb1b046a5",
+"standings": [
+{
+"playerId": "1811",
+"rank": 1,
+"finishTimeBits": "40eb4f5510fdf36b"
+},
+{
+"playerId": "865",
+"rank": 2,
+"finishTimeBits": "40eb6f8e80a941da"
+},
+{
+"playerId": "516",
+"rank": 3,
+"finishTimeBits": "40eb7aa27ce5e8f0"
+},
+{
+"playerId": "698",
+"rank": 4,
+"finishTimeBits": "40eba046ee7cc0e1"
+},
+{
+"playerId": "445",
+"rank": 5,
+"finishTimeBits": "40ebc082278f9bea"
+},
+{
+"playerId": "428",
+"rank": 6,
+"finishTimeBits": "40ebd56258775c1c"
+},
+{
+"playerId": "1838",
+"rank": 7,
+"finishTimeBits": "40ebf79d51d6aa4a"
+},
+{
+"playerId": "1036",
+"rank": 8,
+"finishTimeBits": "40ec14e7f42d168d"
+},
+{
+"playerId": "638",
+"rank": 9,
+"finishTimeBits": "40ec17dd68bfd829"
+},
+{
+"playerId": "760",
+"rank": 10,
+"finishTimeBits": "40ec2f5c12d227d9"
+},
+{
+"playerId": "1357",
+"rank": 11,
+"finishTimeBits": "40ec3153f8fe4518"
+},
+{
+"playerId": "861",
+"rank": 12,
+"finishTimeBits": "40ec5c5c66c17ce7"
+}
+]
+},
+{
+"case": 91,
+"config": "{\"raceId\":\"83\",\"seed\":\"8bd7718e3a426ff83171585770f1a2c68570ef56ac4b5c3dbb5010ff09555f85\",\"protocolVersion\":\"1.0.0\",\"engineVersion\":\"1.2.0\",\"balanceVersion\":\"S3.15\",\"trackVersion\":\"river-01-v2\",\"pickupSpawnVersion\":\"pickups-v1\",\"wildItemBalanceVersion\":\"wild-items-v6\",\"hazardBalanceVersion\":\"hazards-v1\",\"players\":[{\"playerId\":\"22\",\"name\":\"Phở Bò 0\"},{\"playerId\":\"1002\",\"name\":\"\\\"Quote\\\" Duck 1\"},{\"playerId\":\"1920\",\"name\":\"back\\\\slash 2\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-35\\\",\\\"body\\\":\\\"body-9\\\"}\"},{\"playerId\":\"384\",\"name\":\"Vịt Ma 👻\",\"isGhost\":true},{\"playerId\":\"596\",\"name\":\"Minh 4\"},{\"playerId\":\"695\",\"name\":\"Trần Thị Bích Ngọc 5\"},{\"playerId\":\"1241\",\"name\":\"Quack 6\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-4\\\",\\\"body\\\":\\\"body-27\\\"}\"},{\"playerId\":\"1663\",\"name\":\"Trần Thị Bích Ngọc 7\"},{\"playerId\":\"410\",\"name\":\"Đức Anh 8\"},{\"playerId\":\"1346\",\"name\":\"Ünïcödé 9\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-33\\\",\\\"body\\\":\\\"body-3\\\"}\"},{\"playerId\":\"1410\",\"name\":\"tab\\there 10\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-12\\\",\\\"body\\\":\\\"body-13\\\"}\"},{\"playerId\":\"1895\",\"name\":\"tab\\there 11\"},{\"playerId\":\"547\",\"name\":\"Lan 🦆 12\"}],\"chaosConfig\":{\"type\":\"DUO\",\"groups\":[[\"1346\",\"695\"],[\"22\",\"547\"],[\"596\",\"1663\"],[\"1410\",\"410\"],[\"1002\",\"1920\"],[\"1241\",\"1895\"]],\"targetPlayerId\":null}}",
+"finished": true,
+"finalTick": 3486,
+"maxTicks": 5400,
+"stateChainSha256": "a415dbcf06ea17d366709541e12d1895b0f73de1114efa555c08eb8659e0b329",
+"motionSha256": "a79425af52e6be87406214e4a753339580414421da19d87f3f2af6af5956ce62",
+"eventCount": 755,
+"eventsSha256": "d725ad2098ca26ad63552958ce7cb6aef7eb79cc436f7a2d47912bd55d1300db",
+"standings": [
+{
+"playerId": "410",
+"rank": 1,
+"finishTimeBits": "40eafb5527249a97"
+},
+{
+"playerId": "1346",
+"rank": 2,
+"finishTimeBits": "40ebadd5a6887689"
+},
+{
+"playerId": "547",
+"rank": 3,
+"finishTimeBits": "40ebbbd7888f324d"
+},
+{
+"playerId": "1002",
+"rank": 4,
+"finishTimeBits": "40ebbf2e95d38247"
+},
+{
+"playerId": "1895",
+"rank": 5,
+"finishTimeBits": "40ebe0d54f5cb015"
+},
+{
+"playerId": "1241",
+"rank": 6,
+"finishTimeBits": "40ec00afb4540a14"
+},
+{
+"playerId": "22",
+"rank": 7,
+"finishTimeBits": "40ec1574ebde9885"
+},
+{
+"playerId": "1663",
+"rank": 8,
+"finishTimeBits": "40ec2f48fa70e2b2"
+},
+{
+"playerId": "1410",
+"rank": 9,
+"finishTimeBits": "40ec3aff98415dcd"
+},
+{
+"playerId": "596",
+"rank": 10,
+"finishTimeBits": "40ec410a85836ad9"
+},
+{
+"playerId": "695",
+"rank": 11,
+"finishTimeBits": "40ec4ae656f3a9ab"
+},
+{
+"playerId": "1920",
+"rank": 12,
+"finishTimeBits": "40ec5d69dbacc2d8"
+}
+]
+},
+{
+"case": 98,
+"config": "{\"raceId\":\"3650\",\"seed\":\"161130f2779d08c576d04b13d1cf40d9271a82c1f7468be5901adfdf835c6cb7\",\"protocolVersion\":\"1.0.0\",\"engineVersion\":\"1.2.0\",\"balanceVersion\":\"S3.15\",\"trackVersion\":\"river-01-v2\",\"pickupSpawnVersion\":\"pickups-v1\",\"wildItemBalanceVersion\":\"wild-items-v6\",\"hazardBalanceVersion\":\"hazards-v1\",\"players\":[{\"playerId\":\"1795\",\"name\":\"Vịt Bầu 0\"},{\"playerId\":\"1692\",\"name\":\"Vịt Bầu 1\"},{\"playerId\":\"213\",\"name\":\"李雷 2\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-38\\\",\\\"body\\\":\\\"body-27\\\"}\"},{\"playerId\":\"1486\",\"name\":\"Minh 3\"},{\"playerId\":\"541\",\"name\":\"a 4\"},{\"playerId\":\"1190\",\"name\":\"Quack 5\"},{\"playerId\":\"789\",\"name\":\"Nguyễn Văn A 6\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-4\\\",\\\"body\\\":\\\"body-9\\\"}\"},{\"playerId\":\"1927\",\"name\":\"李雷 7\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-12\\\",\\\"body\\\":\\\"body-17\\\"}\"},{\"playerId\":\"904\",\"name\":\"Minh 8\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-17\\\",\\\"body\\\":\\\"body-0\\\"}\",\"isGhost\":false},{\"playerId\":\"401\",\"name\":\"Vịt Bầu 9\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-32\\\",\\\"body\\\":\\\"body-36\\\"}\"},{\"playerId\":\"674\",\"name\":\"O'Brien 10\"},{\"playerId\":\"719\",\"name\":\"Vịt Bầu 11\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-2\\\",\\\"body\\\":\\\"body-38\\\"}\"},{\"playerId\":\"1499\",\"name\":\"O'Brien 12\"},{\"playerId\":\"1533\",\"name\":\"Nguyễn Văn A 13\"}],\"chaosConfig\":{\"type\":\"REVERSE\"}}",
+"finished": true,
+"finalTick": 3499,
+"maxTicks": 5400,
+"stateChainSha256": "9072de4da221c7d5a4894abb92ea9be6c5c4da8402b7584a09207f1413e338a5",
+"motionSha256": "effc50f8f1a9384a2117cef65ffbf5977616043e782cdf56a27bfe455427b958",
+"eventCount": 930,
+"eventsSha256": "5eb456c97cbb76ad0e4d0169761fd3f7019e36f0fa7558eb7f017e00eec2d7c5",
+"standings": [
+{
+"playerId": "213",
+"rank": 1,
+"finishTimeBits": "40ebc965a6650543"
+},
+{
+"playerId": "1692",
+"rank": 2,
+"finishTimeBits": "40ebdddc0069d538"
+},
+{
+"playerId": "719",
+"rank": 3,
+"finishTimeBits": "40ebdf85885b161b"
+},
+{
+"playerId": "1499",
+"rank": 4,
+"finishTimeBits": "40ebf48a12118472"
+},
+{
+"playerId": "1795",
+"rank": 5,
+"finishTimeBits": "40ebfb96d9579721"
+},
+{
+"playerId": "1927",
+"rank": 6,
+"finishTimeBits": "40ec01651f12aa7c"
+},
+{
+"playerId": "1533",
+"rank": 7,
+"finishTimeBits": "40ec1da0f9876eb9"
+},
+{
+"playerId": "1486",
+"rank": 8,
+"finishTimeBits": "40ec39f1b7f23439"
+},
+{
+"playerId": "674",
+"rank": 9,
+"finishTimeBits": "40ec5382b786ee3a"
+},
+{
+"playerId": "904",
+"rank": 10,
+"finishTimeBits": "40ec59efbe1d712f"
+},
+{
+"playerId": "1190",
+"rank": 11,
+"finishTimeBits": "40ec5bfb3efca84c"
+},
+{
+"playerId": "789",
+"rank": 12,
+"finishTimeBits": "40ec66cd2d5a35b2"
+},
+{
+"playerId": "401",
+"rank": 13,
+"finishTimeBits": "40ec731e19ff56ff"
+},
+{
+"playerId": "541",
+"rank": 14,
+"finishTimeBits": "40ec78f6ca1f14fe"
+}
+]
+},
+{
+"case": 105,
+"config": "{\"raceId\":\"c7f62951ac623153040e137bb\",\"seed\":\"5201573d62a67e65ca8e3ef3713b147e8cda276d7aa778c423ab222d746d3ad2\",\"players\":[{\"playerId\":\":155\",\"name\":\"a 0\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-39\\\",\\\"body\\\":\\\"body-6\\\"}\"},{\"playerId\":\"_178\",\"name\":\"Trần Thị Bích Ngọc 1\"},{\"playerId\":\":290\",\"name\":\"Nguyễn Văn A 2\",\"isGhost\":false},{\"playerId\":\"p:34\",\"name\":\"Ünïcödé 3\"},{\"playerId\":\"_131\",\"name\":\"Đức Anh 4\"},{\"playerId\":\"user-117\",\"name\":\"Đức Anh 5\"},{\"playerId\":\"p:177\",\"name\":\"tab\\there 6\"},{\"playerId\":\"user-159\",\"name\":\"Trần Thị Bích Ngọc 7\"},{\"playerId\":\"P-246\",\"name\":\"Vịt Bầu 8\"},{\"playerId\":\"u_144\",\"name\":\"李雷 9\"},{\"playerId\":\"_155\",\"name\":\"\\\"Quote\\\" Duck 10\"},{\"playerId\":\"_151\",\"name\":\"O'Brien 11\"},{\"playerId\":\"P-237\",\"name\":\"Nguyễn Văn A 12\"},{\"playerId\":\"P-105\",\"name\":\"Lan 🦆 13\"},{\"playerId\":\":79\",\"name\":\"a 14\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-13\\\",\\\"body\\\":\\\"body-33\\\"}\"}],\"chaosConfig\":{\"type\":\"NORMAL\"}}",
+"finished": true,
+"finalTick": 3530,
+"maxTicks": 5400,
+"stateChainSha256": "ecef51e3a94b5ba6f9ad09972b787d1028620419450b7304eca79056d148d1a7",
+"motionSha256": "3b41074ff5f1d4e94a163055f4f2cdc334170d7569e2d44e6813084a1b755782",
+"eventCount": 965,
+"eventsSha256": "828dc09fc6614c3fdf263da07900351d5ceaead0bcb3e0e5986cdc6acc6acead",
+"standings": [
+{
+"playerId": ":79",
+"rank": 1,
+"finishTimeBits": "40eb7e1fd452f201"
+},
+{
+"playerId": "p:177",
+"rank": 2,
+"finishTimeBits": "40eb92d293bf3b39"
+},
+{
+"playerId": "_131",
+"rank": 3,
+"finishTimeBits": "40eb9d2ce7cd10c9"
+},
+{
+"playerId": "P-237",
+"rank": 4,
+"finishTimeBits": "40eba512db4b143e"
+},
+{
+"playerId": "_155",
+"rank": 5,
+"finishTimeBits": "40ebbdbce67c489f"
+},
+{
+"playerId": "_178",
+"rank": 6,
+"finishTimeBits": "40ebd91ce7def848"
+},
+{
+"playerId": "P-105",
+"rank": 7,
+"finishTimeBits": "40ebfbbea26466a0"
+},
+{
+"playerId": "user-117",
+"rank": 8,
+"finishTimeBits": "40ec32259c82644e"
+},
+{
+"playerId": "_151",
+"rank": 9,
+"finishTimeBits": "40ec4d51b752e57e"
+},
+{
+"playerId": "P-246",
+"rank": 10,
+"finishTimeBits": "40ec688387635d24"
+},
+{
+"playerId": "p:34",
+"rank": 11,
+"finishTimeBits": "40ec6bb9f5b941e7"
+},
+{
+"playerId": "u_144",
+"rank": 12,
+"finishTimeBits": "40ec70e1f2f121e7"
+},
+{
+"playerId": ":155",
+"rank": 13,
+"finishTimeBits": "40ec8e2de27004fd"
+},
+{
+"playerId": "user-159",
+"rank": 14,
+"finishTimeBits": "40ecabf100f2ca8f"
+},
+{
+"playerId": ":290",
+"rank": 15,
+"finishTimeBits": "40ecb9a42444aeef"
+}
+]
+},
+{
+"case": 112,
+"config": "{\"raceId\":\"1608\",\"seed\":\"662BC438561374CD411341C1BFF01F57AADB4B2398A9CD90702D228DD01C5D42\",\"players\":[{\"playerId\":\"252\",\"name\":\"Vịt Bầu 0\"},{\"playerId\":\"256\",\"name\":\"O'Brien 1\"},{\"playerId\":\"1031\",\"name\":\"Vịt Bầu 2\"},{\"playerId\":\"1928\",\"name\":\"Nguyễn Văn A 3\"},{\"playerId\":\"1322\",\"name\":\"tab\\there 4\"},{\"playerId\":\"1572\",\"name\":\"Quack 5\"},{\"playerId\":\"643\",\"name\":\"Ünïcödé 6\",\"isGhost\":false},{\"playerId\":\"1075\",\"name\":\"tab\\there 7\"},{\"playerId\":\"720\",\"name\":\"Vịt Ma 👻\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-31\\\",\\\"body\\\":\\\"body-1\\\"}\",\"isGhost\":true},{\"playerId\":\"1371\",\"name\":\"a 9\"},{\"playerId\":\"1773\",\"name\":\"Quack 10\"},{\"playerId\":\"407\",\"name\":\"Trần Thị Bích Ngọc 11\"},{\"playerId\":\"962\",\"name\":\"tab\\there 12\"},{\"playerId\":\"88\",\"name\":\"ZZ Top 13\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-9\\\",\\\"body\\\":\\\"body-19\\\"}\"},{\"playerId\":\"370\",\"name\":\"O'Brien 14\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-25\\\",\\\"body\\\":\\\"body-32\\\"}\"},{\"playerId\":\"519\",\"name\":\"Vịt Bầu 15\"}]}",
+"finished": true,
+"finalTick": 3575,
+"maxTicks": 5400,
+"stateChainSha256": "31073e3472f51f09f98bdd2d9737e98b059c8350b2199d643d74e55c02def123",
+"motionSha256": "aae70758784dfbd9a631131a119dc15f3adc0d4a1f413795dd843984846bcc6b",
+"eventCount": 1035,
+"eventsSha256": "3539d5c46939e82bb1d2bbb123df8bff11a23d472441cd20c01b98f357e6ad52",
+"standings": [
+{
+"playerId": "88",
+"rank": 1,
+"finishTimeBits": "40eb696875ae47c1"
+},
+{
+"playerId": "519",
+"rank": 2,
+"finishTimeBits": "40eb99dd7dc3ad16"
+},
+{
+"playerId": "252",
+"rank": 3,
+"finishTimeBits": "40eba77ab98bd132"
+},
+{
+"playerId": "1371",
+"rank": 4,
+"finishTimeBits": "40ebae93757f7c7c"
+},
+{
+"playerId": "1773",
+"rank": 5,
+"finishTimeBits": "40ebcc5e44587b3f"
+},
+{
+"playerId": "370",
+"rank": 6,
+"finishTimeBits": "40ebd0b522801565"
+},
+{
+"playerId": "1075",
+"rank": 7,
+"finishTimeBits": "40ec36f8c004ea50"
+},
+{
+"playerId": "643",
+"rank": 8,
+"finishTimeBits": "40ec471d8c43eb4f"
+},
+{
+"playerId": "1572",
+"rank": 9,
+"finishTimeBits": "40ec4965c225e632"
+},
+{
+"playerId": "407",
+"rank": 10,
+"finishTimeBits": "40ec70f503f600bd"
+},
+{
+"playerId": "1928",
+"rank": 11,
+"finishTimeBits": "40ec9bfae48d9a94"
+},
+{
+"playerId": "1322",
+"rank": 12,
+"finishTimeBits": "40eca2123bea3a1d"
+},
+{
+"playerId": "1031",
+"rank": 13,
+"finishTimeBits": "40ecdb5ae5692f00"
+},
+{
+"playerId": "962",
+"rank": 14,
+"finishTimeBits": "40ed064dfb7304a9"
+},
+{
+"playerId": "256",
+"rank": 15,
+"finishTimeBits": "40ed1666fec02ef0"
+}
+]
+},
+{
+"case": 119,
+"config": "{\"raceId\":\"c152f9b3ea5131cf1c7946eba\",\"seed\":\"3a02497cb4550442b6987a1f34b11e2a2dc00ef53e28ffe7a5109c4314ef970a\",\"tickRate\":60,\"players\":[{\"playerId\":\"200\",\"name\":\"Nguyễn Văn A 0\"},{\"playerId\":\"990\",\"name\":\"Minh 1\"},{\"playerId\":\"1537\",\"name\":\"Minh 2\"},{\"playerId\":\"1640\",\"name\":\"\\\"Quote\\\" Duck 3\"},{\"playerId\":\"505\",\"name\":\"tab\\there 4\"},{\"playerId\":\"392\",\"name\":\"tab\\there 5\"},{\"playerId\":\"260\",\"name\":\"Ünïcödé 6\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-2\\\",\\\"body\\\":\\\"body-38\\\"}\"},{\"playerId\":\"218\",\"name\":\"Phở Bò 7\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-20\\\",\\\"body\\\":\\\"body-33\\\"}\"},{\"playerId\":\"538\",\"name\":\"Minh 8\"},{\"playerId\":\"735\",\"name\":\"ZZ Top 9\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-34\\\",\\\"body\\\":\\\"body-23\\\"}\"},{\"playerId\":\"1749\",\"name\":\"Quack 10\"},{\"playerId\":\"1916\",\"name\":\"O'Brien 11\"},{\"playerId\":\"879\",\"name\":\"Quack 12\",\"isGhost\":false},{\"playerId\":\"1201\",\"name\":\"ZZ Top 13\"},{\"playerId\":\"1036\",\"name\":\"tab\\there 14\"},{\"playerId\":\"100\",\"name\":\"Ünïcödé 15\"}],\"chaosConfig\":{\"type\":\"BOUNTY_HUNT\",\"targetPlayerId\":\"200\"}}",
+"finished": true,
+"finalTick": 3612,
+"maxTicks": 5400,
+"stateChainSha256": "3c739256bd4bb513992ea7e4c9ff1f0f16b96b27b9f8cd6ab8809ac84eb5bf07",
+"motionSha256": "53f225fcd85fe1a1437a63d4122e9ccf82151303f01a041a6672e9020421ee7f",
+"eventCount": 1196,
+"eventsSha256": "7901a22b7ace3d17febde4f3d43ff766e9566ac5cb644f5b4f29443a21f40655",
+"standings": [
+{
+"playerId": "735",
+"rank": 1,
+"finishTimeBits": "40eaff4d9275e5b5"
+},
+{
+"playerId": "1640",
+"rank": 2,
+"finishTimeBits": "40eb6ac992a7eb5a"
+},
+{
+"playerId": "538",
+"rank": 3,
+"finishTimeBits": "40eba9fa0339547b"
+},
+{
+"playerId": "1537",
+"rank": 4,
+"finishTimeBits": "40ebaa65acbda4a4"
+},
+{
+"playerId": "990",
+"rank": 5,
+"finishTimeBits": "40ec214a7addcb7f"
+},
+{
+"playerId": "260",
+"rank": 6,
+"finishTimeBits": "40ec2dfff4b03bf3"
+},
+{
+"playerId": "1036",
+"rank": 7,
+"finishTimeBits": "40ec54437aa53adc"
+},
+{
+"playerId": "100",
+"rank": 8,
+"finishTimeBits": "40ec5e08fd1f5e15"
+},
+{
+"playerId": "392",
+"rank": 9,
+"finishTimeBits": "40ec7b8e6cc53485"
+},
+{
+"playerId": "1916",
+"rank": 10,
+"finishTimeBits": "40ec7f725297cca9"
+},
+{
+"playerId": "505",
+"rank": 11,
+"finishTimeBits": "40ecadf00b5e6e9f"
+},
+{
+"playerId": "879",
+"rank": 12,
+"finishTimeBits": "40ece6d9ee284e94"
+},
+{
+"playerId": "200",
+"rank": 13,
+"finishTimeBits": "40ed03297d4ba827"
+},
+{
+"playerId": "218",
+"rank": 14,
+"finishTimeBits": "40ed1dcc509635b7"
+},
+{
+"playerId": "1201",
+"rank": 15,
+"finishTimeBits": "40ed5e2b146d759e"
+},
+{
+"playerId": "1749",
+"rank": 16,
+"finishTimeBits": "40ed6403af6abae2"
+}
+]
+},
+{
+"case": 126,
+"config": "{\"raceId\":\"4281\",\"seed\":\"bb1168a8cec460a93ce925cf9148cb4cd9d8d7e50148f9449528fbe50945c5bc\",\"protocolVersion\":\"1.0.0\",\"engineVersion\":\"1.2.0\",\"balanceVersion\":\"S3.15\",\"trackVersion\":\"river-01-v2\",\"pickupSpawnVersion\":\"pickups-v1\",\"wildItemBalanceVersion\":\"wild-items-v6\",\"hazardBalanceVersion\":\"hazards-v1\",\"tickRate\":60,\"players\":[{\"playerId\":\"u_190\",\"name\":\"Vịt Bầu 0\"},{\"playerId\":\"_245\",\"name\":\"Ünïcödé 1\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-15\\\",\\\"body\\\":\\\"body-26\\\"}\"}],\"chaosConfig\":{\"type\":\"CONSTRUCTORS\",\"groups\":[[\"u_190\"],[\"_245\"]]}}",
+"finished": true,
+"finalTick": 3303,
+"maxTicks": 5400,
+"stateChainSha256": "017793b921793dcfa0de9ff471a6980dc367f9510a9bdf8759424713bde1f49f",
+"motionSha256": "e383a8b832ebb260b3ab9c84db6dc0c01637ee5ac71966a85a59dbb1f36ccd76",
+"eventCount": 25,
+"eventsSha256": "4224c995876d848670afa2f459860e51e0981a7dba3bf2c8cb819a48b4c08af6",
+"standings": [
+{
+"playerId": "u_190",
+"rank": 1,
+"finishTimeBits": "40ea9907b6f771f7"
+},
+{
+"playerId": "_245",
+"rank": 2,
+"finishTimeBits": "40eae0a7cf69b6a0"
+}
+]
+},
+{
+"case": 133,
+"config": "{\"raceId\":\"c4f5b65e69e1b60ed50d00b01\",\"seed\":\"25d1db4feefb65f9095aee314f18190b2e586a4245668f6ee044c87868e65374\",\"protocolVersion\":\"1.0.0\",\"engineVersion\":\"1.2.0\",\"balanceVersion\":\"S3.15\",\"trackVersion\":\"river-01-v2\",\"pickupSpawnVersion\":\"pickups-v1\",\"wildItemBalanceVersion\":\"wild-items-v6\",\"hazardBalanceVersion\":\"hazards-v1\",\"tickRate\":60,\"players\":[{\"playerId\":\"146\",\"name\":\"a 0\"},{\"playerId\":\"332\",\"name\":\"Vịt Bầu 1\"},{\"playerId\":\"1682\",\"name\":\"a 2\",\"isGhost\":false}],\"chaosConfig\":{\"type\":\"CUT_LINE\"}}",
+"finished": true,
+"finalTick": 3350,
+"maxTicks": 5400,
+"stateChainSha256": "33cdec5bf0e8a6bef59ab3ddbb94029d083060924d1d7d1efe5365b93e380731",
+"motionSha256": "79a039a7e28ea02771e39addf8a1243f236e61adc87fee0a022f0280bff560a0",
+"eventCount": 63,
+"eventsSha256": "4ca46a630030b613188a02424aac29d0b740e3b3875a90b390169257e5bf7a02",
+"standings": [
+{
+"playerId": "146",
+"rank": 1,
+"finishTimeBits": "40eac187530a0d43"
+},
+{
+"playerId": "332",
+"rank": 2,
+"finishTimeBits": "40ead6bdbe069ecf"
+},
+{
+"playerId": "1682",
+"rank": 3,
+"finishTimeBits": "40eb426a4f4002fa"
+}
+]
+},
+{
+"case": 140,
+"config": "{\"raceId\":\"cb35a54ccf4a47cb23bf21483\",\"seed\":\"180F96FD72EC619E8FF993FD461591B470C772A5887437CC38463D15371F5F5D\",\"tickRate\":60,\"players\":[{\"playerId\":\"76\",\"name\":\"Quack 0\"},{\"playerId\":\"1412\",\"name\":\"a 1\"},{\"playerId\":\"297\",\"name\":\"a 2\"},{\"playerId\":\"784\",\"name\":\"Phở Bò 3\"}],\"chaosConfig\":{\"type\":\"TRIPLE_ELIMINATION\"}}",
+"finished": true,
+"finalTick": 3336,
+"maxTicks": 5400,
+"stateChainSha256": "dd935fd4e7711012c9af04eb3f279cc394537be12d2808c3e8ca87aafd40e04a",
+"motionSha256": "1b20b3d3bbc9039fb6bbb88eb3eb0151c09f501d4a7de633e20867c58e07f895",
+"eventCount": 61,
+"eventsSha256": "d08139af446b1143decc2e4c9a4989962cc6624a4b869e2b0c0b7b33176fd3a9",
+"standings": [
+{
+"playerId": "1412",
+"rank": 1,
+"finishTimeBits": "40eab90b839edf53"
+},
+{
+"playerId": "784",
+"rank": 2,
+"finishTimeBits": "40eae1400149a6a9"
+},
+{
+"playerId": "297",
+"rank": 3,
+"finishTimeBits": "40eb12280bfcdd8f"
+},
+{
+"playerId": "76",
+"rank": 4,
+"finishTimeBits": "40eb25f9a69c00cd"
+}
+]
+},
+{
+"case": 147,
+"config": "{\"raceId\":\"test-147-775f\",\"seed\":\"c1fe19c4a3e9ad86ed51c6d0be9856ab9e3644fb1cac61a6861767b017f485e2\",\"players\":[{\"playerId\":\"1033\",\"name\":\"Lan 🦆 0\"},{\"playerId\":\"1417\",\"name\":\"O'Brien 1\"},{\"playerId\":\"672\",\"name\":\"Ünïcödé 2\"},{\"playerId\":\"54\",\"name\":\"Minh 3\",\"isGhost\":false},{\"playerId\":\"382\",\"name\":\"李雷 4\"}],\"chaosConfig\":{\"type\":\"DUO\",\"groups\":[[\"382\",\"672\"],[\"54\",\"1033\",\"1417\"]]}}",
+"finished": true,
+"finalTick": 3355,
+"maxTicks": 5400,
+"stateChainSha256": "3c0b63dba0e4bea66a6f4c108bfd7eaf9fab0e72573f2df5e6047f8bc11c5f21",
+"motionSha256": "42b97008729779b3e9ac3248a3f84e2c777bca369e9e0a618ca765177dcf8924",
+"eventCount": 133,
+"eventsSha256": "27f9c626e54969b80685e31c00a3ccfa1840364f3139a242031c984371cb8c9a",
+"standings": [
+{
+"playerId": "1033",
+"rank": 1,
+"finishTimeBits": "40eae3c512a9880b"
+},
+{
+"playerId": "672",
+"rank": 2,
+"finishTimeBits": "40eb059e03e9a294"
+},
+{
+"playerId": "1417",
+"rank": 3,
+"finishTimeBits": "40eb18bb572b2f10"
+},
+{
+"playerId": "382",
+"rank": 4,
+"finishTimeBits": "40eb1f6ef154fe2c"
+},
+{
+"playerId": "54",
+"rank": 5,
+"finishTimeBits": "40eb4d85532b816b"
+}
+]
+},
+{
+"case": 154,
+"config": "{\"raceId\":\"2956\",\"seed\":\"9a99281416825348d51c4dd4a7e64aba923489deee07ef5e6ed8593a7e6db27b\",\"players\":[{\"playerId\":\"O__ci6t\",\"name\":\"Vịt Ma 👻\",\"isGhost\":true},{\"playerId\":\"9uXRJSgG2S\",\"name\":\"Vịt Bầu 1\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-11\\\",\\\"body\\\":\\\"body-16\\\"}\"},{\"playerId\":\"_KCuteDG\",\"name\":\"Vịt Bầu 2\"},{\"playerId\":\"zb\",\"name\":\"back\\\\slash 3\"},{\"playerId\":\"kr\",\"name\":\"Đức Anh 4\"},{\"playerId\":\"uR2Q90SF1\",\"name\":\"李雷 5\"}],\"chaosConfig\":{\"type\":\"REVERSE\"}}",
+"finished": true,
+"finalTick": 3363,
+"maxTicks": 5400,
+"stateChainSha256": "3c5cc38fa8b5fd97e71d660613f4d7375797f014280fd13dcd119de53317a645",
+"motionSha256": "b96cf02c8be63fec70434881a36cf3d6b45c66376f8f3dcc224f4bb620c525ab",
+"eventCount": 81,
+"eventsSha256": "10df103728a01e523855290b8f6a70916495441e440c4f905eff8535b00aad56",
+"standings": [
+{
+"playerId": "_KCuteDG",
+"rank": 1,
+"finishTimeBits": "40eaaec69b3dc655"
+},
+{
+"playerId": "9uXRJSgG2S",
+"rank": 2,
+"finishTimeBits": "40eac0d56e3c4663"
+},
+{
+"playerId": "uR2Q90SF1",
+"rank": 3,
+"finishTimeBits": "40eafa20fc83ba99"
+},
+{
+"playerId": "kr",
+"rank": 4,
+"finishTimeBits": "40eb0e99664c51f7"
+},
+{
+"playerId": "zb",
+"rank": 5,
+"finishTimeBits": "40eb2b8e95a78052"
+}
+]
+},
+{
+"case": 161,
+"config": "{\"raceId\":\"cabb8f795b76ad7bc9840193f\",\"seed\":\"17d70a127ec2be4b7549a426be3b2eb4917b23e2b02ef1d7a98d1fe3cbfd291a\",\"players\":[{\"playerId\":\"BB44El\",\"name\":\"Vịt Ma 👻\",\"isGhost\":true},{\"playerId\":\"IdW\",\"name\":\"back\\\\slash 1\"},{\"playerId\":\"I2FA\",\"name\":\"Phở Bò 2\"},{\"playerId\":\"spxXLPBGJ5a7\",\"name\":\"ZZ Top 3\"},{\"playerId\":\"-WH\",\"name\":\"ZZ Top 4\"},{\"playerId\":\"0rn\",\"name\":\"李雷 5\"},{\"playerId\":\"aKxClKJ\",\"name\":\"Phở Bò 6\"}],\"chaosConfig\":{\"type\":\"NORMAL\"}}",
+"finished": true,
+"finalTick": 3372,
+"maxTicks": 5400,
+"stateChainSha256": "6e304b299911821bd0bbc952c5f4473b2890efe818753ca5a806f3c0cfbf697d",
+"motionSha256": "b85df2e3646c65b43218c99707c33b42a2614e9b76c6b6463ae83719c9d9791c",
+"eventCount": 114,
+"eventsSha256": "c8c27bbcdc6d7a8401c0df72b76717ba7f8697296e2bb7afbe4aac0df6105ba3",
+"standings": [
+{
+"playerId": "I2FA",
+"rank": 1,
+"finishTimeBits": "40eabe9d8f26c2b7"
+},
+{
+"playerId": "-WH",
+"rank": 2,
+"finishTimeBits": "40eacb7b369ec4d0"
+},
+{
+"playerId": "0rn",
+"rank": 3,
+"finishTimeBits": "40eae4d446851e44"
+},
+{
+"playerId": "IdW",
+"rank": 4,
+"finishTimeBits": "40eafebb9644350f"
+},
+{
+"playerId": "spxXLPBGJ5a7",
+"rank": 5,
+"finishTimeBits": "40eb05bd789c6c66"
+},
+{
+"playerId": "aKxClKJ",
+"rank": 6,
+"finishTimeBits": "40eb4b03bbbfb7eb"
+}
+]
+},
+{
+"case": 168,
+"config": "{\"raceId\":\"3867\",\"seed\":\"a23ee62b4aae958ad631041617ab11288117b28fae2aa51845d635a1f1f2a2a7\",\"tickRate\":60,\"players\":[{\"playerId\":\"1567\",\"name\":\"Quack 0\"},{\"playerId\":\"832\",\"name\":\"\\\"Quote\\\" Duck 1\"},{\"playerId\":\"1931\",\"name\":\"Lan 🦆 2\"},{\"playerId\":\"867\",\"name\":\"Trần Thị Bích Ngọc 3\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-27\\\",\\\"body\\\":\\\"body-31\\\"}\"},{\"playerId\":\"1947\",\"name\":\"back\\\\slash 4\"},{\"playerId\":\"668\",\"name\":\"\\\"Quote\\\" Duck 5\"},{\"playerId\":\"1251\",\"name\":\"Minh 6\"},{\"playerId\":\"1617\",\"name\":\"Nguyễn Văn A 7\"}]}",
+"finished": true,
+"finalTick": 3409,
+"maxTicks": 5400,
+"stateChainSha256": "79ccbc9fda00941d62965a32f3dd59e371315bb1125966a621686ae9a4bc0202",
+"motionSha256": "a5e5175a758ce4d007f41e9fd024f1257c41125e9e696ca1a9503b27d6235dac",
+"eventCount": 228,
+"eventsSha256": "9f5177aea7649c3984cbdfe36924cd82edce5457738b34a23be232595abbb26a",
+"standings": [
+{
+"playerId": "832",
+"rank": 1,
+"finishTimeBits": "40eae712e094b579"
+},
+{
+"playerId": "1617",
+"rank": 2,
+"finishTimeBits": "40eb1032a6a8ae48"
+},
+{
+"playerId": "1251",
+"rank": 3,
+"finishTimeBits": "40eb29d4487fcd3c"
+},
+{
+"playerId": "1947",
+"rank": 4,
+"finishTimeBits": "40eb2d0af83802ef"
+},
+{
+"playerId": "1931",
+"rank": 5,
+"finishTimeBits": "40eb564eb5a70475"
+},
+{
+"playerId": "867",
+"rank": 6,
+"finishTimeBits": "40eb6d42dbb5911d"
+},
+{
+"playerId": "1567",
+"rank": 7,
+"finishTimeBits": "40eb7f06257e0607"
+},
+{
+"playerId": "668",
+"rank": 8,
+"finishTimeBits": "40ebbc4d816b7a0f"
+}
+]
+},
+{
+"case": 175,
+"config": "{\"raceId\":\"2226\",\"seed\":\"8746c461012a6960e17884a380eb54dad29bc27a0c9d6d0c0463b235add9e873\",\"tickRate\":60,\"players\":[{\"playerId\":\"_245\",\"name\":\"O'Brien 0\",\"isGhost\":false},{\"playerId\":\"u_200\",\"name\":\"李雷 1\"},{\"playerId\":\"p:21\",\"name\":\"Đức Anh 2\"},{\"playerId\":\":72\",\"name\":\"Nguyễn Văn A 3\"},{\"playerId\":\"user-158\",\"name\":\"back\\\\slash 4\"},{\"playerId\":\"u_90\",\"name\":\"Quack 5\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-31\\\",\\\"body\\\":\\\"body-11\\\"}\"},{\"playerId\":\"p:27\",\"name\":\"Đức Anh 6\"},{\"playerId\":\"u_259\",\"name\":\"Đức Anh 7\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-7\\\",\\\"body\\\":\\\"body-20\\\"}\"}],\"chaosConfig\":{\"type\":\"BOUNTY_HUNT\",\"targetPlayerId\":\"user-158\"}}",
+"finished": true,
+"finalTick": 3395,
+"maxTicks": 5400,
+"stateChainSha256": "bcee341b4a333e54dc8a2f26ca7bfbb4b4106fe6375b4bb76aabcc3d533254dd",
+"motionSha256": "8f6d118c7a1f7a37824fe1c786ee8e675aaf44d26def889d3361693e87d12f26",
+"eventCount": 256,
+"eventsSha256": "cf38476ff4e95012d4bfffeafe0f6f9e120dc21b3141be3293f751ac0f22945d",
+"standings": [
+{
+"playerId": "u_259",
+"rank": 1,
+"finishTimeBits": "40eaa0a0256bea6f"
+},
+{
+"playerId": "u_200",
+"rank": 2,
+"finishTimeBits": "40eaad87455c0c33"
+},
+{
+"playerId": "user-158",
+"rank": 3,
+"finishTimeBits": "40eb0b4b95b1aa51"
+},
+{
+"playerId": "p:27",
+"rank": 4,
+"finishTimeBits": "40eb1c6009f56b5e"
+},
+{
+"playerId": "_245",
+"rank": 5,
+"finishTimeBits": "40eb66805a11e7f4"
+},
+{
+"playerId": "p:21",
+"rank": 6,
+"finishTimeBits": "40eb77a33d351687"
+},
+{
+"playerId": ":72",
+"rank": 7,
+"finishTimeBits": "40eb8ecf8cb18c18"
+},
+{
+"playerId": "u_90",
+"rank": 8,
+"finishTimeBits": "40eba0db193b94e2"
+}
+]
+},
+{
+"case": 182,
+"config": "{\"raceId\":\"2467\",\"seed\":\"c239048b27fe1b6025a2a562a8273f8b76f87b5049cc18ccb9bff544116a2f82\",\"tickRate\":60,\"players\":[{\"playerId\":\"1104\",\"name\":\"Phở Bò 0\"},{\"playerId\":\"1834\",\"name\":\"back\\\\slash 1\"},{\"playerId\":\"247\",\"name\":\"Trần Thị Bích Ngọc 2\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-34\\\",\\\"body\\\":\\\"body-33\\\"}\"},{\"playerId\":\"106\",\"name\":\"Phở Bò 3\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-2\\\",\\\"body\\\":\\\"body-2\\\"}\"},{\"playerId\":\"1209\",\"name\":\"Vịt Ma 👻\",\"isGhost\":true},{\"playerId\":\"160\",\"name\":\"Lan 🦆 5\"},{\"playerId\":\"1698\",\"name\":\"back\\\\slash 6\"},{\"playerId\":\"225\",\"name\":\"Lan 🦆 7\"},{\"playerId\":\"1026\",\"name\":\"tab\\there 8\"}],\"chaosConfig\":{\"type\":\"CONSTRUCTORS\",\"groups\":[[\"1698\",\"1104\",\"1834\",\"1026\"],[\"247\",\"225\",\"106\",\"160\"]]}}",
+"finished": true,
+"finalTick": 3420,
+"maxTicks": 5400,
+"stateChainSha256": "f9b8b548632a8cedd529ecb156b2668298b52a740dd3e967c889c19f8d0abc97",
+"motionSha256": "0555f7bf151738d6f9af8710bf5b87cbcdb9609b24027c34f4637c09d63b4808",
+"eventCount": 410,
+"eventsSha256": "50330f60c3f6b23c4dced49d9d25ebea23b2b8cf19a39cbed5572ba3c1a135a7",
+"standings": [
+{
+"playerId": "1698",
+"rank": 1,
+"finishTimeBits": "40eb516b926cf701"
+},
+{
+"playerId": "247",
+"rank": 2,
+"finishTimeBits": "40eb5837bf7857ec"
+},
+{
+"playerId": "1026",
+"rank": 3,
+"finishTimeBits": "40eb60f77d92bff8"
+},
+{
+"playerId": "160",
+"rank": 4,
+"finishTimeBits": "40eb71fe522a87e9"
+},
+{
+"playerId": "225",
+"rank": 5,
+"finishTimeBits": "40eb7b30e5735f53"
+},
+{
+"playerId": "1104",
+"rank": 6,
+"finishTimeBits": "40eb9a7f1eb21abe"
+},
+{
+"playerId": "1834",
+"rank": 7,
+"finishTimeBits": "40ebc34434b4fe3c"
+},
+{
+"playerId": "106",
+"rank": 8,
+"finishTimeBits": "40ebd499f0ff2897"
+}
+]
+},
+{
+"case": 189,
+"config": "{\"raceId\":\"c38e7e36b7db6785073a6bc39\",\"seed\":\"3f7230be3cb299a1cb0795b2f0cba43e6377cbe1e1199d7802368380a5513802\",\"tickRate\":60,\"players\":[{\"playerId\":\"953\",\"name\":\"Vịt Bầu 0\"},{\"playerId\":\"21\",\"name\":\"Trần Thị Bích Ngọc 1\"},{\"playerId\":\"66\",\"name\":\"O'Brien 2\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-1\\\",\\\"body\\\":\\\"body-19\\\"}\",\"isGhost\":false},{\"playerId\":\"1333\",\"name\":\"a 3\",\"isGhost\":false},{\"playerId\":\"243\",\"name\":\"Quack 4\"},{\"playerId\":\"809\",\"name\":\"Vịt Ma 👻\",\"isGhost\":true},{\"playerId\":\"501\",\"name\":\"Ünïcödé 6\"},{\"playerId\":\"662\",\"name\":\"Minh 7\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-4\\\",\\\"body\\\":\\\"body-1\\\"}\"},{\"playerId\":\"220\",\"name\":\"\\\"Quote\\\" Duck 8\"},{\"playerId\":\"1138\",\"name\":\"Lan 🦆 9\"}],\"chaosConfig\":{\"type\":\"CUT_LINE\",\"targetPlayerId\":null}}",
+"finished": true,
+"finalTick": 3411,
+"maxTicks": 5400,
+"stateChainSha256": "cfc6ecdfcaeb536e915c15e6a02a32895b808c6a86e0737731b3d06c51d61f37",
+"motionSha256": "a8699654710e1b265a31fdb9ae6d0683b89e7899d01b91ef3a10ee74631c4370",
+"eventCount": 483,
+"eventsSha256": "da4389f1ea61deeb19e715be58d8f91fb7a5514eee9752b634cc80a52f2477ca",
+"standings": [
+{
+"playerId": "21",
+"rank": 1,
+"finishTimeBits": "40eada2486d78134"
+},
+{
+"playerId": "501",
+"rank": 2,
+"finishTimeBits": "40eaf9b8f2823222"
+},
+{
+"playerId": "1333",
+"rank": 3,
+"finishTimeBits": "40eb8918fe148b7c"
+},
+{
+"playerId": "66",
+"rank": 4,
+"finishTimeBits": "40eb8a1cf59ba7bc"
+},
+{
+"playerId": "243",
+"rank": 5,
+"finishTimeBits": "40eb8ce7a120d66a"
+},
+{
+"playerId": "662",
+"rank": 6,
+"finishTimeBits": "40eba5d8c6dc6600"
+},
+{
+"playerId": "953",
+"rank": 7,
+"finishTimeBits": "40ebaf023ca264be"
+},
+{
+"playerId": "220",
+"rank": 8,
+"finishTimeBits": "40ebb8c55c4ef1ca"
+},
+{
+"playerId": "1138",
+"rank": 9,
+"finishTimeBits": "40ebc1092e30554f"
+}
+]
+},
+{
+"case": 196,
+"config": "{\"raceId\":\"ca499db12a358970dd97adb82\",\"seed\":\"0fee2505adad9e94a3d7780a9b2465df3f0fb4351d72da5fe822a01968ee7878\",\"tickRate\":60,\"players\":[{\"playerId\":\"1298\",\"name\":\"\\\"Quote\\\" Duck 0\"},{\"playerId\":\"302\",\"name\":\"Ünïcödé 1\"},{\"playerId\":\"1517\",\"name\":\"ZZ Top 2\"},{\"playerId\":\"551\",\"name\":\"O'Brien 3\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-38\\\",\\\"body\\\":\\\"body-36\\\"}\",\"isGhost\":false},{\"playerId\":\"1161\",\"name\":\"Lan 🦆 4\"},{\"playerId\":\"1445\",\"name\":\"Vịt Bầu 5\"},{\"playerId\":\"1786\",\"name\":\"O'Brien 6\"},{\"playerId\":\"1946\",\"name\":\"Minh 7\"},{\"playerId\":\"734\",\"name\":\"tab\\there 8\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-31\\\",\\\"body\\\":\\\"body-6\\\"}\"},{\"playerId\":\"76\",\"name\":\"ZZ Top 9\"},{\"playerId\":\"612\",\"name\":\"Đức Anh 10\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-5\\\",\\\"body\\\":\\\"body-2\\\"}\"}],\"chaosConfig\":{\"type\":\"TRIPLE_ELIMINATION\"}}",
+"finished": true,
+"finalTick": 3460,
+"maxTicks": 5400,
+"stateChainSha256": "a565a35298ed5db66e6a1f5281a195c075d677da5812e74a22d9ab3d6d268c25",
+"motionSha256": "28106268ee43a841568ae77281b5c328d25bed04859fc3b20dda48af3c912ff6",
+"eventCount": 538,
+"eventsSha256": "293a7bde479c877217c49fb33f13b975604d388a91909a5847d8829d756fc479",
+"standings": [
+{
+"playerId": "1786",
+"rank": 1,
+"finishTimeBits": "40eb05b7061dbfcc"
+},
+{
+"playerId": "1298",
+"rank": 2,
+"finishTimeBits": "40eb1ba03cf924af"
+},
+{
+"playerId": "76",
+"rank": 3,
+"finishTimeBits": "40eb5eba904e95fc"
+},
+{
+"playerId": "302",
+"rank": 4,
+"finishTimeBits": "40eb7741552c8735"
+},
+{
+"playerId": "551",
+"rank": 5,
+"finishTimeBits": "40eb86273da763d3"
+},
+{
+"playerId": "1445",
+"rank": 6,
+"finishTimeBits": "40eba4ecae93b7c9"
+},
+{
+"playerId": "1946",
+"rank": 7,
+"finishTimeBits": "40ebb431a3b5971a"
+},
+{
+"playerId": "612",
+"rank": 8,
+"finishTimeBits": "40ebcc190db6b0e5"
+},
+{
+"playerId": "734",
+"rank": 9,
+"finishTimeBits": "40ebe76b795fa701"
+},
+{
+"playerId": "1161",
+"rank": 10,
+"finishTimeBits": "40ec193fa118a8f3"
+},
+{
+"playerId": "1517",
+"rank": 11,
+"finishTimeBits": "40ec2703b3ff99dd"
+}
+]
+},
+{
+"case": 203,
+"config": "{\"raceId\":\"3094\",\"seed\":\"78ab507ca8d963523810e202272d3810c917ee52ebdec3add0b635e64368a272\",\"protocolVersion\":\"1.0.0\",\"engineVersion\":\"1.2.0\",\"balanceVersion\":\"S3.15\",\"trackVersion\":\"river-01-v2\",\"pickupSpawnVersion\":\"pickups-v1\",\"wildItemBalanceVersion\":\"wild-items-v6\",\"hazardBalanceVersion\":\"hazards-v1\",\"players\":[{\"playerId\":\"640\",\"name\":\"Lan 🦆 0\"},{\"playerId\":\"557\",\"name\":\"Phở Bò 1\"},{\"playerId\":\"763\",\"name\":\"Quack 2\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-33\\\",\\\"body\\\":\\\"body-23\\\"}\"},{\"playerId\":\"1363\",\"name\":\"tab\\there 3\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-34\\\",\\\"body\\\":\\\"body-37\\\"}\"},{\"playerId\":\"1101\",\"name\":\"\\\"Quote\\\" Duck 4\"},{\"playerId\":\"58\",\"name\":\"Lan 🦆 5\"},{\"playerId\":\"478\",\"name\":\"O'Brien 6\"},{\"playerId\":\"1866\",\"name\":\"tab\\there 7\"},{\"playerId\":\"829\",\"name\":\"Nguyễn Văn A 8\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-38\\\",\\\"body\\\":\\\"body-37\\\"}\"},{\"playerId\":\"1612\",\"name\":\"Lan 🦆 9\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-24\\\",\\\"body\\\":\\\"body-29\\\"}\"},{\"playerId\":\"521\",\"name\":\"back\\\\slash 10\"},{\"playerId\":\"1054\",\"name\":\"ZZ Top 11\"}],\"chaosConfig\":{\"type\":\"DUO\",\"groups\":[[\"1363\",\"478\"],[\"763\",\"58\"],[\"1866\",\"521\"],[\"829\",\"557\"],[\"1612\",\"1101\"],[\"1054\",\"640\"]],\"targetPlayerId\":null}}",
+"finished": true,
+"finalTick": 3504,
+"maxTicks": 5400,
+"stateChainSha256": "1770de0d89e520d8845bfcd38ba08482d0ea36b02b314500d4eac038d8af8fc5",
+"motionSha256": "d49122637fbd007cf0d3ea759273f149fbe708a200679f1a62c815fd004168f9",
+"eventCount": 635,
+"eventsSha256": "cfc64a24f6fbb4b6ab0d4e4c0fead67c9883b48917880ba2a71f5b3607516da9",
+"standings": [
+{
+"playerId": "478",
+"rank": 1,
+"finishTimeBits": "40eaaea1de15ac62"
+},
+{
+"playerId": "1054",
+"rank": 2,
+"finishTimeBits": "40eb25854bafc28f"
+},
+{
+"playerId": "557",
+"rank": 3,
+"finishTimeBits": "40eb61faeb30045e"
+},
+{
+"playerId": "1612",
+"rank": 4,
+"finishTimeBits": "40eb724de3c18dfe"
+},
+{
+"playerId": "1363",
+"rank": 5,
+"finishTimeBits": "40ebaf8501f2004b"
+},
+{
+"playerId": "829",
+"rank": 6,
+"finishTimeBits": "40ebb040e2add281"
+},
+{
+"playerId": "1866",
+"rank": 7,
+"finishTimeBits": "40ebbdbaa1aaeb65"
+},
+{
+"playerId": "58",
+"rank": 8,
+"finishTimeBits": "40ebbf1366d2557d"
+},
+{
+"playerId": "640",
+"rank": 9,
+"finishTimeBits": "40ec2a25efea6f19"
+},
+{
+"playerId": "1101",
+"rank": 10,
+"finishTimeBits": "40ec3424de063a8d"
+},
+{
+"playerId": "521",
+"rank": 11,
+"finishTimeBits": "40ec58cba66fa9e5"
+},
+{
+"playerId": "763",
+"rank": 12,
+"finishTimeBits": "40ec82ab820a7376"
+}
+]
+}
+]
+}

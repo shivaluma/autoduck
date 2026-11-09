@@ -2,10 +2,9 @@
 //!
 //! Lengths are `u32`, integer fields `u32`/`i32`, floats `f64::to_bits` with
 //! every NaN mapped to `0x7ff8000000000000` and `-0.0` mapped to `+0.0`; the
-//! hash is sha256 (`sha2`, no_std). Until `Simulation` exists (Phase 2) this
-//! module exposes a `StateHasher` with typed `write_*` methods (the
-//! [`StateWrite`] trait); `state_bytes(&Simulation, &mut impl FnMut(&[u8]))`
-//! is built on it later via [`ByteSink`].
+//! hash is sha256 (`sha2`, no_std). [`StateHasher`] and [`ByteSink`] implement
+//! the typed `write_*` methods (the [`StateWrite`] trait); [`write_state`],
+//! [`state_bytes`] and [`state_hash`] encode a `sim::Simulation` with them.
 //!
 //! The field list Phase 2 must mirror is the `sh1` encoding in
 //! `scripts/oracle/README.md` (the TS side is `visitState` in
@@ -192,6 +191,51 @@ impl HashFold {
     pub const fn value(&self) -> &Sha256Bytes {
         &self.acc
     }
+}
+
+/// Writes the `sh1` encoding of `sim` (`scripts/oracle/README.md`,
+/// `visitState` in `scripts/oracle/dump-trace.ts`): tick, finished, then per
+/// duck in `state.ducks` order its id, 8 physics floats, rank, next impulse,
+/// finished, optional finish time, pacing segments, RNG state and active
+/// effects (wire names).
+pub fn write_state(sim: &crate::sim::Simulation, w: &mut impl StateWrite) {
+    w.write_u32(sim.tick);
+    w.write_bool(sim.finished);
+    w.write_len(sim.ducks.len());
+    for (index, duck) in sim.ducks.iter().enumerate() {
+        w.write_str(duck.player_id.as_str());
+        w.write_f64(duck.progress);
+        w.write_f64(duck.previous_progress);
+        w.write_f64(duck.lateral_offset);
+        w.write_f64(duck.speed);
+        w.write_f64(duck.acceleration);
+        w.write_f64(duck.lateral_velocity);
+        w.write_f64(duck.desired_speed);
+        w.write_f64(duck.desired_lateral_offset);
+        w.write_u32(duck.current_rank);
+        w.write_u32(duck.next_impulse_tick);
+        w.write_bool(duck.finished);
+        w.write_opt_f64(duck.finish_time_ms);
+        w.write_f64_slice(&duck.pacing_segments);
+        w.write_u32(sim.rng_state(index));
+        w.write_len(duck.active_effects.len());
+        for effect in &duck.active_effects {
+            w.write_str(effect.as_str());
+        }
+    }
+}
+
+/// `state_bytes(&Simulation, sink)` (D4/D16): streams the `sh1` encoding.
+pub fn state_bytes(sim: &crate::sim::Simulation, sink: &mut impl FnMut(&[u8])) {
+    write_state(sim, &mut ByteSink(|bytes: &[u8]| sink(bytes)));
+}
+
+/// `state_hash = sha256(state_bytes)`.
+#[must_use]
+pub fn state_hash(sim: &crate::sim::Simulation) -> Sha256Bytes {
+    let mut hasher = StateHasher::new();
+    write_state(sim, &mut hasher);
+    hasher.finish()
 }
 
 /// A fixed `sh1`-shaped state used by the native-vs-wasm check (plan Phase 1

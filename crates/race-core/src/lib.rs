@@ -13,17 +13,25 @@
 // `hypot`, ...) stay unresolvable in engine code in every build.
 extern crate alloc;
 
+pub mod auto_use;
 pub mod build_id;
 pub mod canonical;
 pub mod catalog;
 pub mod chaos;
+pub mod config;
 pub mod digest;
+pub mod ghost;
 pub mod hash;
+pub mod items;
 pub mod js_sort;
 pub mod loadout;
 pub mod math;
 pub mod meta;
+pub mod pickups;
 pub mod rng;
+pub mod serde_jcs;
+pub mod sim;
+pub mod track;
 
 /// D6 id order/validation; the ICU comparator inside is gated on `ts-compat`.
 pub mod collate_compat;

@@ -17,6 +17,13 @@
 //!   non-shortest decimals in exponent form, and exact binary midpoints that
 //!   only a correctly rounding parser resolves (ties-to-even).
 //!
+//! Profiles (`--profile`): `full` (the default, above) and `core`, which
+//! keeps every draw of `full` but drops all loadouts and maps the pickup
+//! block to "omitted" or `{enabled:false, goldenBoxEnabled:false,
+//! hazardsEnabled:false}`, so the race
+//! exercises only core movement, lane AI, collisions, ranks, gates and the
+//! finish (Phase 2 stage "core"). Run its oracle with `--ai-ablation all`.
+//!
 //! JSON is written by a tiny local writer so number text is emitted exactly
 //! as generated (serde_json would re-format it).
 
@@ -491,8 +498,45 @@ fn pick_distinct<'a>(rng: &mut SplitMix64, items: &[&'a str], count: usize) -> V
     pool
 }
 
-/// Generate case `index` as a JSON object plus its coverage facts.
+/// Which features a corpus exercises.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Profile {
+    /// Everything (`corpus-v1`).
+    Full,
+    /// No loadouts, no pickups and no hazards: core movement only. Same
+    /// draws as [`Profile::Full`], with those blocks replaced.
+    Core,
+}
+
+impl Profile {
+    /// Parses `--profile`.
+    pub fn parse(text: &str) -> Result<Self, String> {
+        match text {
+            "full" => Ok(Self::Full),
+            "core" => Ok(Self::Core),
+            other => Err(format!("unknown corpus profile {other:?} (full, core)")),
+        }
+    }
+
+    /// The `--profile` name.
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Full => "full",
+            Self::Core => "core",
+        }
+    }
+}
+
+/// Generate case `index` as a JSON object plus its coverage facts
+/// ([`Profile::Full`]).
+#[cfg(test)]
 pub fn generate_case(root_seed: u64, index: u64) -> (Json, CaseInfo) {
+    generate_case_profile(root_seed, index, Profile::Full)
+}
+
+/// Generate case `index` of `profile` as a JSON object plus its coverage
+/// facts.
+pub fn generate_case_profile(root_seed: u64, index: u64, profile: Profile) -> (Json, CaseInfo) {
     let mut rng = case_rng(root_seed, index);
     let chaos_slot = (index % 8) as usize;
     let lobby = 2 + ((index / 8) % 15) as usize;
@@ -562,6 +606,10 @@ pub fn generate_case(root_seed: u64, index: u64) -> (Json, CaseInfo) {
             ),
             ("source", Json::str(source)),
         ]));
+    }
+
+    if profile == Profile::Core {
+        loadouts.clear();
     }
 
     let mut config: Vec<(&'static str, Json)> = vec![
@@ -641,12 +689,40 @@ pub fn generate_case(root_seed: u64, index: u64) -> (Json, CaseInfo) {
         config.push(("itemTuning", Json::Obj(tuning)));
     }
 
-    let pickups = match rng.below(100) {
+    let pickup_roll = rng.below(100);
+    let pickups = match pickup_roll {
         0..25 => PickupMode::Omitted,
         25..35 => PickupMode::Disabled,
         35..60 => PickupMode::Production,
         _ => PickupMode::Randomized,
     };
+    if profile == Profile::Core {
+        // Omitted, or off with hazards and the golden box off too: with a
+        // block present, `hazardsEnabled` and `goldenBoxEnabled` default to
+        // true and neither is gated on `enabled` (`pickups/engine.ts:105-109,
+        // 151-153, 174-175`).
+        let pickups = if pickup_roll < 60 {
+            PickupMode::Omitted
+        } else {
+            let block: Vec<(&'static str, Json)> = vec![
+                ("enabled", Json::Bool(false)),
+                ("goldenBoxEnabled", Json::Bool(false)),
+                ("hazardsEnabled", Json::Bool(false)),
+            ];
+            config.push(("pickupConfig", Json::Obj(block)));
+            PickupMode::Disabled
+        };
+        return (
+            Json::Obj(config),
+            CaseInfo {
+                lobby,
+                chaos,
+                pickups,
+                ghosts,
+                floats,
+            },
+        );
+    }
     match pickups {
         PickupMode::Omitted => {}
         PickupMode::Disabled => {
@@ -777,7 +853,7 @@ pub fn parse_seed(text: &str) -> Result<u64, String> {
 
 /// `race-cli corpus gen`: write `count` lines to `out` (`-` = stdout) and a
 /// coverage summary to stderr.
-pub fn run_gen(count: u64, out: &str, root_seed: u64) -> Result<()> {
+pub fn run_gen(count: u64, out: &str, root_seed: u64, profile: Profile) -> Result<()> {
     let mut sink: Box<dyn std::io::Write> = if out == "-" {
         Box::new(std::io::BufWriter::new(std::io::stdout().lock()))
     } else {
@@ -791,7 +867,7 @@ pub fn run_gen(count: u64, out: &str, root_seed: u64) -> Result<()> {
     let mut float_kinds = [0u64; 5];
     let mut line = String::new();
     for index in 0..count {
-        let (json, info) = generate_case(root_seed, index);
+        let (json, info) = generate_case_profile(root_seed, index, profile);
         line.clear();
         json.write(&mut line);
         line.push('\n');
@@ -811,7 +887,8 @@ pub fn run_gen(count: u64, out: &str, root_seed: u64) -> Result<()> {
     }
     sink.flush()?;
     eprintln!(
-        "corpus gen: {count} cases ({CORPUS_GENERATOR_VERSION}, root seed {root_seed:#018x}) -> {out}"
+        "corpus gen: {count} cases ({CORPUS_GENERATOR_VERSION}, profile {}, root seed {root_seed:#018x}) -> {out}",
+        profile.name()
     );
     eprintln!("  lobby 2..=16: {:?}", &lobby_seen[2..]);
     eprintln!("  chaos [none, {}]: {chaos_seen:?}", CHAOS_TYPES.join(", "));
@@ -840,6 +917,41 @@ mod tests {
             case_line(DEFAULT_ROOT_SEED, 3),
             case_line(DEFAULT_ROOT_SEED + 1, 3)
         );
+    }
+
+    #[test]
+    fn core_profile_has_no_items_pickups_or_hazards() {
+        let mut ghosts = false;
+        for index in 0..600 {
+            let (json, info) = generate_case_profile(DEFAULT_ROOT_SEED, index, Profile::Core);
+            let (full, full_info) = generate_case(DEFAULT_ROOT_SEED, index);
+            assert_eq!((info.lobby, info.chaos), (full_info.lobby, full_info.chaos));
+            let mut line = String::new();
+            json.write(&mut line);
+            let v: Value = serde_json::from_str(&line).unwrap();
+            let mut full_line = String::new();
+            full.write(&mut full_line);
+            let f: Value = serde_json::from_str(&full_line).unwrap();
+            // Same players and seed as the full profile.
+            assert_eq!(v["players"], f["players"]);
+            assert_eq!(v["seed"], f["seed"]);
+            ghosts |= info.ghosts > 0;
+            if let Some(loadouts) = v.get("loadouts") {
+                assert_eq!(loadouts, &Value::Array(vec![]));
+            }
+            match v.get("pickupConfig") {
+                None => assert_eq!(info.pickups, PickupMode::Omitted),
+                Some(block) => {
+                    assert_eq!(info.pickups, PickupMode::Disabled);
+                    for key in ["enabled", "goldenBoxEnabled", "hazardsEnabled"] {
+                        assert_eq!(block[key], Value::Bool(false), "case {index} {key}");
+                    }
+                }
+            }
+        }
+        assert!(ghosts);
+        assert_eq!(Profile::parse("core"), Ok(Profile::Core));
+        assert!(Profile::parse("items").is_err());
     }
 
     #[test]
