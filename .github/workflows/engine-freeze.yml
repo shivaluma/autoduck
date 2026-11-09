@@ -1,0 +1,55 @@
+name: Engine freeze
+
+# Rewrite plan D28: the TS race engine is frozen from the rewrite branch cut (docs/balance/README.md).
+# A pull request that touches the frozen paths fails unless it carries the `engine-hotfix` label.
+# Pushes to main are not gated. This lives in its own workflow so that adding or removing the label
+# re-runs only this check (a labeled event in ci.yml would cancel and replace the full CI run).
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+concurrency:
+  group: engine-freeze-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  engine-freeze:
+    name: engine-freeze (frozen TS engine paths need the engine-hotfix label)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Frozen paths are untouched, or the PR is labelled engine-hotfix
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          HOTFIX: ${{ contains(github.event.pull_request.labels.*.name, 'engine-hotfix') }}
+        run: |
+          frozen='^(packages/race-[^/]+/|lib/racing/(audit|persistence|runtime)\.ts$|lib/season3-race\.ts$)'
+          # --no-renames lists both sides of a rename, so moving a frozen file out is caught too.
+          changed="$(git diff --name-only --no-renames "${BASE_SHA}...${HEAD_SHA}")"
+          if ! hits="$(grep -E "$frozen" <<<"$changed")"; then
+            echo "engine-freeze: no frozen paths touched"
+            exit 0
+          fi
+          echo "Frozen TS engine paths touched by this PR:"
+          echo "$hits"
+          if [ "$HOTFIX" != "true" ]; then
+            echo "::error::The TS engine is frozen (docs/balance/README.md, plan D28). Revert these changes, or add the engine-hotfix label for a hotfix that bumps RACE_BALANCE_VERSION and adds a Rust port item."
+            exit 1
+          fi
+          if ! git diff "${BASE_SHA}...${HEAD_SHA}" -- packages/race-protocol/src/index.ts | grep -qE '^\+export const (RACE_BALANCE_VERSION|RACE_ENGINE_VERSION) '; then
+            echo "::warning::engine-hotfix PR without a RACE_BALANCE_VERSION/RACE_ENGINE_VERSION bump. A hotfix that changes simulation output must bump it (docs/balance/README.md)."
+          fi
+          echo "engine-freeze: allowed by the engine-hotfix label"

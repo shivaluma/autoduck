@@ -11,6 +11,13 @@ AutoDuck / "ĐUA DZỊT" is a Next.js 16 (App Router, React 19, Tailwind 4, shad
 - Use **pnpm only** (never npm/yarn/bun).
 - The user's shell is **fish**: for env vars use `env KEY=value cmd` or `set -x KEY value`, not `export` / inline `KEY=value cmd`.
 
+## Operating rules (rewrite plan D28)
+
+- **Pushes to `main` auto-deploy to production.** Never push a deploy-triggering change to `main` on a Monday (ICT, UTC+7): the weekly race runs then. Commit locally and push on Tuesday instead. Treat every push to `main` as deploy-triggering, docs- and CI-only commits included.
+- **Rust and Vite work lives on the `rewrite*` branches** (`rewrite`, `rewrite-server`, `rewrite-web`), committed and pushed there, never to `main`. `main` stays the deployable TS app; `main` is merged into `rewrite` (never rebased).
+- **The TS engine is frozen** from the rewrite branch cut: `packages/race-*`, `lib/racing/{audit,persistence,runtime}.ts` and `lib/season3-race.ts`. Don't change them. The `engine-freeze` workflow fails PRs touching them unless they carry the `engine-hotfix` label; direct pushes aren't gated, so the rule is on you. A hotfix bumps `RACE_BALANCE_VERSION` and adds a Rust port item in the same change. Details: `docs/balance/README.md`.
+- Files the Rust server embeds are generated from TS and checked in CI with `--check`: `pnpm cosmetics:export-catalog` (`crates/server/data/cosmetic-{catalog,legacy}.json`) after editing `lib/cosmetics/{catalog,legacy,legacy-v1}.ts`, and `pnpm db:export-migration-ids` (`crates/server/data/required-ts-migrations.json`) after adding an app migration.
+
 ## Commands
 
 ```fish
