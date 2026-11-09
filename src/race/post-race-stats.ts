@@ -4,8 +4,10 @@
  * The aggregation over stored events lives here. The two parts that need the engine (per-tick speed
  * "motion" and the no-items "baseline" ranks) are inputs: the server computes them with the TS engine
  * (server post-race stats, frozen into RaceReplayTrack.statsJson), and the browser can take motion
- * from a recorded track's speed column. Without them, speed columns are 0 and baseline ranks fall back to
- * the participant order.
+ * from a recorded track's speed column. Without motion, speed columns are 0. Without a baseline (an older
+ * engine/balance pair, or engine 2.x without a stored stats blob), `hasBaseline` is false: every
+ * baselineRank equals the final rank, rankDelta is 0, and no "best item user" is picked, so the viewer
+ * hides the baseline columns instead of showing invented deltas.
  */
 import { getRaceItem, itemActivationForEvent, itemSuccessForEvent } from '@/src/engine/catalog'
 import type { RaceEvent, RaceItemId } from '@/src/engine/protocol'
@@ -80,6 +82,12 @@ export interface PostRaceHighlights {
 }
 
 export interface PostRaceStats {
+  /**
+   * False when no no-items baseline was available (rankDelta is then 0 everywhere). Stats blobs frozen
+   * before this field existed lack it; they were built with the engine, so readers treat a missing value
+   * as true.
+   */
+  hasBaseline: boolean
   players: PostRacePlayerStats[]
   highlights: PostRaceHighlights
   raceDurationMs: number
@@ -133,7 +141,7 @@ export type PostRaceMotion = Map<string, { averageSpeed: number; peakSpeed: numb
 
 /** Inputs that need the engine. Absent pieces fall back as documented at the top of this file. */
 export interface PostRaceEngineInputs {
-  /** Ranks from the same race without loadouts; null/undefined → participant order. */
+  /** Ranks from the same race without loadouts; null/undefined → no baseline (rankDelta 0, hasBaseline false). */
   baselineRank?: Map<string, number> | null
   /** Average/peak speed per duck; null/undefined → 0 (speed columns hidden). */
   motion?: PostRaceMotion | null
@@ -223,11 +231,11 @@ export function aggregatePostRaceStats(
       .map(([playerId], index) => [playerId, index + 1]),
   )
 
-  const baselineRank = engine.baselineRank ?? new Map(players.map((player, index) => [player.playerId, index + 1]))
+  const baselineRank = engine.baselineRank ?? null
 
   for (const [playerId, stats] of byPlayer) {
     stats.finalRank = finalRank.get(playerId) ?? players.length
-    stats.baselineRank = baselineRank.get(playerId) ?? stats.finalRank
+    stats.baselineRank = baselineRank?.get(playerId) ?? stats.finalRank
     stats.rankDelta = stats.baselineRank - stats.finalRank
     stats.finishTimeMs = finishTimes.get(playerId) ?? null
   }
@@ -335,6 +343,7 @@ export function aggregatePostRaceStats(
   }
 
   return {
+    hasBaseline: baselineRank !== null,
     players: playerStats,
     highlights,
     raceDurationMs,

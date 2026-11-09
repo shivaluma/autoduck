@@ -7,6 +7,7 @@ import { itemActivationForEvent } from '@/src/engine/catalog'
 import { createRiverTrack } from '@/src/engine/sim'
 import type { DuckSnapshot, RaceEvent, RaceItemId, WildItemId } from '@/src/engine/protocol'
 import { polylineTrack } from '@/src/race/polyline-track'
+import { planLiveView } from '@/src/race/replay-plan'
 import type { RaceWorld, RenderTrack } from '@/src/race/types'
 import { createPlayback, type Playback, type PlaybackFrame } from './drivers/playback'
 import { createRecordingDriver } from './drivers/recording-driver'
@@ -1411,11 +1412,13 @@ export function PhaserRaceCanvas({
         runTimeline(createRecordingDriver(raceSource.track, raceSource.events), true)
       } else if (raceSource.kind === 'sim') {
         runTimeline(createSimDriver(raceSource.config, { manualInputs: raceSource.manualInputs, endTick: raceSource.endTick, allowVersion: raceSource.allowVersion }), true)
-      } else if (raceSource.kind === 'live') {
+      } else if (raceSource.kind === 'live' && planLiveView(raceSource.config) === 'live') {
         const live = createLiveDriver(raceSource.config, { syncTick: raceSource.syncTick, manualInputs: raceSource.manualInputs })
         closeStream = connectLiveDriver(raceId, live, raceSource.config, () => onLiveFinishedRef.current?.())
         runTimeline(live, false)
       } else {
+        // Snapshots, or a live race the browser engine can't simulate (another engine/balance pair, e.g.
+        // engine 2.x): createSimulation's version guard would throw, so follow the server's snapshots.
         closeStream = connectSnapshotDriver(raceId, {
           world: (world, tick) => liveScene?.queueWorld(world, tick),
           event: (raceEvent) => liveScene?.applyEvent(raceEvent),

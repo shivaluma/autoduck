@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db'
 import { isImmortalDuck } from '@/lib/immortal-duck'
 import { isGhostDuck } from '@/lib/ghost-duck'
 import { publicRaceEngineVisibility } from '@/lib/racing/public-engine'
+import { parseRaceIdParam } from '@/lib/racing/race-id'
 import { getLiveRaceSession, liveManualInputsFromSession } from '@/lib/racing/live-race-session'
 import { trackGeometryUrl } from '@/src/race/polyline-track'
 import type { RaceReplayInfo, ReplayFidelity } from '@/src/race/types'
@@ -43,14 +44,13 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const raceId = parseInt(id)
-
-    if (isNaN(raceId)) {
-      return NextResponse.json(
-        { error: 'Invalid race ID' },
-        { status: 400 }
-      )
+    const parsedId = parseRaceIdParam(id)
+    if (!parsedId.ok) {
+      return parsedId.status === 400
+        ? NextResponse.json({ error: 'Invalid race ID' }, { status: 400 })
+        : NextResponse.json({ error: 'Race not found' }, { status: 404 })
     }
+    const { raceId } = parsedId
 
     const token = new URL(request.url).searchParams.get('token')
     const viewerPlayer = token ? await prisma.seasonPlayer.findUnique({

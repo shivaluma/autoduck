@@ -18,6 +18,15 @@ export function canResimulate(config: { engineVersion?: unknown; balanceVersion?
     && config.balanceVersion === RACE_BALANCE_VERSION
 }
 
+/**
+ * How the live canvas follows a running race: re-simulate locally only when the browser engine can run
+ * the config (the current pair; createSimulation's version guard throws for anything else, e.g. an
+ * engine 2.x race started by the Rust server), otherwise draw the server's SSE snapshots.
+ */
+export function planLiveView(config: { engineVersion?: unknown; balanceVersion?: unknown } | null | undefined): 'live' | 'snapshot' {
+  return canResimulate(config) ? 'live' : 'snapshot'
+}
+
 export function planReplay(input: {
   replay: RaceReplayInfo | null | undefined
   config: { engineVersion?: unknown; balanceVersion?: unknown } | null | undefined

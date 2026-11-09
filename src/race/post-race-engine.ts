@@ -3,10 +3,18 @@
  * The server freezes them into RaceReplayTrack.statsJson; the browser uses them only for current-version
  * races that have neither a stored stats blob nor a track (the version guard throws otherwise).
  */
-import type { RaceConfig, RaceFinishEntry, RecordedWildItemInput } from '@/src/engine/protocol'
+import type { RaceConfig, RaceEvent, RaceFinishEntry, RecordedWildItemInput } from '@/src/engine/protocol'
 import { createSimulation, simulateRace, stepSimulation } from '@/src/engine/sim'
 import type { DecodedReplayTrack } from '@/src/race/replay-track/decode'
-import { aggregateMotion, type PostRaceMotion } from './post-race-stats'
+import { manualInputsFromEvents } from './event-vocab'
+import {
+  aggregateMotion,
+  aggregatePostRaceStats,
+  type PostRaceMotion,
+  type PostRacePlayerInput,
+  type PostRaceStats,
+} from './post-race-stats'
+import { canResimulate } from './replay-plan'
 
 /** Per-duck average/peak speed over a re-simulation (samples after every step, capped at 180 s). */
 export function collectPostRaceMotion(config: RaceConfig, manualInputs: readonly RecordedWildItemInput[]): PostRaceMotion {
@@ -54,4 +62,33 @@ export function motionFromTrack(track: DecodedReplayTrack): PostRaceMotion {
     const at = duck * sampleCount + (tick - firstTick)
     return { speed: speedQ[at]! / header.q.speed, finished: progressQ[at]! >= header.q.progress }
   }, firstTick + 1, lastTick)
+}
+
+/**
+ * What the race page's stats tab shows (PostRaceStatsPanel): the frozen stats blob when there is one;
+ * otherwise an aggregation of the stored events, with motion from the recorded track or, for the
+ * current engine/balance pair only, a local re-simulation, and a no-items baseline only for that pair.
+ * Never simulates another version (the engine's version guard would throw). `showBaseline` is false
+ * when no baseline exists, so "Δ" and "Hạng không item" are hidden rather than shown as invented values.
+ */
+export function postRaceStatsForView(input: {
+  config: RaceConfig | null
+  events: RaceEvent[]
+  players: PostRacePlayerInput[]
+  frozenStats?: PostRaceStats | null
+  track?: DecodedReplayTrack | null
+}): { stats: PostRaceStats; showSpeed: boolean; showBaseline: boolean } {
+  const { config, events, players, frozenStats = null, track = null } = input
+  // Blobs frozen before `hasBaseline` existed were built with the engine (baseline included).
+  if (frozenStats) return { stats: frozenStats, showSpeed: true, showBaseline: frozenStats.hasBaseline !== false }
+  const simulatable = canResimulate(config)
+  let motion: PostRaceMotion | null = null
+  try {
+    motion = track ? motionFromTrack(track) : simulatable && config ? collectPostRaceMotion(config, manualInputsFromEvents(events)) : null
+  } catch {
+    motion = null
+  }
+  const baselineRank = simulatable && config ? collectPostRaceBaselineRank(config) : null
+  const stats = aggregatePostRaceStats({ tickRate: Number(config?.tickRate) || 60 }, events, players, { motion, baselineRank })
+  return { stats, showSpeed: motion !== null, showBaseline: stats.hasBaseline }
 }

@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db'
 import { replayTrackResponse } from '@/lib/racing/replay-track/serve'
+import { parseRaceIdParam } from '@/lib/racing/race-id'
 
 export const dynamic = 'force-dynamic'
 
@@ -8,9 +9,13 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params
-  const raceId = Number.parseInt(id, 10)
-  if (!Number.isSafeInteger(raceId)) return Response.json({ error: 'Invalid race ID' }, { status: 400 })
+  const parsedId = parseRaceIdParam((await params).id)
+  if (!parsedId.ok) {
+    return parsedId.status === 400
+      ? Response.json({ error: 'Invalid race ID' }, { status: 400 })
+      : replayTrackResponse(null, { h: null, acceptEncoding: null, ifNoneMatch: null })
+  }
+  const { raceId } = parsedId
   try {
     const row = await prisma.raceReplayTrack.findUnique({
       where: { raceId },

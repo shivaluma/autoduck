@@ -4,15 +4,11 @@ import { useMemo, useState } from 'react'
 import type { RaceConfig, RaceEvent } from '@/src/engine/protocol'
 import { Season3Avatar } from '@/components/season3-avatar'
 import {
-  aggregatePostRaceStats,
-  type PostRaceMotion,
   type PostRacePlayerInput,
   type PostRacePlayerStats,
   type PostRaceStats,
 } from '@/src/race/post-race-stats'
-import { collectPostRaceBaselineRank, collectPostRaceMotion, motionFromTrack } from '@/src/race/post-race-engine'
-import { manualInputsFromEvents } from '@/src/race/event-vocab'
-import { canResimulate } from '@/src/race/replay-plan'
+import { postRaceStatsForView } from '@/src/race/post-race-engine'
 import type { DecodedReplayTrack } from '@/src/race/replay-track/decode'
 import {
   extractCombatEncounters,
@@ -62,6 +58,7 @@ function PlayerRow({
   encountersDealt,
   encountersReceived,
   showSpeed,
+  showBaseline,
 }: {
   player: PostRacePlayerStats
   expanded: boolean
@@ -69,6 +66,8 @@ function PlayerRow({
   encountersDealt: CombatEncounter[]
   encountersReceived: CombatEncounter[]
   showSpeed: boolean
+  /** False without a no-items baseline: the Δ and "Hạng không item" columns would be invented. */
+  showBaseline: boolean
 }) {
   const topEfficiency = player.efficiencyScore >= 8
   return (
@@ -83,14 +82,14 @@ function PlayerRow({
         <span className="min-w-0 flex-1 truncate font-black">{player.name}</span>
         {topEfficiency && <span className="rounded-full bg-[var(--color-ggd-neon-green)] px-2 py-0.5 text-[10px] font-black text-[var(--color-ggd-outline)]">MVP ITEM</span>}
         {showSpeed && <span className="hidden text-sm font-bold text-white/55 sm:block">{formatSpeed(player.averageSpeed)} avg</span>}
-        <span className="hidden text-sm font-bold text-[var(--color-ggd-gold)] sm:block">Δ {formatDelta(player.rankDelta)}</span>
+        {showBaseline && <span className="hidden text-sm font-bold text-[var(--color-ggd-gold)] sm:block">Δ {formatDelta(player.rankDelta)}</span>}
         <span className="text-xs text-white/35">{expanded ? '▲' : '▼'}</span>
       </button>
       {expanded && (
         <div className="border-b border-white/10 bg-black/20 px-5 py-4 space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {showSpeed && <div><div className="text-[10px] font-black uppercase text-white/40">Tốc độ TB / đỉnh</div><div className="font-black">{formatSpeed(player.averageSpeed)} · {formatSpeed(player.peakSpeed)}</div></div>}
-            <div><div className="text-[10px] font-black uppercase text-white/40">Hạng không item</div><div className="font-black">#{player.baselineRank} → #{player.finalRank} ({formatDelta(player.rankDelta)})</div></div>
+            {showBaseline && <div><div className="text-[10px] font-black uppercase text-white/40">Hạng không item</div><div className="font-black">#{player.baselineRank} → #{player.finalRank} ({formatDelta(player.rankDelta)})</div></div>}
             <div><div className="text-[10px] font-black uppercase text-white/40">Tấn công / bị đánh</div><div className="font-black">{player.attacksDealt} gây · {player.attacksReceived} nhận · {player.attacksBlocked} chặn</div></div>
             <div><div className="text-[10px] font-black uppercase text-white/40">Thời gian mất (ước tính)</div><div className="font-black text-[var(--color-ggd-orange)]">{formatSeconds(player.timeLostFromAttacksSeconds)}</div></div>
             <div><div className="text-[10px] font-black uppercase text-white/40">Pickup / wild item</div><div className="font-black">{player.pickupsCollected} pickup · {player.wildItemsUsed} wild</div></div>
@@ -184,6 +183,8 @@ function PlayerRow({
  * Stats for a finished race. Uses the frozen `stats` (RaceReplayTrack.statsJson) when the race has one.
  * Otherwise it aggregates the stored events here, with motion from the recorded track or, for a
  * current-version race only, from a local re-simulation; without either, speed columns are hidden.
+ * Without a no-items baseline (any other version), the Δ / "Hạng không item" columns and the
+ * best-item-user highlight are hidden too (see postRaceStatsForView).
  */
 export function PostRaceStatsPanel({
   config,
@@ -201,21 +202,10 @@ export function PostRaceStatsPanel({
   track?: DecodedReplayTrack | null
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
-  const { stats, showSpeed } = useMemo(() => {
-    if (frozenStats) return { stats: frozenStats, showSpeed: true }
-    const simulatable = canResimulate(config)
-    let motion: PostRaceMotion | null = null
-    try {
-      motion = track ? motionFromTrack(track) : simulatable && config ? collectPostRaceMotion(config, manualInputsFromEvents(events)) : null
-    } catch {
-      motion = null
-    }
-    const baselineRank = simulatable && config ? collectPostRaceBaselineRank(config) : null
-    return {
-      stats: aggregatePostRaceStats({ tickRate: Number(config?.tickRate) || 60 }, events, players, { motion, baselineRank }),
-      showSpeed: motion !== null,
-    }
-  }, [config, events, frozenStats, players, track])
+  const { stats, showSpeed, showBaseline } = useMemo(
+    () => postRaceStatsForView({ config, events, players, frozenStats, track }),
+    [config, events, frozenStats, players, track],
+  )
   const combat = useMemo(() => extractCombatEncounters(events, players), [events, players])
 
   const combatByPlayer = useMemo(() => {
@@ -257,7 +247,7 @@ export function PostRaceStatsPanel({
       </div>
 
       <div className="grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-3">
-        {highlights.bestItemUser && (
+        {showBaseline && highlights.bestItemUser && (
           <HighlightCard
             emoji="🎯"
             title="Tận dụng item tốt nhất"
@@ -318,6 +308,7 @@ export function PostRaceStatsPanel({
         {stats.players.map((player) => (
           <PlayerRow
             showSpeed={showSpeed}
+            showBaseline={showBaseline}
             key={player.playerId}
             player={player}
             expanded={expandedId === player.playerId}

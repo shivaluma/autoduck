@@ -12,6 +12,7 @@ import { RaceEventTimeline } from '@/components/racing/race-event-timeline'
 import { CombatEncountersPanel } from '@/components/racing/combat-encounters-panel'
 import { useReplayTrack } from '@/components/racing/use-replay-track'
 import { readStoredEvents } from '@/src/race/event-vocab'
+import { planLiveView } from '@/src/race/replay-plan'
 import type { RaceStatus } from '@/lib/types'
 import type { DuckAppearance } from '@/lib/cosmetics/types'
 import type { DuckSnapshot, RaceEvent } from '@/src/engine/protocol'
@@ -193,7 +194,7 @@ export function Season3RaceView({ raceId }: { raceId: number }) {
           raceId={raceId}
           players={racePlayers}
           chaosType={race.engine.chaosConfig?.type}
-          source={race.engine.config
+          source={race.engine.config && planLiveView(race.engine.config) === 'live'
             ? { kind: 'live', config: race.engine.config, syncTick: race.engine.liveTick ?? undefined, manualInputs: race.engine.liveManualInputs }
             : { kind: 'snapshot', trackVersion: race.engine.trackVersion }}
           onReplayInspect={handleLiveInspect}
