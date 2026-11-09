@@ -75,10 +75,38 @@ model Race {
   pickupTelemetry      RacePickupTelemetry[]
   currencyTransactions CurrencyTransaction[]
   wildActions          RaceWildAction[]
+  replayTrack          RaceReplayTrack?
 
   @@index([createdAt])
   @@index([isTest, createdAt])
   @@index([status, isTest, finishedAt, id])
+}
+
+// Recorded race track (DTRK/1, docs/replay-tracks.md). One row per race; bytes are gzip,
+// byteSha256 covers the UNCOMPRESSED payload. Same columns are used by the Rust server.
+model RaceReplayTrack {
+  raceId           Int      @id
+  format           String // "dtrk/1"
+  source           String // LIVE_TS | BACKFILL | LIVE_RUST
+  fidelity         String // RECORDED | VERIFIED_DIGEST | VERIFIED_EVENTS | UNAVAILABLE
+  engineImpl       String // ts | rust
+  engineCommit     String? // git sha (TS build / resolver candidate / Rust build commit)
+  engineBuild      String? // Rust ENGINE_BUILD_ID
+  engineVersion    String
+  balanceVersion   String
+  trackVersion     String
+  trackGeometry    String? // "<trackVersion>@<sha8>"
+  tickRate         Int
+  tickCount        Int
+  stride           Int      @default(1)
+  reproducedDigest String?
+  byteSha256       String? // sha256 of UNCOMPRESSED payload
+  bytes            Bytes? // gzip; null iff UNAVAILABLE
+  statsJson        String? // frozen PostRaceStats
+  note             String? // e.g. "digest envelope differs", "outcome-match@<sha>"
+  createdAt        DateTime @default(now())
+
+  race Race @relation(fields: [raceId], references: [id], onDelete: Cascade)
 }
 
 model RaceEngineEvent {

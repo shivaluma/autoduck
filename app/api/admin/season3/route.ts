@@ -53,7 +53,7 @@ const OPS_IN_FLIGHT_STATUSES = ['pending', 'running', 'failed']
 
 /** Read-only ops report: ids, states and versions only (no names or tokens). */
 async function opsReport() {
-  const [inFlightRaces, groups] = await Promise.all([
+  const [inFlightRaces, groups, replayTrackGate, replayTrackFidelity] = await Promise.all([
     prisma.race.findMany({
       where: { status: { in: OPS_IN_FLIGHT_STATUSES } },
       select: { id: true, status: true, engineState: true, engineVersion: true, balanceVersion: true, createdAt: true },
@@ -64,6 +64,12 @@ async function opsReport() {
       _count: { _all: true },
       orderBy: [{ isTest: 'asc' }, { status: 'asc' }, { engineVersion: 'asc' }, { balanceVersion: 'asc' }],
     }),
+    // §4.5 gate (docs/replay-tracks.md): finished engine races without a RaceReplayTrack row. Must be empty before
+    // cutover, before deleting the TS engine and before every engine/balance bump.
+    prisma.$queryRaw`SELECT r.id AS id, r."balanceVersion" AS balanceVersion FROM "Race" r LEFT JOIN "RaceReplayTrack" t ON t."raceId" = r.id
+      WHERE r."engineConfigJson" IS NOT NULL AND r.status = 'finished' AND t."raceId" IS NULL ORDER BY r.id` as Promise<Array<{ id: number | bigint; balanceVersion: string | null }>>,
+    prisma.$queryRaw`SELECT t.fidelity AS fidelity, r."balanceVersion" AS balanceVersion, r."isTest" AS isTest, COUNT(*) AS n FROM "RaceReplayTrack" t
+      JOIN "Race" r ON r.id = t."raceId" GROUP BY 1, 2, 3 ORDER BY 1, 2, 3` as Promise<Array<{ fidelity: string; balanceVersion: string | null; isTest: number | bigint | boolean; n: number | bigint }>>,
   ])
   return {
     report: 'ops',
@@ -76,7 +82,16 @@ async function opsReport() {
       balanceVersion: group.balanceVersion,
       count: group._count._all,
     })),
-    // TODO(plan 0.4/0.6): add the §4.5 replay-track gate and fidelity queries once RaceReplayTrack exists.
+    replayTrackGate: {
+      missingCount: replayTrackGate.length,
+      missing: replayTrackGate.map((row) => ({ raceId: Number(row.id), balanceVersion: row.balanceVersion })),
+    },
+    replayTrackFidelity: replayTrackFidelity.map((row) => ({
+      fidelity: row.fidelity,
+      balanceVersion: row.balanceVersion,
+      isTest: Boolean(Number(row.isTest)),
+      count: Number(row.n),
+    })),
   }
 }
 
