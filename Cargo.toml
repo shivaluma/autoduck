@@ -1,0 +1,52 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99"
+publish = false
+license = "UNLICENSED"
+
+# Pinned versions (Phase 1). The plan names older majors (sha2 0.10, ts-rs 10);
+# see docs/rewrite/phase1-notes.md for why these pins replace them.
+[workspace.dependencies]
+# Internal crates
+race-protocol = { path = "crates/race-protocol", default-features = false }
+race-core = { path = "crates/race-core", default-features = false }
+
+# Engine (no_std-safe) dependencies. Features are chosen per D4.
+serde = { version = "=1.0.229", default-features = false, features = ["derive", "alloc"] }
+# D4(d): every crate that can parse floats declares serde_json directly with
+# `alloc` + `float_roundtrip` so feature unification can't change parsing.
+serde_json = { version = "=1.0.154", default-features = false, features = ["alloc", "float_roundtrip"] }
+# D4(a): `arch` (default) is off and `force-soft-floats` on, so no platform
+# intrinsic can change a transcendental result between native and wasm.
+libm = { version = "=0.2.16", default-features = false, features = ["force-soft-floats"] }
+ryu-js = { version = "=1.0.3", default-features = false }
+sha2 = { version = "=0.11.1", default-features = false }
+indexmap = { version = "=2.14.2", default-features = false }
+ts-rs = { version = "=12.0.1" }
+
+# WASM glue
+wasm-bindgen = { version = "=0.2.129" }
+
+# Native tooling (std only)
+rayon = { version = "=1.12.0" }
+clap = { version = "=4.6.7", features = ["derive"] }
+flate2 = { version = "=1.1.10" }
+thiserror = { version = "=2.0.21" }
+anyhow = { version = "=1.0.104" }
+
+# D1: unwinding so the driver thread's catch_unwind can contain a sim panic.
+# race-wasm alone is built with -C panic=abort by scripts/build-wasm.sh.
+[profile.release]
+panic = "unwind"
+
+# D1: overflow checks turn silent wrapping in the sim into a caught panic.
+[profile.release.package.race-core]
+overflow-checks = true
+
+[profile.release.package.race-protocol]
+overflow-checks = true

@@ -1,0 +1,23 @@
+[package]
+name = "race-protocol"
+description = "Season 3 race wire types shared by race-core, the server and the browser (D1, D7, D8)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+
+[features]
+default = []
+std = ["serde/std", "serde_json/std"]
+# TS-oracle compatibility (`RaceConfigInput::resolve_ts_compat`); enabled by
+# race-core's `ts-compat`.
+ts-compat = []
+# ts-rs export of the wire types (Phase 4 consumes the generated .ts files).
+ts-export = ["std", "dep:ts-rs"]
+
+[dependencies]
+serde = { workspace = true }
+# D4(d): declared directly so every graph parses floats with correct rounding.
+serde_json = { workspace = true }
+ts-rs = { workspace = true, optional = true, features = ["no-serde-warnings"] }

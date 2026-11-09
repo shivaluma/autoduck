@@ -65,3 +65,6 @@ tmp/
 
 # build approvals
 .pnpm-build-approvals.json
+
+# rust
+/target

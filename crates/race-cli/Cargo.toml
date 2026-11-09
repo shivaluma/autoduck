@@ -1,0 +1,29 @@
+[package]
+name = "race-cli"
+description = "Native tooling: corpus generation, TS-oracle diff, meta parity and gates (Phase 1)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "race-cli"
+path = "src/main.rs"
+
+[dependencies]
+race-core = { workspace = true, features = ["std"] }
+# `ts-compat` only adds `resolve_ts_compat` (oracle diff); it does not touch
+# race-core's `ts-compat` or ENGINE_BUILD_ID (review 1 MINOR 12).
+race-protocol = { workspace = true, features = ["std", "ts-compat"] }
+serde = { workspace = true, features = ["std"] }
+serde_json = { workspace = true, features = ["std"] }
+clap = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+rayon = { workspace = true }
+flate2 = { workspace = true }
+
+[dev-dependencies]
+# tests/build_id.rs includes race-core/build/engine_build_id.rs.
+sha2 = { workspace = true }

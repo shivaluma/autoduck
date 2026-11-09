@@ -1,0 +1,19 @@
+[package]
+name = "race-wasm"
+description = "wasm-bindgen glue over race-core for the browser (D1, D27)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+race-core = { workspace = true }
+race-protocol = { workspace = true }
+wasm-bindgen = { workspace = true }
+serde = { workspace = true }
+# D4(d): declared directly so every graph parses floats with correct rounding.
+serde_json = { workspace = true }
