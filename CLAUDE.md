@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-AutoDuck / "ĐUA DZỊT" is a Next.js 16 (App Router, React 19, Tailwind 4, shadcn/radix UI) app for a weekly office duck race with meta-game systems (shields, scars, chests, dragon, cosmetics/gacha, Season 3). Persistence is SQLite through Prisma 7 + `@prisma/adapter-better-sqlite3`. Much UI copy and many docs are in Vietnamese.
+AutoDuck / "ĐUA DZỊT" is a Next.js 16 (App Router, React 19, Tailwind 4, shadcn/radix UI) app for a weekly office duck race with Season 3 meta-game systems (Season Shields, scars, Chaos cards, predictions, cosmetics/gacha). Persistence is SQLite through Prisma 7 + `@prisma/adapter-better-sqlite3`. Much UI copy and many docs are in Vietnamese.
 
 ## Tooling rules (from `.cursor/rules`)
 
@@ -37,10 +37,9 @@ There is no `prisma/migrations` workflow: schema changes go into `prisma/schema.
 
 ## Architecture
 
-Two generations of race live side by side:
+The legacy v2 race (Playwright-driven browser game, AI commentary, video upload, and the shield/boss/chest/dragon meta) has been **removed**, along with its API routes and pages. Old URLs (`/rules`, `/race/:id`, `/race/new`, `/dragon`, `/members`, `/admin/dashboard`) are redirects in `next.config.ts`. Its Prisma models are intentionally kept (data stays recoverable), and `app/api/races/[id]` still returns the old legacy keys (`consumedChests`, `awardedChests`, `dragonAward`, `dragonScaleEvents`) as constant empty values. Historical app migrations that need v2 logic use the frozen copies in `scripts/migrations/legacy-helpers.ts`; don't reintroduce `lib/` imports for them.
 
-- **Legacy (v2) race** — `app/api/races/start` → `lib/race-worker.ts`, which drives an external browser game with Playwright (or a random fallback when `SIMULATE_RACE` is set), extracts rankings and commentary with AI (`lib/ai*.ts`: Gemini / Z.ai / Claude), and uploads video to R2. Meta systems: `lib/shield-logic.ts`, `shield-decay.ts`, `boss-logic.ts`, `mystery-chest.ts`, `lib/dragon/*`. Docker (`scripts/start.sh`) runs Xvfb for this.
-- **Season 3 race** — fully deterministic and authoritative on the server, isolated from the v2 chest/boss/dragon modifiers:
+**Season 3 race** — fully deterministic and authoritative on the server:
   - `packages/race-core/src` — pure fixed-step simulation (`simulation.ts`, `track.ts`, seeded `rng.ts`), items (`items/`), wild pickups (`pickups/`), the AI item-use system (`auto-use/`: evaluate → arbiter → execute, with per-Chaos objectives in `objective.ts`), Chaos card plugins (`chaos/`), and ghost ducks. It must stay deterministic: no `Math.random`/`Date.now`, and all randomness comes from the seed.
   - `packages/race-protocol/src` — Zod schemas shared by server and browser, plus version constants (`RACE_ENGINE_VERSION`, `RACE_BALANCE_VERSION`, track/pickup/hazard versions, `RACE_TICK_RATE`).
   - These "packages" are **not** pnpm workspace packages. Import them by path (`@/packages/race-core/src`, or relative from tests/scripts).

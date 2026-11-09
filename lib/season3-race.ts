@@ -13,6 +13,9 @@ import {
 } from '@/lib/racing/live-race-session'
 import { parseItemIds, selectAutoLoadout, serializeItemIds } from '@/lib/racing/loadout'
 import { runAuthoritativeRace } from '@/lib/racing/runtime'
+import { createReplayTrackRecorder, isReplayTrackRecordingEnabled } from '@/lib/racing/replay-track/recorder'
+import { storeRecordedReplayTrack } from '@/lib/racing/replay-track/store'
+import { buildPostRaceStats } from '@/lib/racing/post-race-stats'
 import { buildRaceItemTelemetry, persistRaceItemTelemetry } from '@/lib/racing/telemetry'
 import { buildRacePickupTelemetry, persistRacePickupTelemetry } from '@/lib/racing/pickup-telemetry'
 import { assertRaceStateTransition, transitionPersistedRaceState } from '@/lib/racing/state-machine'
@@ -26,6 +29,7 @@ import {
   RACE_TICK_RATE,
   WILD_ITEM_BALANCE_VERSION,
   raceConfigSchema,
+  type RaceEvent,
   type RaceItemId,
 } from '@/packages/race-protocol/src'
 import { queueWildItemInput } from '@/packages/race-core/src'
@@ -260,6 +264,15 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
     }))
     let lastControlPollTick = -Infinity
     const liveSession = startLiveRaceSession(raceId)
+    // Observational only: push() never throws and never changes the simulation (plan 0.4, risk R2).
+    let replayRecorder: ReturnType<typeof createReplayTrackRecorder> | null = null
+    if (isReplayTrackRecordingEnabled()) {
+      try {
+        replayRecorder = createReplayTrackRecorder()
+      } catch (error) {
+        console.error(`Race ${raceId}: replay recording disabled, recorder setup failed:`, error instanceof Error ? error.message : error)
+      }
+    }
     let result
     try {
       result = await runAuthoritativeRace(config, {
@@ -267,6 +280,7 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
         snapshotRate: 8,
         onLiveSnapshot: (snapshot) => liveSession.publishSnapshot(snapshot),
         beforeTick: (state) => {
+          if (state.tick === 0) replayRecorder?.push(state)
           if (state.tick - lastControlPollTick < Math.max(1, Math.round(config.tickRate / 4))) return
           lastControlPollTick = state.tick
           for (const action of liveSession.drainPendingWildActions()) {
@@ -281,7 +295,8 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
             }, authoritativeTick)
           }
         },
-        afterTick: (_state, newEvents) => {
+        afterTick: (state, newEvents) => {
+          replayRecorder?.push(state)
           for (const raceEvent of newEvents) {
             if (raceEvent.type === 'WILD_ITEM_MANUAL_INPUT') liveSession.resolveFromEvent(raceEvent)
           }
@@ -311,7 +326,7 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
       chaos,
       previousKing ? { userId: previousKing.userId, streak: previousKing.kingStreak } : null,
     )
-    await persistRaceEvents(prisma, raceId, [{
+    const chaosResolvedEvent: RaceEvent = {
       raceId: String(raceId),
       type: 'CHAOS_RESOLVED',
       tick: Math.ceil(result.durationMs / (1000 / config.tickRate)),
@@ -320,7 +335,8 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
         chaosType: chaos.type,
         loserPlayerIds: resolved.scarOutcomes.map((outcome) => String(outcome.userId)),
       },
-    }])
+    }
+    await persistRaceEvents(prisma, raceId, [chaosResolvedEvent])
     const activeUserIds = new Set(players.map((player) => player.userId))
     const activePredictions = week.predictions.filter((prediction: { predictorUserId: number; targetUserId: number }) => activeUserIds.has(prediction.predictorUserId) && activeUserIds.has(prediction.targetUserId))
     const predictionOutcomes = resolvePredictions(activePredictions, resolved.bottomTwo)
@@ -352,6 +368,8 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
     if (goldenPlayer) qpLines.push(`🪙 Golden Quack Box — ${goldenPlayer.user.name}${race.isTest ? ' (test)' : ' +1 QP'}`)
     const recap = `${duckNews}\n\n${qpLines.join('\n')}`
 
+    const persistedResult = persistedRaceResult(result)
+    const metaEventsInTransaction: RaceEvent[] = []
     assertRaceStateTransition('FINISHED', 'RESOLVED')
     await prisma.$transaction(async (tx: typeof prisma) => {
       for (const entry of resolved.ranking) {
@@ -443,6 +461,14 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
           })
           if (!goldenReward) throw new Error('Golden reward cannot be granted for an unofficial race')
           await applyQuackTransaction(tx, goldenReward)
+          metaEventsInTransaction.push({
+            raceId: String(raceId),
+            type: 'QP_TRACK_REWARD_GRANTED',
+            tick: goldenCollection!.tick,
+            timestampWithinRaceMs: goldenCollection!.timestampWithinRaceMs,
+            sourcePlayerId: String(goldenPlayer.userId),
+            metadata: { pickupId: goldenPickupId, amount: 1, reason: 'TRACK_GOLDEN_BOX' },
+          })
           await tx.raceEngineEvent.create({
             data: {
               raceId,
@@ -464,7 +490,7 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
           engineState: 'RESOLVED',
           videoUrl: null,
           liveSnapshotJson: null,
-          ...persistedRaceResult(result),
+          ...persistedResult,
           finalVerdict: resolved.scarVictims.map((entry) => `${entry.name} bị làm dzịt`).join(' & ') || 'Khiên đã cứu hết người bị phạt.',
           finishedAt: new Date(),
         },
@@ -478,6 +504,37 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
       }
     })
     if (race.isTest) await transitionPersistedRaceState(prisma, raceId, 'RESOLVED', 'ARCHIVED')
+
+    // Best effort, after resolve: never throws; a failed recording or self-check writes no row and logs once.
+    await storeRecordedReplayTrack({
+      recorder: replayRecorder,
+      result,
+      raceId,
+      resultDigest: persistedResult.resultDigest,
+      persist: (row) => prisma.raceReplayTrack.create({ data: row }),
+      stats: async () => {
+        // Same inputs the race page passes to PostRaceStatsPanel (events ordered like the DB rows: tick, then insert order).
+        const statsEvents = [...result.events, chaosResolvedEvent, ...metaEventsInTransaction]
+          .map((raceEvent, order) => ({ raceEvent, order }))
+          .sort((left, right) => left.raceEvent.tick - right.raceEvent.tick || left.order - right.order)
+          .map(({ raceEvent }) => raceEvent)
+        const participants = await prisma.raceParticipant.findMany({ where: { raceId }, include: { user: true }, orderBy: { initialRank: 'asc' } })
+        const configPlayers = new Map(config.players.map((player) => [player.playerId, player] as const))
+        const loadouts = new Map(config.loadouts.map((loadout) => [loadout.playerId, loadout.itemIds] as const))
+        const statsPlayers = participants
+          .filter((participant: { isClone: boolean }) => !participant.isClone)
+          .map((participant: { userId: number; displayName: string | null; user: { name: string; avatarUrl: string | null } }) => {
+            const playerId = String(participant.userId)
+            return {
+              playerId,
+              name: configPlayers.get(playerId)?.name ?? participant.displayName ?? participant.user.name,
+              avatarUrl: participant.user.avatarUrl,
+              itemIds: loadouts.get(playerId) ?? [],
+            }
+          })
+        return JSON.stringify(buildPostRaceStats(config, statsEvents, statsPlayers))
+      },
+    })
 
     return { raceId, recap, resolution: resolved, predictions: predictionOutcomes, quackRewards: race.isTest ? [] : quackRewards }
   } catch (error) {

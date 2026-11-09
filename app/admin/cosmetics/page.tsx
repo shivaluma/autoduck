@@ -118,35 +118,39 @@ export default function CosmeticsAdminPage() {
   useEffect(() => {
     const saved = window.localStorage.getItem('autoduck-season3-secret') ?? ''
     if (saved) {
+      // Browser-only value read after hydration; a lazy useState initializer would mismatch the server render.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSecret(saved)
       void load(saved)
     }
   }, [])
 
-  const selectedPlayer = data?.players.find((p) => String(p.id) === playerId)
+  const catalog = data?.catalog
+  const players = data?.players
+  const selectedPlayer = players?.find((p) => String(p.id) === playerId)
   const ownedSet = useMemo(() => new Set(selectedPlayer?.ownedCosmeticIds ?? []), [selectedPlayer])
 
   const collections = useMemo(() => {
-    if (!data?.catalog) return []
-    return [...new Set(data.catalog.flatMap((item) => (item.collection ? [item.collection] : [])))].sort()
-  }, [data?.catalog])
+    if (!catalog) return []
+    return [...new Set(catalog.flatMap((item) => (item.collection ? [item.collection] : [])))].sort()
+  }, [catalog])
 
   const slotCounts = useMemo(() => {
     const map = new Map<string, { total: number; owned: number }>()
-    if (!data?.catalog) return map
-    for (const item of data.catalog) {
+    if (!catalog) return map
+    for (const item of catalog) {
       const current = map.get(item.slot) ?? { total: 0, owned: 0 }
       current.total += 1
       if (ownedSet.has(item.id)) current.owned += 1
       map.set(item.slot, current)
     }
     return map
-  }, [data?.catalog, ownedSet])
+  }, [catalog, ownedSet])
 
   const filteredCatalog = useMemo(() => {
-    if (!data?.catalog) return []
+    if (!catalog) return []
     const q = itemQuery.trim().toLowerCase()
-    return data.catalog.filter((item) => {
+    return catalog.filter((item) => {
       if (selectedSlot !== 'all' && item.slot !== selectedSlot) return false
       if (selectedRarity !== 'all' && item.rarity !== selectedRarity) return false
       if (selectedCollection !== 'all' && item.collection !== selectedCollection) return false
@@ -158,14 +162,14 @@ export default function CosmeticsAdminPage() {
       }
       return true
     })
-  }, [data?.catalog, selectedSlot, selectedRarity, selectedCollection, ownershipFilter, ownedSet, itemQuery])
+  }, [catalog, selectedSlot, selectedRarity, selectedCollection, ownershipFilter, ownedSet, itemQuery])
 
   const filteredPlayers = useMemo(() => {
-    if (!data?.players) return []
+    if (!players) return []
     const q = playerSearch.trim().toLowerCase()
-    if (!q) return data.players
-    return data.players.filter((p) => p.name.toLowerCase().includes(q) || String(p.id).includes(q))
-  }, [data?.players, playerSearch])
+    if (!q) return players
+    return players.filter((p) => p.name.toLowerCase().includes(q) || String(p.id).includes(q))
+  }, [players, playerSearch])
 
   return (
     <main className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6 text-white">

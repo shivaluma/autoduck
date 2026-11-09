@@ -141,6 +141,9 @@ export default function Season3Page() {
       if (queryToken) {
         localStorage.setItem('autoduck_season3_token', queryToken)
       }
+      // Token comes from the URL/localStorage, which only exist after hydration; reading it in a
+      // lazy useState initializer would make the first client render differ from the server's.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setToken(activeToken)
       const fromHash = tabFromHash(window.location.hash)
       if (fromHash) setTab(fromHash)

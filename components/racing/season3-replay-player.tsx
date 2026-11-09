@@ -55,7 +55,11 @@ export function Season3ReplayPlayer({
   const balanceDrift = config.balanceVersion !== RACE_BALANCE_VERSION
   const seedTail = config.seed.slice(-8)
 
-  useEffect(() => {
+  // Reset playback when a different race (or seed) is shown: state during render, refs in an effect.
+  const replayKey = `${raceId}:${config.seed}`
+  const [shownReplayKey, setShownReplayKey] = useState(replayKey)
+  if (shownReplayKey !== replayKey) {
+    setShownReplayKey(replayKey)
     setRunId(0)
     setStarted(false)
     setPaused(true)
@@ -63,9 +67,12 @@ export function Season3ReplayPlayer({
     setTick(0)
     setLatestDucks([])
     setVerifyState('idle')
+  }
+
+  useEffect(() => {
     lastReportedTick.current = -1
     verifiedRef.current = false
-  }, [raceId, config.seed])
+  }, [replayKey])
 
   const inspect = useCallback((state: ReplayInspection) => {
     if (state.finished || state.tick - lastReportedTick.current >= Math.max(1, Math.floor(config.tickRate / 4))) {
