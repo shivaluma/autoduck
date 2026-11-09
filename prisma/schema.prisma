@@ -716,6 +716,7 @@ model SeasonWeek {
   raceSeed             String?
   chaosSeed            String?
   skippedPlayerIdsJson String?
+  previousRaceSeeds    String? // JSON array of earlier raceSeed values replaced by a re-seed (rewrite plan 0.8)
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
