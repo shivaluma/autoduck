@@ -2,8 +2,6 @@
 
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
-import { ChestReveal } from '@/components/chest-reveal'
-import type { ChestEffect } from '@/lib/types'
 
 interface PlayerInfo {
   name: string
@@ -18,19 +16,6 @@ interface Props {
   allPlayers: PlayerInfo[]
   victims: PlayerInfo[]
   verdict: string | null
-  bossFalls?: string[]
-  consumedChests?: {
-    id: number
-    ownerName: string
-    effect: string
-    targetName?: string | null
-    outcome: 'success' | 'fizzled'
-  }[]
-  awardedChests?: {
-    id: number
-    ownerName: string
-    effect: ChestEffect
-  }[]
   duration?: number
 }
 
@@ -38,9 +23,6 @@ export function RaceCelebration({
   allPlayers,
   victims,
   verdict,
-  bossFalls = [],
-  consumedChests = [],
-  awardedChests = [],
   duration = 3000,
 }: Props) {
   const [visible, setVisible] = useState(duration > 0)
@@ -48,8 +30,6 @@ export function RaceCelebration({
   const [showText, setShowText] = useState(false)
   const [showVictims, setShowVictims] = useState(false)
   const [showPlayers, setShowPlayers] = useState(false)
-  const [showChestReport, setShowChestReport] = useState(false)
-  const [showBossFall, setShowBossFall] = useState(false)
 
   useEffect(() => {
     if (duration <= 0) {
@@ -60,8 +40,6 @@ export function RaceCelebration({
     timers.push(setTimeout(() => setShowPlayers(true), 300))
     timers.push(setTimeout(() => setShowText(true), 800))
     timers.push(setTimeout(() => setShowVictims(true), 1500))
-    timers.push(setTimeout(() => setShowBossFall(true), 2000))
-    timers.push(setTimeout(() => setShowChestReport(true), 2400))
 
     const fadeTimer = setTimeout(() => {
       setFading(true)
@@ -187,47 +165,6 @@ export function RaceCelebration({
           </p>
         )}
       </div>
-
-      {bossFalls.length > 0 && (
-        <div className={`absolute top-[20%] left-1/2 -translate-x-1/2 z-20 transition-all duration-700 ${showBossFall ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-8'}`}>
-          <div className="rounded-2xl border-4 border-[#4d0000] bg-[rgba(120,0,0,0.78)] px-8 py-5 shadow-[0_8px_0_#250000,0_22px_36px_rgba(0,0,0,0.55)]">
-            <div className="font-display text-2xl md:text-3xl text-white text-outlined text-center">
-              👑💔 MỚI GẶP TÝ ÁP LỰC ĐÃ VỤN VỠ
-            </div>
-            <div className="font-data text-sm md:text-base text-white/85 text-center mt-2">
-              {bossFalls.join(' • ')} mất danh hiệu Boss!
-            </div>
-          </div>
-        </div>
-      )}
-
-      {(consumedChests.length > 0 || awardedChests.length > 0) && (
-        <div className={`absolute right-6 top-24 z-20 w-[320px] transition-all duration-700 ${showChestReport ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'}`}>
-          <div className="rounded-2xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] shadow-[0_6px_0_var(--color-ggd-outline),0_20px_30px_rgba(0,0,0,0.5)]">
-            <div className="px-4 py-3 border-b-2 border-[var(--color-ggd-outline)]/30">
-              <div className="font-display text-lg text-white text-outlined">🎁 EFFECT REPORT</div>
-            </div>
-            <div className="p-4 space-y-3">
-              {consumedChests.map((chest) => (
-                <div key={`consumed-${chest.id}`} className="rounded-xl bg-black/20 p-3 border-2 border-[var(--color-ggd-outline)]/30">
-                  <div className="font-body text-sm font-black text-white">{chest.ownerName}</div>
-                  <div className="font-data text-xs text-[var(--color-ggd-gold)] mt-1">
-                    {chest.effect}
-                    {chest.targetName ? ` → ${chest.targetName}` : ''}
-                    {chest.outcome === 'success' ? ' ✅' : ' ❌'}
-                  </div>
-                </div>
-              ))}
-              {awardedChests.slice(0, 2).map((chest) => (
-                <div key={`awarded-${chest.id}`} className="rounded-xl bg-[var(--color-ggd-orange)]/15 p-3 border-2 border-[var(--color-ggd-orange)]/40 overflow-hidden">
-                  <div className="font-body text-sm font-black text-white mb-2">{chest.ownerName} nhận rương mới</div>
-                  <ChestReveal chestId={chest.id} effect={chest.effect} animated={duration > 0} />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ===== BOTTOM: Victim Ducks (Big) ===== */}
       <div className={`relative z-10 pb-10 transition-all duration-700 ${showVictims ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>

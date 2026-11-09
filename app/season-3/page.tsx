@@ -4,12 +4,12 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Season3ChaosCard } from '@/components/season3-chaos-card'
 import { Season3Avatar } from '@/components/season3-avatar'
-import type { RaceItemId } from '@/packages/race-protocol/src'
+import type { RaceItemId } from '@/src/engine/protocol'
 import { DuckCloset } from '@/components/cosmetics/duck-closet'
 import type { CosmeticDefinition, DuckAppearance } from '@/lib/cosmetics/types'
 import { QuackEconomy } from '@/components/cosmetics/quack-economy'
 import { Duckdex } from '@/components/cosmetics/duckdex'
-import { evaluateLoadoutPairing } from '@/lib/racing/loadout-guide'
+import { evaluateLoadoutPairing } from '@/src/race/loadout-guide'
 import { GoogleAuthButton } from '@/components/auth/google-auth-button'
 import { RaceItemIcon } from '@/components/racing/race-item-icon'
 import { CosmeticDuck } from '@/components/cosmetics/cosmetic-duck'
@@ -141,6 +141,9 @@ export default function Season3Page() {
       if (queryToken) {
         localStorage.setItem('autoduck_season3_token', queryToken)
       }
+      // Token comes from the URL/localStorage, which only exist after hydration; reading it in a
+      // lazy useState initializer would make the first client render differ from the server's.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setToken(activeToken)
       const fromHash = tabFromHash(window.location.hash)
       if (fromHash) setTab(fromHash)

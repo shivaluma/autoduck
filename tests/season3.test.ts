@@ -11,7 +11,7 @@ import {
 } from '../lib/season3'
 import { mapSeason3RaceRanking, type Season3RaceMappingPlayer } from '../lib/season3-race-mapping'
 import { assertSeason3RaceDay, isVietnamMonday } from '../lib/season3-schedule'
-import { canStartSeason3TestRace, getSeason3RaceMode } from '../lib/season3-test-mode'
+import { canStartSeason3TestRace, getSeason3RaceMode } from '../src/season3/season3-test-mode'
 
 const ranking = [
   { userId: 1, name: 'Thanh', rank: 1, hasShield: false },

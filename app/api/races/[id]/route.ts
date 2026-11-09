@@ -1,19 +1,40 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import type { ChestEffect } from '@/lib/types'
 import { isImmortalDuck } from '@/lib/immortal-duck'
 import { isGhostDuck } from '@/lib/ghost-duck'
-import { MYSTERY_CHESTS_ENABLED } from '@/lib/feature-flags'
-import { getDragonInventory } from '@/lib/dragon/getDragonState'
-import { getDragonOrbName } from '@/lib/dragon/naming'
 import { publicRaceEngineVisibility } from '@/lib/racing/public-engine'
 import { getLiveRaceSession, liveManualInputsFromSession } from '@/lib/racing/live-race-session'
-import {
-  DRAGON_ORB_BONUS_RACE_SOURCE,
-  DRAGON_ORB_FEATURED_RACE_SOURCE,
-  DRAGON_ORB_LEGACY_RACE_SOURCE,
-  DRAGON_ORB_RACE_SOURCES,
-} from '@/lib/dragon/utils'
+import { trackGeometryUrl } from '@/src/race/polyline-track'
+import type { RaceReplayInfo, ReplayFidelity } from '@/src/race/types'
+
+type ReplayTrackSummary = {
+  fidelity: string
+  engineVersion: string
+  balanceVersion: string
+  trackGeometry: string | null
+  byteSha256: string | null
+  statsJson: string | null
+}
+
+/** `replay` per plan §4.6. verify stays 'none' on main (WASM verification arrives with the Rust engine). */
+function replayInfo(raceId: number, status: string, track: ReplayTrackSummary | null): RaceReplayInfo {
+  const playable = status === 'finished' && track !== null && track.byteSha256 !== null && track.fidelity !== 'UNAVAILABLE'
+  return {
+    mode: playable ? 'track' : 'none',
+    fidelity: (track?.fidelity as ReplayFidelity | undefined) ?? null,
+    trackUrl: playable ? `/api/races/${raceId}/track?h=${track!.byteSha256}` : null,
+    geometryUrl: playable ? trackGeometryUrl(track!.trackGeometry) : null,
+    engineVersion: track?.engineVersion ?? null,
+    balanceVersion: track?.balanceVersion ?? null,
+    byteSha256: playable ? track!.byteSha256 : null,
+    verify: 'none',
+  }
+}
+
+function parseJsonOr<T>(value: string | null | undefined, fallback: T): T {
+  if (!value) return fallback
+  try { return JSON.parse(value) as T } catch { return fallback }
+}
 
 // GET /api/races/[id] - Chi tiết cuộc đua
 export async function GET(
@@ -47,8 +68,13 @@ export async function GET(
         commentaries: {
           orderBy: { timestamp: 'asc' },
         },
+        // Emission order. Meta events (CHAOS_RESOLVED, QP_TRACK_REWARD_GRANTED) come last with their own tick;
+        // the viewer splits them off (src/race/event-vocab.ts).
         engineEvents: {
-          orderBy: [{ tick: 'asc' }, { id: 'asc' }],
+          orderBy: { id: 'asc' },
+        },
+        replayTrack: {
+          select: { fidelity: true, engineVersion: true, balanceVersion: true, trackGeometry: true, byteSha256: true, statsJson: true },
         },
         seasonWeek: {
           include: {
@@ -70,84 +96,9 @@ export async function GET(
       )
     }
 
-    const engineConfig = race.engineConfigJson ? JSON.parse(race.engineConfigJson) : null
+    // Never Zod-parsed here: configs from other engine versions (e.g. 2.0.0) must still be served as-is.
+    const engineConfig = parseJsonOr<Parameters<typeof publicRaceEngineVisibility>[2]>(race.engineConfigJson, null)
     const engineVisibility = publicRaceEngineVisibility(race.status, race.raceSeed, engineConfig)
-
-    const [consumedChests, awardedChests] = MYSTERY_CHESTS_ENABLED ? await Promise.all([
-      prisma.mysteryChest.findMany({
-        where: {
-          consumedRaceId: raceId,
-          earnedFromRaceId: { not: raceId },
-        },
-        include: { owner: true },
-        orderBy: { id: 'asc' },
-      }),
-      prisma.mysteryChest.findMany({
-        where: { earnedFromRaceId: raceId },
-        include: { owner: true },
-        orderBy: { id: 'asc' },
-      }),
-    ]) : [[], []]
-    const [dragonOrbs, dragonItemEvents] = await Promise.all([
-      prisma.dragonOrb.findMany({
-        where: {
-          originalRaceId: raceId,
-          source: { in: DRAGON_ORB_RACE_SOURCES },
-        },
-        include: {
-          currentOwner: true,
-          originalOwner: true,
-          dragonWeek: true,
-        },
-        orderBy: [{ source: 'asc' }, { id: 'asc' }],
-      }),
-      prisma.dragonItemEvent.findMany({
-        where: {
-          raceId,
-          type: { in: ['PROTECTED', 'NOT_NEEDED', 'CONSUMED'] },
-        },
-        include: {
-          user: true,
-        },
-        orderBy: { createdAt: 'asc' },
-      }),
-    ])
-    const sourceOrder = new Map([
-      [DRAGON_ORB_FEATURED_RACE_SOURCE, 0],
-      [DRAGON_ORB_LEGACY_RACE_SOURCE, 1],
-      [DRAGON_ORB_BONUS_RACE_SOURCE, 2],
-    ])
-    const sortedDragonOrbs = [...dragonOrbs].sort((left: { source: string; id: number }, right: { source: string; id: number }) =>
-      (sourceOrder.get(left.source) ?? 99) - (sourceOrder.get(right.source) ?? 99) || left.id - right.id
-    )
-    const primaryDragonOrb = sortedDragonOrbs[0] ?? null
-    const dragonAwardOwnerId = primaryDragonOrb?.originalOwnerId ?? primaryDragonOrb?.currentOwnerId ?? null
-    const dragonInventory = dragonAwardOwnerId && primaryDragonOrb
-      ? await getDragonInventory(prisma, dragonAwardOwnerId, primaryDragonOrb.seasonKey)
-      : null
-
-    const targetUserIds = Array.from(
-      new Set(
-        consumedChests
-          .map((chest: { targetUserId?: number | null }) => chest.targetUserId)
-          .filter((userId: number | null | undefined): userId is number => typeof userId === 'number')
-      )
-    )
-    const targetUsers = targetUserIds.length > 0
-      ? await prisma.user.findMany({ where: { id: { in: targetUserIds } } })
-      : []
-
-    const participantByUserId = new Map<number, {
-      userId: number
-      gotScar: boolean
-      initialRank: number | null
-      usedShield: boolean
-    }>()
-    for (const participant of race.participants as Array<{ userId: number; gotScar: boolean; initialRank: number | null; usedShield: boolean }>) {
-      if (!participantByUserId.has(participant.userId)) {
-        participantByUserId.set(participant.userId, participant)
-      }
-    }
 
     return NextResponse.json({
       id: race.id,
@@ -171,6 +122,8 @@ export async function GET(
         liveTick: race.status === 'running' ? (getLiveRaceSession(race.id)?.latestSnapshot?.tick ?? null) : null,
         liveManualInputs: race.status === 'running' ? liveManualInputsFromSession(race.id) : [],
         resultDigest: race.resultDigest,
+        replay: replayInfo(race.id, race.status, race.replayTrack ?? null),
+        postRaceStats: race.status === 'finished' ? parseJsonOr(race.replayTrack?.statsJson, null) : null,
         events: race.engineEvents.map((event: {
           type: string
           tick: number
@@ -185,106 +138,14 @@ export async function GET(
           timestampWithinRaceMs: event.timestampWithinRaceMs,
           sourcePlayerId: event.sourcePlayerId,
           targetPlayerId: event.targetPlayerId,
-          metadata: JSON.parse(event.metadataJson),
+          metadata: parseJsonOr<Record<string, unknown>>(event.metadataJson, {}),
         })),
       } : null,
-      consumedChests: consumedChests.map((chest: {
-        id: number
-        ownerId: number
-        targetUserId?: number | null
-        effect: ChestEffect
-        owner: { name: string }
-      }) => {
-        const ownerParticipant = participantByUserId.get(chest.ownerId)
-        const targetParticipant = chest.targetUserId ? participantByUserId.get(chest.targetUserId) : null
-        const targetName = targetUsers.find((user: { id: number; name: string }) => user.id === chest.targetUserId)?.name ?? null
-        let outcome: 'success' | 'fizzled' = 'success'
-
-        if (chest.effect === 'INSURANCE_FRAUD') {
-          outcome = ownerParticipant?.gotScar ? 'success' : 'fizzled'
-        }
-
-        if (chest.effect === 'I_CHOOSE_YOU') {
-          outcome = targetParticipant?.initialRank === 1 ? 'success' : 'fizzled'
-        }
-
-        if (chest.effect === 'LAST_LAUGH') {
-          outcome = ownerParticipant?.gotScar ? 'success' : 'fizzled'
-        }
-
-        return {
-          id: chest.id,
-          ownerId: chest.ownerId,
-          ownerName: chest.owner.name,
-          effect: chest.effect,
-          targetUserId: chest.targetUserId ?? null,
-          targetName,
-          outcome,
-        }
-      }),
-      awardedChests: awardedChests.map((chest: {
-        id: number
-        ownerId: number
-        status: string
-        effect: ChestEffect
-        owner: { name: string }
-      }) => ({
-        id: chest.id,
-        ownerId: chest.ownerId,
-        ownerName: chest.owner.name,
-        effect: chest.effect,
-        status: chest.status,
-      })),
-      dragonAward: primaryDragonOrb ? {
-        awarded: true,
-        winnerUserId: dragonAwardOwnerId ?? primaryDragonOrb.currentOwnerId,
-        winnerName: primaryDragonOrb.originalOwner?.name ?? primaryDragonOrb.currentOwner?.name ?? null,
-        awardedStar: primaryDragonOrb.star,
-        awardedOrbName: getDragonOrbName(primaryDragonOrb.star),
-        awardedOrbs: sortedDragonOrbs.map((orb: {
-          id: number
-          star: number
-          source: string
-        }) => ({
-          id: orb.id,
-          star: orb.star,
-          orbName: getDragonOrbName(orb.star),
-          source: orb.source,
-          kind: orb.source === DRAGON_ORB_BONUS_RACE_SOURCE ? 'BONUS' : 'FEATURED',
-          duplicateCountForStar: dragonInventory?.stars[String(orb.star)]?.count ?? undefined,
-        })),
-        dragonWeekId: primaryDragonOrb.dragonWeekId,
-        orbId: primaryDragonOrb.id,
-        duplicateCountForStar: dragonInventory?.stars[String(primaryDragonOrb.star)]?.count ?? undefined,
-        setProgressAfter: dragonInventory?.progress ?? undefined,
-        summonReady: dragonInventory?.summonReady ?? undefined,
-        reason: dragonInventory?.claimBlocked ? dragonInventory.blockedReason : undefined,
-      } : null,
-      dragonScaleEvents: dragonItemEvents.map((event: {
-        type: string
-        userId: number
-        itemId: number
-        message?: string | null
-        payloadJson?: string | null
-        user?: { name: string } | null
-      }) => {
-        let participantIds: string[] = []
-        try {
-          const payload = event.payloadJson ? JSON.parse(event.payloadJson) : null
-          participantIds = Array.isArray(payload?.participantIds) ? payload.participantIds.map(String) : []
-        } catch {
-          participantIds = []
-        }
-
-        return {
-          type: event.type,
-          userId: event.userId,
-          userName: event.user?.name ?? null,
-          itemId: event.itemId,
-          participantIds,
-          message: event.message ?? null,
-        }
-      }),
+      // Legacy v2 keys (chests, dragon) were removed; kept as constants so older clients don't break.
+      consumedChests: [],
+      awardedChests: [],
+      dragonAward: null,
+      dragonScaleEvents: [],
       participants: race.participants.map((p: {
         userId: number
         user: { name: string; avatarUrl?: string | null; shields?: number | null }
@@ -317,8 +178,8 @@ export async function GET(
         isClone: p.isClone,
         cloneOfUserId: p.cloneOfUserId,
         cloneIndex: p.cloneIndex,
-        chestEffect: MYSTERY_CHESTS_ENABLED ? p.chestEffect : null,
-        chestTargetUserId: MYSTERY_CHESTS_ENABLED ? p.chestTargetUserId : null,
+        chestEffect: p.chestEffect,
+        chestTargetUserId: p.chestTargetUserId,
         dragonEligible: p.dragonEligible,
       })),
       commentaries: race.commentaries.map((c: { timestamp: number; content: string }) => ({

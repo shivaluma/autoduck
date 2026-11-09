@@ -1,14 +1,14 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import type { RaceEvent } from '@/packages/race-protocol/src'
+import type { RaceEvent } from '@/src/engine/protocol'
 import { Season3Avatar } from '@/components/season3-avatar'
 import {
   extractCombatEncounters,
   type CombatPlayerRef,
   type CombatEncounter,
   type PlayerCombatSummary,
-} from '@/lib/racing/combat-encounters'
+} from '@/src/race/combat-encounters'
 
 export function CombatEncountersPanel({
   events,

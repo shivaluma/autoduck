@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { RaceLiveView } from '@/app/race/[id]/race-live-view'
 import { RaceCelebration } from '@/components/race-celebration'
 import { Season3Avatar } from '@/components/season3-avatar'
 import { PhaserRaceCanvas, type ReplayInspection } from '@/components/racing/phaser-race-canvas'
@@ -11,9 +10,11 @@ import { PostRaceStatsPanel } from '@/components/racing/post-race-stats-panel'
 import { LiveLeaderboardSnapshot } from '@/components/racing/live-leaderboard-snapshot'
 import { RaceEventTimeline } from '@/components/racing/race-event-timeline'
 import { CombatEncountersPanel } from '@/components/racing/combat-encounters-panel'
+import { useReplayTrack } from '@/components/racing/use-replay-track'
+import { readStoredEvents } from '@/src/race/event-vocab'
 import type { RaceStatus } from '@/lib/types'
 import type { DuckAppearance } from '@/lib/cosmetics/types'
-import type { DuckSnapshot, RaceEvent } from '@/packages/race-protocol/src'
+import type { DuckSnapshot, RaceEvent } from '@/src/engine/protocol'
 import { GameLink, GamePanel, UiIcon } from '@/components/game-ui'
 import type { UiIconName } from '@/lib/race-fx/manifest'
 
@@ -29,6 +30,13 @@ function parseAppearance(value?: string) {
   try { return JSON.parse(value) as DuckAppearance } catch { return null }
 }
 
+function raceUrl(raceId: number) {
+  const token = typeof window !== 'undefined'
+    ? (new URLSearchParams(window.location.search).get('token') || window.localStorage.getItem('autoduck_season3_token') || '')
+    : ''
+  return token ? `/api/races/${raceId}?token=${encodeURIComponent(token)}` : `/api/races/${raceId}`
+}
+
 export function Season3RaceView({ raceId }: { raceId: number }) {
   const [race, setRace] = useState<RaceStatus | null>(null)
   const [loading, setLoading] = useState(true)
@@ -39,33 +47,36 @@ export function Season3RaceView({ raceId }: { raceId: number }) {
   const [resultTab, setResultTab] = useState<typeof RESULT_TABS[number]['id']>('result')
 
   const fetchRace = useCallback(async () => {
-    const token = typeof window !== 'undefined'
-      ? (new URLSearchParams(window.location.search).get('token') || window.localStorage.getItem('autoduck_season3_token') || '')
-      : ''
-    const url = token ? `/api/races/${raceId}?token=${encodeURIComponent(token)}` : `/api/races/${raceId}`
-    const response = await fetch(url)
+    const response = await fetch(raceUrl(raceId))
     if (!response.ok) return
     const nextRace = await response.json() as RaceStatus
     setRace(nextRace)
     setLoading(false)
   }, [raceId])
 
-  useEffect(() => {
-    let active = true
+  // Reset when navigating to another race (state adjusted during render, not in the effect).
+  const [shownRaceId, setShownRaceId] = useState(raceId)
+  if (shownRaceId !== raceId) {
+    setShownRaceId(raceId)
     setLoading(true)
     setRace(null)
     setLiveDucks([])
     setLiveTick(0)
     setLiveEvents([])
+  }
 
-    void fetchRace()
+  useEffect(() => {
+    let active = true
+
+    void fetch(raceUrl(raceId)).then(async (response) => {
+      if (!active || !response.ok) return
+      const nextRace = await response.json() as RaceStatus
+      setRace(nextRace)
+      setLoading(false)
+    })
 
     const interval = window.setInterval(() => {
-      const token = typeof window !== 'undefined'
-        ? (new URLSearchParams(window.location.search).get('token') || window.localStorage.getItem('autoduck_season3_token') || '')
-        : ''
-      const url = token ? `/api/races/${raceId}?token=${encodeURIComponent(token)}` : `/api/races/${raceId}`
-      void fetch(url).then(async (response) => {
+      void fetch(raceUrl(raceId)).then(async (response) => {
         if (!active || !response.ok) return
         const nextRace = await response.json() as RaceStatus
         if (nextRace.status === 'finished' || nextRace.status === 'failed') {
@@ -81,7 +92,11 @@ export function Season3RaceView({ raceId }: { raceId: number }) {
       active = false
       window.clearInterval(interval)
     }
-  }, [raceId, fetchRace])
+  }, [raceId])
+
+  // Stored events arrive in id order; timelines, combat and stats read them ordered by tick.
+  const storedEvents = useMemo(() => readStoredEvents(race?.engine?.events ?? []), [race?.engine?.events])
+  const trackState = useReplayTrack(race?.status === 'finished' ? race.engine?.replay : null)
 
   const ranking = useMemo(() => [...(race?.participants ?? [])].sort((left, right) => (left.initialRank ?? 99) - (right.initialRank ?? 99)), [race])
   const officialRanking = useMemo(() => ranking.filter((player) => !player.isGhost && !player.isClone), [ranking])
@@ -178,14 +193,14 @@ export function Season3RaceView({ raceId }: { raceId: number }) {
           raceId={raceId}
           players={racePlayers}
           chaosType={race.engine.chaosConfig?.type}
-          liveConfig={race.engine.config}
-          liveSyncTick={race.engine.liveTick ?? undefined}
-          liveManualInputs={race.engine.liveManualInputs}
+          source={race.engine.config
+            ? { kind: 'live', config: race.engine.config, syncTick: race.engine.liveTick ?? undefined, manualInputs: race.engine.liveManualInputs }
+            : { kind: 'snapshot', trackVersion: race.engine.trackVersion }}
           onReplayInspect={handleLiveInspect}
           onLiveFinished={handleLiveFinished}
         />
       ) : (
-        <RaceLiveView raceId={raceId} season3Mode />
+        <section className="gx-panel p-6 text-center text-white/75">Đang chuẩn bị đường đua…</section>
       )}
 
       {/* Live Tabs: Standings & Live Events */}
@@ -250,14 +265,15 @@ export function Season3RaceView({ raceId }: { raceId: number }) {
       </section>
 
       {/* Replay Player with synced Leaderboard & Event Log */}
-      {race.engine?.config && (
+      {race.engine && (race.engine.config || race.engine.replay?.mode === 'track') && (
         <Season3ReplayPlayer
           key={raceId}
           raceId={raceId}
           players={racePlayers}
           config={race.engine.config}
           events={race.engine.events}
-          resultDigest={race.engine.resultDigest}
+          replay={race.engine.replay}
+          trackState={trackState}
         />
       )}
 
@@ -266,24 +282,22 @@ export function Season3RaceView({ raceId }: { raceId: number }) {
       </div>
 
       <div key={resultTab} className="gx-pop-in space-y-6">
-      {resultTab === 'combat' && race.engine?.events && race.engine.events.length > 0 && (
-        <CombatEncountersPanel events={race.engine.events} players={racePlayers} />
+      {resultTab === 'combat' && storedEvents.timeline.length > 0 && (
+        <CombatEncountersPanel events={storedEvents.timeline} players={racePlayers} />
       )}
-      {resultTab === 'stats' && race.engine?.config && race.engine.events.length > 0 && (
-        <PostRaceStatsPanel config={race.engine.config} events={race.engine.events} players={racePlayers} />
+      {resultTab === 'stats' && race.engine && storedEvents.timeline.length > 0 && (
+        <PostRaceStatsPanel
+          config={race.engine.config}
+          events={storedEvents.timeline}
+          players={racePlayers}
+          stats={race.engine.postRaceStats ?? null}
+          track={trackState.status === 'ready' ? trackState.track : null}
+        />
       )}
-      {resultTab === 'timeline' && race.engine?.events && race.engine.events.length > 0 && (
-        <RaceEventTimeline events={race.engine.events} players={racePlayers} />
+      {resultTab === 'timeline' && storedEvents.timeline.length > 0 && (
+        <RaceEventTimeline events={storedEvents.timeline} players={racePlayers} />
       )}
       {resultTab === 'result' && <>
-      {/* Video Replay if available */}
-      {race.videoUrl && (
-        <section className="overflow-hidden rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-black">
-          <div className="border-b-2 border-white/10 px-5 py-4 font-black text-white">🎬 RACE REPLAY VIDEO</div>
-          <video src={race.videoUrl} controls playsInline className="w-full" />
-        </section>
-      )}
-
       {/* Official Final Rankings */}
       <section className="gx-panel overflow-hidden">
         <div className="border-b-2 border-white/10 px-5 py-4 font-black flex items-center justify-between">

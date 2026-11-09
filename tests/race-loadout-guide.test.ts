@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { evaluateLoadoutPairing } from '../lib/racing/loadout-guide'
+import { evaluateLoadoutPairing } from '../src/race/loadout-guide'
 
 test('loadout guide labels pure speed combo', () => {
   const pairing = evaluateLoadoutPairing(['NITRO', 'DRAFT_FIN'])

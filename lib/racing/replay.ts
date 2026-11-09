@@ -9,7 +9,8 @@ export function replayRace(config: RaceConfig, expectedDigest?: string, manualIn
   if (!supported) {
     throw new Error(`Unsupported replay version: engine ${config.engineVersion}, balance ${config.balanceVersion}`)
   }
-  const result = simulateRace(config, { manualInputs })
+  // Allowlisted older pairs opt out of the engine's version guard explicitly.
+  const result = simulateRace(config, { manualInputs, allowVersion: true })
   const digest = createResultDigest(result)
   if (expectedDigest && digest !== expectedDigest) {
     throw new Error(`Replay mismatch: expected ${expectedDigest}, received ${digest}`)

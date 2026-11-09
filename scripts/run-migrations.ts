@@ -1,7 +1,7 @@
 import path from 'path'
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 import { PrismaClient } from '../prisma/generated/prisma/client'
-import { getIsoWeekKey, normalizeLegacyShieldState } from '../lib/shield-decay'
+import { getIsoWeekKey, normalizeLegacyShieldState } from './migrations/legacy-helpers'
 import { DEFAULT_APPEARANCE, STARTER_COSMETIC_IDS } from '../lib/cosmetics/catalog'
 import { applyQuackTransaction } from '../lib/cosmetics/economy'
 import { planLegacyInventory, remapAppearance } from '../lib/cosmetics/legacy'

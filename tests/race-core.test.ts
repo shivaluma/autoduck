@@ -65,7 +65,7 @@ test('replay verifies the persisted result digest', () => {
 
 test('legacy S3.2 replay stays pickup-free and supported', () => {
   const legacy = raceConfigSchema.parse({ ...config('ed'.repeat(32)), engineVersion: '1.1.0', balanceVersion: 'S3.2', trackVersion: 'river-01-v1', pickupConfig: undefined })
-  const result = simulateRace(legacy)
+  const result = simulateRace(legacy, { allowVersion: true })
   assert.equal(result.events.some((event) => event.type.startsWith('PICKUP_') || event.type.startsWith('HAZARD_') || event.type.startsWith('GOLDEN_')), false)
   assert.doesNotThrow(() => replayRace(legacy, createResultDigest(result)))
 })

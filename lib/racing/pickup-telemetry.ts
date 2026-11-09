@@ -26,6 +26,7 @@ function itemSuccess(itemId: WildItemId, playerId: string, events: RaceEvent[]) 
   return 1
 }
 
+/** Runs the pickups-off counterfactual with HEAD code, so the config must be the current engine/balance pair (version guard). */
 export function buildRacePickupTelemetry(raceId: number, config: RaceConfig, officialResult: RaceResult): RacePickupTelemetryRow[] {
   const baseline = simulateRace({
     ...config,

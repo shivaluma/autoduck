@@ -1,17 +1,23 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import type { RaceConfig, RaceEvent } from '@/packages/race-protocol/src'
+import type { RaceConfig, RaceEvent } from '@/src/engine/protocol'
 import { Season3Avatar } from '@/components/season3-avatar'
 import {
-  buildPostRaceStats,
+  aggregatePostRaceStats,
+  type PostRaceMotion,
   type PostRacePlayerInput,
   type PostRacePlayerStats,
-} from '@/lib/racing/post-race-stats'
+  type PostRaceStats,
+} from '@/src/race/post-race-stats'
+import { collectPostRaceBaselineRank, collectPostRaceMotion, motionFromTrack } from '@/src/race/post-race-engine'
+import { manualInputsFromEvents } from '@/src/race/event-vocab'
+import { canResimulate } from '@/src/race/replay-plan'
+import type { DecodedReplayTrack } from '@/src/race/replay-track/decode'
 import {
   extractCombatEncounters,
   type CombatEncounter,
-} from '@/lib/racing/combat-encounters'
+} from '@/src/race/combat-encounters'
 
 function formatSeconds(value: number) {
   if (value <= 0) return '0s'
@@ -55,12 +61,14 @@ function PlayerRow({
   onToggle,
   encountersDealt,
   encountersReceived,
+  showSpeed,
 }: {
   player: PostRacePlayerStats
   expanded: boolean
   onToggle: () => void
   encountersDealt: CombatEncounter[]
   encountersReceived: CombatEncounter[]
+  showSpeed: boolean
 }) {
   const topEfficiency = player.efficiencyScore >= 8
   return (
@@ -74,14 +82,14 @@ function PlayerRow({
         <Season3Avatar name={player.name} avatarUrl={player.avatarUrl} size={40} />
         <span className="min-w-0 flex-1 truncate font-black">{player.name}</span>
         {topEfficiency && <span className="rounded-full bg-[var(--color-ggd-neon-green)] px-2 py-0.5 text-[10px] font-black text-[var(--color-ggd-outline)]">MVP ITEM</span>}
-        <span className="hidden text-sm font-bold text-white/55 sm:block">{formatSpeed(player.averageSpeed)} avg</span>
+        {showSpeed && <span className="hidden text-sm font-bold text-white/55 sm:block">{formatSpeed(player.averageSpeed)} avg</span>}
         <span className="hidden text-sm font-bold text-[var(--color-ggd-gold)] sm:block">Δ {formatDelta(player.rankDelta)}</span>
         <span className="text-xs text-white/35">{expanded ? '▲' : '▼'}</span>
       </button>
       {expanded && (
         <div className="border-b border-white/10 bg-black/20 px-5 py-4 space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div><div className="text-[10px] font-black uppercase text-white/40">Tốc độ TB / đỉnh</div><div className="font-black">{formatSpeed(player.averageSpeed)} · {formatSpeed(player.peakSpeed)}</div></div>
+            {showSpeed && <div><div className="text-[10px] font-black uppercase text-white/40">Tốc độ TB / đỉnh</div><div className="font-black">{formatSpeed(player.averageSpeed)} · {formatSpeed(player.peakSpeed)}</div></div>}
             <div><div className="text-[10px] font-black uppercase text-white/40">Hạng không item</div><div className="font-black">#{player.baselineRank} → #{player.finalRank} ({formatDelta(player.rankDelta)})</div></div>
             <div><div className="text-[10px] font-black uppercase text-white/40">Tấn công / bị đánh</div><div className="font-black">{player.attacksDealt} gây · {player.attacksReceived} nhận · {player.attacksBlocked} chặn</div></div>
             <div><div className="text-[10px] font-black uppercase text-white/40">Thời gian mất (ước tính)</div><div className="font-black text-[var(--color-ggd-orange)]">{formatSeconds(player.timeLostFromAttacksSeconds)}</div></div>
@@ -172,17 +180,42 @@ function PlayerRow({
   )
 }
 
+/**
+ * Stats for a finished race. Uses the frozen `stats` (RaceReplayTrack.statsJson) when the race has one.
+ * Otherwise it aggregates the stored events here, with motion from the recorded track or, for a
+ * current-version race only, from a local re-simulation; without either, speed columns are hidden.
+ */
 export function PostRaceStatsPanel({
   config,
   events,
   players,
+  stats: frozenStats = null,
+  track = null,
 }: {
-  config: RaceConfig
+  /** Stored config, unparsed (may be from another engine version). */
+  config: RaceConfig | null
+  /** Stored events ordered by tick (meta events included). */
   events: RaceEvent[]
   players: PostRacePlayerInput[]
+  stats?: PostRaceStats | null
+  track?: DecodedReplayTrack | null
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
-  const stats = useMemo(() => buildPostRaceStats(config, events, players), [config, events, players])
+  const { stats, showSpeed } = useMemo(() => {
+    if (frozenStats) return { stats: frozenStats, showSpeed: true }
+    const simulatable = canResimulate(config)
+    let motion: PostRaceMotion | null = null
+    try {
+      motion = track ? motionFromTrack(track) : simulatable && config ? collectPostRaceMotion(config, manualInputsFromEvents(events)) : null
+    } catch {
+      motion = null
+    }
+    const baselineRank = simulatable && config ? collectPostRaceBaselineRank(config) : null
+    return {
+      stats: aggregatePostRaceStats({ tickRate: Number(config?.tickRate) || 60 }, events, players, { motion, baselineRank }),
+      showSpeed: motion !== null,
+    }
+  }, [config, events, frozenStats, players, track])
   const combat = useMemo(() => extractCombatEncounters(events, players), [events, players])
 
   const combatByPlayer = useMemo(() => {
@@ -248,7 +281,7 @@ export function PostRaceStatsPanel({
             detail={`${highlights.bestAttacker.attacksDealt} hit gây ra`}
           />
         )}
-        {highlights.fastestAverage && (
+        {showSpeed && highlights.fastestAverage && (
           <HighlightCard
             emoji="⚡"
             title="Tốc độ trung bình cao nhất"
@@ -284,6 +317,7 @@ export function PostRaceStatsPanel({
         </div>
         {stats.players.map((player) => (
           <PlayerRow
+            showSpeed={showSpeed}
             key={player.playerId}
             player={player}
             expanded={expandedId === player.playerId}
