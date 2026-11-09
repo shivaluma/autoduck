@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { hasGoogleLink } from '@/lib/auth/google'
 
 export async function GET(request: Request, context: { params: Promise<{ userId: string }> }) {
   const { userId: rawUserId } = await context.params
@@ -48,7 +49,7 @@ export async function GET(request: Request, context: { params: Promise<{ userId:
       isKing: player.isKing,
     },
     isOwner,
-    isGoogleLinked: Boolean(player.user.email || player.user.googleId),
+    isGoogleLinked: hasGoogleLink(player.user.googleId),
     googleEmail: isOwner ? player.user.email : null,
     personalLink: isOwner ? `/season-3?token=${encodeURIComponent(player.accessToken)}` : null,
   })

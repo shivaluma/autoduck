@@ -5,6 +5,7 @@ import { raceItemIdSchema } from '@/packages/race-protocol/src'
 import { parseItemIds, serializeItemIds } from '@/lib/racing/loadout'
 import { COSMETIC_CATALOG } from '@/lib/cosmetics/catalog'
 import { grantStarterCosmetics, saveAppearance } from '@/lib/cosmetics/inventory'
+import { hasGoogleLink } from '@/lib/auth/google'
 
 function parseChaosGroups(payload: string | null | undefined) {
   if (!payload) return undefined
@@ -84,7 +85,7 @@ export async function GET(request: Request) {
         name: viewer.user.name,
         avatarUrl: viewer.user.avatarUrl,
         email: viewer.user.email,
-        isGoogleLinked: Boolean(viewer.user.googleId || viewer.user.email),
+        isGoogleLinked: hasGoogleLink(viewer.user.googleId),
         predictionPoints: viewer.predictionPoints,
         quackPoints: viewer.quackPoints,
         scars: viewer.scars,

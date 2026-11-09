@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { isImmortalDuck } from '@/lib/immortal-duck'
 import { normalizeLegacyShieldState } from '@/lib/shield-decay'
+import { isAdminSecret } from '@/lib/auth/admin-secret'
 
 // Helper to check secret
 const checkSecret = (req: Request) => {
   const { searchParams } = new URL(req.url)
   const secret = searchParams.get('secret')
-  return secret === process.env.RACE_SECRET_KEY
+  return isAdminSecret(secret)
 }
 
 export async function GET(request: Request) {

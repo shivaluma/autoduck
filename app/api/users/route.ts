@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getDashboardUsers } from '@/lib/dashboard-data'
 import { prisma } from '@/lib/db'
+import { isAdminRequest } from '@/lib/auth/admin-secret'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -26,6 +27,9 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
+    if (!isAdminRequest(request, body)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     const { name } = body
 
     if (!name || typeof name !== 'string') {

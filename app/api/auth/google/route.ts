@@ -1,13 +1,30 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { findUserByGoogle, getActiveSeasonPlayerToken, verifyGoogleToken } from '@/lib/auth/google'
+import {
+  GoogleKeysUnavailableError,
+  findUserByGoogle,
+  getActiveSeasonPlayerToken,
+  googleAudiences,
+  googleClientId,
+  hasGoogleLink,
+  verifyGoogleIdToken,
+} from '@/lib/auth/google'
+
+const ACTIONS = ['login', 'bind', 'unbind'] as const
+type Action = (typeof ACTIONS)[number]
+
+function isUniqueConstraintError(error: unknown) {
+  return typeof error === 'object' && error !== null && (error as { code?: unknown }).code === 'P2002'
+}
+
+const ALREADY_LINKED = 'Tài khoản Google này đã được liên kết với một chú Dzịt khác.'
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const token = searchParams.get('token')
 
-    const clientId = process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''
+    const clientId = googleClientId()
 
     let boundInfo = null
     if (token) {
@@ -20,7 +37,7 @@ export async function GET(request: Request) {
           userId: player.user.id,
           name: player.user.name,
           email: player.user.email,
-          hasGoogle: Boolean(player.user.googleId || player.user.email),
+          hasGoogle: hasGoogleLink(player.user.googleId),
         }
       }
     }
@@ -38,25 +55,32 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as {
-      action?: 'login' | 'bind' | 'unbind'
-      credential?: string
-      token?: string
-      email?: string
-      googleId?: string
+    let raw: unknown
+    try {
+      raw = await request.json()
+    } catch {
+      return NextResponse.json({ error: 'Yêu cầu không hợp lệ' }, { status: 400 })
     }
+    if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+      return NextResponse.json({ error: 'Yêu cầu không hợp lệ' }, { status: 400 })
+    }
+    const body = raw as { action?: unknown; credential?: unknown; token?: unknown }
 
-    const action = body.action ?? 'login'
+    const action: Action | null = body.action === undefined ? 'login' : ACTIONS.find((value) => value === body.action) ?? null
+    if (!action) {
+      return NextResponse.json({ error: 'Hành động không hợp lệ' }, { status: 400 })
+    }
+    const playerToken = typeof body.token === 'string' ? body.token : ''
 
     // ==========================================
     // ACTION: UNBIND
     // ==========================================
     if (action === 'unbind') {
-      if (!body.token) {
+      if (!playerToken) {
         return NextResponse.json({ error: 'Token là bắt buộc' }, { status: 400 })
       }
       const player = await prisma.seasonPlayer.findUnique({
-        where: { accessToken: body.token },
+        where: { accessToken: playerToken },
         include: { user: true },
       })
       if (!player) {
@@ -75,51 +99,81 @@ export async function POST(request: Request) {
     }
 
     // ==========================================
-    // EXTRACT GOOGLE PROFILE
+    // VERIFY GOOGLE ID TOKEN
     // ==========================================
-    const tokenInput = body.credential || body.email || body.googleId || ''
-    if (!tokenInput) {
+    const audience = googleAudiences()
+    if (audience.length === 0) {
+      console.error('Google sign-in is not configured: set GOOGLE_CLIENT_ID.')
+      return NextResponse.json({ error: 'Đăng nhập Google chưa được cấu hình.' }, { status: 503 })
+    }
+
+    if (typeof body.credential !== 'string' || !body.credential.trim()) {
       return NextResponse.json({ error: 'Thiếu thông tin xác thực Google' }, { status: 400 })
     }
 
-    const googleProfile = await verifyGoogleToken(tokenInput)
-    if (!googleProfile || (!googleProfile.googleId && !googleProfile.email)) {
-      return NextResponse.json({ error: 'Không thể xác thực thông tin tài khoản Google' }, { status: 400 })
+    let googleProfile
+    try {
+      googleProfile = await verifyGoogleIdToken(body.credential, { audience })
+    } catch (error) {
+      if (error instanceof GoogleKeysUnavailableError) {
+        console.error('Could not fetch Google signing keys:', error.message)
+        return NextResponse.json({ error: 'Không kết nối được Google. Vui lòng thử lại sau.' }, { status: 503 })
+      }
+      throw error
+    }
+    if (!googleProfile) {
+      return NextResponse.json({ error: 'Không thể xác thực thông tin tài khoản Google' }, { status: 401 })
     }
 
     // ==========================================
     // ACTION: BIND
     // ==========================================
     if (action === 'bind') {
-      if (!body.token) {
+      if (!playerToken) {
         return NextResponse.json({ error: 'Token là bắt buộc để liên kết' }, { status: 400 })
       }
       const player = await prisma.seasonPlayer.findUnique({
-        where: { accessToken: body.token },
+        where: { accessToken: playerToken },
         include: { user: true },
       })
       if (!player) {
         return NextResponse.json({ error: 'Token không hợp lệ' }, { status: 401 })
       }
 
-      // Check if this google account is already bound to another user
-      const existingUser = await findUserByGoogle(googleProfile.googleId, googleProfile.email)
-      if (existingUser && existingUser.id !== player.userId) {
-        return NextResponse.json(
-          { error: `Tài khoản Google (${googleProfile.email ?? googleProfile.googleId}) đã được liên kết với chú Dzịt "${existingUser.name}".` },
-          { status: 409 },
-        )
+      // One Google account per duck.
+      const linkedElsewhere = await prisma.user.findFirst({
+        where: { googleId: googleProfile.googleId, id: { not: player.userId } },
+        select: { id: true },
+      })
+      if (linkedElsewhere) {
+        console.warn(`Google bind refused: sub already linked to user ${linkedElsewhere.id}, requested by user ${player.userId}`)
+        return NextResponse.json({ error: ALREADY_LINKED }, { status: 409 })
       }
 
-      // Update current user
-      const updatedUser = await prisma.user.update({
-        where: { id: player.userId },
-        data: {
-          googleId: googleProfile.googleId,
-          email: googleProfile.email ? googleProfile.email.toLowerCase().trim() : player.user.email,
-          avatarUrl: player.user.avatarUrl || googleProfile.picture || null,
-        },
-      })
+      // Store the verified email only when Google verified it and no other duck already uses it.
+      let email = player.user.email
+      if (googleProfile.email && googleProfile.emailVerified) {
+        const emailOwner = await prisma.user.findFirst({
+          where: { email: googleProfile.email, id: { not: player.userId } },
+          select: { id: true },
+        })
+        if (!emailOwner) email = googleProfile.email
+      }
+
+      let updatedUser
+      try {
+        updatedUser = await prisma.user.update({
+          where: { id: player.userId },
+          data: {
+            googleId: googleProfile.googleId,
+            email,
+            avatarUrl: player.user.avatarUrl || googleProfile.picture || null,
+          },
+        })
+      } catch (error) {
+        if (isUniqueConstraintError(error)) return NextResponse.json({ error: ALREADY_LINKED }, { status: 409 })
+        throw error
+      }
 
       return NextResponse.json({
         ok: true,
@@ -133,29 +187,17 @@ export async function POST(request: Request) {
     }
 
     // ==========================================
-    // ACTION: LOGIN
+    // ACTION: LOGIN (by verified Google id only)
     // ==========================================
-    const matchedUser = await findUserByGoogle(googleProfile.googleId, googleProfile.email)
+    const matchedUser = await findUserByGoogle(googleProfile)
 
     if (!matchedUser) {
       return NextResponse.json(
         {
-          error: `Tài khoản Google (${googleProfile.email ?? googleProfile.googleId}) chưa được liên kết với chú Dzịt nào. Hãy đăng nhập bằng Secret Link một lần rồi bấm "Liên kết Google" để kích hoạt nhé!`,
-          email: googleProfile.email,
+          error: 'Tài khoản Google này chưa được liên kết với chú Dzịt nào. Hãy đăng nhập bằng Secret Link một lần rồi bấm "Liên kết Google" để kích hoạt nhé!',
         },
         { status: 404 },
       )
-    }
-
-    // Update googleId or avatar if missing
-    if (!matchedUser.googleId && googleProfile.googleId) {
-      await prisma.user.update({
-        where: { id: matchedUser.id },
-        data: {
-          googleId: googleProfile.googleId,
-          avatarUrl: matchedUser.avatarUrl || googleProfile.picture || null,
-        },
-      })
     }
 
     // Get active season token

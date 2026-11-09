@@ -15,6 +15,7 @@ import { awardDragonOrbForRace } from '@/lib/dragon/awardDragonOrb'
 import { applyDragonScaleProtection } from '@/lib/dragon/applyDragonScaleProtection'
 import { DRAGON_ITEM_TYPE_SCALE } from '@/lib/dragon/utils'
 import { DRAGON_ITEM_LABEL, DRAGON_ITEM_SUBTITLE } from '@/lib/dragon/naming'
+import { isAdminSecret } from '@/lib/auth/admin-secret'
 
 interface ParticipantInput {
   userId: number
@@ -214,8 +215,11 @@ export async function POST(request: Request) {
       secret?: string
     }
 
-    const secretKey = process.env.RACE_SECRET_KEY
-    const isTestMode = test === true && secret === secretKey
+    // Legacy v2 race: retired in favour of Season 3, so every start now needs the admin secret.
+    if (!isAdminSecret(secret)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    const isTestMode = test === true
 
     if (!isTestMode) {
       const { day, startOfVNDayUTC, endOfVNDayUTC } = getVietnamDayWindow()

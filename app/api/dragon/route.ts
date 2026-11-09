@@ -4,6 +4,7 @@ import { getDragonInventory, getDragonState } from '@/lib/dragon/getDragonState'
 import { acceptDragonTradeOffer, cancelDragonTradeOffer, createDragonTradeOffer } from '@/lib/dragon/tradeDragonOrb'
 import { resolveDragonSummon } from '@/lib/dragon/resolveDragonSummon'
 import { equipDragonScaleForRace, unequipDragonScaleForRace } from '@/lib/dragon/dragonScale'
+import { isAdminRequest } from '@/lib/auth/admin-secret'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -30,6 +31,9 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
+    if (!isAdminRequest(request, body)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     const action = body?.action
 
     if (action === 'createTrade') {

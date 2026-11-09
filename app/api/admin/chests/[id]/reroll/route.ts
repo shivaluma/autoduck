@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { isInventoryChestEffect, rollChest } from '@/lib/mystery-chest'
+import { isAdminSecret } from '@/lib/auth/admin-secret'
 
 function checkSecret(req: Request) {
   const { searchParams } = new URL(req.url)
   const secret = searchParams.get('secret')
-  return secret === process.env.RACE_SECRET_KEY
+  return isAdminSecret(secret)
 }
 
 export async function POST(

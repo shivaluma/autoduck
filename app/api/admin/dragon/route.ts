@@ -5,10 +5,11 @@ import { adminGrantDragonScale, unequipDragonScaleForRace } from '@/lib/dragon/d
 import { cancelDragonTradeOffer } from '@/lib/dragon/tradeDragonOrb'
 import { resolveDragonSummon } from '@/lib/dragon/resolveDragonSummon'
 import { adminSetDragonWeekStar } from '@/lib/dragon/weekSchedule'
+import { isAdminSecret } from '@/lib/auth/admin-secret'
 
 function checkSecret(req: Request) {
   const { searchParams } = new URL(req.url)
-  return searchParams.get('secret') === process.env.RACE_SECRET_KEY
+  return isAdminSecret(searchParams.get('secret'))
 }
 
 export async function GET(request: Request) {

@@ -1,144 +1,106 @@
+import { createRemoteJWKSet, errors, jwtVerify, type JWTVerifyGetKey } from 'jose'
 import { prisma } from '@/lib/db'
 
 export interface GoogleProfile {
+  /** Google's stable account id (`sub`). Always a verified value. */
   googleId: string
   email: string | null
-  name?: string | null
-  picture?: string | null
-  emailVerified?: boolean
+  name: string | null
+  picture: string | null
+  emailVerified: boolean
+}
+
+/** Google's signing keys couldn't be fetched; the credential was not judged either way. */
+export class GoogleKeysUnavailableError extends Error {}
+
+const GOOGLE_ISSUERS = ['https://accounts.google.com', 'accounts.google.com']
+const GOOGLE_JWKS_URL = new URL('https://www.googleapis.com/oauth2/v3/certs')
+
+let googleJwks: JWTVerifyGetKey | null = null
+function defaultGoogleJwks() {
+  googleJwks ??= createRemoteJWKSet(GOOGLE_JWKS_URL)
+  return googleJwks
 }
 
 /**
- * Safely decodes a Google ID Token (JWT) payload without external dependencies.
+ * OAuth client ids that Google ID tokens may be issued for. The browser button prefers
+ * NEXT_PUBLIC_GOOGLE_CLIENT_ID and the server GOOGLE_CLIENT_ID, so both are accepted.
+ * Empty when Google sign-in isn't configured.
  */
-export function decodeGoogleJwt(jwtString: string): GoogleProfile | null {
+export function googleAudiences(): string[] {
+  const ids = [process.env.GOOGLE_CLIENT_ID, process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID]
+    .map((id) => id?.trim() ?? '')
+    .filter(Boolean)
+  return [...new Set(ids)]
+}
+
+/** Client id the browser should use for the sign-in button. */
+export function googleClientId() {
+  return googleAudiences().at(-1) ?? ''
+}
+
+/**
+ * True when jose failed to obtain Google's keys (network, non-200, bad JSON) rather than judging
+ * the token. Token problems are JOSEError subclasses; key-download failures are JWKSTimeout,
+ * JWKSInvalid, the base JOSEError itself, or a non-jose error from fetch.
+ */
+function isKeyFetchFailure(error: unknown) {
+  if (error instanceof errors.JWKSTimeout || error instanceof errors.JWKSInvalid) return true
+  if (!(error instanceof errors.JOSEError)) return true
+  return error.constructor === errors.JOSEError
+}
+
+/**
+ * Verifies a Google Identity Services ID token (the `credential` from the sign-in button):
+ * RS256 signature against Google's published keys, issuer, audience = one of our client ids,
+ * and expiry. Returns null for anything that doesn't verify. Never accepts raw emails, JSON,
+ * or unsigned tokens. Throws GoogleKeysUnavailableError when Google's keys can't be fetched.
+ */
+export async function verifyGoogleIdToken(
+  credential: string,
+  options: { audience: string | string[]; keys?: JWTVerifyGetKey },
+): Promise<GoogleProfile | null> {
+  const token = typeof credential === 'string' ? credential.trim() : ''
+  const audience = (Array.isArray(options.audience) ? options.audience : [options.audience]).filter(Boolean)
+  if (!token || audience.length === 0) return null
   try {
-    const parts = jwtString.trim().split('.')
-    if (parts.length < 2) return null
-    const payloadBase64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
-    const padded = payloadBase64.padEnd(payloadBase64.length + ((4 - (payloadBase64.length % 4)) % 4), '=')
-    const jsonStr = Buffer.from(padded, 'base64').toString('utf8')
-    const parsed = JSON.parse(jsonStr) as Record<string, unknown>
-
-    const googleId = typeof parsed.sub === 'string' ? parsed.sub : ''
-    const email = typeof parsed.email === 'string' ? parsed.email.toLowerCase().trim() : null
-    const name = typeof parsed.name === 'string' ? parsed.name : null
-    const picture = typeof parsed.picture === 'string' ? parsed.picture : null
-    const emailVerified = parsed.email_verified === true || parsed.email_verified === 'true'
-
-    if (!googleId && !email) return null
-
+    const { payload } = await jwtVerify(token, options.keys ?? defaultGoogleJwks(), {
+      issuer: GOOGLE_ISSUERS,
+      audience,
+      algorithms: ['RS256'],
+      requiredClaims: ['sub', 'exp', 'iat'],
+      clockTolerance: 30,
+    })
+    if (typeof payload.sub !== 'string' || !payload.sub) return null
+    // When present, azp must be one of our clients too.
+    if (payload.azp !== undefined && (typeof payload.azp !== 'string' || !audience.includes(payload.azp))) return null
+    const email = typeof payload.email === 'string' ? payload.email.toLowerCase().trim() || null : null
     return {
-      googleId: googleId || email!,
+      googleId: payload.sub,
       email,
-      name,
-      picture,
-      emailVerified,
+      name: typeof payload.name === 'string' ? payload.name : null,
+      picture: typeof payload.picture === 'string' ? payload.picture : null,
+      emailVerified: payload.email_verified === true,
     }
-  } catch {
+  } catch (error) {
+    if (isKeyFetchFailure(error)) {
+      throw new GoogleKeysUnavailableError(error instanceof Error ? error.message : String(error), { cause: error })
+    }
     return null
   }
 }
 
 /**
- * Verifies and parses a Google token or payload.
- * Attempts tokeninfo validation if online, or falls back to decoded payload.
+ * True when a stored googleId is a real Google account id. Real `sub` values are numeric strings;
+ * older versions of this endpoint stored emails or other unverified strings, which don't count.
  */
-export async function verifyGoogleToken(tokenOrJwt: string): Promise<GoogleProfile | null> {
-  const clean = tokenOrJwt.trim()
-  if (!clean) return null
-
-  // If already JSON string (e.g. from tests or mock dev)
-  if (clean.startsWith('{') && clean.endsWith('}')) {
-    try {
-      const parsed = JSON.parse(clean) as Record<string, unknown>
-      const googleId = typeof parsed.googleId === 'string' ? parsed.googleId : typeof parsed.sub === 'string' ? parsed.sub : ''
-      const email = typeof parsed.email === 'string' ? parsed.email.toLowerCase().trim() : null
-      if (googleId || email) {
-        return {
-          googleId: googleId || email!,
-          email,
-          name: typeof parsed.name === 'string' ? parsed.name : null,
-          picture: typeof parsed.picture === 'string' ? parsed.picture : null,
-          emailVerified: true,
-        }
-      }
-    } catch {
-      // Continue to JWT decode
-    }
-  }
-
-  // If standard JWT string (header.payload.signature)
-  if (clean.split('.').length >= 3) {
-    const decoded = decodeGoogleJwt(clean)
-
-    // Optionally verify with Google's tokeninfo endpoint if possible
-    try {
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 3000)
-      const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(clean)}`, {
-        signal: controller.signal,
-      })
-      clearTimeout(timeoutId)
-      if (res.ok) {
-        const data = (await res.json()) as Record<string, unknown>
-        const sub = typeof data.sub === 'string' ? data.sub : ''
-        const email = typeof data.email === 'string' ? data.email.toLowerCase().trim() : null
-        if (sub || email) {
-          return {
-            googleId: sub || email!,
-            email,
-            name: typeof data.name === 'string' ? data.name : decoded?.name ?? null,
-            picture: typeof data.picture === 'string' ? data.picture : decoded?.picture ?? null,
-            emailVerified: data.email_verified === 'true' || data.email_verified === true,
-          }
-        }
-      }
-    } catch {
-      // In offline / dev mode, fallback to safely decoded JWT
-    }
-
-    return decoded
-  }
-
-  // If plain email or googleId passed directly in dev / test
-  if (clean.includes('@')) {
-    return {
-      googleId: clean.toLowerCase(),
-      email: clean.toLowerCase(),
-      emailVerified: true,
-    }
-  }
-
-  return {
-    googleId: clean,
-    email: null,
-    emailVerified: false,
-  }
+export function hasGoogleLink(googleId: string | null | undefined): boolean {
+  return typeof googleId === 'string' && /^\d+$/.test(googleId)
 }
 
-/**
- * Finds user by googleId or email
- */
-export async function findUserByGoogle(googleId?: string | null, email?: string | null) {
-  if (!googleId && !email) return null
-
-  if (googleId) {
-    const userByGoogleId = await prisma.user.findFirst({
-      where: { googleId },
-    })
-    if (userByGoogleId) return userByGoogleId
-  }
-
-  if (email) {
-    const cleanEmail = email.toLowerCase().trim()
-    const userByEmail = await prisma.user.findFirst({
-      where: { email: cleanEmail },
-    })
-    if (userByEmail) return userByEmail
-  }
-
-  return null
+/** Finds the user linked to a verified Google account. Matches by Google id only, never by email. */
+export async function findUserByGoogle(profile: GoogleProfile) {
+  return prisma.user.findFirst({ where: { googleId: profile.googleId } })
 }
 
 /**

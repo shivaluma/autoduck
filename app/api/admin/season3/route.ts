@@ -15,11 +15,10 @@ import { createRaceSeed } from '@/lib/racing/audit'
 import { selectAutoLoadout, serializeItemIds } from '@/lib/racing/loadout'
 import { createRaceRng } from '@/packages/race-core/src'
 import { grantStarterCosmetics } from '@/lib/cosmetics/inventory'
+import { isAdminRequest } from '@/lib/auth/admin-secret'
 
 function authorized(request: Request, body?: { secret?: string }) {
-  const urlSecret = new URL(request.url).searchParams.get('secret')
-  const headerSecret = request.headers.get('x-race-secret')
-  return urlSecret === process.env.RACE_SECRET_KEY || headerSecret === process.env.RACE_SECRET_KEY || body?.secret === process.env.RACE_SECRET_KEY
+  return isAdminRequest(request, body)
 }
 
 function fail(error: string, status = 400) {

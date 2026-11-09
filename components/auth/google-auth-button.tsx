@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useRef, useState } from 'react'
 
 declare global {
   interface Window {
@@ -49,72 +49,14 @@ export function GoogleAuthButton({
   onError,
   className = '',
 }: GoogleAuthButtonProps) {
-  const [clientId, setClientId] = useState<string>('')
+  const [clientId, setClientId] = useState<string>(() => process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '')
   const [loading, setLoading] = useState(false)
   const [unbinding, setUnbinding] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
-  const [showDirectInput, setShowDirectInput] = useState(false)
-  const [directEmail, setDirectEmail] = useState('')
+  const [gsiRendered, setGsiRendered] = useState(false)
   const buttonRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    // 1. Fetch client ID if not in public env
-    const envClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''
-    if (envClientId) {
-      setClientId(envClientId)
-    } else {
-      void fetch('/api/auth/google')
-        .then((res) => res.json())
-        .then((data: { clientId?: string }) => {
-          if (data.clientId) setClientId(data.clientId)
-        })
-        .catch(() => {})
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!clientId) return
-
-    // 2. Dynamically load Google GSI script
-    if (!window.google?.accounts?.id) {
-      const script = document.createElement('script')
-      script.src = 'https://accounts.google.com/gsi/client'
-      script.async = true
-      script.defer = true
-      script.onload = () => {
-        initGoogleButton()
-      }
-      document.body.appendChild(script)
-    } else {
-      initGoogleButton()
-    }
-
-    function initGoogleButton() {
-      if (!window.google?.accounts?.id || !buttonRef.current) return
-
-      try {
-        window.google.accounts.id.initialize({
-          client_id: clientId,
-          callback: (response: { credential: string }) => {
-            void handleCredential(response.credential)
-          },
-        })
-
-        buttonRef.current.innerHTML = ''
-        window.google.accounts.id.renderButton(buttonRef.current, {
-          theme: 'filled_black',
-          size: 'large',
-          text: mode === 'bind' ? 'continue_with' : 'signin_with',
-          shape: 'pill',
-          width: '100%',
-        })
-      } catch (err) {
-        console.error('Failed to render Google button:', err)
-      }
-    }
-  }, [clientId, mode, token])
-
-  async function handleCredential(credentialOrEmail: string) {
+  async function handleCredential(credential: string) {
     setLoading(true)
     setErrorMsg('')
 
@@ -126,7 +68,7 @@ export function GoogleAuthButton({
         body: JSON.stringify({
           action: mode,
           token: mode === 'bind' ? token : undefined,
-          credential: credentialOrEmail,
+          credential,
         }),
       })
 
@@ -150,7 +92,6 @@ export function GoogleAuthButton({
         user: data.user,
         message: data.message,
       })
-      setShowDirectInput(false)
     } catch {
       const message = 'Lỗi kết nối máy chủ khi xác thực Google.'
       setErrorMsg(message)
@@ -159,6 +100,68 @@ export function GoogleAuthButton({
       setLoading(false)
     }
   }
+
+  const onGoogleCredential = useEffectEvent((credential: string) => {
+    void handleCredential(credential)
+  })
+
+  useEffect(() => {
+    // 1. Fetch client ID if not in public env
+    if (!clientId) {
+      void fetch('/api/auth/google')
+        .then((res) => res.json())
+        .then((data: { clientId?: string }) => {
+          if (data.clientId) setClientId(data.clientId)
+        })
+        .catch(() => {})
+    }
+  }, [clientId])
+
+  useEffect(() => {
+    if (!clientId) return
+
+    // 2. Dynamically load Google GSI script
+    if (!window.google?.accounts?.id) {
+      const script = document.createElement('script')
+      script.src = 'https://accounts.google.com/gsi/client'
+      script.async = true
+      script.defer = true
+      script.onload = () => {
+        initGoogleButton()
+      }
+      script.onerror = () => {
+        setErrorMsg('Không tải được Google Sign-In. Hãy dùng Secret Link để đăng nhập.')
+      }
+      document.body.appendChild(script)
+    } else {
+      initGoogleButton()
+    }
+
+    function initGoogleButton() {
+      if (!window.google?.accounts?.id || !buttonRef.current) return
+
+      try {
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: (response: { credential: string }) => {
+            onGoogleCredential(response.credential)
+          },
+        })
+
+        buttonRef.current.innerHTML = ''
+        window.google.accounts.id.renderButton(buttonRef.current, {
+          theme: 'filled_black',
+          size: 'large',
+          text: mode === 'bind' ? 'continue_with' : 'signin_with',
+          shape: 'pill',
+          width: '100%',
+        })
+        setGsiRendered(true)
+      } catch (err) {
+        console.error('Failed to render Google button:', err)
+      }
+    }
+  }, [clientId, mode, token])
 
   async function handleUnbind() {
     if (!token) return
@@ -184,12 +187,6 @@ export function GoogleAuthButton({
     } finally {
       setUnbinding(false)
     }
-  }
-
-  function handleDirectSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!directEmail.trim()) return
-    void handleCredential(directEmail.trim())
   }
 
   return (
@@ -221,7 +218,7 @@ export function GoogleAuthButton({
           <div className="flex justify-center" ref={buttonRef} />
 
           {/* Fallback button if GSI element isn't rendered or direct action */}
-          {(!clientId || !buttonRef.current?.hasChildNodes()) && (
+          {(!clientId || !gsiRendered) && (
             <div className="space-y-2">
               <button
                 type="button"
@@ -230,7 +227,9 @@ export function GoogleAuthButton({
                   if (window.google?.accounts?.id && clientId) {
                     window.google.accounts.id.prompt()
                   } else {
-                    setShowDirectInput(!showDirectInput)
+                    setErrorMsg(clientId
+                      ? 'Google Sign-In chưa tải xong. Hãy thử lại hoặc dùng Secret Link.'
+                      : 'Đăng nhập Google chưa được cấu hình. Hãy dùng Secret Link.')
                   }
                 }}
                 className="flex w-full items-center justify-center gap-3 rounded-xl border-2 border-white/20 bg-white/10 px-4 py-3 font-display text-sm font-bold text-white transition hover:border-[var(--color-ggd-neon-green)] hover:bg-white/15"
@@ -262,24 +261,6 @@ export function GoogleAuthButton({
                 </span>
               </button>
 
-              {showDirectInput && (
-                <form onSubmit={handleDirectSubmit} className="flex gap-2 pt-1">
-                  <input
-                    type="email"
-                    placeholder="Nhập Gmail để liên kết/đăng nhập"
-                    value={directEmail}
-                    onChange={(e) => setDirectEmail(e.target.value)}
-                    className="min-w-0 flex-1 rounded-lg border border-white/20 bg-black/40 px-3 py-2 text-xs text-white placeholder:text-white/30 focus:border-[var(--color-ggd-neon-green)] focus:outline-none"
-                  />
-                  <button
-                    type="submit"
-                    disabled={!directEmail.trim() || loading}
-                    className="rounded-lg bg-[var(--color-ggd-neon-green)] px-3 py-2 text-xs font-black text-[var(--color-ggd-outline)] disabled:opacity-40"
-                  >
-                    Xác nhận
-                  </button>
-                </form>
-              )}
             </div>
           )}
         </>

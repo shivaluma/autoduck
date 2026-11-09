@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { COSMETIC_BY_ID, COSMETIC_CATALOG } from '@/lib/cosmetics/catalog'
 import { applyQuackTransaction } from '@/lib/cosmetics/economy'
+import { isAdminSecret } from '@/lib/auth/admin-secret'
 
 function authorized(request: Request) {
-  return request.headers.get('x-race-secret') === process.env.RACE_SECRET_KEY
+  return isAdminSecret(request.headers.get('x-race-secret'))
 }
 
 export async function GET(request: Request) {

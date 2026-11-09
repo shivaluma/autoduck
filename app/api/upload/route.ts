@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { uploadBufferToR2 } from '@/lib/r2-upload'
+import { isAdminSecret } from '@/lib/auth/admin-secret'
 
 export async function POST(req: NextRequest) {
   try {
-    const formData = await req.formData()
-    const file = formData.get('file') as File
-    const secret = req.nextUrl.searchParams.get('secret')
-
-    if (!secret || secret !== process.env.RACE_SECRET_KEY) {
+    if (!isAdminSecret(req.nextUrl.searchParams.get('secret'))) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const formData = await req.formData()
+    const file = formData.get('file') as File
 
     if (!file) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
