@@ -656,6 +656,16 @@ header: { raceId, tickRate, firstTick:0, lastTick, stride:1, trackVersion, track
 §5               reserved (candidate event stream; only if Q10 = yes)
 ```
 
+**As built on main in 0.4 (`0c355e4`, see `docs/replay-tracks.md`), the Rust mirror must match these three choices:**
+
+- **§4 ROCKETS has a retarget list:** each rocket also stores `u16 r | (u32 tick, u8 tgt) × r`.
+- **`tickCount` is the last tick:** samples = `tickCount + 1`, counting from tick 0.
+- **Unfinished progress is capped:** a duck that hasn't finished has its quantised progress capped at `2^24 − 1`.
+
+Prisma's `db push` gives `RaceReplayTrack.raceId` the DDL `INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT`. The D14 verifier must expect this.
+
+TS and Rust tracks of the same race are not required to be byte-identical. TS quantises lateral through an f32 intermediate.
+
 **Rules:**
 
 - `byteSha256` and the ETag are sha256 of the **uncompressed** payload.
