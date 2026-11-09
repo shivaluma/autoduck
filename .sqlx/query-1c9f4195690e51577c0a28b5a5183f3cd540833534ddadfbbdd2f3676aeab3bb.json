@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT \"predictorPlayerId\" AS \"predictor_player_id!: i64\",\n                          \"predictorUserId\" AS \"predictor_user_id!: i64\",\n                          \"targetUserId\" AS \"target_user_id!: i64\",\n                          \"pointsAwarded\" AS \"points_awarded!: i64\"\n                   FROM \"SeasonPrediction\" WHERE \"weekId\" IN (?)",
+  "describe": {
+    "columns": [
+      {
+        "name": "predictor_player_id!: i64",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "SeasonPrediction",
+            "name": "predictorPlayerId"
+          }
+        }
+      },
+      {
+        "name": "predictor_user_id!: i64",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "SeasonPrediction",
+            "name": "predictorUserId"
+          }
+        }
+      },
+      {
+        "name": "target_user_id!: i64",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "SeasonPrediction",
+            "name": "targetUserId"
+          }
+        }
+      },
+      {
+        "name": "points_awarded!: i64",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "SeasonPrediction",
+            "name": "pointsAwarded"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "1c9f4195690e51577c0a28b5a5183f3cd540833534ddadfbbdd2f3676aeab3bb"
+}

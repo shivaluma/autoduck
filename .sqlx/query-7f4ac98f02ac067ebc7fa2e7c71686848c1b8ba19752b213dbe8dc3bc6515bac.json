@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT \"id\" AS \"id!: i64\", \"engineState\" AS \"engineState!\", \"isTest\" AS \"isTest!: bool\"\n           FROM \"Race\"\n           WHERE \"status\" IN ('pending', 'running')\n             AND CAST(substr(\"engineVersion\", 1, instr(\"engineVersion\", '.') - 1) AS INT) >= 2\n           ORDER BY \"id\"",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!: i64",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "Race",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "engineState!",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "Race",
+            "name": "engineState"
+          }
+        }
+      },
+      {
+        "name": "isTest!: bool",
+        "ordinal": 2,
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "Race",
+            "name": "isTest"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "7f4ac98f02ac067ebc7fa2e7c71686848c1b8ba19752b213dbe8dc3bc6515bac"
+}

@@ -1,0 +1,182 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT \"userId\" AS \"user_id!: i64\", \"usedShield\" AS \"used_shield!: bool\",\n                  \"shieldId\" AS \"shield_id?: i64\",\n                  \"shieldChargesAtStart\" AS \"shield_charges_at_start?: i64\",\n                  \"shieldBackfired\" AS \"shield_backfired!: bool\",\n                  \"initialRank\" AS \"initial_rank?: i64\", \"gotScar\" AS \"got_scar!: bool\",\n                  \"isClone\" AS \"is_clone!: bool\", \"cloneOfUserId\" AS \"clone_of_user_id?: i64\",\n                  \"cloneIndex\" AS \"clone_index?: i64\", \"displayName\" AS \"display_name?\",\n                  \"chestEffect\" AS \"chest_effect?\",\n                  \"chestTargetUserId\" AS \"chest_target_user_id?: i64\",\n                  \"dragonEligible\" AS \"dragon_eligible!: bool\"\n           FROM \"RaceParticipant\" WHERE \"raceId\" = ? ORDER BY \"initialRank\" ASC",
+  "describe": {
+    "columns": [
+      {
+        "name": "user_id!: i64",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "RaceParticipant",
+            "name": "userId"
+          }
+        }
+      },
+      {
+        "name": "used_shield!: bool",
+        "ordinal": 1,
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "RaceParticipant",
+            "name": "usedShield"
+          }
+        }
+      },
+      {
+        "name": "shield_id?: i64",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "RaceParticipant",
+            "name": "shieldId"
+          }
+        }
+      },
+      {
+        "name": "shield_charges_at_start?: i64",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "RaceParticipant",
+            "name": "shieldChargesAtStart"
+          }
+        }
+      },
+      {
+        "name": "shield_backfired!: bool",
+        "ordinal": 4,
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "RaceParticipant",
+            "name": "shieldBackfired"
+          }
+        }
+      },
+      {
+        "name": "initial_rank?: i64",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "RaceParticipant",
+            "name": "initialRank"
+          }
+        }
+      },
+      {
+        "name": "got_scar!: bool",
+        "ordinal": 6,
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "RaceParticipant",
+            "name": "gotScar"
+          }
+        }
+      },
+      {
+        "name": "is_clone!: bool",
+        "ordinal": 7,
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "RaceParticipant",
+            "name": "isClone"
+          }
+        }
+      },
+      {
+        "name": "clone_of_user_id?: i64",
+        "ordinal": 8,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "RaceParticipant",
+            "name": "cloneOfUserId"
+          }
+        }
+      },
+      {
+        "name": "clone_index?: i64",
+        "ordinal": 9,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "RaceParticipant",
+            "name": "cloneIndex"
+          }
+        }
+      },
+      {
+        "name": "display_name?",
+        "ordinal": 10,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "RaceParticipant",
+            "name": "displayName"
+          }
+        }
+      },
+      {
+        "name": "chest_effect?",
+        "ordinal": 11,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "RaceParticipant",
+            "name": "chestEffect"
+          }
+        }
+      },
+      {
+        "name": "chest_target_user_id?: i64",
+        "ordinal": 12,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "RaceParticipant",
+            "name": "chestTargetUserId"
+          }
+        }
+      },
+      {
+        "name": "dragon_eligible!: bool",
+        "ordinal": 13,
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "RaceParticipant",
+            "name": "dragonEligible"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      false,
+      true,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "c35498503af063e8d797ab23d1e262d229ae5af94f740261e57aab102c059826"
+}

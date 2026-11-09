@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT \"id\" AS \"id!: i64\", \"seasonId\" AS \"season_id!: i64\", \"userId\" AS \"user_id!: i64\"\n           FROM \"SeasonPlayer\" WHERE \"accessToken\" = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!: i64",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "SeasonPlayer",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "season_id!: i64",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "SeasonPlayer",
+            "name": "seasonId"
+          }
+        }
+      },
+      {
+        "name": "user_id!: i64",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "SeasonPlayer",
+            "name": "userId"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e6a8b2262898c2dea5dc1feecf84493a2d926e0bbc9f92e1d3127193893bd53f"
+}

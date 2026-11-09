@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO \"Shield\" (\"ownerId\", \"earnedAt\", \"charges\", \"weeksUnused\", \"status\")\n                       VALUES (?, ?, 5, 0, 'active')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "e1a111b522da777533da90f905981affb0b7bbd599c84a5ae9ff6642fff61070"
+}

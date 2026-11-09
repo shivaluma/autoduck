@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT \"avatarUrl\" AS \"avatar_url\" FROM \"User\" WHERE \"id\" = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "avatar_url",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "User",
+            "name": "avatarUrl"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "2a1954b11cf156fc29ba2e9084bb27d0b5422a997e19143e3cdaae93970445fb"
+}

@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT \"byteSha256\" AS \"byte_sha256?\", \"bytes\" AS \"bytes?: Vec<u8>\"\n           FROM \"RaceReplayTrack\" WHERE \"raceId\" = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "byte_sha256?",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "RaceReplayTrack",
+            "name": "byteSha256"
+          }
+        }
+      },
+      {
+        "name": "bytes?: Vec<u8>",
+        "ordinal": 1,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "RaceReplayTrack",
+            "name": "bytes"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      true
+    ]
+  },
+  "hash": "bc1913f7ab2a1bdcfac5b5619719f53f376afd60658cd56a3651e2ee12d4e82b"
+}

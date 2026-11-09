@@ -1,0 +1,86 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT \"type\" AS \"event_type!\", \"tick\" AS \"tick!: i64\",\n                  \"timestampWithinRaceMs\" AS \"timestamp_within_race_ms!: f64\",\n                  \"sourcePlayerId\" AS \"source_player_id?\", \"targetPlayerId\" AS \"target_player_id?\",\n                  \"metadataJson\" AS \"metadata_json!\"\n           FROM \"RaceEngineEvent\" WHERE \"raceId\" = ? ORDER BY \"tick\" ASC, \"id\" ASC",
+  "describe": {
+    "columns": [
+      {
+        "name": "event_type!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "RaceEngineEvent",
+            "name": "type"
+          }
+        }
+      },
+      {
+        "name": "tick!: i64",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "RaceEngineEvent",
+            "name": "tick"
+          }
+        }
+      },
+      {
+        "name": "timestamp_within_race_ms!: f64",
+        "ordinal": 2,
+        "type_info": "Float",
+        "origin": {
+          "Table": {
+            "table": "RaceEngineEvent",
+            "name": "timestampWithinRaceMs"
+          }
+        }
+      },
+      {
+        "name": "source_player_id?",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "RaceEngineEvent",
+            "name": "sourcePlayerId"
+          }
+        }
+      },
+      {
+        "name": "target_player_id?",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "RaceEngineEvent",
+            "name": "targetPlayerId"
+          }
+        }
+      },
+      {
+        "name": "metadata_json!",
+        "ordinal": 5,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "RaceEngineEvent",
+            "name": "metadataJson"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "f8fe20ad92bf45cbcfc4e44e297d58cb452987232277653a6b61b915fbcf5e3d"
+}

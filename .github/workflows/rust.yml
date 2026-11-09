@@ -27,6 +27,8 @@ permissions:
   contents: read
 
 env:
+  # sqlx query macros read the committed .sqlx/ metadata, never a live DB.
+  SQLX_OFFLINE: "true"
   CARGO_TERM_COLOR: always
   CARGO_INCREMENTAL: 0
   RUST_BACKTRACE: short
@@ -199,11 +201,11 @@ jobs:
           cargo tree --locked -p race-core -e features -i serde_json > core-native.txt
           cargo tree --locked -p race-core -e features -i serde_json --target wasm32-unknown-unknown > core-wasm.txt
           diff -u core-native.txt core-wasm.txt
-          # 2. Unified native graph (today race-cli; from Phase 3 use
-          #    `-p autoduck-server`) vs the shipped wasm graph. Features that
-          #    change float parsing must agree; std/alloc-only differences are
+          # 2. The server's native graph (D4(e): `-p autoduck-server`, which adds
+          #    std/raw_value/preserve_order) vs the shipped wasm graph. Features
+          #    that change float parsing must agree; other differences are
           #    reported but allowed.
-          cargo tree --locked --workspace -e features -i serde_json | features > native-features.txt
+          cargo tree --locked -p autoduck-server -e features -i serde_json | features > native-features.txt
           cargo tree --locked -p race-wasm -e features -i serde_json --target wasm32-unknown-unknown | features > wasm-features.txt
           echo "native: $(tr '\n' ' ' < native-features.txt)"
           echo "wasm:   $(tr '\n' ' ' < wasm-features.txt)"

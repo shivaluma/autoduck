@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT \"timestamp\" AS \"timestamp!: i64\", \"content\" AS \"content!\"\n           FROM \"CommentaryLog\" WHERE \"raceId\" = ? ORDER BY \"timestamp\" ASC",
+  "describe": {
+    "columns": [
+      {
+        "name": "timestamp!: i64",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "CommentaryLog",
+            "name": "timestamp"
+          }
+        }
+      },
+      {
+        "name": "content!",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "CommentaryLog",
+            "name": "content"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "dc2a08312873e309b957119265fa6aa2c89a7fe928cd8d97c5ea87426ac8ad3a"
+}
