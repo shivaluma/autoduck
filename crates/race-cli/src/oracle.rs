@@ -268,6 +268,7 @@ mod engine {
         result_from_simulation, step_simulation,
     };
     use race_protocol::config::{RaceConfigInput, ResolvedRaceConfig};
+    use race_protocol::events::RecordedWildItemInput;
 
     /// The Rust trace of one case, in the shape of a TS record.
     pub struct RustTrace {
@@ -280,6 +281,16 @@ mod engine {
         pub events_sha256: [u8; 32],
         pub event_count: u64,
         pub standings: Option<Vec<(String, u32, String)>>,
+        /// The engine panicked while stepping this tick (message). Every
+        /// vector above then covers only the ticks before it.
+        pub panic: Option<(u32, String)>,
+    }
+
+    /// A parsed corpus line: the resolved config plus the manual wild-item
+    /// inputs of an `items` corpus (`oracleManualInputs`).
+    pub struct CaseInput {
+        pub config: ResolvedRaceConfig,
+        pub manual_inputs: Vec<RecordedWildItemInput>,
     }
 
     /// How the Rust engine runs a case: the oracle host's maths plus the
@@ -304,16 +315,33 @@ mod engine {
     }
 
     /// Parses and resolves a corpus line exactly as the TS oracle does
-    /// (Zod defaults, `resolve_ts_compat`).
-    pub fn parse_config(line: &str) -> Result<ResolvedRaceConfig, String> {
+    /// (Zod defaults, `resolve_ts_compat`). The `oracleManualInputs` key
+    /// (`parseCaseLine` in `dump-trace.ts`) is not part of the config; serde
+    /// ignores it there and it is read separately.
+    pub fn parse_config(line: &str) -> Result<CaseInput, String> {
+        #[derive(serde::Deserialize)]
+        struct Extras {
+            #[serde(default, rename = "oracleManualInputs")]
+            manual_inputs: Vec<RecordedWildItemInput>,
+        }
         let input: RaceConfigInput =
             serde_json::from_str(line).map_err(|error| format!("parse: {error}"))?;
-        input
+        let extras: Extras = serde_json::from_str(line)
+            .map_err(|error| format!("parse oracleManualInputs: {error}"))?;
+        let config = input
             .resolve_ts_compat()
-            .map_err(|error| format!("resolve: {error:?}"))
+            .map_err(|error| format!("resolve: {error:?}"))?;
+        Ok(CaseInput {
+            config,
+            manual_inputs: extras.manual_inputs,
+        })
     }
 
-    pub fn new_sim(config: ResolvedRaceConfig, setup: RunSetup) -> Simulation {
+    pub fn new_sim(input: CaseInput, setup: RunSetup) -> Simulation {
+        let CaseInput {
+            config,
+            manual_inputs,
+        } = input;
         let ai_ablation = if setup.ai_ablation_all {
             config
                 .players
@@ -328,6 +356,7 @@ mod engine {
             SimOptions {
                 record_events: true,
                 ai_ablation,
+                manual_inputs,
                 math: EngineMath::oracle(setup.host),
                 ..SimOptions::default()
             },
@@ -358,12 +387,9 @@ mod engine {
     }
 
     /// Runs one case like `runCase` in `dump-trace.ts`.
-    pub fn run(
-        config: ResolvedRaceConfig,
-        setup: RunSetup,
-        max_ticks: u32,
-    ) -> Result<RustTrace, String> {
-        let mut sim = new_sim(config, setup);
+    pub fn run(input: CaseInput, setup: RunSetup, max_ticks: u32) -> Result<RustTrace, String> {
+        use std::panic::{AssertUnwindSafe, catch_unwind};
+        let mut sim = new_sim(input, setup);
         let mut digest = EventsDigest::new();
         let mut cursor = 0usize;
         let mut chain = HashFold::new();
@@ -384,12 +410,20 @@ mod engine {
             Ok(hash)
         };
         let mut last = observe(&sim, &mut cursor, &mut digest)?;
+        let mut panic = None;
         while !sim.finished && sim.tick < max_ticks {
-            step_simulation(&mut sim, None);
+            let tick = sim.tick + 1;
+            if let Err(payload) = catch_unwind(AssertUnwindSafe(|| step_simulation(&mut sim, None)))
+            {
+                panic = Some((tick, panic_message(payload.as_ref())));
+                break;
+            }
             last = observe(&sim, &mut cursor, &mut digest)?;
         }
-        motion.push_final(sim.tick, &last);
-        let standings = if sim.finished {
+        if panic.is_none() {
+            motion.push_final(sim.tick, &last);
+        }
+        let standings = if sim.finished && panic.is_none() {
             let result = result_from_simulation(&sim).map_err(|error| error.to_string())?;
             Some(
                 result
@@ -418,19 +452,33 @@ mod engine {
             events_sha256: digest.finish(),
             event_count,
             standings,
+            panic,
         })
+    }
+
+    /// The text of a panic payload.
+    pub fn panic_message(payload: &(dyn std::any::Any + Send)) -> String {
+        payload
+            .downcast_ref::<String>()
+            .cloned()
+            .or_else(|| {
+                payload
+                    .downcast_ref::<&str>()
+                    .map(|text| (*text).to_owned())
+            })
+            .unwrap_or_else(|| "non-string panic".to_owned())
     }
 
     /// `--full-at` lines for the Rust side (field names as `FullDump` in
     /// `dump-trace.ts`, f64 as raw big-endian bits).
     pub fn full_dump(
         case: u64,
-        config: ResolvedRaceConfig,
+        input: CaseInput,
         setup: RunSetup,
         max_ticks: u32,
         mut write: impl FnMut(String) -> Result<()>,
     ) -> Result<()> {
-        let mut sim = new_sim(config, setup);
+        let mut sim = new_sim(input, setup);
         let mut digest = EventsDigest::new();
         let mut cursor = 0usize;
         loop {
@@ -450,7 +498,16 @@ mod engine {
             if sim.finished || sim.tick >= max_ticks {
                 return Ok(());
             }
-            step_simulation(&mut sim, None);
+            let tick = sim.tick + 1;
+            if let Err(payload) = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                step_simulation(&mut sim, None);
+            })) {
+                eprintln!(
+                    "oracle diff: the Rust engine panicked at tick {tick}: {}",
+                    panic_message(payload.as_ref())
+                );
+                return Ok(());
+            }
         }
     }
 
@@ -557,8 +614,8 @@ fn compare_case(record: &TraceRecord, line: Option<&str>, host: engine::RunSetup
     let Some(line) = line else {
         return CaseOutcome::RustConfig(format!("case {} is not in the corpus", record.case));
     };
-    let config = match engine::parse_config(line) {
-        Ok(config) => config,
+    let input = match engine::parse_config(line) {
+        Ok(input) => input,
         Err(error) if !record.ok => return CaseOutcome::BothFailed(error),
         Err(error) => return CaseOutcome::RustConfig(error),
     };
@@ -571,23 +628,45 @@ fn compare_case(record: &TraceRecord, line: Option<&str>, host: engine::RunSetup
         ));
     }
     let max_ticks = record.max_ticks;
-    let run = catch_unwind(AssertUnwindSafe(|| engine::run(config, host, max_ticks)));
+    let run = catch_unwind(AssertUnwindSafe(|| engine::run(input, host, max_ticks)));
     let trace = match run {
         Ok(Ok(trace)) => trace,
         Ok(Err(error)) => return CaseOutcome::RustPanic(format!("error: {error}")),
-        Err(payload) => {
-            let message = payload
-                .downcast_ref::<String>()
-                .cloned()
-                .or_else(|| {
-                    payload
-                        .downcast_ref::<&str>()
-                        .map(|text| (*text).to_owned())
-                })
-                .unwrap_or_else(|| "non-string panic".to_owned());
-            return CaseOutcome::RustPanic(message);
-        }
+        Err(payload) => return CaseOutcome::RustPanic(engine::panic_message(payload.as_ref())),
     };
+
+    if let Some((tick, message)) = &trace.panic {
+        // Compare the ticks observed before the panic: a divergence there
+        // is a real (earlier) bug; otherwise report the panic.
+        let width = record.hash_prefix_bytes * 2;
+        let ts_states = record.tick_hashes.get(..trace.tick_hashes.len() * width);
+        let event_width = record.event_prefix_bytes * 2;
+        let ts_events = record
+            .tick_event_hashes
+            .get(..trace.tick_event_hashes.len() * event_width);
+        let first_state_tick = first_mismatch(
+            ts_states.unwrap_or(&record.tick_hashes),
+            width,
+            record.hash_prefix_bytes,
+            &trace.tick_hashes,
+        );
+        let first_event_tick = first_mismatch(
+            ts_events.unwrap_or(&record.tick_event_hashes),
+            event_width,
+            record.event_prefix_bytes,
+            &trace.tick_event_hashes,
+        );
+        if first_state_tick.is_some() || first_event_tick.is_some() {
+            return CaseOutcome::Diverged(Divergence {
+                first_state_tick,
+                first_event_tick,
+                details: vec![format!("then Rust panicked at tick {tick}: {message}")],
+            });
+        }
+        return CaseOutcome::RustPanic(format!(
+            "{message} (at tick {tick}; ticks 0..{tick} exact)"
+        ));
+    }
 
     let first_state_tick = first_mismatch(
         &record.tick_hashes,
@@ -756,12 +835,12 @@ fn run_engine_diff(
         let line = corpus
             .get(usize::try_from(case)?)
             .ok_or_else(|| anyhow!("case {case} is not in the corpus"))?;
-        let config = engine::parse_config(line).map_err(|error| anyhow!(error))?;
-        let max_ticks = race_core::config::maximum_ticks(config.tick_rate);
+        let input = engine::parse_config(line).map_err(|error| anyhow!(error))?;
+        let max_ticks = race_core::config::maximum_ticks(input.config.tick_rate);
         let mut file = std::io::BufWriter::new(
             std::fs::File::create(&out).with_context(|| format!("create {out}"))?,
         );
-        engine::full_dump(case, config, host, max_ticks, |line| {
+        engine::full_dump(case, input, host, max_ticks, |line| {
             writeln!(file, "{line}")?;
             Ok(())
         })?;

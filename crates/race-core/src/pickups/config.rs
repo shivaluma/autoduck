@@ -149,24 +149,15 @@ pub mod pickup_balance {
 
 /// `POSITION_CATEGORY_WEIGHTS` (`pickups/config.ts:85-89`): per rank bucket,
 /// `(category, weight)` in TS object-literal order (which is the iteration
-/// order `Object.entries` gives).
+/// order `Object.entries` gives, and so the order `weightedCategory` walks).
 pub mod position_category_weights {
-    pub const FRONT: [(&str, u32); 4] = [
-        ("DEFENSE", 34),
-        ("ATTACK", 26),
-        ("UTILITY", 22),
-        ("MOBILITY", 18),
-    ];
-    pub const MIDDLE: [(&str, u32); 4] = [
-        ("ATTACK", 34),
-        ("MOBILITY", 28),
-        ("DEFENSE", 20),
-        ("UTILITY", 18),
-    ];
-    pub const BACK: [(&str, u32); 4] = [
-        ("MOBILITY", 44),
-        ("ATTACK", 30),
-        ("DEFENSE", 16),
-        ("UTILITY", 10),
-    ];
+    use crate::pickups::catalog::WildItemCategory;
+    use crate::pickups::catalog::WildItemCategory::{Attack, Defense, Mobility, Utility};
+
+    pub const FRONT: [(WildItemCategory, u32); 4] =
+        [(Defense, 34), (Attack, 26), (Utility, 22), (Mobility, 18)];
+    pub const MIDDLE: [(WildItemCategory, u32); 4] =
+        [(Attack, 34), (Mobility, 28), (Defense, 20), (Utility, 18)];
+    pub const BACK: [(WildItemCategory, u32); 4] =
+        [(Mobility, 44), (Attack, 30), (Defense, 16), (Utility, 10)];
 }

@@ -39,7 +39,7 @@ import {
   stepSimulation,
   type RaceSimulationState,
 } from '../../packages/race-core/src'
-import { raceConfigSchema, type RaceEvent } from '../../packages/race-protocol/src'
+import { raceConfigSchema, type RaceEvent, type RecordedWildItemInput } from '../../packages/race-protocol/src'
 
 export const STATE_HASH_VERSION = 'sh1'
 export const EVENT_DIGEST_VERSION = 'ev-jcs-v1'
@@ -277,15 +277,31 @@ interface CaseRecord {
   [key: string]: unknown
 }
 
+/**
+ * Key of the manual wild-item inputs in a corpus line (`race-cli corpus gen
+ * --profile items`). It is not part of `raceConfigSchema`: it is stripped
+ * here and passed as `SimulationOptions.manualInputs`, verbatim (replay
+ * semantics, no `queueWildItemInput` clamping).
+ */
+export const MANUAL_INPUTS_KEY = 'oracleManualInputs'
+
+export function parseCaseLine(line: string) {
+  const raw = JSON.parse(line) as Record<string, unknown>
+  const manualInputs = raw[MANUAL_INPUTS_KEY] as RecordedWildItemInput[] | undefined
+  delete raw[MANUAL_INPUTS_KEY]
+  return { config: raceConfigSchema.parse(raw), manualInputs }
+}
+
 function runCase(caseIndex: number, line: string, options: CaseOptions): CaseRecord {
   let stage = 'parse'
   let tick = 0
   try {
-    const config = raceConfigSchema.parse(JSON.parse(line))
+    const { config, manualInputs } = parseCaseLine(line)
     stage = 'create'
     const state = createSimulation(config, {
       recordEvents: true,
       ...(options.aiAblation === 'all' ? { aiAblationPlayerIds: config.players.map((player) => player.playerId) } : {}),
+      ...(manualInputs ? { manualInputs } : {}),
     })
     const maxTicks = options.maxTicks ?? CORE_BALANCE.maximumDurationSeconds * config.tickRate
 

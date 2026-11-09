@@ -14,12 +14,12 @@ use race_protocol::snapshot::{HazardSnapshot, PickupSnapshot};
 
 use super::collect::{collect_pickups, resolve_hazards};
 use super::config::pickup_balance;
-use super::spawn::{create_golden_box, create_hazards, create_regular_boxes};
+use super::spawn::{create_golden_box, create_hazards, create_regular_boxes, sort_pickups};
 use super::state::PickupRaceState;
 use super::wild::{WildUseInput, WildUseMode, activate_wild_item};
 use crate::items::{ItemRaceState, apply_item_boost};
 use crate::js_sort::v8_sort_by;
-use crate::math::{cmp_f64_js, js_max_of};
+use crate::math::js_max_of;
 use crate::sim::{DuckPhysicsState, Emitter, WildLootOverride, id_cmp};
 use crate::track::RaceTrack;
 
@@ -38,9 +38,7 @@ pub fn create_pickup_race_state(
         Some(golden) => {
             let mut all = regular;
             all.push(golden);
-            v8_sort_by(&mut all, |left, right| {
-                cmp_f64_js(left.progress, right.progress).then_with(|| id_cmp(&left.id, &right.id))
-            });
+            sort_pickups(&mut all);
             all
         }
         None => regular,

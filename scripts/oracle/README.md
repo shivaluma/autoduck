@@ -20,6 +20,10 @@ cargo run -p race-cli --release -- corpus gen --count 2000 --out corpus.jsonl
 #    (same lobbies, seeds, ghosts and Chaos as `full`); trace it with
 #    `dump-trace.ts --ai-ablation all`
 cargo run -p race-cli --release -- corpus gen --count 300 --profile core --out core.jsonl
+#    Phase 2 stage "items+pickups": every player gets a loadout (all 46
+#    combos), the golden box is forced in some cases and some cases carry
+#    manual wild-item inputs (`oracleManualInputs`, below)
+cargo run -p race-cli --release -- corpus gen --count 400 --profile items --out items.jsonl
 
 # 2. Check every line against the TS raceConfigSchema (no simulation)
 node --import tsx scripts/oracle/dump-trace.ts --corpus corpus.jsonl --validate-only
@@ -78,6 +82,14 @@ Float knobs (`itemTuning.*`, `pickupConfig.goldenBoxProbability`,
 - the exact decimal expansion of the midpoint between two adjacent doubles,
   which only a correctly rounding parser resolves (ties to even);
 - short values in unusual forms (`1e0`, `125e-2`, `1E-1`, `1.0`).
+
+An `items` corpus line may carry one extra top-level key,
+`oracleManualInputs`: an array of `RecordedWildItemInput`s (`{raceId,
+playerId, wildItemInstanceId, action: "USE", clientActionId,
+authoritativeTick}`). It is not part of `raceConfigSchema`: `dump-trace.ts`
+(`parseCaseLine`) strips it and passes it verbatim as
+`SimulationOptions.manualInputs`, and `race-cli oracle diff` does the same with
+`SimOptions::manual_inputs`.
 
 Integer fields are always plain integers. TS would also accept `3.0` for
 `regularPickupCap`, but no producer writes that.

@@ -4,14 +4,19 @@
 //! `itemActiveEffects` and `snapshotItemWorld`. Boost gates use the same
 //! boost runtime as prep items, so these are exact ports, not stubs.
 //!
-//! Projectiles (`updateRockets` / `updateBananas`) are in
-//! [`super::projectiles`] (M2).
+//! M2 adds the item actions the auto-use executor and the box items call:
+//! `breakActiveSpeedBoost`, `grantMomentumSteal`, `tryActivateBubbleShield`,
+//! `armBubbleReflex`, `triggerMenacePredatorRush`, `tryApplyPrepSpeedBoost`,
+//! `slipstreamReady` and `firePrepRocket`. Projectiles in flight
+//! (`updateRockets` / `updateBananas`) are in [`super::projectiles`].
 
 use alloc::vec::Vec;
 
 use race_protocol::config::ResolvedRaceConfig;
 use race_protocol::events::{
-    EventKind, GuardDefenseItem, GuardSurgeMeta, IncomingAttack, SpeedBoostEndedMeta,
+    AutoUseReason, BoostBreakSource, BoostBrokenMeta, BubbleShieldActivatedMeta, EventKind,
+    GuardDefenseItem, GuardSurgeMeta, IncomingAttack, MomentumStolenMeta, PredatorRushStartedMeta,
+    PredatorRushTrigger, ReflexThreat, RocketFiredMeta, SpeedBoostEndedMeta, SpeedBoostQueuedMeta,
     SpeedBoostStartedMeta,
 };
 use race_protocol::ids::{PlayerId, RaceItemId};
@@ -20,11 +25,13 @@ use race_protocol::snapshot::{ActiveEffect, BananaSnapshot, ProjectileKind, Rock
 use super::classes::{LoadoutCombo, loadout_combo_label};
 use super::config::item_balance;
 use super::projectiles::{update_bananas, update_rockets};
-use super::state::{DuckItemRuntime, ItemRaceState, ProjectileSource};
+use super::state::{
+    DuckItemRuntime, ItemRaceState, ProjectileSource, QueuedSpeedBoost, RocketRuntime,
+};
 use crate::ghost::ghost_player_ids_from_config;
 use crate::js_sort::v8_sort_by;
 use crate::math::{cmp_f64_js, js_max, js_min, js_round};
-use crate::sim::{DuckPhysicsState, Emitter, IdMap, id_cmp};
+use crate::sim::{DuckPhysicsState, Emitter, IdMap, id_cmp, id_set_has};
 
 /// `Math.round(seconds * tickRate)` as a tick count.
 #[must_use]
@@ -220,6 +227,540 @@ pub fn speed_end_event(item_id: RaceItemId, meta: SpeedBoostEndedMeta) -> Option
         RaceItemId::PaddleBurst => Some(EventKind::PaddleBurstEnded(meta)),
         _ => None,
     }
+}
+
+/// `SPEED_BOOST_PRIORITY[itemId]` (`items/engine.ts:68-72`): `None` is the
+/// TS `undefined` (every non-speed item).
+#[must_use]
+pub const fn speed_boost_priority(item_id: RaceItemId) -> Option<u32> {
+    match item_id {
+        RaceItemId::Nitro => Some(3),
+        RaceItemId::DraftFin => Some(2),
+        RaceItemId::PaddleBurst => Some(1),
+        _ => None,
+    }
+}
+
+/// `Math.round(x)` of a value that is always an integer-valued tick count
+/// in range (`Math.round(remainingBoostTicks * breakRatio)`).
+fn js_round_ticks(x: f64) -> i64 {
+    let rounded = js_round(x);
+    assert!(
+        rounded.is_finite() && rounded.abs() < 9.0e15,
+        "tick count out of range"
+    );
+    // Integral and well inside i64 (checked above).
+    #[allow(clippy::cast_possible_truncation)]
+    let ticks = rounded as i64;
+    ticks
+}
+
+/// Resets the speed boost after a break (`items/engine.ts:262-267,283-288`).
+fn clear_speed_boost(runtime: &mut DuckItemRuntime, tick: i64) {
+    runtime.boost_multiplier = 1.0;
+    runtime.boost_until_tick = tick;
+    runtime.boost_started_at_tick = tick;
+    runtime.active_speed_item_id = None;
+    runtime.queued_speed_boost = None;
+    runtime.continuous_boost_started_at_tick = None;
+}
+
+/// `breakActiveSpeedBoost(runtime, tick, tickRate, emit, sourcePlayerId,
+/// targetPlayerId, breakSource)` (`items/engine.ts:236-300`).
+///
+/// `source_player_id` is the attacker and `target_player_id` the victim; the
+/// events go out the other way round (source = victim, target = attacker),
+/// as in TS. Returns the broken speed item (only on a full break).
+///
+/// Quirks kept: a partial break (`MINI_ROCKET` / `WILD_BANANA`) that happens
+/// to end the boost still returns `null`; the broken `*_ENDED` event's
+/// `consumedSeconds` is the *remaining* time.
+#[allow(clippy::too_many_arguments)]
+pub fn break_active_speed_boost(
+    runtime: &mut DuckItemRuntime,
+    tick: u32,
+    tick_rate: u32,
+    emit: &mut Emitter<'_>,
+    source_player_id: &PlayerId,
+    target_player_id: &PlayerId,
+    break_source: BoostBreakSource,
+) -> Option<RaceItemId> {
+    let tick_i = i64::from(tick);
+    if tick_i >= runtime.boost_until_tick || runtime.boost_multiplier <= 1.0 {
+        return None;
+    }
+    // Wild horns cannot break Nitro; the prep Horn can (ATTACK > SPEED).
+    if break_source == BoostBreakSource::WildHorn
+        && runtime.active_speed_item_id == Some(RaceItemId::Nitro)
+    {
+        return None;
+    }
+    let ended = runtime.active_speed_item_id;
+    let boost_multiplier = runtime.boost_multiplier;
+    let remaining_boost_ticks = (runtime.boost_until_tick - tick_i).max(0);
+    let original_boost_ticks = (runtime.boost_until_tick - runtime.boost_started_at_tick).max(1);
+
+    if matches!(
+        break_source,
+        BoostBreakSource::MiniRocket | BoostBreakSource::WildBanana
+    ) {
+        let break_ratio = if break_source == BoostBreakSource::MiniRocket {
+            0.50
+        } else {
+            0.30
+        };
+        let lost_ticks = js_round_ticks(ticks_f64(remaining_boost_ticks) * break_ratio);
+        runtime.boost_until_tick -= lost_ticks;
+        let fraction_denied = ticks_f64(lost_ticks) / ticks_f64(original_boost_ticks);
+        let fully_ended = runtime.boost_until_tick <= tick_i;
+        if fully_ended {
+            clear_speed_boost(runtime, tick_i);
+            if let Some(ended) = ended {
+                emit_broken_speed_end(
+                    ended,
+                    remaining_boost_ticks,
+                    tick_rate,
+                    target_player_id,
+                    source_player_id,
+                    emit,
+                );
+            }
+        }
+        emit.emit(
+            EventKind::BoostBroken(BoostBrokenMeta {
+                ended_item: if fully_ended { ended } else { None },
+                remaining_boost_ticks: tick_u32(lost_ticks),
+                original_boost_ticks: tick_u32(original_boost_ticks),
+                boost_multiplier,
+                fraction_denied,
+                break_source,
+                partial: !fully_ended,
+                auto_reason: None,
+            }),
+            Some(target_player_id),
+            Some(source_player_id),
+        );
+        return None;
+    }
+
+    let fraction_denied = ticks_f64(remaining_boost_ticks) / ticks_f64(original_boost_ticks);
+    clear_speed_boost(runtime, tick_i);
+    if let Some(ended) = ended {
+        emit_broken_speed_end(
+            ended,
+            remaining_boost_ticks,
+            tick_rate,
+            target_player_id,
+            source_player_id,
+            emit,
+        );
+    }
+    emit.emit(
+        EventKind::BoostBroken(BoostBrokenMeta {
+            ended_item: ended,
+            remaining_boost_ticks: tick_u32(remaining_boost_ticks),
+            original_boost_ticks: tick_u32(original_boost_ticks),
+            boost_multiplier,
+            fraction_denied,
+            break_source,
+            partial: false,
+            auto_reason: None,
+        }),
+        Some(target_player_id),
+        Some(source_player_id),
+    );
+    // `ended && SPEED_BOOST_PRIORITY[ended] ? ended : null`.
+    ended.filter(|&item| speed_boost_priority(item).is_some())
+}
+
+/// `if (ended && SPEED_END_EVENT[ended]) emit(SPEED_END_EVENT[ended], victim,
+/// attacker, {broken: true, consumedSeconds: remainingBoostTicks / tickRate})`.
+fn emit_broken_speed_end(
+    ended: RaceItemId,
+    remaining_boost_ticks: i64,
+    tick_rate: u32,
+    victim: &PlayerId,
+    attacker: &PlayerId,
+    emit: &mut Emitter<'_>,
+) {
+    let meta = SpeedBoostEndedMeta {
+        broken: Some(true),
+        consumed_seconds: ticks_f64(remaining_boost_ticks) / f64::from(tick_rate),
+        natural: None,
+        start_progress: None,
+        start_rank: None,
+        auto_reason: None,
+    };
+    if let Some(kind) = speed_end_event(ended, meta) {
+        emit.emit(kind, Some(victim), Some(attacker));
+    }
+}
+
+/// `grantMomentumSteal(itemState, attackerPlayerId, victimPlayerId,
+/// brokenItemId, tick, tickRate, emit, stealSeconds, stealMultiplier)`
+/// (`items/engine.ts:303-324`). ATTACK > SPEED.
+///
+/// The TS defaults are `ITEM_BALANCE.counter.momentumStealSeconds` /
+/// `momentumStealMultiplier` (see [`MOMENTUM_STEAL_DEFAULTS`]); callers pass
+/// them explicitly.
+#[allow(clippy::too_many_arguments)]
+pub fn grant_momentum_steal(
+    item_state: &mut ItemRaceState,
+    attacker_player_id: &PlayerId,
+    victim_player_id: &PlayerId,
+    broken_item_id: Option<RaceItemId>,
+    tick: u32,
+    tick_rate: u32,
+    emit: &mut Emitter<'_>,
+    steal_seconds: f64,
+    steal_multiplier: f64,
+) -> bool {
+    // Momentum carriers: any duck whose speed boost was just broken, or a
+    // SPEED-class duck still holding its Nitro.
+    let victim_holds_nitro = item_state
+        .by_player
+        .get(victim_player_id.as_str())
+        .is_some_and(|victim| victim.has_unused(RaceItemId::Nitro));
+    let stolen_item_id = match broken_item_id {
+        Some(item) => item,
+        None if victim_holds_nitro => RaceItemId::Nitro,
+        None => return false,
+    };
+    if !item_state
+        .by_player
+        .contains_key(attacker_player_id.as_str())
+    {
+        return false;
+    }
+    if broken_item_id.is_none()
+        && let Some(victim) = item_state.by_player.get_mut(victim_player_id.as_str())
+    {
+        victim.speed_drained = true;
+    }
+    let attacker = item_state.runtime_mut(attacker_player_id.as_str());
+    apply_item_boost(attacker, steal_multiplier, steal_seconds, tick, tick_rate);
+    emit.emit(
+        EventKind::MomentumStolen(MomentumStolenMeta {
+            stolen_item_id,
+            broke_boost: broken_item_id.is_some(),
+            multiplier: steal_multiplier,
+            duration_seconds: steal_seconds,
+            auto_reason: None,
+        }),
+        Some(attacker_player_id),
+        Some(victim_player_id),
+    );
+    true
+}
+
+/// The default `(stealSeconds, stealMultiplier)` of `grantMomentumSteal`.
+pub const MOMENTUM_STEAL_DEFAULTS: (f64, f64) = (
+    item_balance::counter::MOMENTUM_STEAL_SECONDS,
+    item_balance::counter::MOMENTUM_STEAL_MULTIPLIER,
+);
+
+/// `tryActivateBubbleShield(runtime, playerId, tick, tickRate, emit,
+/// metadata)` (`items/engine.ts:344-362`). Every TS caller passes
+/// `{autoReason}` (plus `reflex` from [`arm_bubble_reflex`]).
+pub fn try_activate_bubble_shield(
+    runtime: &mut DuckItemRuntime,
+    player_id: &PlayerId,
+    tick: u32,
+    tick_rate: u32,
+    emit: &mut Emitter<'_>,
+    auto_reason: AutoUseReason,
+    reflex: Option<ReflexThreat>,
+) -> bool {
+    if !runtime.item_ids.contains(&RaceItemId::BubbleShield)
+        || runtime.used(RaceItemId::BubbleShield)
+    {
+        return false;
+    }
+    runtime.mark_used(RaceItemId::BubbleShield);
+    runtime.bubble_available = true;
+    runtime.bubble_until_tick = i64::from(tick)
+        + seconds_to_ticks(item_balance::bubble_shield::DURATION_SECONDS, tick_rate);
+    emit.emit(
+        EventKind::BubbleShieldActivated(BubbleShieldActivatedMeta {
+            duration_seconds: item_balance::bubble_shield::DURATION_SECONDS,
+            until_tick: tick_u32(runtime.bubble_until_tick),
+            auto_reason,
+            reflex,
+        }),
+        Some(player_id),
+        None,
+    );
+    true
+}
+
+/// `armBubbleReflex` (`items/engine.ts:365-369`): a packed Bubble Shield
+/// snaps up on the first incoming prep rocket/banana unless its owner is
+/// silenced (or item-immune). Box attacks only meet a raised bubble.
+pub fn arm_bubble_reflex(
+    runtime: &mut DuckItemRuntime,
+    player_id: &PlayerId,
+    tick: u32,
+    tick_rate: u32,
+    emit: &mut Emitter<'_>,
+    threat: ReflexThreat,
+) {
+    let tick_i = i64::from(tick);
+    if tick_i < runtime.item_immunity_until_tick || tick_i < runtime.silenced_until_tick {
+        return;
+    }
+    if runtime.bubble_available && tick_i < runtime.bubble_until_tick {
+        return;
+    }
+    try_activate_bubble_shield(
+        runtime,
+        player_id,
+        tick,
+        tick_rate,
+        emit,
+        AutoUseReason::ReactiveDefense,
+        Some(threat),
+    );
+}
+
+/// `triggerMenacePredatorRush(itemState, attackerPlayerId, tick, tickRate,
+/// emit, trigger)` (`items/engine.ts:371-388`).
+pub fn trigger_menace_predator_rush(
+    item_state: &mut ItemRaceState,
+    attacker_player_id: &PlayerId,
+    tick: u32,
+    tick_rate: u32,
+    emit: &mut Emitter<'_>,
+    trigger: PredatorRushTrigger,
+) {
+    let Some(runtime) = item_state.by_player.get_mut(attacker_player_id.as_str()) else {
+        return;
+    };
+    if runtime.loadout_combo != Some(LoadoutCombo::Menace) {
+        return;
+    }
+    apply_item_boost(
+        runtime,
+        item_balance::menace::PREDATOR_RUSH_MULTIPLIER,
+        item_balance::menace::PREDATOR_RUSH_DURATION_SECONDS,
+        tick,
+        tick_rate,
+    );
+    emit.emit(
+        EventKind::PredatorRushStarted(PredatorRushStartedMeta {
+            trigger,
+            multiplier: item_balance::menace::PREDATOR_RUSH_MULTIPLIER,
+            duration_seconds: item_balance::menace::PREDATOR_RUSH_DURATION_SECONDS,
+            until_tick: tick_u32(runtime.boost_until_tick),
+        }),
+        Some(attacker_player_id),
+        None,
+    );
+}
+
+/// The caller `metadata` of `tryApplyPrepSpeedBoost`, spread into the
+/// `*_STARTED` event (`auto-use/execute.ts:38-63`): Nitro passes
+/// `{autoReason, startRank, startProgress}`, Draft Fin `{draftTarget,
+/// autoReason}` (`draftTarget` may be `null`), Paddle Burst `{autoReason}`.
+/// `None` keys are absent (TS: not in the object).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct SpeedStartExtras {
+    pub auto_reason: Option<AutoUseReason>,
+    pub draft_target: Option<Option<PlayerId>>,
+    pub start_rank: Option<u32>,
+    pub start_progress: Option<f64>,
+}
+
+/// `'applied' | 'queued' | 'ignored'`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PrepSpeedOutcome {
+    Applied,
+    Queued,
+    Ignored,
+}
+
+/// `tryApplyPrepSpeedBoost(runtime, duckId, itemId, multiplier,
+/// durationSeconds, tick, tickRate, emit, metadata)`
+/// (`items/engine.ts:390-437`).
+///
+/// Quirks kept: a non-speed item returns `Applied` without doing anything;
+/// a pending speed drain is consumed (and halves the duration) even when the
+/// boost is only queued or ignored, but `drained: true` reaches only the
+/// direct `*_STARTED` event; the queued boost keeps the shortened duration.
+#[allow(clippy::too_many_arguments)]
+pub fn try_apply_prep_speed_boost(
+    runtime: &mut DuckItemRuntime,
+    duck_id: &PlayerId,
+    item_id: RaceItemId,
+    multiplier: f64,
+    duration_seconds: f64,
+    tick: u32,
+    tick_rate: u32,
+    emit: &mut Emitter<'_>,
+    extras: SpeedStartExtras,
+) -> PrepSpeedOutcome {
+    if speed_boost_priority(item_id).is_none() {
+        // `SPEED_START_EVENT[itemId]` is undefined.
+        return PrepSpeedOutcome::Applied;
+    }
+    let mut duration_seconds = duration_seconds;
+    let mut drained = None;
+    if runtime.speed_drained {
+        runtime.speed_drained = false;
+        duration_seconds *= item_balance::counter::SPEED_DRAIN_DURATION_RATIO;
+        drained = Some(true);
+    }
+    let tick_i = i64::from(tick);
+    if tick_i < runtime.boost_until_tick && runtime.boost_multiplier > 1.0 {
+        let incoming = QueuedSpeedBoost {
+            multiplier,
+            duration_seconds,
+            item_id,
+        };
+        let incoming_priority = speed_boost_priority(item_id).unwrap_or(0);
+        let Some(existing) = runtime.queued_speed_boost else {
+            runtime.queued_speed_boost = Some(incoming);
+            emit.emit(
+                EventKind::SpeedBoostQueued(SpeedBoostQueuedMeta {
+                    item_id,
+                    duration_seconds,
+                    multiplier,
+                    replaced_previous: false,
+                    replaced_item_id: None,
+                }),
+                Some(duck_id),
+                None,
+            );
+            return PrepSpeedOutcome::Queued;
+        };
+        let existing_priority = speed_boost_priority(existing.item_id).unwrap_or(0);
+        if incoming_priority > existing_priority {
+            runtime.queued_speed_boost = Some(incoming);
+            emit.emit(
+                EventKind::SpeedBoostQueued(SpeedBoostQueuedMeta {
+                    item_id,
+                    duration_seconds,
+                    multiplier,
+                    replaced_previous: true,
+                    replaced_item_id: Some(existing.item_id),
+                }),
+                Some(duck_id),
+                None,
+            );
+            return PrepSpeedOutcome::Queued;
+        }
+        return PrepSpeedOutcome::Ignored;
+    }
+    runtime.continuous_boost_started_at_tick = Some(tick_i);
+    if item_id == RaceItemId::Nitro {
+        set_nitro_phases(runtime, tick_rate);
+        // `Number(metadata.startProgress)` of a number is the number.
+        if let Some(progress) = extras.start_progress {
+            runtime.nitro_start_progress = Some(progress);
+        }
+        if let Some(rank) = extras.start_rank {
+            runtime.nitro_start_rank = Some(rank);
+        }
+    }
+    apply_item_boost(runtime, multiplier, duration_seconds, tick, tick_rate);
+    runtime.active_speed_item_id = Some(item_id);
+    let meta = SpeedBoostStartedMeta {
+        until_tick: tick_u32(runtime.boost_until_tick),
+        duration_seconds,
+        multiplier,
+        queued: None,
+        draft_target: extras.draft_target,
+        auto_reason: extras.auto_reason,
+        start_rank: extras.start_rank,
+        start_progress: extras.start_progress,
+        drained,
+    };
+    if let Some(kind) = speed_start_event(item_id, meta) {
+        emit.emit(kind, Some(duck_id), None);
+    }
+    PrepSpeedOutcome::Applied
+}
+
+/// `slipstreamReady(runtime, tickRate, progress?)` (`items/engine.ts:509-518`).
+#[must_use]
+pub fn slipstream_ready(runtime: &DuckItemRuntime, tick_rate: u32, progress: Option<f64>) -> bool {
+    let mut hold_seconds = item_balance::draft_fin::HOLD_SECONDS;
+    if runtime.loadout_combo == Some(LoadoutCombo::SpeedDemon) {
+        hold_seconds *= 0.8;
+    }
+    if let Some(progress) = progress
+        && progress >= item_balance::auto_use::END_GAME_BURN_PROGRESS
+    {
+        hold_seconds = js_min(hold_seconds, 0.4);
+    }
+    runtime.draft_slipstream_ticks >= seconds_to_ticks(hold_seconds, tick_rate)
+}
+
+/// `firePrepRocket(itemState, source, targetPlayerId, tick, tickRate, emit,
+/// autoReason, metadata)` (`items/engine.ts:528-561`). `meta` is the whole
+/// `ROCKET_FIRED` metadata (`{autoReason, ...executeMetadata}`).
+///
+/// # Panics
+/// If the source duck has no item runtime (the TS `!`).
+#[allow(clippy::too_many_arguments)]
+pub fn fire_prep_rocket(
+    item_state: &mut ItemRaceState,
+    source_player_id: &PlayerId,
+    source_progress: f64,
+    target_player_id: &PlayerId,
+    tick: u32,
+    tick_rate: u32,
+    emit: &mut Emitter<'_>,
+    meta: RocketFiredMeta,
+) -> bool {
+    if item_state
+        .runtime(source_player_id.as_str())
+        .used(RaceItemId::HomingRocket)
+    {
+        return false;
+    }
+    if id_set_has(&item_state.ghost_player_ids, target_player_id.as_str()) {
+        return false;
+    }
+    if !item_state.by_player.contains_key(target_player_id.as_str()) {
+        return false;
+    }
+    let tick_i = i64::from(tick);
+    let id = next_object_id(item_state);
+    item_state.rockets.push(RocketRuntime {
+        id,
+        source_player_id: source_player_id.clone(),
+        target_player_id: target_player_id.clone(),
+        progress: source_progress,
+        spawned_at_tick: tick_i,
+        launch_at_tick: tick_i,
+        expires_at_tick: tick_i
+            + seconds_to_ticks(item_balance::rocket::LIFETIME_SECONDS, tick_rate),
+        kind: ProjectileSource::Prep,
+        speed_per_second: item_balance::rocket::PROJECTILE_SPEED,
+        hit_radius: item_balance::rocket::HIT_RADIUS,
+        slow_multiplier: item_state.tuning.rocket_slow_multiplier,
+        slow_duration_seconds: item_balance::rocket::SLOW_DURATION_SECONDS,
+        retargeted: false,
+    });
+    item_state
+        .runtime_mut(source_player_id.as_str())
+        .mark_used(RaceItemId::HomingRocket);
+    emit.emit(
+        EventKind::RocketFired(meta),
+        Some(source_player_id),
+        Some(target_player_id),
+    );
+    true
+}
+
+/// `itemState.nextObjectId++`.
+///
+/// # Panics
+/// If the id counter overflows `u32`.
+pub fn next_object_id(item_state: &mut ItemRaceState) -> u32 {
+    let id = item_state.next_object_id;
+    item_state.next_object_id = id.checked_add(1).expect("object id fits in u32");
+    id
 }
 
 /// `ITEM_BALANCE.counter.guardSurge[defenseItemId]`.

@@ -55,8 +55,9 @@ enum CorpusCommand {
         /// Root seed (decimal or 0x-hex); defaults to the fixed corpus seed.
         #[arg(long, value_parser = corpus::parse_seed, default_value_t = corpus::DEFAULT_ROOT_SEED)]
         seed: u64,
-        /// `full` (everything) or `core` (no loadouts, pickups or hazards;
-        /// run its oracle with `--ai-ablation all`).
+        /// `full` (everything), `core` (no loadouts, pickups or hazards;
+        /// run its oracle with `--ai-ablation all`) or `items` (every item
+        /// combo, forced golden boxes, manual wild-item inputs).
         #[arg(long, value_parser = corpus::Profile::parse, default_value = "full")]
         profile: corpus::Profile,
     },

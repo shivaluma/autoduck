@@ -1,25 +1,24 @@
 //! The auto-use AI: `packages/race-core/src/auto-use/*` (S3.15).
 //!
-//! # Hooks the core calls (M1 contract)
+//! | Rust | TS |
+//! |---|---|
+//! | [`create_duck_brains`], [`note_brain_event`], [`note_neighbours`] | `brain.ts` |
+//! | [`build_race_objective_context`] | `buildRaceObjectiveContext` (`objective.ts`) |
+//! | [`ChaosUtility`] | `chaos-utility.ts` (ranking memo as a plain field) |
+//! | [`director::read_race`] | `readRace` (`director.ts`), memo = `Simulation::director` |
+//! | [`evaluate`] | `evaluate.ts` |
+//! | [`execute`] | `execute.ts` |
+//! | [`tick_auto_use_execute`], [`tick_auto_use_decide`] | `arbiter.ts` |
 //!
-//! | Rust | TS | Status |
-//! |---|---|---|
-//! | [`create_duck_brains`] | `createDuckBrains` (`brain.ts:82`) | ported (`DUCK_TEMPERAMENT` needs it) |
-//! | [`note_brain_event`] | `noteBrainEvent` (`brain.ts:120`) | ported; `sim::Emitter::emit` calls it for every event, recorded or not |
-//! | [`build_race_objective_context`] | `buildRaceObjectiveContext` (`objective.ts:20`) | ported except the `ChaosUtility` internals (**M3**) |
-//! | [`tick_auto_use_execute`] | `tickAutoUseExecute` (`arbiter.ts:271`) | **M3** (exact no-op while no item is in play) |
-//! | [`tick_auto_use_decide`] | `tickAutoUseDecide` (`arbiter.ts:278`) | **M3** (exact no-op while no item is in play) |
-//! | [`director::read_race`] | `readRace` (`director.ts:27`) | ported, memo = `Simulation::director` |
-//!
-//! **Left for M3**: `evaluate.ts`, `execute.ts`, the rest of `arbiter.ts`,
-//! `chaos-utility.ts` (beyond the constructor). `Math.exp`/`Math.pow` go
-//! through `sim::EngineMath` (`emit.math`).
+//! `Math.exp`/`Math.pow` go through `sim::EngineMath` (`emit.math`).
 
 pub mod arbiter;
 pub mod brain;
 pub mod chaos_utility;
 pub mod config;
 pub mod director;
+pub mod evaluate;
+pub mod execute;
 pub mod objective;
 pub mod types;
 
