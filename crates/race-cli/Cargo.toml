@@ -11,6 +11,13 @@ license.workspace = true
 name = "race-cli"
 path = "src/main.rs"
 
+[features]
+default = []
+# `oracle meta` (and the Phase 2 oracle diff) need race-core's TS-compat
+# models. Opt-in so `cargo build --workspace` never unifies it into
+# ENGINE_BUILD_ID (review 1 MINOR 12).
+ts-compat = ["race-core/ts-compat"]
+
 [dependencies]
 race-core = { workspace = true, features = ["std"] }
 # `ts-compat` only adds `resolve_ts_compat` (oracle diff); it does not touch

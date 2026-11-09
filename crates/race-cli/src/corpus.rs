@@ -17,6 +17,16 @@
 //!   non-shortest decimals in exponent form, and exact binary midpoints that
 //!   only a correctly rounding parser resolves (ties-to-even).
 //!
+//! Profiles (`--profile`): `full` (the default, above), `core`, which
+//! keeps every draw of `full` but drops all loadouts and maps the pickup
+//! block to "omitted" or `{enabled:false, goldenBoxEnabled:false,
+//! hazardsEnabled:false}`, so the race
+//! exercises only core movement, lane AI, collisions, ranks, gates and the
+//! finish (Phase 2 stage "core"). Run its oracle with `--ai-ablation all`.
+//! `items` (Phase 2 stage "items+pickups") keeps the `full` draws and
+//! overlays loadouts covering every item combo, forced golden boxes and
+//! manual wild-item inputs ([`MANUAL_INPUTS_KEY`]).
+//!
 //! JSON is written by a tiny local writer so number text is emitted exactly
 //! as generated (serde_json would re-format it).
 
@@ -491,8 +501,57 @@ fn pick_distinct<'a>(rng: &mut SplitMix64, items: &[&'a str], count: usize) -> V
     pool
 }
 
-/// Generate case `index` as a JSON object plus its coverage facts.
+/// Which features a corpus exercises.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Profile {
+    /// Everything (`corpus-v1`).
+    Full,
+    /// No loadouts, no pickups and no hazards: core movement only. Same
+    /// draws as [`Profile::Full`], with those blocks replaced.
+    Core,
+    /// Phase 2 stage "items+pickups": the draws of [`Profile::Full`], then
+    /// an overlay from its own stream ([`items_overlay`]): every player gets
+    /// a loadout cycling through all 46 item combos (empty, 9 singles, 36
+    /// pairs in both orders, plus the occasional duplicate pair), the golden
+    /// box is forced in some pickup-enabled cases, and some cases carry
+    /// manual wild-item inputs (`oracleManualInputs`). Run its oracle with
+    /// `--ai-ablation all`.
+    Items,
+}
+
+impl Profile {
+    /// Parses `--profile`.
+    pub fn parse(text: &str) -> Result<Self, String> {
+        match text {
+            "full" => Ok(Self::Full),
+            "core" => Ok(Self::Core),
+            "items" => Ok(Self::Items),
+            other => Err(format!(
+                "unknown corpus profile {other:?} (full, core, items)"
+            )),
+        }
+    }
+
+    /// The `--profile` name.
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Full => "full",
+            Self::Core => "core",
+            Self::Items => "items",
+        }
+    }
+}
+
+/// Generate case `index` as a JSON object plus its coverage facts
+/// ([`Profile::Full`]).
+#[cfg(test)]
 pub fn generate_case(root_seed: u64, index: u64) -> (Json, CaseInfo) {
+    generate_case_profile(root_seed, index, Profile::Full)
+}
+
+/// Generate case `index` of `profile` as a JSON object plus its coverage
+/// facts.
+pub fn generate_case_profile(root_seed: u64, index: u64, profile: Profile) -> (Json, CaseInfo) {
     let mut rng = case_rng(root_seed, index);
     let chaos_slot = (index % 8) as usize;
     let lobby = 2 + ((index / 8) % 15) as usize;
@@ -562,6 +621,10 @@ pub fn generate_case(root_seed: u64, index: u64) -> (Json, CaseInfo) {
             ),
             ("source", Json::str(source)),
         ]));
+    }
+
+    if profile == Profile::Core {
+        loadouts.clear();
     }
 
     let mut config: Vec<(&'static str, Json)> = vec![
@@ -641,12 +704,40 @@ pub fn generate_case(root_seed: u64, index: u64) -> (Json, CaseInfo) {
         config.push(("itemTuning", Json::Obj(tuning)));
     }
 
-    let pickups = match rng.below(100) {
+    let pickup_roll = rng.below(100);
+    let pickups = match pickup_roll {
         0..25 => PickupMode::Omitted,
         25..35 => PickupMode::Disabled,
         35..60 => PickupMode::Production,
         _ => PickupMode::Randomized,
     };
+    if profile == Profile::Core {
+        // Omitted, or off with hazards and the golden box off too: with a
+        // block present, `hazardsEnabled` and `goldenBoxEnabled` default to
+        // true and neither is gated on `enabled` (`pickups/engine.ts:105-109,
+        // 151-153, 174-175`).
+        let pickups = if pickup_roll < 60 {
+            PickupMode::Omitted
+        } else {
+            let block: Vec<(&'static str, Json)> = vec![
+                ("enabled", Json::Bool(false)),
+                ("goldenBoxEnabled", Json::Bool(false)),
+                ("hazardsEnabled", Json::Bool(false)),
+            ];
+            config.push(("pickupConfig", Json::Obj(block)));
+            PickupMode::Disabled
+        };
+        return (
+            Json::Obj(config),
+            CaseInfo {
+                lobby,
+                chaos,
+                pickups,
+                ghosts,
+                floats,
+            },
+        );
+    }
     match pickups {
         PickupMode::Omitted => {}
         PickupMode::Disabled => {
@@ -710,16 +801,167 @@ pub fn generate_case(root_seed: u64, index: u64) -> (Json, CaseInfo) {
         }
     }
 
-    (
-        Json::Obj(config),
-        CaseInfo {
-            lobby,
-            chaos,
-            pickups,
-            ghosts,
-            floats,
-        },
-    )
+    let mut info = CaseInfo {
+        lobby,
+        chaos,
+        pickups,
+        ghosts,
+        floats,
+    };
+    if profile == Profile::Items {
+        items_overlay(root_seed, index, &ids, &mut config, &mut info);
+    }
+    (Json::Obj(config), info)
+}
+
+/// Key of the manual wild-item inputs in an `items` corpus line. It is not
+/// part of `raceConfigSchema`: `dump-trace.ts` and `oracle diff` strip it and
+/// pass it as `SimulationOptions.manualInputs`.
+pub const MANUAL_INPUTS_KEY: &str = "oracleManualInputs";
+
+/// Every loadout combo: empty, the 9 singles and the 36 unordered pairs.
+fn item_combos() -> Vec<Vec<&'static str>> {
+    let mut combos = vec![Vec::new()];
+    combos.extend(RACE_ITEMS.iter().map(|item| vec![*item]));
+    for (i, first) in RACE_ITEMS.iter().enumerate() {
+        for second in &RACE_ITEMS[i + 1..] {
+            combos.push(vec![*first, *second]);
+        }
+    }
+    combos
+}
+
+/// Pickup-zone centres of `river-01-v2` (`track.ts`), for aiming manual
+/// inputs near the ticks a duck holds a box from that zone.
+const PICKUP_ZONE_CENTERS: [f64; 4] = [0.2, 0.42, 0.64, 0.82];
+
+fn set_field(config: &mut Vec<(&'static str, Json)>, key: &'static str, value: Json) {
+    if let Some(slot) = config.iter_mut().find(|(name, _)| *name == key) {
+        slot.1 = value;
+    } else {
+        config.push((key, value));
+    }
+}
+
+fn get_field<'a>(config: &'a [(&'static str, Json)], key: &str) -> Option<&'a Json> {
+    config
+        .iter()
+        .find(|(name, _)| *name == key)
+        .map(|(_, value)| value)
+}
+
+/// The [`Profile::Items`] overlay. It draws from its own stream, so the
+/// base draws (players, seed, Chaos, pickups) stay those of `full`.
+fn items_overlay(
+    root_seed: u64,
+    index: u64,
+    ids: &[String],
+    config: &mut Vec<(&'static str, Json)>,
+    info: &mut CaseInfo,
+) {
+    let mut rng = case_rng(root_seed ^ 0x4954_454D_5321_0001, index);
+    let combos = item_combos();
+    let rotation = (index as usize).wrapping_mul(16);
+    let mut loadouts = Vec::new();
+    for (slot, id) in ids.iter().enumerate() {
+        let mut items = if rng.percent(5) {
+            let item = *rng.pick(&RACE_ITEMS);
+            vec![item, item]
+        } else {
+            combos[(rotation + slot) % combos.len()].clone()
+        };
+        if items.len() == 2 && rng.percent(50) {
+            items.swap(0, 1);
+        }
+        let source = if rng.percent(30) { "AUTO" } else { "PLAYER" };
+        loadouts.push(Json::Obj(vec![
+            ("playerId", Json::str(id.clone())),
+            (
+                "itemIds",
+                Json::Arr(items.into_iter().map(Json::str).collect()),
+            ),
+            ("source", Json::str(source)),
+        ]));
+    }
+    set_field(config, "loadouts", Json::Arr(loadouts));
+
+    // Pickups: keep `full`'s block; force the golden box in some enabled
+    // cases and sometimes turn auto wild items off so manual inputs find a
+    // held item.
+    let enabled = matches!(
+        info.pickups,
+        PickupMode::Production | PickupMode::Randomized
+    );
+    let mut auto_off = false;
+    if enabled
+        && let Some(Json::Obj(block)) = config
+            .iter_mut()
+            .find(|(name, _)| *name == "pickupConfig")
+            .map(|(_, value)| value)
+    {
+        if rng.percent(25) {
+            set_field(block, "goldenBoxEnabled", Json::Bool(true));
+            set_field(block, "forceGoldenBox", Json::Bool(true));
+        }
+        if rng.percent(20) {
+            set_field(block, "autoItemsEnabled", Json::Bool(false));
+            auto_off = true;
+        }
+    }
+    let manual = if enabled {
+        rng.percent(45)
+    } else {
+        rng.percent(5)
+    };
+    if !manual {
+        return;
+    }
+    let race_id = match get_field(config, "raceId") {
+        Some(Json::Str(id)) => id.clone(),
+        _ => unreachable!("raceId is always written"),
+    };
+    let count = rng.range_inclusive(1, if auto_off { 24 } else { 12 });
+    let mut inputs = Vec::new();
+    let mut last_tick = 1u64;
+    for _ in 0..count {
+        let player = rng.pick(ids).clone();
+        let zone = rng.below(4) as usize;
+        let instance = match rng.below(10) {
+            0 => format!("wild:{race_id}:bogus:{}", rng.below(100)),
+            1 => format!(
+                "wild:{race_id}:gold:pickup-zone-{}:z{}-a{}:{player}",
+                zone + 1,
+                zone + 1,
+                1 + rng.below(5)
+            ),
+            _ => format!(
+                "wild:{race_id}:box:pickup-zone-{}:z{}-a{}:{player}",
+                zone + 1,
+                zone + 1,
+                1 + rng.below(5)
+            ),
+        };
+        let tick = if rng.percent(20) {
+            last_tick
+        } else {
+            let base = (PICKUP_ZONE_CENTERS[zone] * 3400.0) as u64;
+            (base + rng.below(500)).max(1)
+        };
+        last_tick = tick;
+        let action_len = rng.range_inclusive(8, 24) as usize;
+        let action: String = (0..action_len)
+            .map(|_| char::from(*rng.pick(ID_ALPHABET)))
+            .collect();
+        inputs.push(Json::Obj(vec![
+            ("raceId", Json::str(race_id.clone())),
+            ("playerId", Json::str(player)),
+            ("wildItemInstanceId", Json::str(instance)),
+            ("action", Json::str("USE")),
+            ("clientActionId", Json::str(action)),
+            ("authoritativeTick", Json::int(tick)),
+        ]));
+    }
+    config.push((MANUAL_INPUTS_KEY, Json::Arr(inputs)));
 }
 
 fn maybe_bool(rng: &mut SplitMix64, block: &mut Vec<(&'static str, Json)>, key: &'static str) {
@@ -777,7 +1019,7 @@ pub fn parse_seed(text: &str) -> Result<u64, String> {
 
 /// `race-cli corpus gen`: write `count` lines to `out` (`-` = stdout) and a
 /// coverage summary to stderr.
-pub fn run_gen(count: u64, out: &str, root_seed: u64) -> Result<()> {
+pub fn run_gen(count: u64, out: &str, root_seed: u64, profile: Profile) -> Result<()> {
     let mut sink: Box<dyn std::io::Write> = if out == "-" {
         Box::new(std::io::BufWriter::new(std::io::stdout().lock()))
     } else {
@@ -791,7 +1033,7 @@ pub fn run_gen(count: u64, out: &str, root_seed: u64) -> Result<()> {
     let mut float_kinds = [0u64; 5];
     let mut line = String::new();
     for index in 0..count {
-        let (json, info) = generate_case(root_seed, index);
+        let (json, info) = generate_case_profile(root_seed, index, profile);
         line.clear();
         json.write(&mut line);
         line.push('\n');
@@ -811,7 +1053,8 @@ pub fn run_gen(count: u64, out: &str, root_seed: u64) -> Result<()> {
     }
     sink.flush()?;
     eprintln!(
-        "corpus gen: {count} cases ({CORPUS_GENERATOR_VERSION}, root seed {root_seed:#018x}) -> {out}"
+        "corpus gen: {count} cases ({CORPUS_GENERATOR_VERSION}, profile {}, root seed {root_seed:#018x}) -> {out}",
+        profile.name()
     );
     eprintln!("  lobby 2..=16: {:?}", &lobby_seen[2..]);
     eprintln!("  chaos [none, {}]: {chaos_seen:?}", CHAOS_TYPES.join(", "));
@@ -840,6 +1083,95 @@ mod tests {
             case_line(DEFAULT_ROOT_SEED, 3),
             case_line(DEFAULT_ROOT_SEED + 1, 3)
         );
+    }
+
+    #[test]
+    fn core_profile_has_no_items_pickups_or_hazards() {
+        let mut ghosts = false;
+        for index in 0..600 {
+            let (json, info) = generate_case_profile(DEFAULT_ROOT_SEED, index, Profile::Core);
+            let (full, full_info) = generate_case(DEFAULT_ROOT_SEED, index);
+            assert_eq!((info.lobby, info.chaos), (full_info.lobby, full_info.chaos));
+            let mut line = String::new();
+            json.write(&mut line);
+            let v: Value = serde_json::from_str(&line).unwrap();
+            let mut full_line = String::new();
+            full.write(&mut full_line);
+            let f: Value = serde_json::from_str(&full_line).unwrap();
+            // Same players and seed as the full profile.
+            assert_eq!(v["players"], f["players"]);
+            assert_eq!(v["seed"], f["seed"]);
+            ghosts |= info.ghosts > 0;
+            if let Some(loadouts) = v.get("loadouts") {
+                assert_eq!(loadouts, &Value::Array(vec![]));
+            }
+            match v.get("pickupConfig") {
+                None => assert_eq!(info.pickups, PickupMode::Omitted),
+                Some(block) => {
+                    assert_eq!(info.pickups, PickupMode::Disabled);
+                    for key in ["enabled", "goldenBoxEnabled", "hazardsEnabled"] {
+                        assert_eq!(block[key], Value::Bool(false), "case {index} {key}");
+                    }
+                }
+            }
+        }
+        assert!(ghosts);
+        assert_eq!(Profile::parse("core"), Ok(Profile::Core));
+        assert_eq!(Profile::parse("items"), Ok(Profile::Items));
+        assert!(Profile::parse("auto").is_err());
+    }
+
+    #[test]
+    fn items_profile_covers_every_combo_and_manual_inputs() {
+        let mut combos = std::collections::BTreeSet::new();
+        let (mut forced_gold, mut manual, mut auto_off) = (0, 0, 0);
+        for index in 0..400 {
+            let (json, info) = generate_case_profile(DEFAULT_ROOT_SEED, index, Profile::Items);
+            let (full, full_info) = generate_case(DEFAULT_ROOT_SEED, index);
+            assert_eq!(
+                (info.lobby, info.chaos, info.pickups),
+                (full_info.lobby, full_info.chaos, full_info.pickups)
+            );
+            let mut line = String::new();
+            json.write(&mut line);
+            let v: Value = serde_json::from_str(&line).unwrap();
+            let mut full_line = String::new();
+            full.write(&mut full_line);
+            let f: Value = serde_json::from_str(&full_line).unwrap();
+            assert_eq!(v["players"], f["players"]);
+            assert_eq!(v["seed"], f["seed"]);
+            let loadouts = v["loadouts"].as_array().unwrap();
+            assert_eq!(loadouts.len(), info.lobby);
+            for loadout in loadouts {
+                let mut items: Vec<&str> = loadout["itemIds"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(|item| item.as_str().unwrap())
+                    .collect();
+                assert!(items.len() <= 2);
+                items.sort_unstable();
+                combos.insert(items.join("+"));
+            }
+            if v["pickupConfig"]["forceGoldenBox"] == Value::Bool(true) {
+                forced_gold += 1;
+            }
+            if v["pickupConfig"]["autoItemsEnabled"] == Value::Bool(false) {
+                auto_off += 1;
+            }
+            if let Some(inputs) = v.get(MANUAL_INPUTS_KEY) {
+                manual += 1;
+                for input in inputs.as_array().unwrap() {
+                    let action = input["clientActionId"].as_str().unwrap();
+                    assert!((8..=64).contains(&action.len()));
+                    assert!(input["authoritativeTick"].as_u64().unwrap() >= 1);
+                    assert_eq!(input["raceId"], v["raceId"]);
+                }
+            }
+        }
+        // 46 combos plus the 9 duplicate pairs.
+        assert!(combos.len() >= 46, "{}", combos.len());
+        assert!(forced_gold > 20 && manual > 60 && auto_off > 10);
     }
 
     #[test]

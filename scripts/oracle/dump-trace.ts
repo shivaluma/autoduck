@@ -39,7 +39,7 @@ import {
   stepSimulation,
   type RaceSimulationState,
 } from '../../packages/race-core/src'
-import { raceConfigSchema, type RaceEvent } from '../../packages/race-protocol/src'
+import { raceConfigSchema, type RaceEvent, type RecordedWildItemInput } from '../../packages/race-protocol/src'
 
 export const STATE_HASH_VERSION = 'sh1'
 export const EVENT_DIGEST_VERSION = 'ev-jcs-v1'
@@ -266,6 +266,8 @@ const u32le = (value: number) => {
 
 interface CaseOptions {
   maxTicks: number | null
+  /** `--ai-ablation all`: every duck plays with the ablated brain (`aiAblationPlayerIds`). */
+  aiAblation: AiAblation
   hashPrefixBytes: number
   eventPrefixBytes: number
   full: ((line: string) => void) | null
@@ -275,13 +277,32 @@ interface CaseRecord {
   [key: string]: unknown
 }
 
+/**
+ * Key of the manual wild-item inputs in a corpus line (`race-cli corpus gen
+ * --profile items`). It is not part of `raceConfigSchema`: it is stripped
+ * here and passed as `SimulationOptions.manualInputs`, verbatim (replay
+ * semantics, no `queueWildItemInput` clamping).
+ */
+export const MANUAL_INPUTS_KEY = 'oracleManualInputs'
+
+export function parseCaseLine(line: string) {
+  const raw = JSON.parse(line) as Record<string, unknown>
+  const manualInputs = raw[MANUAL_INPUTS_KEY] as RecordedWildItemInput[] | undefined
+  delete raw[MANUAL_INPUTS_KEY]
+  return { config: raceConfigSchema.parse(raw), manualInputs }
+}
+
 function runCase(caseIndex: number, line: string, options: CaseOptions): CaseRecord {
   let stage = 'parse'
   let tick = 0
   try {
-    const config = raceConfigSchema.parse(JSON.parse(line))
+    const { config, manualInputs } = parseCaseLine(line)
     stage = 'create'
-    const state = createSimulation(config, { recordEvents: true })
+    const state = createSimulation(config, {
+      recordEvents: true,
+      ...(options.aiAblation === 'all' ? { aiAblationPlayerIds: config.players.map((player) => player.playerId) } : {}),
+      ...(manualInputs ? { manualInputs } : {}),
+    })
     const maxTicks = options.maxTicks ?? CORE_BALANCE.maximumDurationSeconds * config.tickRate
 
     const sink = new StateBytes()
@@ -396,7 +417,10 @@ function runCase(caseIndex: number, line: string, options: CaseOptions): CaseRec
 // ---------------------------------------------------------------------------
 // CLI
 
+type AiAblation = 'none' | 'all'
+
 interface Args {
+  aiAblation: AiAblation
   corpus: string
   out: string
   from: number
@@ -414,12 +438,13 @@ function usage(message?: string): never {
   if (message) console.error(`dump-trace: ${message}`)
   console.error('usage: dump-trace.ts --corpus corpus.jsonl [--out trace.jsonl|-] [--from N] [--limit N] [--shard i/n]')
   console.error('         [--max-ticks N] [--hash-prefix-bytes 1..32] [--event-prefix-bytes 1..32]')
-  console.error('         [--full-at <case> [--full-out path]] [--validate-only]')
+  console.error('         [--full-at <case> [--full-out path]] [--validate-only] [--ai-ablation none|all]')
   process.exit(2)
 }
 
 function parseArgs(argv: string[]): Args {
   const args: Args = {
+    aiAblation: 'none',
     corpus: '',
     out: '-',
     from: 0,
@@ -451,6 +476,12 @@ function parseArgs(argv: string[]): Args {
       case '--full-at': args.fullAt = int('--full-at', next()); break
       case '--full-out': args.fullOut = next() ?? usage('--full-out needs a path'); break
       case '--validate-only': args.validateOnly = true; break
+      case '--ai-ablation': {
+        const value = next()
+        if (value !== 'none' && value !== 'all') usage('--ai-ablation needs none or all')
+        args.aiAblation = value
+        break
+      }
       case '--shard': {
         const match = /^(\d+)\/(\d+)$/.exec(next() ?? '')
         if (!match || Number(match[2]) < 1 || Number(match[1]) >= Number(match[2])) usage('--shard needs i/n with 0 <= i < n')
@@ -503,7 +534,7 @@ function openSink(path: string): LineSink {
  * `--use-std-math-pow` flag (default on): with it, `Math.pow` calls the
  * platform libm, which on darwin is not V8's fdlibm port.
  */
-export function oracleHost() {
+export function oracleHost(aiAblation: AiAblation = 'none') {
   const nodeOptions = process.env.NODE_OPTIONS ?? ''
   const flags = [...process.execArgv, ...nodeOptions.split(/\s+/).filter(Boolean)]
   const lastPowFlag = flags.filter((flag) => /^--(no-)?use[-_]std[-_]math[-_]pow$/.test(flag)).at(-1)
@@ -519,6 +550,8 @@ export function oracleHost() {
     execArgv: process.execArgv,
     nodeOptions,
     useStdMathPow: lastPowFlag === undefined ? true : !lastPowFlag.startsWith('--no-'),
+    // Simulation options (absent = the default engine options).
+    ...(aiAblation === 'none' ? {} : { aiAblation }),
   }
 }
 
@@ -547,7 +580,7 @@ async function main() {
   }
 
   const out = openSink(args.out)
-  await out.write(JSON.stringify(oracleHost()))
+  await out.write(JSON.stringify(oracleHost(args.aiAblation)))
   const fullPath = args.fullAt === null
     ? null
     : args.fullOut ?? (args.out === '-' ? `full-${args.fullAt}.jsonl` : `${args.out.replace(/\.jsonl(\.gz)?$/, '')}.full-${args.fullAt}.jsonl`)
@@ -562,6 +595,7 @@ async function main() {
     const isFull = args.fullAt === index
     const record = runCase(index, lines[index]!, {
       maxTicks: args.maxTicks,
+      aiAblation: args.aiAblation,
       hashPrefixBytes: args.hashPrefixBytes,
       eventPrefixBytes: args.eventPrefixBytes,
       full: isFull ? (line) => { fullLines.push(line) } : null,
