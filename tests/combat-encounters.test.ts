@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test, { describe } from 'node:test'
-import { extractCombatEncounters } from '../lib/racing/combat-encounters'
+import { extractCombatEncounters } from '../src/race/combat-encounters'
 import type { RaceEvent } from '../packages/race-protocol/src'
 
 describe('extractCombatEncounters', () => {

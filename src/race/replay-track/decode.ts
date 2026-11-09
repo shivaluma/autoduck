@@ -1,4 +1,4 @@
-import type { DuckSnapshot, StateSnapshotMessage } from '@/packages/race-protocol/src'
+import type { DuckSnapshot, StateSnapshotMessage } from '@/src/engine/protocol'
 import {
   DTRK_MAGIC,
   DTRK_Q,

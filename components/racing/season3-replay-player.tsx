@@ -1,14 +1,16 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { RaceConfig, RaceEvent, RaceItemId, RecordedWildItemInput, DuckSnapshot } from '@/packages/race-protocol/src'
-import { RACE_BALANCE_VERSION } from '@/packages/race-protocol/src'
-import { replayRace } from '@/lib/racing/replay'
-import { PhaserRaceCanvas, type ReplayInspection } from './phaser-race-canvas'
+import type { DuckSnapshot, RaceConfig, RaceEvent, RaceItemId } from '@/src/engine/protocol'
+import { manualInputsFromEvents, raceFinishedTick, readStoredEvents } from '@/src/race/event-vocab'
+import { fidelityBadge, planReplay, REPLAY_UNAVAILABLE_COPY } from '@/src/race/replay-plan'
+import type { RaceReplayInfo } from '@/src/race/types'
+import { extractCombatEncounters } from '@/src/race/combat-encounters'
+import { PhaserRaceCanvas, type RaceSource, type ReplayInspection } from './phaser-race-canvas'
 import { LiveLeaderboardSnapshot } from './live-leaderboard-snapshot'
 import { RaceEventTimeline } from './race-event-timeline'
 import { CombatEncountersPanel } from './combat-encounters-panel'
-import { extractCombatEncounters } from '@/lib/racing/combat-encounters'
+import type { ReplayTrackState } from './use-replay-track'
 
 type ReplayPlayer = {
   playerId: string
@@ -17,126 +19,182 @@ type ReplayPlayer = {
   itemIds?: RaceItemId[]
 }
 
-function manualInputs(events: RaceEvent[]): RecordedWildItemInput[] {
-  return events.filter((event) => event.type === 'WILD_ITEM_MANUAL_INPUT').flatMap((event) => {
-    const instanceId = event.metadata.instanceId
-    const clientActionId = event.metadata.clientActionId
-    if (!event.sourcePlayerId || typeof instanceId !== 'string' || typeof clientActionId !== 'string') return []
-    return [{ raceId: event.raceId, playerId: event.sourcePlayerId, wildItemInstanceId: instanceId, action: 'USE' as const, clientActionId, authoritativeTick: event.tick }]
-  })
+function clock(tick: number, tickRate: number) {
+  const seconds = Math.floor(tick / tickRate)
+  return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`
 }
 
+/**
+ * Finished-race replay. Plays the recorded track whenever the race has one (with its fidelity badge),
+ * re-simulates only a current-version race without a track, and otherwise shows no canvas.
+ * `events` are the stored events in id order (GET /api/races/:id).
+ */
 export function Season3ReplayPlayer({
   raceId,
   players,
   config,
   events = [],
-  resultDigest,
+  replay,
+  trackState,
 }: {
   raceId: number
   players: ReplayPlayer[]
-  config: RaceConfig
+  /** The stored config, unparsed: it may come from another engine version. */
+  config: RaceConfig | null
   events?: RaceEvent[]
-  resultDigest?: string | null
+  replay?: RaceReplayInfo | null
+  trackState: ReplayTrackState
 }) {
-  const [runId, setRunId] = useState(0)
+  const stored = useMemo(() => readStoredEvents(events), [events])
+  const plan = planReplay({ replay, config, eventsUsable: stored.usable, trackFailed: trackState.status === 'error' })
+  const tickRate = (trackState.status === 'ready' ? trackState.track.header.tickRate : Number(config?.tickRate)) || 60
+
   const [started, setStarted] = useState(false)
   const [paused, setPaused] = useState(true)
   const [finished, setFinished] = useState(false)
   const [speed, setSpeed] = useState<1 | 2 | 4>(1)
   const [tick, setTick] = useState(0)
+  const [endTick, setEndTick] = useState<number | null>(null)
+  const [seekRequest, setSeekRequest] = useState<{ tick: number; nonce: number } | null>(null)
   const [latestDucks, setLatestDucks] = useState<DuckSnapshot[]>([])
   const [activeTab, setActiveTab] = useState<'leaderboard' | 'timeline' | 'combat'>('leaderboard')
-  const [verifyState, setVerifyState] = useState<'idle' | 'ok' | 'mismatch' | 'unsupported'>('idle')
   const lastReportedTick = useRef(-1)
-  const verifiedRef = useRef(false)
-  const inputs = useMemo(() => manualInputs(events), [events])
-  const combatAnalytics = useMemo(() => extractCombatEncounters(events, players), [events, players])
-  const balanceDrift = config.balanceVersion !== RACE_BALANCE_VERSION
-  const seedTail = config.seed.slice(-8)
+  const finishedRef = useRef(false)
+  const combatAnalytics = useMemo(() => extractCombatEncounters(stored.timeline, players), [stored.timeline, players])
 
-  // Reset playback when a different race (or seed) is shown: state during render, refs in an effect.
-  const replayKey = `${raceId}:${config.seed}`
+  const source = useMemo<RaceSource | null>(() => {
+    if (plan === 'track' && trackState.status === 'ready') {
+      return { kind: 'recording', track: trackState.track, events: stored.engine, geometry: trackState.geometry, chaosType: config?.chaosConfig?.type }
+    }
+    if (plan === 'sim' && config) {
+      return { kind: 'sim', config, manualInputs: manualInputsFromEvents(stored.engine), endTick: raceFinishedTick(stored.engine) }
+    }
+    return null
+  }, [config, plan, stored.engine, trackState])
+  const sourceEndTick = source?.kind === 'recording' ? source.track.lastTick : source?.kind === 'sim' ? source.endTick ?? null : null
+  const knownEndTick = endTick ?? sourceEndTick
+
+  // Reset playback when a different race (or source) is shown: state during render, refs in an effect.
+  const replayKey = `${raceId}:${plan}:${source?.kind ?? 'none'}`
   const [shownReplayKey, setShownReplayKey] = useState(replayKey)
   if (shownReplayKey !== replayKey) {
     setShownReplayKey(replayKey)
-    setRunId(0)
     setStarted(false)
     setPaused(true)
     setFinished(false)
     setTick(0)
+    setEndTick(null)
+    setSeekRequest(null)
     setLatestDucks([])
-    setVerifyState('idle')
   }
 
   useEffect(() => {
     lastReportedTick.current = -1
-    verifiedRef.current = false
+    finishedRef.current = false
   }, [replayKey])
 
   const inspect = useCallback((state: ReplayInspection) => {
-    if (state.finished || state.tick - lastReportedTick.current >= Math.max(1, Math.floor(config.tickRate / 4))) {
+    if (state.endTick !== undefined && state.endTick !== null) setEndTick(state.endTick)
+    if (state.seeked || state.finished || state.tick - lastReportedTick.current >= Math.max(1, Math.floor(tickRate / 4))) {
       lastReportedTick.current = state.tick
       setTick(state.tick)
       setLatestDucks(state.ducks)
     }
-    if (state.finished && !verifiedRef.current) {
-      verifiedRef.current = true
+    if (state.finished && !finishedRef.current) {
+      finishedRef.current = true
       setFinished(true)
       setPaused(true)
-      if (!resultDigest) {
-        setVerifyState('idle')
-        return
-      }
-      try {
-        replayRace(config, resultDigest, inputs)
-        setVerifyState('ok')
-      } catch (error) {
-        const message = error instanceof Error ? error.message : ''
-        setVerifyState(message.includes('Unsupported replay version') ? 'unsupported' : 'mismatch')
-      }
+      setEndTick(state.tick)
+    } else if (!state.finished && finishedRef.current) {
+      finishedRef.current = false
+      setFinished(false)
     }
-  }, [config, inputs, resultDigest, config.tickRate])
+  }, [tickRate])
+
+  const seek = useCallback((target: number) => {
+    setTick(target)
+    setSeekRequest((current) => ({ tick: target, nonce: (current?.nonce ?? 0) + 1 }))
+  }, [])
 
   function play() {
-    if (finished) {
-      lastReportedTick.current = -1
-      verifiedRef.current = false
-      setVerifyState('idle')
-      setTick(0)
-      setLatestDucks([])
-      setFinished(false)
-      setRunId((current) => current + 1)
-    }
+    if (finished) seek(0)
     setStarted(true)
     setPaused(false)
   }
 
-  const elapsedSeconds = Math.floor(tick / config.tickRate)
+  const badge = fidelityBadge(replay)
+  const shownEngine = replay?.mode === 'track'
+    ? `${replay.engineVersion ?? '?'}/${replay.balanceVersion ?? '?'}`
+    : `${String(config?.engineVersion ?? '?')}/${String(config?.balanceVersion ?? '?')}`
+  const seedTail = typeof config?.seed === 'string' ? config.seed.slice(-8) : '—'
+
+  if (plan === 'unavailable') {
+    return (
+      <section className="space-y-4">
+        <div className="gx-panel p-5 text-center" data-testid="replay-unavailable">
+          <div className="font-black">🎬 RACE REPLAY · Race #{raceId}</div>
+          <p className="mt-2 font-black text-[var(--color-ggd-orange)]">{REPLAY_UNAVAILABLE_COPY}</p>
+          <p className="mt-1 text-xs text-white/50">engine {shownEngine} · kết quả, diễn biến và thống kê từ event log vẫn xem được bên dưới.</p>
+        </div>
+        {stored.timeline.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2 border-b border-white/10 pb-2">
+              <button type="button" onClick={() => setActiveTab('timeline')} className={`rounded-xl px-4 py-2 text-sm font-black transition ${activeTab !== 'combat' ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)] shadow' : 'bg-black/30 text-white/60 hover:text-white'}`}>📜 Nhật Ký Sự Kiện ({stored.timeline.length})</button>
+              <button type="button" onClick={() => setActiveTab('combat')} className={`rounded-xl px-4 py-2 text-sm font-black transition ${activeTab === 'combat' ? 'bg-rose-500 text-white shadow' : 'bg-black/30 text-white/60 hover:text-white'}`}>⚔️ Tấn Công & Đối Đầu ({combatAnalytics.totalAttacks})</button>
+            </div>
+            {activeTab === 'combat'
+              ? <CombatEncountersPanel events={stored.timeline} players={players} />
+              : <RaceEventTimeline events={stored.timeline} players={players} />}
+          </div>
+        )}
+      </section>
+    )
+  }
+
+  const scrubMax = knownEndTick ?? Math.max(tick, 1)
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-4" data-testid="replay-player" data-replay-source={source?.kind ?? 'loading'}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div className="font-black">🎬 RACE REPLAY · Race #{raceId} · {config.balanceVersion}</div>
+          <div className="font-black">🎬 RACE REPLAY · Race #{raceId} · {replay?.mode === 'track' ? replay.balanceVersion : String(config?.balanceVersion ?? '')}</div>
           <div className="mt-1 text-xs font-black text-white/50">
-            seed …{seedTail} · {config.engineVersion} · {config.trackVersion} · {String(Math.floor(elapsedSeconds / 60)).padStart(2, '0')}:{String(elapsedSeconds % 60).padStart(2, '0')} · {finished ? 'FINISHED' : paused ? 'PAUSED' : 'PLAYING'}
+            seed …{seedTail} · {shownEngine} · {clock(tick, tickRate)} · {finished ? 'FINISHED' : paused ? 'PAUSED' : 'PLAYING'}
           </div>
-          {balanceDrift && <div className="mt-2 rounded-lg border border-[var(--color-ggd-orange)]/40 bg-[var(--color-ggd-orange)]/10 px-3 py-2 text-xs font-bold text-[var(--color-ggd-orange)]">Race này chạy balance {config.balanceVersion}; client hiện tại {RACE_BALANCE_VERSION} — replay có thể khác kết quả thật.</div>}
-          {verifyState === 'ok' && <div className="mt-2 text-xs font-bold text-[var(--color-ggd-neon-green)]">✓ Replay khớp result digest của race #{raceId}</div>}
-          {verifyState === 'mismatch' && <div className="mt-2 text-xs font-bold text-[var(--color-ggd-orange)]">⚠ Replay không khớp digest đã lưu — có thể do balance/engine đổi sau race.</div>}
-          {verifyState === 'unsupported' && <div className="mt-2 text-xs font-bold text-[var(--color-ggd-orange)]">⚠ Balance/engine version này không còn được replay chính xác trên client hiện tại.</div>}
+          {badge && <div className="mt-2 text-xs font-bold text-[var(--color-ggd-neon-green)]" data-testid="replay-fidelity">{badge}</div>}
+          {plan === 'sim' && <div className="mt-2 text-xs font-bold text-white/55">↻ Mô phỏng lại từ seed bằng engine hiện tại ({shownEngine})</div>}
         </div>
         <div className="flex flex-wrap gap-2">
-          <button onClick={paused ? play : () => setPaused(true)} className="rounded-xl bg-[var(--color-ggd-gold)] px-5 py-2 font-black text-[var(--color-ggd-outline)] shadow transition hover:brightness-110">{finished ? '↻ CHẠY LẠI' : paused ? '▶ PLAY REPLAY' : '⏸ PAUSE'}</button>
+          <button disabled={!source} onClick={paused ? play : () => setPaused(true)} className="rounded-xl bg-[var(--color-ggd-gold)] px-5 py-2 font-black text-[var(--color-ggd-outline)] shadow transition hover:brightness-110 disabled:opacity-50">{finished ? '↻ CHẠY LẠI' : paused ? '▶ PLAY REPLAY' : '⏸ PAUSE'}</button>
           {([1, 2, 4] as const).map((value) => <button key={value} onClick={() => setSpeed(value)} className={`rounded-xl border-2 px-3 py-2 text-sm font-black transition ${speed === value ? 'border-[var(--color-ggd-neon-green)] text-[var(--color-ggd-neon-green)] bg-[var(--color-ggd-neon-green)]/10' : 'border-white/15 text-white/55 hover:border-white/30'}`}>{value}×</button>)}
         </div>
       </div>
 
       <div className="relative">
-        <PhaserRaceCanvas key={`${raceId}-${runId}`} raceId={raceId} players={players} replayConfig={config} replayManualInputs={inputs} replaySpeed={speed} replayPaused={!started || paused} onReplayInspect={inspect} />
-        {!started && <button onClick={play} className="absolute inset-0 z-10 m-auto h-20 w-52 rounded-2xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-gold)] gx-title text-2xl text-[var(--color-ggd-outline)] shadow-[0_7px_0_var(--color-ggd-outline)] transition hover:scale-105">▶ PLAY REPLAY</button>}
+        {source
+          ? <PhaserRaceCanvas key={`${raceId}-${source.kind}`} raceId={raceId} players={players} source={source} replaySpeed={speed} replayPaused={!started || paused} seekRequest={seekRequest} onReplayInspect={inspect} />
+          : <div className="grid aspect-[16/9] max-h-[640px] min-h-[360px] w-full place-items-center rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[#2f7a46] text-sm font-black text-white/70">Đang tải bản ghi race…</div>}
+        {source && !started && <button onClick={play} className="absolute inset-0 z-10 m-auto h-20 w-52 rounded-2xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-gold)] gx-title text-2xl text-[var(--color-ggd-outline)] shadow-[0_7px_0_var(--color-ggd-outline)] transition hover:scale-105">▶ PLAY REPLAY</button>}
       </div>
+
+      {source && (
+        <label className="flex items-center gap-3 text-xs font-black text-white/60">
+          <span className="w-12 tabular-nums">{clock(tick, tickRate)}</span>
+          <input
+            type="range"
+            aria-label="Tua replay"
+            data-testid="replay-scrubber"
+            min={0}
+            max={scrubMax}
+            step={1}
+            value={Math.min(tick, scrubMax)}
+            disabled={knownEndTick === null}
+            onChange={(event) => seek(Number(event.target.value))}
+            className="h-2 flex-1 cursor-pointer accent-[var(--color-ggd-gold)] disabled:cursor-not-allowed"
+          />
+          <span className="w-12 text-right tabular-nums">{knownEndTick !== null ? clock(knownEndTick, tickRate) : '--:--'}</span>
+        </label>
+      )}
 
       {/* Replay Synchronized Leaderboard & Event Feed */}
       <div className="space-y-3">
@@ -150,7 +208,7 @@ export function Season3ReplayPlayer({
                 : 'bg-black/30 text-white/60 hover:text-white'
             }`}
           >
-            🏆 BXH Thời Điểm ({String(Math.floor(elapsedSeconds / 60)).padStart(2, '0')}:{String(elapsedSeconds % 60).padStart(2, '0')})
+            🏆 BXH Thời Điểm ({clock(tick, tickRate)})
           </button>
           <button
             type="button"
@@ -172,7 +230,7 @@ export function Season3ReplayPlayer({
                 : 'bg-black/30 text-white/60 hover:text-white'
             }`}
           >
-            📜 Nhật Ký Sự Kiện ({events.length})
+            📜 Nhật Ký Sự Kiện ({stored.timeline.length})
           </button>
         </div>
 
@@ -180,10 +238,10 @@ export function Season3ReplayPlayer({
           <LiveLeaderboardSnapshot players={players} ducks={latestDucks} />
         )}
         {activeTab === 'combat' && (
-          <CombatEncountersPanel events={events} players={players} />
+          <CombatEncountersPanel events={stored.timeline} players={players} />
         )}
         {activeTab === 'timeline' && (
-          <RaceEventTimeline events={events} players={players} currentTick={tick} />
+          <RaceEventTimeline events={stored.timeline} players={players} currentTick={tick} />
         )}
       </div>
     </section>

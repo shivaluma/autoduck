@@ -4,6 +4,37 @@ import { isImmortalDuck } from '@/lib/immortal-duck'
 import { isGhostDuck } from '@/lib/ghost-duck'
 import { publicRaceEngineVisibility } from '@/lib/racing/public-engine'
 import { getLiveRaceSession, liveManualInputsFromSession } from '@/lib/racing/live-race-session'
+import { trackGeometryUrl } from '@/src/race/polyline-track'
+import type { RaceReplayInfo, ReplayFidelity } from '@/src/race/types'
+
+type ReplayTrackSummary = {
+  fidelity: string
+  engineVersion: string
+  balanceVersion: string
+  trackGeometry: string | null
+  byteSha256: string | null
+  statsJson: string | null
+}
+
+/** `replay` per plan §4.6. verify stays 'none' on main (WASM verification arrives with the Rust engine). */
+function replayInfo(raceId: number, status: string, track: ReplayTrackSummary | null): RaceReplayInfo {
+  const playable = status === 'finished' && track !== null && track.byteSha256 !== null && track.fidelity !== 'UNAVAILABLE'
+  return {
+    mode: playable ? 'track' : 'none',
+    fidelity: (track?.fidelity as ReplayFidelity | undefined) ?? null,
+    trackUrl: playable ? `/api/races/${raceId}/track?h=${track!.byteSha256}` : null,
+    geometryUrl: playable ? trackGeometryUrl(track!.trackGeometry) : null,
+    engineVersion: track?.engineVersion ?? null,
+    balanceVersion: track?.balanceVersion ?? null,
+    byteSha256: playable ? track!.byteSha256 : null,
+    verify: 'none',
+  }
+}
+
+function parseJsonOr<T>(value: string | null | undefined, fallback: T): T {
+  if (!value) return fallback
+  try { return JSON.parse(value) as T } catch { return fallback }
+}
 
 // GET /api/races/[id] - Chi tiết cuộc đua
 export async function GET(
@@ -37,8 +68,13 @@ export async function GET(
         commentaries: {
           orderBy: { timestamp: 'asc' },
         },
+        // Emission order. Meta events (CHAOS_RESOLVED, QP_TRACK_REWARD_GRANTED) come last with their own tick;
+        // the viewer splits them off (src/race/event-vocab.ts).
         engineEvents: {
-          orderBy: [{ tick: 'asc' }, { id: 'asc' }],
+          orderBy: { id: 'asc' },
+        },
+        replayTrack: {
+          select: { fidelity: true, engineVersion: true, balanceVersion: true, trackGeometry: true, byteSha256: true, statsJson: true },
         },
         seasonWeek: {
           include: {
@@ -60,7 +96,8 @@ export async function GET(
       )
     }
 
-    const engineConfig = race.engineConfigJson ? JSON.parse(race.engineConfigJson) : null
+    // Never Zod-parsed here: configs from other engine versions (e.g. 2.0.0) must still be served as-is.
+    const engineConfig = parseJsonOr<Parameters<typeof publicRaceEngineVisibility>[2]>(race.engineConfigJson, null)
     const engineVisibility = publicRaceEngineVisibility(race.status, race.raceSeed, engineConfig)
 
     return NextResponse.json({
@@ -85,6 +122,8 @@ export async function GET(
         liveTick: race.status === 'running' ? (getLiveRaceSession(race.id)?.latestSnapshot?.tick ?? null) : null,
         liveManualInputs: race.status === 'running' ? liveManualInputsFromSession(race.id) : [],
         resultDigest: race.resultDigest,
+        replay: replayInfo(race.id, race.status, race.replayTrack ?? null),
+        postRaceStats: race.status === 'finished' ? parseJsonOr(race.replayTrack?.statsJson, null) : null,
         events: race.engineEvents.map((event: {
           type: string
           tick: number
@@ -99,7 +138,7 @@ export async function GET(
           timestampWithinRaceMs: event.timestampWithinRaceMs,
           sourcePlayerId: event.sourcePlayerId,
           targetPlayerId: event.targetPlayerId,
-          metadata: JSON.parse(event.metadataJson),
+          metadata: parseJsonOr<Record<string, unknown>>(event.metadataJson, {}),
         })),
       } : null,
       // Legacy v2 keys (chests, dragon) were removed; kept as constants so older clients don't break.

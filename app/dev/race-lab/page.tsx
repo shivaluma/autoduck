@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PhaserRaceCanvas, type ReplayInspection } from '@/components/racing/phaser-race-canvas'
 import { Switch } from '@/components/ui/switch'
 import { RACE_THEMES, RACE_THEME_IDS, type RaceThemeId } from '@/lib/race-fx/themes'
-import { WILD_ITEM_CATALOG } from '@/packages/race-core/src'
+import { WILD_ITEM_CATALOG } from '@/src/engine/catalog'
 import {
   DEFAULT_TRACK_VERSION,
   HAZARD_BALANCE_VERSION,
@@ -20,7 +20,7 @@ import {
   type RaceEvent,
   type RaceItemId,
   type WildItemId,
-} from '@/packages/race-protocol/src'
+} from '@/src/engine/protocol'
 
 const CHAOS_TYPES = ['NORMAL', 'REVERSE', 'DUO', 'TRIPLE_ELIMINATION', 'CUT_LINE', 'CONSTRUCTORS', 'BOUNTY_HUNT'] as const
 const MAJORS: Array<{ id: RaceItemId; label: string }> = [
@@ -213,7 +213,7 @@ export default function RaceLabPage() {
 
     {activeConfig && <>
       <div className="flex flex-wrap items-center gap-2"><button onClick={() => setPaused((value) => !value)} className="rounded-xl border-2 border-white/20 px-4 py-2 font-black">{paused ? '▶ RESUME' : '⏸ PAUSE'}</button>{([1, 2, 4] as const).map((value) => <button key={value} onClick={() => setSpeed(value)} className={`rounded-xl px-4 py-2 font-black ${speed === value ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' : 'border-2 border-white/20'}`}>{value}×</button>)}<button onClick={start} className="rounded-xl border-2 border-[var(--color-ggd-neon-green)] px-4 py-2 font-black text-[var(--color-ggd-neon-green)]">↻ REPLAY</button><span className="ml-auto text-sm text-white/60">Tick {snapshot?.tick ?? 0} · {snapshot?.finished ? 'FINISHED' : paused ? 'PAUSED' : 'RUNNING'}</span></div>
-      <PhaserRaceCanvas key={runKey} raceId={-runKey} players={canvasPlayers} replayConfig={activeConfig} replaySpeed={speed} replayPaused={paused} onReplayInspect={inspect} debugPickups theme={canvasTheme || undefined} />
+      <PhaserRaceCanvas key={runKey} raceId={-runKey} players={canvasPlayers} source={{ kind: 'sim', config: activeConfig, allowVersion: true }} replaySpeed={speed} replayPaused={paused} onReplayInspect={inspect} debugPickups theme={canvasTheme || undefined} />
       <section className="grid gap-4 lg:grid-cols-2"><div className="rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-4"><h2 className="font-display text-2xl">State inspector</h2><div className="mt-3 space-y-2">{snapshot?.ducks.map((duck) => <div key={duck.playerId} className="flex items-center gap-3 rounded-xl bg-black/20 px-3 py-2 text-sm"><b className="w-6">#{duck.rank}</b><span className="flex-1">{players.find((player) => player.playerId === duck.playerId)?.name}</span><span>{(duck.progress * 100).toFixed(1)}%</span><span className="text-white/50">{duck.wildItem ? `🎒 ${WILD_ITEM_CATALOG.find((item) => item.id === duck.wildItem?.itemId)?.icon}` : duck.activeEffects.join(', ') || '—'} · 📦 {duck.regularPickupCount}</span></div>)}</div></div><div className="max-h-[420px] overflow-auto rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-4"><h2 className="font-display text-2xl">Event log · {events.length}</h2><div className="mt-3 space-y-1 font-mono text-xs">{[...events].reverse().map((event, index) => <div key={`${event.tick}-${event.type}-${index}`} className="rounded-lg bg-black/20 px-3 py-2"><span className="text-white/45">{event.tick}</span> · {event.type} · {event.sourcePlayerId ?? '—'}{event.targetPlayerId ? ` → ${event.targetPlayerId}` : ''}</div>)}</div></div></section>
     </>}
   </main>

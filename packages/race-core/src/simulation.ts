@@ -1,4 +1,4 @@
-import type { DuckSnapshot, RaceConfig, RaceEvent, RaceResult, RecordedWildItemInput } from '../../race-protocol/src'
+import { RACE_BALANCE_VERSION, RACE_ENGINE_VERSION, type DuckSnapshot, type RaceConfig, type RaceEvent, type RaceResult, type RecordedWildItemInput } from '../../race-protocol/src'
 import { isGhostPlayerId } from './ghost'
 import { CORE_BALANCE } from './config'
 import { ITEM_BALANCE } from './items/config'
@@ -88,6 +88,27 @@ export interface SimulationOptions {
   lootOverride?: WildLootOverride
   /** Balance tooling only: these ducks play with the Chaos-blind, personality-free brain. */
   aiAblationPlayerIds?: readonly string[]
+  /**
+   * Simulate a config whose engineVersion/balanceVersion differ from the current constants. Without it,
+   * createSimulation/simulateRace throw: HEAD code does not reproduce races from other versions, so their
+   * output must never be shown or stored as if it did. Tests, balance tooling and the replay allowlist opt in.
+   */
+  allowVersion?: boolean
+}
+
+export class UnsupportedRaceVersionError extends Error {
+  constructor(readonly engineVersion: string, readonly balanceVersion: string) {
+    super(`Unsupported race version: engine ${engineVersion}, balance ${balanceVersion} (this engine is ${RACE_ENGINE_VERSION}/${RACE_BALANCE_VERSION})`)
+    this.name = 'UnsupportedRaceVersionError'
+  }
+}
+
+/** Throws UnsupportedRaceVersionError unless the config is the current engine/balance pair or allowVersion is set. */
+export function assertSimulatableVersion(config: Pick<RaceConfig, 'engineVersion' | 'balanceVersion'>, options: Pick<SimulationOptions, 'allowVersion'> = {}) {
+  if (options.allowVersion) return
+  if (config.engineVersion !== RACE_ENGINE_VERSION || config.balanceVersion !== RACE_BALANCE_VERSION) {
+    throw new UnsupportedRaceVersionError(String(config.engineVersion), String(config.balanceVersion))
+  }
 }
 
 function event(state: RaceSimulationState, value: Omit<RaceEvent, 'raceId' | 'tick' | 'timestampWithinRaceMs'>): RaceEvent {
@@ -153,6 +174,7 @@ export function evaluatePacingMultiplier(segments: readonly number[], progress: 
 }
 
 export function createSimulation(config: RaceConfig, options: SimulationOptions = {}): RaceSimulationState {
+  assertSimulatableVersion(config, options)
   const sortedPlayers = [...config.players].sort((left, right) => left.playerId.localeCompare(right.playerId))
   const rngByPlayer = new Map<string, DeterministicRng>()
   const startRng = createRaceRng(config.seed, 'track:start')

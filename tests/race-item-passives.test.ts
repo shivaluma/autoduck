@@ -100,7 +100,7 @@ test('Fortress reduces duck collision push', () => {
     { playerId: 'duck-1', itemIds: ['BUBBLE_SHIELD', 'SHOCK_ABSORBER'], source: 'PLAYER' }, // Fortress
     { playerId: 'duck-2', itemIds: ['NITRO', 'DRAFT_FIN'], source: 'PLAYER' }, // Speed Demon
   ])
-  const sim = createSimulation(cfg, { recordEvents: false })
+  const sim = createSimulation(cfg, { recordEvents: false, allowVersion: true })
   sim.ducks[0]!.progress = 0.5
   sim.ducks[0]!.lateralOffset = 0.05
   sim.ducks[1]!.progress = 0.5

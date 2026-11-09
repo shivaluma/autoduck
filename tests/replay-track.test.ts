@@ -6,9 +6,9 @@ import { gunzipSync } from 'node:zlib'
 import { createHash } from 'node:crypto'
 import { createResultDigest } from '../lib/racing/audit'
 import { runAuthoritativeRace } from '../lib/racing/runtime'
-import { decodeReplayTrack } from '../lib/racing/replay-track/decode'
+import { decodeReplayTrack } from '../src/race/replay-track/decode'
 import { encodeReplayTrack, packReplayTrack } from '../lib/racing/replay-track/encode'
-import { DTRK_Q, canonicalHeaderJson, quantiseProgress } from '../lib/racing/replay-track/format'
+import { DTRK_Q, canonicalHeaderJson, quantiseProgress } from '../src/race/replay-track/format'
 import {
   createReplayTrackRecorder,
   isReplayTrackRecordingEnabled,

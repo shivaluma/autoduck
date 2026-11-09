@@ -1,9 +1,9 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import type { RaceEvent, RaceItemId, WildItemId } from '@/packages/race-protocol/src'
+import type { RaceEvent, RaceItemId, WildItemId } from '@/src/engine/protocol'
 import { Season3Avatar } from '@/components/season3-avatar'
-import { intentCopy, temperamentLabel, TEMPERAMENT_COPY } from '@/lib/racing/ai-intent-copy'
+import { intentCopy, temperamentLabel, TEMPERAMENT_COPY } from '@/src/race/ai-intent-copy'
 
 export type TimelinePlayer = {
   playerId: string

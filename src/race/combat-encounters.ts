@@ -1,4 +1,4 @@
-import type { RaceEvent } from '@/packages/race-protocol/src'
+import type { RaceEvent } from '@/src/engine/protocol'
 
 export type AttackWeapon =
   | 'HOMING_ROCKET'

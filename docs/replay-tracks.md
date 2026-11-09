@@ -7,15 +7,16 @@ depending on the engine version: the canvas can play a track back without re-sim
 This is plan step 0.4 (`docs/rewrite-plan.md` in the rewrite branch: §4.2 format, §4.3 table, §4.5 gates,
 D10, D23, risk R2).
 
-Code: `lib/racing/replay-track/`
+Code: `lib/racing/replay-track/` (server) and `src/race/replay-track/` (browser-safe, moved there in plan step 0.5).
 
 | File | Role |
 |---|---|
-| `format.ts` | Constants, header type, canonical header JSON and quantisation. No Node imports. |
-| `recorder.ts` | Live recorder. `push(state)` never throws. Also has the `REPLAY_TRACK_RECORDING` kill switch. |
-| `encode.ts` | Recording → uncompressed DTRK/1 payload; `packReplayTrack` gzips it and hashes it. Node only. |
-| `decode.ts` | Payload → per-tick world (`worldAt(tick)`), finish ticks and final ranks. Safe in the browser. |
-| `store.ts` | After resolve: finalize → encode → gzip → gunzip → decode → self-check → insert. Never throws. |
+| `src/race/replay-track/format.ts` | Constants, header type, canonical header JSON and quantisation. No Node imports. |
+| `lib/racing/replay-track/recorder.ts` | Live recorder. `push(state)` never throws. Also has the `REPLAY_TRACK_RECORDING` kill switch. |
+| `lib/racing/replay-track/encode.ts` | Recording → uncompressed DTRK/1 payload; `packReplayTrack` gzips it and hashes it. Node only. |
+| `src/race/replay-track/decode.ts` | Payload → per-tick world (`worldAt(tick)`), finish ticks and final ranks. Safe in the browser. |
+| `lib/racing/replay-track/store.ts` | After resolve: finalize → encode → gzip → gunzip → decode → self-check → insert. Never throws. |
+| `lib/racing/replay-track/serve.ts` | `GET /api/races/:id/track` response (gzip, ETag, caching). |
 
 ## How a race is recorded
 
@@ -52,7 +53,7 @@ After the meta transaction, and after a test race moves to ARCHIVED, `storeRecor
 | `engineCommit` | `SOURCE_COMMIT` or `GIT_SHA`, otherwise `null` |
 | `engineBuild` | `null` |
 | `engineVersion`, `balanceVersion`, `trackVersion`, `tickRate` | from the result |
-| `trackGeometry` | `null` (plan step 0.5 adds geometry files) |
+| `trackGeometry` | `<trackVersion>@<sha8>` of the committed HEAD geometry export (see [Geometry](#geometry)), or `null` if that file is missing. Rows written before 0.5 have `null`. |
 | `tickCount` | final simulation tick (= `RACE_FINISHED` tick); there are `tickCount + 1` samples, ticks `0..tickCount` |
 | `stride` | 1 |
 | `reproducedDigest` | `Race.resultDigest` |
@@ -80,7 +81,7 @@ Decoders skip section ids they don't know. Id 5 is reserved for a possible event
 ```jsonc
 {
   "raceId": "41", "tickRate": 60, "firstTick": 0, "lastTick": 3447, "stride": 1,
-  "trackVersion": "river-01-v2", "trackGeometry": null,
+  "trackVersion": "river-01-v2", "trackGeometry": "river-01-v2@678a27dc",
   "ducks": ["101", "102", …],            // playerIds in simulation order (state.ducks, sorted by playerId)
   "effects": ["SLOWED", "NITRO", …],     // effect table, in order of first appearance
   "wildItems": [...], "pickupTypes": [...], "hazardTypes": [...],   // protocol enums first, then anything new
@@ -173,6 +174,64 @@ The round-trip guarantees, from `tests/replay-track.test.ts`:
 - lateral within 1/32767
 - rocket progress within 2^-24
 - ranks, effects (with order), wild items, pickup counts, pickups, hazards and bananas exact
+
+## Geometry
+
+The canvas draws the river, gates and zones from a geometry file, not from HEAD code, so a track keeps the geometry it
+was recorded on (plan D10; `river-01-v2` gained boost gates without a version bump).
+
+- `pnpm race:tracks` (`scripts/race-tracks/export.ts`) exports HEAD `createRiverTrack(DEFAULT_TRACK_VERSION)` to
+  `public/race-tracks/<trackVersion>@<sha8>.json`. `sha8` is the start of the sha256 of the file's bytes
+  (canonical JSON, keys sorted). `pnpm race:tracks --check` fails if the committed file for HEAD is missing.
+- The file has `sim` (length, currents, pickup and hazard zones, boost gates) and `render` (the centreline sampled at
+  1024 segments as `[x, y, tangentX, tangentY, width]`, `lateralScale` 0.42). `src/race/polyline-track.ts` turns it
+  into the `sample(progress, lateral)` the canvas uses; it stays within 0.05 px of HEAD (`tests/replay-viewer.test.ts`).
+- New recordings name the HEAD file in the header and the row (`resolveHeadTrackGeometryId`). The race API exposes it as
+  `replay.geometryUrl`. Without a geometry id or file, the canvas falls back to HEAD `createRiverTrack`.
+- If HEAD geometry changes, export a new file and keep the old one: stored tracks still reference it.
+
+## Viewer (plan step 0.5, §4.6)
+
+`GET /api/races/:id` returns stored events in **id order** (emission order) and:
+
+```jsonc
+"replay": { "mode": "track" | "none", "fidelity": "RECORDED" | … | null,
+            "trackUrl": "/api/races/41/track?h=<byteSha256>", "geometryUrl": "/race-tracks/river-01-v2@678a27dc.json",
+            "engineVersion": "1.2.0", "balanceVersion": "S3.15", "byteSha256": "…", "verify": "none" },
+"postRaceStats": { … }   // RaceReplayTrack.statsJson, when stored
+```
+
+`mode` is `track` for a finished race whose row has bytes and isn't `UNAVAILABLE`. `verify` stays `none` on main.
+
+`GET /api/races/:id/track?h=<byteSha256>` serves the stored gzip with `Content-Encoding: gzip` (or decompresses when the
+client doesn't accept gzip), `ETag: "<byteSha256>"`, and `Cache-Control: public, max-age=31536000, immutable` only when
+`h` matches; otherwise `no-cache`. A matching `If-None-Match` gets 304.
+
+The race page (`components/racing/season3-replay-player.tsx`) then:
+
+1. **Track exists:** downloads it (checks the sha256 when WebCrypto is available), decodes it and plays it through
+   `RecordingDriver` with the fidelity badge and a scrubber. Nothing is simulated, so any engine version plays,
+   including engine major ≥ 2.
+2. **No track, current engine/balance pair:** re-simulates through `SimDriver` (also seekable).
+3. **Otherwise:** no canvas, `Replay không khả dụng cho race này`. Results, timeline, combat and event-derived stats
+   still show; the speed columns are hidden.
+
+Configs are never Zod-parsed by the viewer, and the TS engine's version guard (`createSimulation`/`simulateRace` throw
+unless the config is the current pair or `{ allowVersion: true }` is passed) makes a wrong-version re-simulation
+impossible.
+
+**Events.** `src/race/event-vocab.ts` splits the id-ordered rows: engine events (asserted never to go back in tick)
+drive FX; meta events (`CHAOS_RESOLVED`, `QP_TRACK_REWARD_GRANTED`) are only shown in the timeline, where every event is
+stable-sorted by tick. The canvas plays engine events with tick > 0.
+
+**Drivers** (`components/racing/drivers/`): `recording-driver`, `sim-driver`, `live-driver` (the live re-simulation with
+SSE manual inputs, unchanged) and `snapshot-driver` (SSE snapshots). `PhaserRaceCanvas` takes a `source` prop.
+Seeking is reset-and-replay (`playback.ts`): a forward seek fast-applies the skipped events with FX suppressed; a
+backward seek restarts the Phaser scene, resets the driver and fast-applies `[0, t]` the same way, because
+`applyEvent` side effects (feed, used-item icons, finish order) are not idempotent.
+
+**Stats.** The panel uses `postRaceStats` when present. Without it, it aggregates the stored events and takes motion from
+the track's speed column, or from a re-simulation for the current pair only.
 
 ## Fixture
 

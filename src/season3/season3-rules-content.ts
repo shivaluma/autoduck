@@ -1,5 +1,3 @@
-import { RACE_ITEM_CATALOG } from '@/packages/race-core/src/items/catalog'
-import { WILD_ITEM_CATALOG } from '@/packages/race-core/src/pickups/catalog'
 
 export const SEASON3_RULES_META = {
   title: 'Luật Chơi Season 3',

@@ -21,7 +21,6 @@ env:
   NEXT_TELEMETRY_DISABLED: '1'
 
 # TODO(plan step 0.4): add the `track-format` job (replay-track encode/decode fixtures).
-# TODO(plan step 0.5): add the `client-boundary` job (no packages/race-*, lib/season3*, lib/racing/ imports outside src/engine/* seams).
 
 
 # bash -eo pipefail: a failing command piped into tee still fails the step.
@@ -101,6 +100,37 @@ jobs:
             echo "::error::The second run re-applied migrations; every app migration must be recorded once and be idempotent."
             exit 1
           fi
+
+  client-boundary:
+    name: client-boundary (browser code reaches the engine only through src/engine seams)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      # Plan D18/D26: src/ and components/ must not reference packages/race-*, lib/season3(-race), or
+      # lib/racing/ anywhere outside the src/engine/* seams (which re-export the TS engine on main and the
+      # Rust/WASM build on the rewrite branch). The browser-side DTRK decoder and format live in
+      # src/race/replay-track; lib/racing/replay-track imports them from there.
+      - name: No engine or server imports outside src/engine/*
+        run: |
+          pattern="packages/race-|lib/season3(-race)?(\.ts)?['\"]|lib/racing/"
+          if hits="$(grep -rnE "$pattern" src components | grep -v '^src/engine/')"; then
+            echo "$hits"
+            echo "::error::Browser code must import the engine through src/engine/{catalog,protocol,sim}.ts, not packages/race-*, lib/season3* or lib/racing/."
+            exit 1
+          fi
+          echo "client-boundary: clean"
+
+      - name: Client pages use the seams too
+        run: |
+          files="$(grep -rlE "^['\"]use client['\"]" app || true)"
+          if [ -n "$files" ] && hits="$(grep -nE "packages/race-|@/lib/season3|@/lib/racing/" $files)"; then
+            echo "$hits"
+            echo "::error::'use client' pages must import the engine through src/engine/* seams."
+            exit 1
+          fi
+          echo "client pages: clean"
 
   docker:
     name: docker (build, size, push on main)

@@ -1,11 +1,19 @@
 'use client'
 
 import { useEffect, useId, useRef } from 'react'
-import { intentCopy } from '@/lib/racing/ai-intent-copy'
+import { intentCopy } from '@/src/race/ai-intent-copy'
 import type PhaserType from 'phaser'
-import { createSimulation, itemActivationForEvent, queueWildItemInput, snapshotRaceWorld, stepSimulation } from '@/packages/race-core/src'
-import { createRiverTrack } from '@/packages/race-core/src/track'
-import { type DuckSnapshot, type RaceConfig, type RaceEvent, type RaceItemId, type RecordedWildItemInput, type StateSnapshotMessage, type WildItemId } from '@/packages/race-protocol/src'
+import { itemActivationForEvent } from '@/src/engine/catalog'
+import { createRiverTrack } from '@/src/engine/sim'
+import type { DuckSnapshot, RaceEvent, RaceItemId, WildItemId } from '@/src/engine/protocol'
+import { polylineTrack } from '@/src/race/polyline-track'
+import type { RaceWorld, RenderTrack } from '@/src/race/types'
+import { createPlayback, type Playback, type PlaybackFrame } from './drivers/playback'
+import { createRecordingDriver } from './drivers/recording-driver'
+import { createSimDriver } from './drivers/sim-driver'
+import { connectLiveDriver, createLiveDriver } from './drivers/live-driver'
+import { connectSnapshotDriver } from './drivers/snapshot-driver'
+import { raceSourceKey, type RaceSource, type TimelineDriver } from './drivers/types'
 import { RaceAudioSystem } from './race-audio'
 import { createCrowd, planCrowd, preloadCrowdAvatars } from './race-crowd'
 import { COSMETIC_BY_ID, STARTER_COSMETIC_IDS } from '@/lib/cosmetics/catalog'
@@ -129,18 +137,28 @@ export interface ReplayInspection {
   finished: boolean
   ducks: DuckSnapshot[]
   newEvents: RaceEvent[]
+  /** True when this inspection completes a seek (the tick may have gone backwards). */
+  seeked?: boolean
+  /** The last tick when known (recordings, or sims whose finish tick is known). */
+  endTick?: number | null
+}
+
+export type { RaceSource } from './drivers/types'
+
+function trackForSource(source: RaceSource): RenderTrack {
+  if (source.kind === 'recording') return source.geometry ? polylineTrack(source.geometry) : createRiverTrack(source.track.header.trackVersion)
+  if (source.kind === 'sim') return source.geometry ? polylineTrack(source.geometry) : createRiverTrack(source.config.trackVersion)
+  if (source.kind === 'live') return createRiverTrack(source.config.trackVersion)
+  return createRiverTrack(source.trackVersion ?? undefined)
 }
 
 export function PhaserRaceCanvas({
   raceId,
   players,
-  replayConfig,
-  liveConfig,
-  liveSyncTick,
-  liveManualInputs = [],
+  source,
   replaySpeed = 1,
   replayPaused = false,
-  replayManualInputs = [],
+  seekRequest,
   onReplayInspect,
   onLiveFinished,
   chaosType,
@@ -149,13 +167,12 @@ export function PhaserRaceCanvas({
 }: {
   raceId: number
   players: PlayerLabel[]
-  replayConfig?: RaceConfig | null
-  liveConfig?: RaceConfig | null
-  liveSyncTick?: number
-  liveManualInputs?: RecordedWildItemInput[]
+  /** Where the race comes from: a recorded track, a local re-simulation, a live race or live snapshots. */
+  source: RaceSource
   replaySpeed?: 1 | 2 | 4
   replayPaused?: boolean
-  replayManualInputs?: RecordedWildItemInput[]
+  /** Seek a recording or replay sim to `tick`; a new `nonce` issues a new seek. */
+  seekRequest?: { tick: number; nonce: number } | null
   onReplayInspect?: (inspection: ReplayInspection) => void
   onLiveFinished?: () => void
   chaosType?: string
@@ -165,20 +182,26 @@ export function PhaserRaceCanvas({
 }) {
   const parentId = `duck-race-${useId().replace(/:/g, '')}`
   const serializedPlayers = JSON.stringify(players)
-  const serializedManualInputs = JSON.stringify(replayManualInputs)
-  const serializedLiveConfig = JSON.stringify(liveConfig ?? null)
-  const serializedReplayConfig = JSON.stringify(replayConfig ?? null)
-  const initialLiveRef = useRef<{ syncTick: number; manualInputs: RecordedWildItemInput[] } | null>(null)
-  if (!initialLiveRef.current && liveConfig) {
-    initialLiveRef.current = { syncTick: liveSyncTick ?? 0, manualInputs: liveManualInputs }
-  }
+  const sourceKey = raceSourceKey(source)
+  // The effect reads the latest source through a ref and rebuilds only when its key changes, so a live
+  // race's polling (new sync tick, new manual inputs) never restarts the canvas.
+  const sourceRef = useRef(source)
   const playbackRef = useRef({ speed: replaySpeed, paused: replayPaused })
   const inspectRef = useRef(onReplayInspect)
   const onLiveFinishedRef = useRef(onLiveFinished)
+  const seekRef = useRef<((tick: number) => void) | null>(null)
+
+  useEffect(() => {
+    sourceRef.current = source
+  }, [source])
 
   useEffect(() => {
     playbackRef.current = { speed: replaySpeed, paused: replayPaused }
   }, [replayPaused, replaySpeed])
+
+  useEffect(() => {
+    if (seekRequest) seekRef.current?.(seekRequest.tick)
+  }, [seekRequest])
 
   useEffect(() => {
     inspectRef.current = onReplayInspect
@@ -191,17 +214,18 @@ export function PhaserRaceCanvas({
   useEffect(() => {
     let active = true
     let game: PhaserType.Game | null = null
-    let source: EventSource | null = null
+    let closeStream: (() => void) | null = null
     let replayFrame = 0
     const audio = new RaceAudioSystem()
+    const raceSource = sourceRef.current
 
     void import('phaser').then((module) => {
       if (!active) return
       const Phaser = module.default ?? module
-      const parsedLiveConfig = serializedLiveConfig !== 'null' ? JSON.parse(serializedLiveConfig) as RaceConfig : null
-      const parsedReplayConfig = serializedReplayConfig !== 'null' ? JSON.parse(serializedReplayConfig) as RaceConfig : null
-      const clientSimConfig = parsedReplayConfig ?? parsedLiveConfig
-      const track = createRiverTrack(clientSimConfig?.trackVersion ?? parsedReplayConfig?.trackVersion)
+      const isReplay = raceSource.kind === 'recording' || raceSource.kind === 'sim'
+      const clientDriven = raceSource.kind !== 'snapshot'
+      const sourceChaos = raceSource.kind === 'sim' || raceSource.kind === 'live' ? raceSource.config.chaosConfig?.type : raceSource.kind === 'recording' ? raceSource.chaosType : undefined
+      const track = trackForSource(raceSource)
       const scenePlayers = JSON.parse(serializedPlayers) as PlayerLabel[]
       const reducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
       const mobileViewport = typeof window !== 'undefined' && window.innerWidth < 640
@@ -245,11 +269,11 @@ export function PhaserRaceCanvas({
         private bananaViews = new Map<number, PhaserType.GameObjects.Sprite>()
         private focusPlayerId: string | null = null
         private focusUntil = 0
-        private pendingWorld: Pick<StateSnapshotMessage, 'ducks' | 'pickups' | 'hazards' | 'rockets' | 'bananas'> | null = null
+        private pendingWorld: RaceWorld | null = null
         private lastAppliedSnapshotTick = -1
         private crowd: ReturnType<typeof createCrowd> | null = null
 
-        queueWorld(world: Pick<StateSnapshotMessage, 'ducks' | 'pickups' | 'hazards' | 'rockets' | 'bananas'>, tick: number) {
+        queueWorld(world: RaceWorld, tick: number) {
           if (tick <= this.lastAppliedSnapshotTick) return
           this.lastAppliedSnapshotTick = tick
           this.pendingWorld = world
@@ -257,7 +281,35 @@ export function PhaserRaceCanvas({
 
         constructor() { super('duck-race') }
 
+        /** Phaser calls init on every (re)start; field initialisers only run once, so reset per-run state here. */
+        init() {
+          this.duckViews.clear()
+          this.recentEvents = []
+          this.pickupViews.clear()
+          this.hazardViews.clear()
+          this.rocketViews.clear()
+          this.bananaViews.clear()
+          this.focusPlayerId = null
+          this.focusUntil = 0
+          this.pendingWorld = null
+          this.lastAppliedSnapshotTick = -1
+          this.crowd = null
+          this.finishCelebrationCount = 0
+          this.snapCamera = false
+        }
+
+        /** Seeking backwards: restart the scene to its freshly created state (resolves once create() ran). */
+        rebuild() {
+          return new Promise<void>((resolve) => {
+            this.events.once(Phaser.Scenes.Events.CREATE, () => resolve())
+            this.scene.restart()
+          })
+        }
+
+        private snapCamera = false
+
         preload() {
+          this.load.off('loaderror')
           this.load.on('loaderror', (file: { key?: string; src?: string }) => {
             console.warn('Phaser asset load error:', file?.key, file?.src)
           })
@@ -310,9 +362,9 @@ export function PhaserRaceCanvas({
           if (debugPickups) this.drawPickupDebug()
           scenePlayers.forEach((player, index) => this.createDuck(player, index))
           this.crowd = createCrowd(this, { track, players: crowdPlayers, plan: crowdPlan, reducedMotion })
-          const chaosLabel = chaosType ?? clientSimConfig?.chaosConfig?.type
-          this.add.text(18, 16, `${replayConfig ? '↻ REPLAY' : clientSimConfig ? '● LIVE' : '● LIVE'} · ${raceTheme.emoji} ${raceTheme.name.toUpperCase()}${chaosLabel ? ` · 🎴 ${chaosLabel.replaceAll('_', ' ')}` : ''}`, {
-            color: replayConfig ? '#ffcc00' : '#3dff8f', fontFamily: 'sans-serif', fontSize: '18px', fontStyle: 'bold',
+          const chaosLabel = chaosType ?? sourceChaos
+          this.add.text(18, 16, `${isReplay ? '↻ REPLAY' : '● LIVE'} · ${raceTheme.emoji} ${raceTheme.name.toUpperCase()}${chaosLabel ? ` · 🎴 ${chaosLabel.replaceAll('_', ' ')}` : ''}`, {
+            color: isReplay ? '#ffcc00' : '#3dff8f', fontFamily: 'sans-serif', fontSize: '18px', fontStyle: 'bold',
             backgroundColor: '#100b20cc', padding: { x: 12, y: 8 },
           }).setScrollFactor(0).setDepth(1000)
           this.leaderboard = this.add.text(this.scale.width - 22, 18, '', {
@@ -325,7 +377,7 @@ export function PhaserRaceCanvas({
           }).setOrigin(0, 1).setScrollFactor(0).setDepth(1000)
           const soundHint = this.add.text(this.scale.width / 2, 18, '🔈 TAP FOR SOUND', { color: '#ffffff', fontFamily: 'sans-serif', fontSize: '13px', fontStyle: 'bold', backgroundColor: '#100b20cc', padding: { x: 10, y: 7 } }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(1000)
           this.input.once('pointerdown', () => { void audio.unlock(); soundHint.destroy() })
-          if (!clientSimConfig) this.showCountdown()
+          if (!clientDriven) this.showCountdown()
           markSceneReady()
         }
 
@@ -699,9 +751,13 @@ export function PhaserRaceCanvas({
           })
         }
 
-        private markPrepItemUsed(playerId: string, itemId: RaceItemId) {
+        private markPrepItemUsed(playerId: string, itemId: RaceItemId, silent = false) {
           const icon = this.duckViews.get(playerId)?.loadoutIcons.get(itemId)
           if (!icon || icon.alpha <= 0.35) return
+          if (silent) {
+            icon.setAlpha(0)
+            return
+          }
           icon.setAlpha(0.3)
           this.tweens.add({ targets: icon, scale: reducedMotion ? 1 : 1.8, alpha: 0, duration: reducedMotion ? 150 : 420, ease: 'Quad.Out' })
         }
@@ -764,13 +820,18 @@ export function PhaserRaceCanvas({
           } })
         }
 
-        applySnapshot(ducks: DuckSnapshot[]) {
+        applySnapshot(ducks: DuckSnapshot[], snap = false) {
           for (const duck of ducks) {
             const view = this.duckViews.get(duck.playerId)
             if (!view) continue
             const point = track.sample(duck.progress, duck.lateralOffset)
             view.targetX = point.x
             view.targetY = point.y
+            if (snap) {
+              view.root.setPosition(point.x, point.y)
+              view.lastX = point.x
+              view.lastY = point.y
+            }
             const medal = RANK_COLORS[Math.min(duck.rank, RANK_COLORS.length) - 1] ?? RANK_COLORS[RANK_COLORS.length - 1]!
             view.rankBg.setFillStyle(medal.fill)
             view.rankLabel.setText(String(duck.rank)).setColor(medal.text)
@@ -803,8 +864,14 @@ export function PhaserRaceCanvas({
           }).join('\n'))
         }
 
-        applyWorld(world: Pick<StateSnapshotMessage, 'ducks' | 'pickups' | 'hazards' | 'rockets' | 'bananas'>) {
-          this.applySnapshot(world.ducks)
+        /** `snap` (after a seek): jump ducks and camera, and drop vanished pickups without their burst. */
+        applyWorld(world: RaceWorld, options: { snap?: boolean } = {}) {
+          const snap = options.snap === true
+          if (snap) {
+            this.pendingWorld = null
+            this.snapCamera = true
+          }
+          this.applySnapshot(world.ducks, snap)
           const duckById = new Map(world.ducks.map((duck) => [duck.playerId, duck]))
           const activeIds = new Set(world.pickups.filter((pickup) => pickup.state === 'ACTIVE').map((pickup) => pickup.id))
           for (const pickup of world.pickups) {
@@ -820,6 +887,10 @@ export function PhaserRaceCanvas({
             if (activeIds.has(pickupId)) continue
             this.pickupViews.delete(pickupId)
             this.tweens.killTweensOf(view)
+            if (snap) {
+              view.destroy()
+              continue
+            }
             playFx(this, 'sparkle-burst', view.x, view.y, { size: 110, depth: 931 })
             this.tweens.add({ targets: view, scale: view.scale * (reducedMotion ? 1.1 : 1.6), alpha: 0, duration: reducedMotion ? 120 : 280, onComplete: () => view.destroy() })
           }
@@ -1135,9 +1206,11 @@ export function PhaserRaceCanvas({
           }
         }
 
-        applyEvent(raceEvent: RaceEvent) {
+        /** `silent` (seek fast-forward): keep the feed, used-item icons and finish count; skip FX, audio and camera. */
+        applyEvent(raceEvent: RaceEvent, options: { silent?: boolean } = {}) {
+          const silent = options.silent === true
           const activation = itemActivationForEvent(raceEvent)
-          if (activation) this.markPrepItemUsed(activation.playerId, activation.itemId)
+          if (activation) this.markPrepItemUsed(activation.playerId, activation.itemId, silent)
 
           const source = scenePlayers.find((player) => player.playerId === raceEvent.sourcePlayerId)?.name
           const target = scenePlayers.find((player) => player.playerId === raceEvent.targetPlayerId)?.name
@@ -1198,10 +1271,14 @@ export function PhaserRaceCanvas({
             AI_INTENT: `${intentCopy(raceEvent.metadata.intent, source ?? '', target ?? '', '').icon} ${intentCopy(raceEvent.metadata.intent, source ?? '', target ?? '', String(raceEvent.metadata.itemId ?? '').replaceAll('_', ' ')).title}`,
           }
           const message = messages[raceEvent.type]
-          audio.raceEvent(raceEvent.type)
+          if (!silent) audio.raceEvent(raceEvent.type)
           if (message) {
             this.recentEvents = [message, ...this.recentEvents].slice(0, 3)
             this.eventFeed.setText(this.recentEvents.join('\n'))
+          }
+          if (silent) {
+            if (raceEvent.type === 'DUCK_FINISHED' && this.duckView(raceEvent.sourcePlayerId)) this.finishCelebrationCount += 1
+            return
           }
           this.playActionEffects(raceEvent)
           const focusId = raceEvent.targetPlayerId ?? raceEvent.sourcePlayerId
@@ -1263,6 +1340,13 @@ export function PhaserRaceCanvas({
           const targetX = focus?.root.x ?? averageX
           const targetY = focus?.root.y ?? averageY
           const targetZoom = reducedMotion ? 0.82 : focus ? 1.08 : Phaser.Math.Clamp(this.scale.width / Math.max(900, spread + 520), 0.62, 1.08)
+          if (this.snapCamera) {
+            this.snapCamera = false
+            camera.zoom = targetZoom
+            camera.scrollX = targetX - this.scale.width / (2 * camera.zoom)
+            camera.scrollY = targetY - this.scale.height / (2 * camera.zoom)
+            return
+          }
           camera.zoom += (targetZoom - camera.zoom) * 0.035
           camera.scrollX += (targetX - this.scale.width / (2 * camera.zoom) - camera.scrollX) * 0.045
           camera.scrollY += (targetY - this.scale.height / (2 * camera.zoom) - camera.scrollY) * 0.045
@@ -1276,136 +1360,80 @@ export function PhaserRaceCanvas({
         type: Phaser.AUTO, parent: parentId, backgroundColor: themeBackground, width: mobileViewport ? 720 : 1280, height: mobileViewport ? 720 : 640, scene,
         render: { antialias: true, roundPixels: false },
         scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
-        fps: { target: clientSimConfig ? 60 : 30 },
+        fps: { target: clientDriven ? 60 : 30 },
       })
 
-      const runClientSimulation = (config: RaceConfig, options: { replayMode?: boolean; manualInputs?: RecordedWildItemInput[]; catchUpTick?: number }) => {
-        const simulation = createSimulation(config, { manualInputs: options.manualInputs ?? [] })
-        const catchUpTick = Math.max(0, options.catchUpTick ?? 0)
-        while (simulation.tick < catchUpTick && !simulation.finished) stepSimulation(simulation)
-
+      /** Drives a timeline (recording, replay sim or live sim) from requestAnimationFrame. */
+      const runTimeline = (driver: TimelineDriver, replayMode: boolean) => {
+        const playback: Playback = createPlayback(driver, scene)
         let previous = performance.now()
-        let accumulator = 0
-        let eventCount = simulation.events.length
-        const tickMs = 1000 / config.tickRate
+        let lastReportedTick = -1
+        let finishedReported = false
+
+        const report = (frame: PlaybackFrame) => {
+          if (frame.tick === lastReportedTick && frame.events.length === 0 && !frame.seeked) return
+          lastReportedTick = frame.tick
+          inspectRef.current?.({ tick: frame.tick, finished: frame.finished, ducks: frame.world.ducks, newEvents: frame.events, seeked: frame.seeked, endTick: driver.endTick })
+          if (frame.finished && !finishedReported) {
+            finishedReported = true
+            onLiveFinishedRef.current?.()
+          } else if (!frame.finished) {
+            finishedReported = false
+          }
+        }
 
         const loop = (now: number) => {
-          if (!active || simulation.finished) return
-          const paused = options.replayMode ? playbackRef.current.paused : false
-          const speed = options.replayMode ? playbackRef.current.speed : 1
-          if (!paused) {
-            accumulator += Math.min(100, now - previous) * speed
-            previous = now
-            while (accumulator >= tickMs && !simulation.finished) {
-              stepSimulation(simulation)
-              accumulator -= tickMs
-            }
-          } else {
-            previous = now
-          }
-          const world = snapshotRaceWorld(simulation)
-          const newEvents = simulation.events.slice(eventCount)
-          scene.applyWorld(world)
-          for (const raceEvent of newEvents) scene.applyEvent(raceEvent)
-          eventCount = simulation.events.length
-          inspectRef.current?.({ tick: simulation.tick, finished: simulation.finished, ducks: world.ducks, newEvents })
-          if (simulation.finished) {
-            onLiveFinishedRef.current?.()
-          }
-          if (!simulation.finished) replayFrame = requestAnimationFrame(loop)
+          if (!active) return
+          const paused = replayMode ? playbackRef.current.paused : false
+          const speed = replayMode ? playbackRef.current.speed : 1
+          const frame = playback.frame(now - previous, speed, paused)
+          previous = now
+          if (frame) report(frame)
+          // A live race stops drawing once it is over; replays keep running so the scrubber can seek.
+          if (!replayMode && driver.finished()) return
+          replayFrame = requestAnimationFrame(loop)
         }
 
-        return {
-          simulation,
-          start: () => { void sceneReady.then(() => { replayFrame = requestAnimationFrame(loop) }) },
-          applySyncEvent: (event: RaceEvent) => {
-            if (event.type !== 'WILD_ITEM_MANUAL_INPUT' || event.metadata.applied !== true) return
-            const instanceId = event.metadata.instanceId
-            const clientActionId = event.metadata.clientActionId
-            if (!event.sourcePlayerId || typeof instanceId !== 'string' || typeof clientActionId !== 'string') return
-            queueWildItemInput(simulation, {
-              raceId: config.raceId,
-              playerId: event.sourcePlayerId,
-              wildItemInstanceId: instanceId,
-              action: 'USE',
-              clientActionId,
-            }, event.tick)
-          },
-        }
+        void sceneReady.then(() => {
+          if (!active) return
+          if (replayMode && driver.seekable) {
+            seekRef.current = (tick: number) => {
+              void playback.seek(tick).then((frame) => {
+                if (frame && active) report(frame)
+              })
+            }
+          }
+          replayFrame = requestAnimationFrame(loop)
+        })
       }
 
-      if (parsedReplayConfig) {
-        const runner = runClientSimulation(parsedReplayConfig, {
-          replayMode: true,
-          manualInputs: JSON.parse(serializedManualInputs) as RecordedWildItemInput[],
-        })
-        void sceneReady.then(() => runner.start())
-      } else if (parsedLiveConfig) {
-        const initialLive = initialLiveRef.current
-        const runner = runClientSimulation(parsedLiveConfig, {
-          catchUpTick: initialLive?.syncTick ?? 0,
-          manualInputs: initialLive?.manualInputs ?? [],
-        })
-        source = new EventSource(`/api/races/${raceId}/live`)
-        source.addEventListener('engine-event', (event) => {
-          try {
-            const payload = JSON.parse((event as MessageEvent<string>).data) as RaceEvent
-            if (payload.type === 'WILD_ITEM_MANUAL_INPUT') runner.applySyncEvent(payload)
-            if (payload.type === 'RACE_FINISHED') {
-              onLiveFinishedRef.current?.()
-            }
-          } catch {
-            // Ignore malformed sync events.
-          }
-        })
-        source.addEventListener('finished', () => {
-          onLiveFinishedRef.current?.()
-        })
-        void sceneReady.then(() => runner.start())
+      if (raceSource.kind === 'recording') {
+        runTimeline(createRecordingDriver(raceSource.track, raceSource.events), true)
+      } else if (raceSource.kind === 'sim') {
+        runTimeline(createSimDriver(raceSource.config, { manualInputs: raceSource.manualInputs, endTick: raceSource.endTick, allowVersion: raceSource.allowVersion }), true)
+      } else if (raceSource.kind === 'live') {
+        const live = createLiveDriver(raceSource.config, { syncTick: raceSource.syncTick, manualInputs: raceSource.manualInputs })
+        closeStream = connectLiveDriver(raceId, live, raceSource.config, () => onLiveFinishedRef.current?.())
+        runTimeline(live, false)
       } else {
-        const visualEventTypes = new Set<RaceEvent['type']>([
-          'ROCKET_FIRED', 'ROCKET_HIT', 'ROCKET_BLOCKED', 'BANANA_DROPPED', 'BANANA_HIT', 'BANANA_BLOCKED',
-          'NITRO_STARTED', 'HORN_USED', 'FEATHER_DODGED', 'BUBBLE_POPPED', 'PICKUP_COLLECTED', 'PICKUP_SKIPPED_SLOT_FULL',
-          'WILD_ITEM_GRANTED', 'INSTANT_PICKUP_TRIGGERED', 'MINI_ROCKET_FIRED', 'MINI_ROCKET_HIT', 'MINI_ROCKET_BLOCKED',
-          'WILD_BANANA_DROPPED', 'WILD_BANANA_HIT', 'WILD_BANANA_BLOCKED', 'MINI_BUBBLE_ACTIVATED', 'MINI_BUBBLE_BLOCKED',
-          'WILD_HORN_USED', 'WILD_FEATHER_USED', 'WILD_FEATHER_DODGED', 'HAZARD_HIT', 'HAZARD_DODGED', 'GOLDEN_BOX_COLLECTED', 'DUCK_FINISHED',
-          'AI_INTENT', 'MOMENTUM_STOLEN', 'GUARD_SURGE',
-        ])
-        source = new EventSource(`/api/races/${raceId}/live`)
-        source.addEventListener('finished', () => {
-          onLiveFinishedRef.current?.()
-        })
-        source.addEventListener('snapshot', (event) => {
-          try {
-            const payload = JSON.parse((event as MessageEvent<string>).data) as StateSnapshotMessage
-            if (payload.type !== 'STATE_SNAPSHOT' || !payload.ducks) return
-            if (!liveScene) return
-            liveScene.queueWorld(payload, payload.tick)
-          } catch {
-            // Ignore malformed snapshot frames.
-          }
-        })
-        source.addEventListener('engine-event', (event) => {
-          try {
-            const payload = JSON.parse((event as MessageEvent<string>).data) as RaceEvent
-            if (!payload.type || !visualEventTypes.has(payload.type)) return
-            if (!liveScene) return
-            liveScene.applyEvent(payload)
-          } catch {
-            // Ignore malformed engine events.
-          }
+        closeStream = connectSnapshotDriver(raceId, {
+          world: (world, tick) => liveScene?.queueWorld(world, tick),
+          event: (raceEvent) => liveScene?.applyEvent(raceEvent),
+          finished: () => onLiveFinishedRef.current?.(),
         })
       }
     })
 
     return () => {
       active = false
-      source?.close()
+      seekRef.current = null
+      closeStream?.()
       if (replayFrame) cancelAnimationFrame(replayFrame)
       game?.destroy(true)
       audio.close()
     }
-  }, [chaosType, debugPickups, parentId, raceId, serializedLiveConfig, serializedManualInputs, serializedPlayers, serializedReplayConfig, theme])
+    // sourceKey stands for the source (read via sourceRef).
+  }, [chaosType, debugPickups, parentId, raceId, serializedPlayers, sourceKey, theme])
 
   return (
     <div className="overflow-hidden rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[#2f7a46] shadow-2xl">
