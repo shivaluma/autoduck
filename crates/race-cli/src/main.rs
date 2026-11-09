@@ -1,13 +1,15 @@
 //! `race-cli`: native tooling for the Rust engine (Phase 1).
 //!
 //! `corpus gen` is complete. `oracle diff` validates the trace host header
-//! and stops before the comparison (Phase 2); `oracle meta` and `gate` are
-//! stubs that exit with status 2.
+//! and stops before the comparison (Phase 2). `oracle meta` checks Season meta
+//! parity (needs `--features ts-compat`). `gate` is a stub that exits with
+//! status 2.
 
 // Native-only tool: the D4(b) determinism bans don't apply here.
 #![allow(clippy::disallowed_methods, clippy::disallowed_types)]
 
 mod corpus;
+mod meta;
 mod oracle;
 
 use std::process::ExitCode;
@@ -70,8 +72,17 @@ enum OracleCommand {
         #[arg(long)]
         linux_x64_no_fma: bool,
     },
-    /// Check meta RNG streams against `meta-parity.json.gz` fixtures.
-    Meta,
+    /// Check Season meta parity (Chaos rules and card draws, toggle-skip,
+    /// auto-loadouts, validateLoadout, catalog) against the TS fixture from
+    /// `scripts/oracle/dump-meta-fixtures.ts`. Build with `--features ts-compat`.
+    Meta {
+        /// Fixture path (`.json.gz` or `.json`).
+        #[arg(long, default_value = meta::DEFAULT_FIXTURE)]
+        fixture: String,
+        /// How many mismatching cases to print.
+        #[arg(long, default_value_t = 20)]
+        show: usize,
+    },
 }
 
 fn not_implemented(name: &str) -> ExitCode {
@@ -104,8 +115,14 @@ fn main() -> ExitCode {
             }
         },
         Command::Oracle {
-            command: OracleCommand::Meta,
-        } => not_implemented("oracle meta"),
+            command: OracleCommand::Meta { fixture, show },
+        } => match meta::run_meta(&fixture, show) {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(err) => {
+                eprintln!("race-cli oracle meta: {err:#}");
+                ExitCode::FAILURE
+            }
+        },
         Command::Gate => not_implemented("gate"),
         Command::BuildId => {
             println!("{}", race_core::ENGINE_BUILD_ID);

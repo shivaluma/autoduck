@@ -15,9 +15,14 @@ extern crate alloc;
 
 pub mod build_id;
 pub mod canonical;
+pub mod catalog;
+pub mod chaos;
 pub mod digest;
 pub mod hash;
+pub mod js_sort;
+pub mod loadout;
 pub mod math;
+pub mod meta;
 pub mod rng;
 
 /// D6 id order/validation; the ICU comparator inside is gated on `ts-compat`.
