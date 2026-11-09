@@ -265,7 +265,14 @@ export async function executeSeason3Race(raceId: number, weekId: number, options
     let lastControlPollTick = -Infinity
     const liveSession = startLiveRaceSession(raceId)
     // Observational only: push() never throws and never changes the simulation (plan 0.4, risk R2).
-    const replayRecorder = isReplayTrackRecordingEnabled() ? createReplayTrackRecorder() : null
+    let replayRecorder: ReturnType<typeof createReplayTrackRecorder> | null = null
+    if (isReplayTrackRecordingEnabled()) {
+      try {
+        replayRecorder = createReplayTrackRecorder()
+      } catch (error) {
+        console.error(`Race ${raceId}: replay recording disabled, recorder setup failed:`, error instanceof Error ? error.message : error)
+      }
+    }
     let result
     try {
       result = await runAuthoritativeRace(config, {
