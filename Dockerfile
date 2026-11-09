@@ -4,23 +4,43 @@
 # Multi-stage Dockerfile for Dokploy deployment
 # ============================================
 
-# --- Stage 1: Dependencies (same Node/runtime as Playwright runner) ---
-FROM mcr.microsoft.com/playwright:v1.59.1-noble AS deps
+# One base for every stage, so better-sqlite3 is compiled against the same
+# glibc and Node ABI it runs on. Node 24.14.1 (ICU 78.2, V8 13.6.233.17) is the
+# exact runtime of the previous base, mcr.microsoft.com/playwright:v1.59.1-noble,
+# which keeps race replays/digests on the same JS engine. Pinned by the
+# multi-arch index digest (pushed 2026-04-07).
+ARG NODE_IMAGE=node:24.14.1-bookworm-slim@sha256:b506e7321f176aae77317f99d67a24b272c1f09f1d10f1761f2773447d8da26c
 
-RUN corepack enable && corepack prepare pnpm@11.19.0 --activate
+# --- Stage 1: Dependencies ---
+FROM ${NODE_IMAGE} AS deps
 
-# Install build tools for native modules (better-sqlite3).
-RUN apt-get update && apt-get install -y \
-    xvfb python3 make g++ \
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+RUN corepack enable && corepack prepare pnpm@11.22.0 --activate
+
+# Toolchain for compiling better-sqlite3 (builder stages only).
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 make g++ \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
-RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+# Build better-sqlite3 from source against this base instead of downloading a
+# prebuilt binary; node-gyp uses the headers shipped in the image (no download).
+RUN --mount=type=cache,id=pnpm-store-node24-bookworm,target=/pnpm/store \
     pnpm config set store-dir /pnpm/store && \
-    pnpm install --frozen-lockfile
+    env npm_config_build_from_source=better-sqlite3 npm_config_nodedir=/usr/local \
+    pnpm install --frozen-lockfile && \
+    node -e "const db = require('better-sqlite3')(':memory:'); console.log('better-sqlite3 OK, sqlite', db.prepare('select sqlite_version() v').get().v)"
+
+# Keep only the compiled addon: the runner copies this package dir, and the
+# node-gyp intermediates plus the bundled SQLite sources are ~27 MB of dead weight.
+RUN B=node_modules/.pnpm/better-sqlite3@12.9.0/node_modules/better-sqlite3 && \
+    mv "$B/build/Release/better_sqlite3.node" /tmp/better_sqlite3.node && \
+    rm -rf "$B/build" "$B/deps" "$B/src" && \
+    mkdir -p "$B/build/Release" && mv /tmp/better_sqlite3.node "$B/build/Release/" && \
+    node -e "require('better-sqlite3')(':memory:').close(); console.log('better-sqlite3 OK after prune')"
 
 # --- Stage 2: Build Next.js ---
 FROM deps AS builder
@@ -28,16 +48,20 @@ FROM deps AS builder
 COPY . .
 
 # Generate Prisma client
-RUN npx prisma generate
+RUN pnpm exec prisma generate
 
 # Build Next.js (standalone output)
 RUN pnpm build
 
-# --- Stage 3: Runner (Playwright for browser automation) ---
-FROM mcr.microsoft.com/playwright:v1.59.1-noble AS runner
+# --- Stage 3: Runner ---
+FROM ${NODE_IMAGE} AS runner
 
 # sqlite3 CLI for on-box runbooks (`sqlite3 ... ".backup ..."`, never cp).
-RUN apt-get update && apt-get install -y --no-install-recommends sqlite3 \
+# openssl: Prisma picks its schema-engine binary (`prisma db push` at boot) by the
+# libssl it detects; without it every prisma call warns and falls back to openssl-1.1.x.
+# ca-certificates: system trust store, as the old Playwright base had, so outbound
+# TLS still works if NODE_OPTIONS ever adds --use-openssl-ca / --use-system-ca.
+RUN apt-get update && apt-get install -y --no-install-recommends sqlite3 openssl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 RUN npm install -g prisma@7.7.0 tsx@4.21.0 dotenv@17.4.2
@@ -59,13 +83,17 @@ RUN mkdir -p ./node_modules/@prisma && \
     ln -s "$(npm root -g)/prisma" ./node_modules/prisma && \
     ln -s "$(npm root -g)/dotenv" ./node_modules/dotenv && \
     ln -s "../.pnpm/$(basename "$PRISMA_CLIENT_DIR")/node_modules/@prisma/client" ./node_modules/@prisma/client && \
-    ln -s "../.pnpm/@prisma+adapter-better-sqlite3@7.7.0/node_modules/@prisma/adapter-better-sqlite3" ./node_modules/@prisma/adapter-better-sqlite3
+    ln -s "../.pnpm/@prisma+adapter-better-sqlite3@7.7.0/node_modules/@prisma/adapter-better-sqlite3" ./node_modules/@prisma/adapter-better-sqlite3 && \
+    for link in ./node_modules/prisma ./node_modules/dotenv ./node_modules/@prisma/client ./node_modules/@prisma/adapter-better-sqlite3; do \
+      test -e "$link" || { echo "dangling symlink: $link -> $(readlink "$link")" >&2; exit 1; }; \
+    done
 
 # Copy Prisma files used by startup migrations and the generated client.
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 
-# Copy commentary worker + AI modules
+# Startup migrations (scripts/run-migrations.ts), seed and ops scripts, plus the
+# lib/ modules they import.
 COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/lib ./lib
 COPY --from=builder /app/package.json ./package.json
@@ -75,11 +103,15 @@ COPY scripts/start.sh ./start.sh
 RUN chmod +x ./start.sh
 
 # Create data directory for SQLite persistence
-RUN mkdir -p /app/data /app/tmp/videos
+RUN mkdir -p /app/data
 
 # Environment
 ENV NODE_ENV=production
-ENV DISPLAY=:99
+# LANG and LC_ALL both pinned (as in the old Playwright base) so ICU's default
+# locale stays en-US even if the deploy env sets LANG/LC_*: race-core and chaos
+# order ties with localeCompare, and a vi-VN collator would change race results.
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 ENV DATABASE_URL="file:/app/data/autoduck.db"

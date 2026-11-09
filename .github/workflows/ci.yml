@@ -14,7 +14,7 @@ permissions:
   contents: read
 
 env:
-  # Matches the Node in the runtime image (mcr.microsoft.com/playwright:v1.59.1-noble).
+  # Matches the Node in the runtime image (node:24.14.1-bookworm-slim, see Dockerfile).
   NODE_VERSION: '24.14.1'
   PNPM_VERSION: '11.22.0'
   COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
