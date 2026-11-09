@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { COSMETIC_BY_ID, COSMETIC_CATALOG } from '@/lib/cosmetics/catalog'
 import { applyQuackTransaction } from '@/lib/cosmetics/economy'
+import { grantMissingCosmetics } from '@/lib/cosmetics/admin-grant'
 import { isAdminSecret } from '@/lib/auth/admin-secret'
 
 function authorized(request: Request) {
@@ -98,15 +99,8 @@ export async function POST(request: Request) {
       : COSMETIC_CATALOG
 
     await prisma.$transaction(async (tx: typeof prisma) => {
-      await tx.playerCosmetic.createMany({
-        data: targetItems.map((item) => ({
-          seasonPlayerId: player.id,
-          cosmeticId: item.id,
-          source: 'ADMIN_GRANT_ALL',
-          isNew: true,
-        })),
-        skipDuplicates: true,
-      })
+      // No createMany({ skipDuplicates }): Prisma rejects it on SQLite, which made grant-all a 500.
+      await grantMissingCosmetics(tx, player.id, targetItems.map((item) => item.id), 'ADMIN_GRANT_ALL')
       await tx.cosmeticAdminEvent.create({
         data: {
           action: 'GRANT_ALL_COSMETICS',
