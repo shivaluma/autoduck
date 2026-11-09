@@ -307,6 +307,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, week })
     }
 
+    if (body.action === 'extend-season') {
+      const playedWeeks = season.weeksPlan[0]?.weekNumber ?? 0
+      const requested = body.weeks ?? season.weeks + 1
+      if (!Number.isInteger(requested) || requested < 1 || requested > 52) return fail('Số tuần không hợp lệ (1–52)')
+      if (requested <= season.weeks) return fail(`Season đang có ${season.weeks} tuần — số tuần mới phải lớn hơn`)
+      if (requested < playedWeeks) return fail(`Đã đua ${playedWeeks} tuần, không thể giảm xuống ${requested}`)
+      const updated = await prisma.season.update({ where: { id: season.id }, data: { weeks: requested } })
+      return NextResponse.json({ ok: true, season: updated })
+    }
+
     if (body.action === 'set-chaos') {
       if (!body.weekId) return fail('weekId là bắt buộc')
       const week = await prisma.seasonWeek.findUnique({ where: { id: body.weekId } })

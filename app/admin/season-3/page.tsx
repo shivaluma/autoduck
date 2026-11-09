@@ -107,6 +107,7 @@ export default function AdminSeason3Page() {
   const [openWeekMode, setOpenWeekMode] = useState<'random' | 'manual'>('random')
   const [openWeekChaosType, setOpenWeekChaosType] = useState<string>('NORMAL')
   const [openWeekTargetUserId, setOpenWeekTargetUserId] = useState<number | ''>('')
+  const [extraWeeks, setExtraWeeks] = useState(1)
 
   const currentWeek = useMemo(() => (data?.weeks ?? []).find((week) => week.status !== 'resolved') ?? null, [data])
   const nameById = useMemo(() => new Map((data?.players ?? []).map((player) => [player.id, player.name])), [data])
@@ -437,7 +438,7 @@ export default function AdminSeason3Page() {
         <h2 className="mt-1 font-display text-2xl">Mở Tuần Thi Đấu Kế Tiếp</h2>
         <p className="mt-1 text-sm text-white/60">Bốc ngẫu nhiên hoặc chọn thủ công lá bài Chaos cho tuần tiếp theo.</p>
 
-        {data.weeks.length < (data.season?.weeks ?? 12) && (
+        {data.weeks.length < (data.season?.weeks ?? 12) ? (
           <div className="mt-5 space-y-4">
             <div className="flex flex-wrap gap-3">
               <button
@@ -532,6 +533,32 @@ export default function AdminSeason3Page() {
             >
               {openWeekMode === 'manual' ? '🎴 MỞ TUẦN MỚI VỚI LÁ BÀI ĐÃ CHỌN' : '🎴 BỐC LÁ BÀI CHAOS TUẦN TIẾP THEO'}
             </button>
+          </div>
+        ) : (
+          <div className="mt-5 space-y-3 rounded-2xl border-2 border-[var(--color-ggd-gold)]/60 bg-black/20 p-4">
+            <p className="font-black text-[var(--color-ggd-gold)]">🏁 Season đã đua đủ {data.season?.weeks ?? 12}/{data.season?.weeks ?? 12} tuần.</p>
+            <p className="text-sm text-white/60">Muốn đua tiếp? Gia hạn thêm tuần — bảng điểm, King và Scar được giữ nguyên.</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <label className="flex items-center gap-2 text-sm font-bold">
+                Thêm
+                <input
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={extraWeeks}
+                  onChange={(event) => setExtraWeeks(Math.max(1, Math.min(20, Number(event.target.value) || 1)))}
+                  className="w-20 rounded-xl border-2 border-white/20 bg-black/30 px-3 py-2 text-sm focus:border-[var(--color-ggd-gold)] focus:outline-none"
+                />
+                tuần
+              </label>
+              <button
+                type="button"
+                onClick={() => void act({ action: 'extend-season', weeks: (data.season?.weeks ?? 12) + extraWeeks })}
+                className="rounded-xl bg-[var(--color-ggd-gold)] px-6 py-3 font-black text-[var(--color-ggd-outline)] transition-transform hover:scale-105"
+              >
+                ➕ GIA HẠN SEASON → {(data.season?.weeks ?? 12) + extraWeeks} TUẦN
+              </button>
+            </div>
           </div>
         )}
       </section>}
