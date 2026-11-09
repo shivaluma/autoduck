@@ -9,6 +9,7 @@ frozen: nothing here changes it. These scripts run it and write traces that
 |---|---|
 | `dump-trace.ts` | Runs the TS engine per corpus case and writes per-tick state hashes, the event digest and standings. |
 | `collation-table.ts` | D6 collation key table (owned by the `collate_compat` module). |
+| `dump-cosmetic-fixtures.ts` | Shop `seededScore`/week/rotation, gacha roll/selection/pity, QP rewards and appearance/legacy planner fixtures for `crates/server/tests/{gacha,cosmetics_economy,catalog}.rs` (`crates/server/tests/fixtures/cosmetics.json.gz`; `--check` verifies it is current). |
 
 ## Workflow
 
