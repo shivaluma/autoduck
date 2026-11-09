@@ -23,6 +23,12 @@ env:
 # TODO(plan step 0.4): add the `track-format` job (replay-track encode/decode fixtures).
 # TODO(plan step 0.5): add the `client-boundary` job (no packages/race-*, lib/season3*, lib/racing/ imports outside src/engine/* seams).
 
+
+# bash -eo pipefail: a failing command piped into tee still fails the step.
+defaults:
+  run:
+    shell: bash
+
 jobs:
   ts:
     name: ts (lint, test, build, cosmetics)
