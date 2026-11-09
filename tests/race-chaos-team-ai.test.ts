@@ -4,10 +4,12 @@ import {
   createItemRaceState,
   createPickupRaceState,
   createRiverTrack,
+  simulateRace,
   stepSimulation,
   tickAutoUseAI,
   type ItemDuckState,
 } from '../packages/race-core/src'
+import { tickItemSystem } from '../packages/race-core/src/items/engine'
 import {
   evaluatePrepCandidates,
   evaluateWildCandidates,
@@ -15,7 +17,7 @@ import {
   decideOffensiveAutoItemAction,
 } from '../packages/race-core/src/auto-use/evaluate'
 import { buildRaceObjectiveContext } from '../packages/race-core/src/auto-use/objective'
-import type { RaceConfig } from '../packages/race-protocol/src'
+import type { RaceConfig, RaceItemId } from '../packages/race-protocol/src'
 
 function createTeamRaceConfig(groups: string[][], overrides: Partial<RaceConfig> = {}): RaceConfig {
   const allPlayers = groups.flat().map((id, index) => ({
@@ -350,9 +352,6 @@ test('In-flight Wild Rocket retargeting skips teammates when original target fin
   ]
 
   const emitted: Array<{ type: string; source?: string; target?: string }> = []
-  // Run tickItemSystem or simulate rocket step
-  // Let's import tickItemSystem
-  const { tickItemSystem } = require('../packages/race-core/src/items/engine')
   tickItemSystem(itemState, ducks, 105, 60, (type: string, source?: string, target?: string) => {
     emitted.push({ type, source, target })
   })
@@ -366,7 +365,7 @@ test('Full simulation in Duo and Constructors has ZERO friendly fire incidents',
   const duoConfig = createTeamRaceConfig([['duck-1', 'duck-2'], ['duck-3', 'duck-4'], ['duck-5', 'duck-6'], ['duck-7', 'duck-8']], {
     loadouts: Array.from({ length: 8 }, (_, i) => ({
       playerId: `duck-${i + 1}`,
-      itemIds: (i % 2 === 0 ? ['HOMING_ROCKET', 'QUACK_HORN'] : ['HOMING_ROCKET', 'BANANA']) as any,
+      itemIds: (i % 2 === 0 ? ['HOMING_ROCKET', 'QUACK_HORN'] : ['HOMING_ROCKET', 'BANANA']) as RaceItemId[],
       source: 'PLAYER',
     })),
     pickupConfig: {
@@ -386,7 +385,6 @@ test('Full simulation in Duo and Constructors has ZERO friendly fire incidents',
     },
   })
 
-  const { simulateRace } = require('../packages/race-core/src')
   const result = simulateRace(duoConfig, { recordEvents: true })
   assert.ok(result.events.length > 0)
 

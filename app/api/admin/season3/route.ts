@@ -49,8 +49,40 @@ function parseSkippedPlayerIds(payload: string | null | undefined) {
   }
 }
 
+const OPS_IN_FLIGHT_STATUSES = ['pending', 'running', 'failed']
+
+/** Read-only ops report: ids, states and versions only (no names or tokens). */
+async function opsReport() {
+  const [inFlightRaces, groups] = await Promise.all([
+    prisma.race.findMany({
+      where: { status: { in: OPS_IN_FLIGHT_STATUSES } },
+      select: { id: true, status: true, engineState: true, engineVersion: true, balanceVersion: true, createdAt: true },
+      orderBy: { id: 'asc' },
+    }),
+    prisma.race.groupBy({
+      by: ['isTest', 'status', 'engineVersion', 'balanceVersion'],
+      _count: { _all: true },
+      orderBy: [{ isTest: 'asc' }, { status: 'asc' }, { engineVersion: 'asc' }, { balanceVersion: 'asc' }],
+    }),
+  ])
+  return {
+    report: 'ops',
+    generatedAt: new Date().toISOString(),
+    inFlightRaces,
+    raceCounts: groups.map((group: { isTest: boolean; status: string; engineVersion: string | null; balanceVersion: string | null; _count: { _all: number } }) => ({
+      isTest: group.isTest,
+      status: group.status,
+      engineVersion: group.engineVersion,
+      balanceVersion: group.balanceVersion,
+      count: group._count._all,
+    })),
+    // TODO(plan 0.4/0.6): add the §4.5 replay-track gate and fidelity queries once RaceReplayTrack exists.
+  }
+}
+
 export async function GET(request: Request) {
   if (!authorized(request)) return fail('Unauthorized', 401)
+  if (new URL(request.url).searchParams.get('report') === 'ops') return NextResponse.json(await opsReport())
   const season = await prisma.season.findFirst({
     where: { status: 'active' },
     orderBy: { createdAt: 'desc' },

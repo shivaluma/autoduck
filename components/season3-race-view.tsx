@@ -28,6 +28,13 @@ function parseAppearance(value?: string) {
   try { return JSON.parse(value) as DuckAppearance } catch { return null }
 }
 
+function raceUrl(raceId: number) {
+  const token = typeof window !== 'undefined'
+    ? (new URLSearchParams(window.location.search).get('token') || window.localStorage.getItem('autoduck_season3_token') || '')
+    : ''
+  return token ? `/api/races/${raceId}?token=${encodeURIComponent(token)}` : `/api/races/${raceId}`
+}
+
 export function Season3RaceView({ raceId }: { raceId: number }) {
   const [race, setRace] = useState<RaceStatus | null>(null)
   const [loading, setLoading] = useState(true)
@@ -38,33 +45,36 @@ export function Season3RaceView({ raceId }: { raceId: number }) {
   const [resultTab, setResultTab] = useState<typeof RESULT_TABS[number]['id']>('result')
 
   const fetchRace = useCallback(async () => {
-    const token = typeof window !== 'undefined'
-      ? (new URLSearchParams(window.location.search).get('token') || window.localStorage.getItem('autoduck_season3_token') || '')
-      : ''
-    const url = token ? `/api/races/${raceId}?token=${encodeURIComponent(token)}` : `/api/races/${raceId}`
-    const response = await fetch(url)
+    const response = await fetch(raceUrl(raceId))
     if (!response.ok) return
     const nextRace = await response.json() as RaceStatus
     setRace(nextRace)
     setLoading(false)
   }, [raceId])
 
-  useEffect(() => {
-    let active = true
+  // Reset when navigating to another race (state adjusted during render, not in the effect).
+  const [shownRaceId, setShownRaceId] = useState(raceId)
+  if (shownRaceId !== raceId) {
+    setShownRaceId(raceId)
     setLoading(true)
     setRace(null)
     setLiveDucks([])
     setLiveTick(0)
     setLiveEvents([])
+  }
 
-    void fetchRace()
+  useEffect(() => {
+    let active = true
+
+    void fetch(raceUrl(raceId)).then(async (response) => {
+      if (!active || !response.ok) return
+      const nextRace = await response.json() as RaceStatus
+      setRace(nextRace)
+      setLoading(false)
+    })
 
     const interval = window.setInterval(() => {
-      const token = typeof window !== 'undefined'
-        ? (new URLSearchParams(window.location.search).get('token') || window.localStorage.getItem('autoduck_season3_token') || '')
-        : ''
-      const url = token ? `/api/races/${raceId}?token=${encodeURIComponent(token)}` : `/api/races/${raceId}`
-      void fetch(url).then(async (response) => {
+      void fetch(raceUrl(raceId)).then(async (response) => {
         if (!active || !response.ok) return
         const nextRace = await response.json() as RaceStatus
         if (nextRace.status === 'finished' || nextRace.status === 'failed') {
@@ -80,7 +90,7 @@ export function Season3RaceView({ raceId }: { raceId: number }) {
       active = false
       window.clearInterval(interval)
     }
-  }, [raceId, fetchRace])
+  }, [raceId])
 
   const ranking = useMemo(() => [...(race?.participants ?? [])].sort((left, right) => (left.initialRank ?? 99) - (right.initialRank ?? 99)), [race])
   const officialRanking = useMemo(() => ranking.filter((player) => !player.isGhost && !player.isClone), [ranking])
