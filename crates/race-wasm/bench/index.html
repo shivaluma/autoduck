@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>race-wasm bench</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { font: 14px/1.5 ui-monospace, Menlo, Consolas, monospace; margin: 16px; max-width: 960px; }
+    pre { white-space: pre-wrap; word-break: break-word; }
+    label { margin-right: 12px; }
+    input { width: 6em; }
+  </style>
+</head>
+<body>
+  <h1>race-wasm perf harness</h1>
+  <p>Stub re-sim of <code>ducks × ticks</code> in wasm and in JS. Throttle the CPU first
+    (DevTools → Performance → CPU: 4× slowdown), then press Run. Query parameters
+    <code>?ducks=8&amp;ticks=5400&amp;work=1&amp;iterations=15&amp;r=19&amp;autorun=1</code>
+    set the defaults; <code>r</code> is the Node-measured R factor (see README.md).</p>
+  <form id="form">
+    <label>ducks <input name="ducks" type="number" min="1" max="64"></label>
+    <label>ticks <input name="ticks" type="number" min="1"></label>
+    <label>work <input name="work" type="number" min="1"></label>
+    <label>iterations <input name="iterations" type="number" min="1"></label>
+    <label>R <input name="r" type="number" step="any"></label>
+    <button type="submit">Run</button>
+  </form>
+  <pre id="out">loading…</pre>
+  <script type="module" src="./bench-browser.mjs"></script>
+</body>
+</html>

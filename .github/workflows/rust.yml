@@ -1,0 +1,217 @@
+# Rust CI skeleton (plan D26, D27, D4(e); Phase 1).
+#
+# Jobs: rust (fmt, clippy with and without --all-features, tests, usize and
+# getrandom guards), wasm (no_std proof on wasm32v1-none, the shipped
+# wasm-bindgen package and its engineBuildId), determinism (native vs
+# wasm32-wasip1 under wasmtime on x86_64 and aarch64, default features and
+# ts-compat; includes the pinned libm outputs and the fixed state_hash),
+# serde-features (D4(e) serde_json feature diff).
+#
+# The toolchain comes from rust-toolchain.toml: the channel is read from the
+# file and installed with dtolnay/rust-toolchain, and rustup then selects it
+# for every cargo call through the same file.
+name: rust
+
+on:
+  push:
+    branches: [rewrite]
+  pull_request:
+    branches: [rewrite]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  RUST_BACKTRACE: short
+  WASMTIME_VERSION: 50.0.0
+
+jobs:
+  rust:
+    name: rust (fmt, clippy, test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read pinned toolchain
+        id: toolchain
+        run: echo "channel=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)" >> "$GITHUB_OUTPUT"
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ steps.toolchain.outputs.channel }}
+          components: clippy, rustfmt
+          targets: wasm32-unknown-unknown, wasm32-wasip1
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo fmt
+        run: cargo fmt --all --check
+      - name: cargo clippy (all features)
+        run: cargo clippy --workspace --all-features --all-targets --locked -- -D warnings
+      - name: cargo clippy (default features, the shipped configuration)
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - name: No usize in hashed or serialized engine types (D4(b))
+        run: scripts/ci/check-wire-usize.sh
+      - name: cargo test
+        run: cargo test --workspace --all-features --locked
+      - name: ENGINE_BUILD_ID self-check without ts-compat
+        # Recomputes the id from the tree and compares it with the compiled
+        # constant (catches a stale id after an mtime-preserving restore).
+        run: cargo test -p race-cli --test build_id --locked
+      - name: No getrandom/rand in the wasm graph (race-core and the shipped race-wasm)
+        run: |
+          for pkg in race-core race-wasm; do
+            if cargo tree -p "$pkg" -e normal --target wasm32-unknown-unknown --locked | grep -E 'getrandom|rand'; then
+              echo "::error::$pkg pulls getrandom/rand into the wasm build"
+              exit 1
+            fi
+          done
+      - name: Corpus generator smoke test
+        run: cargo run -p race-cli --locked -- corpus gen --count 240 --out "$RUNNER_TEMP/corpus.jsonl"
+
+  wasm:
+    name: wasm (shipped package)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read pinned toolchain and wasm-bindgen version
+        id: pins
+        run: |
+          echo "channel=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)" >> "$GITHUB_OUTPUT"
+          version="$(awk '/^\[\[package\]\]/{name=""} /^name = "wasm-bindgen"$/{name=$3} name!="" && /^version = /{gsub(/"/,"",$3); print $3; exit}' Cargo.lock)"
+          test -n "$version"
+          echo "wasm_bindgen=$version" >> "$GITHUB_OUTPUT"
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ steps.pins.outputs.channel }}
+          components: clippy
+          targets: wasm32-unknown-unknown, wasm32v1-none
+      - uses: Swatinem/rust-cache@v2
+      - name: Install wasm-bindgen-cli ${{ steps.pins.outputs.wasm_bindgen }}
+        uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-bindgen@${{ steps.pins.outputs.wasm_bindgen }}
+      - name: wasm-bindgen CLI matches the crate pin (D27)
+        run: |
+          cli="$(wasm-bindgen --version | awk '{print $2}')"
+          echo "wasm-bindgen CLI $cli, crate ${{ steps.pins.outputs.wasm_bindgen }}"
+          test "$cli" = "${{ steps.pins.outputs.wasm_bindgen }}"
+      - name: race-core and race-protocol build for wasm32-unknown-unknown
+        run: cargo build -p race-core -p race-protocol --target wasm32-unknown-unknown --locked
+      - name: race-core and race-protocol are really no_std (wasm32v1-none has no std)
+        run: |
+          cargo build -p race-core -p race-protocol --target wasm32v1-none --locked
+          cargo build -p race-core -p race-protocol --target wasm32v1-none --features race-core/ts-compat --locked
+      - name: clippy race-wasm (wasm32-unknown-unknown)
+        run: cargo clippy -p race-wasm --target wasm32-unknown-unknown --locked -- -D warnings
+      - name: scripts/build-wasm.sh
+        run: scripts/build-wasm.sh --require-bindgen
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Load the package in Node and run the perf stub
+        run: node crates/race-wasm/bench/run-node.mjs --iterations 3 --warmup 1
+      - name: Shipped engineBuildId equals the native (server) build id
+        # race-cli doesn't enable race-core/ts-compat, so this is the id a
+        # server built with `-p` reports. Never build the server with
+        # --workspace/--all-features: unification would turn ts-compat on.
+        run: |
+          native="$(cargo run -q -p race-cli --locked -- build-id)"
+          shipped="$(node --input-type=module -e "
+            import { readFileSync } from 'node:fs'
+            const m = await import('./crates/race-wasm/pkg/race_wasm.js')
+            await m.default({ module_or_path: readFileSync('crates/race-wasm/pkg/race_wasm_bg.wasm') })
+            console.log(m.engineBuildId())")"
+          echo "native $native, shipped $shipped"
+          test "$native" = "$shipped"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: race-wasm-pkg
+          path: crates/race-wasm/pkg
+          if-no-files-found: error
+          include-hidden-files: false
+
+  determinism:
+    name: determinism (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: x86_64
+          - os: macos-latest
+            arch: aarch64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read pinned toolchain
+        id: toolchain
+        run: echo "channel=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)" >> "$GITHUB_OUTPUT"
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ steps.toolchain.outputs.channel }}
+          targets: wasm32-wasip1
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: determinism-${{ matrix.arch }}
+      - name: Install wasmtime ${{ env.WASMTIME_VERSION }}
+        uses: taiki-e/install-action@v2
+        with:
+          tool: wasmtime@${{ env.WASMTIME_VERSION }}
+      - name: race-core / race-protocol tests, native (default features, the shipped configuration)
+        run: cargo test -p race-core -p race-protocol --release --locked
+      - name: race-core / race-protocol tests, native (ts-compat)
+        run: cargo test -p race-core -p race-protocol --features race-core/ts-compat --release --locked
+      - name: race-core / race-protocol tests, wasm32-wasip1 under wasmtime (default features)
+        # Fixture-reading tests open absolute paths under the workspace, so
+        # the runner preopens it (`wasmtime` alone would deny file access).
+        env:
+          CARGO_TARGET_WASM32_WASIP1_RUNNER: wasmtime run --dir=${{ github.workspace }}
+        run: cargo test -p race-core -p race-protocol --release --locked --target wasm32-wasip1
+      - name: race-core / race-protocol tests, wasm32-wasip1 under wasmtime (ts-compat)
+        env:
+          CARGO_TARGET_WASM32_WASIP1_RUNNER: wasmtime run --dir=${{ github.workspace }}
+        run: cargo test -p race-core -p race-protocol --features race-core/ts-compat --release --locked --target wasm32-wasip1
+      # Phase 2+: compare the per-60-tick state_hash chain and digest of the
+      # corpus across native, wasm32-wasip1 and the shipped package (race-wasm-pkg
+      # artifact from the wasm job) in Node, then Playwright in three browsers (D26).
+
+  serde-features:
+    name: serde_json feature diff (D4(e))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read pinned toolchain
+        id: toolchain
+        run: echo "channel=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)" >> "$GITHUB_OUTPUT"
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ steps.toolchain.outputs.channel }}
+          targets: wasm32-unknown-unknown
+      - name: Diff serde_json features
+        run: |
+          set -euo pipefail
+          features() { grep -o 'serde_json feature "[^"]*"' | sed 's/.*"\(.*\)"/\1/' | sort -u; }
+          # 1. race-core's own graph must be identical native vs wasm.
+          cargo tree --locked -p race-core -e features -i serde_json > core-native.txt
+          cargo tree --locked -p race-core -e features -i serde_json --target wasm32-unknown-unknown > core-wasm.txt
+          diff -u core-native.txt core-wasm.txt
+          # 2. Unified native graph (today race-cli; from Phase 3 use
+          #    `-p autoduck-server`) vs the shipped wasm graph. Features that
+          #    change float parsing must agree; std/alloc-only differences are
+          #    reported but allowed.
+          cargo tree --locked --workspace -e features -i serde_json | features > native-features.txt
+          cargo tree --locked -p race-wasm -e features -i serde_json --target wasm32-unknown-unknown | features > wasm-features.txt
+          echo "native: $(tr '\n' ' ' < native-features.txt)"
+          echo "wasm:   $(tr '\n' ' ' < wasm-features.txt)"
+          diff -u wasm-features.txt native-features.txt || true
+          parse_relevant='^(float_roundtrip|arbitrary_precision)$'
+          diff <(grep -E "$parse_relevant" native-features.txt || true) <(grep -E "$parse_relevant" wasm-features.txt || true)
+          grep -qx float_roundtrip wasm-features.txt
+          if grep -qx arbitrary_precision native-features.txt wasm-features.txt; then
+            echo "::error::serde_json arbitrary_precision changes number parsing (D4(d))"
+            exit 1
+          fi
