@@ -59,6 +59,19 @@ jobs:
       - run: pnpm build
       - run: pnpm cosmetics:validate
 
+      # Plan 0.8 / D14 / D19: the Rust server embeds these generated files; TS stays the source of truth.
+      - name: Exports for the Rust server are in sync with TS (crates/server/data)
+        run: |
+          pnpm cosmetics:export-catalog --check
+          pnpm db:export-migration-ids --check
+
+      # The oracle dumpers only read TS modules; their fixtures live on the rewrite branches. This makes
+      # sure they still run against main's TS (outputs go to the runner's temp dir, not the repo).
+      - name: Oracle fixture dumpers run against main's TS
+        run: |
+          node --import tsx scripts/oracle/dump-cosmetic-fixtures.ts "$RUNNER_TEMP/cosmetics.json.gz"
+          node --no-use-std-math-pow --import tsx scripts/oracle/dump-meta-fixtures.ts --out "$RUNNER_TEMP/meta-parity.json.gz"
+
   migrations:
     name: migrations (fresh DB, idempotent app migrations)
     runs-on: ubuntu-latest
@@ -124,8 +137,8 @@ jobs:
 
       - name: Client pages use the seams too
         run: |
-          files="$(grep -rlE "^['\"]use client['\"]" app || true)"
-          if [ -n "$files" ] && hits="$(grep -nE "packages/race-|@/lib/season3|@/lib/racing/" $files)"; then
+          mapfile -t files < <(grep -rlE "^['\"]use client['\"]" app || true)
+          if [ "${#files[@]}" -gt 0 ] && hits="$(grep -nE "packages/race-|@/lib/season3|@/lib/racing/" "${files[@]}")"; then
             echo "$hits"
             echo "::error::'use client' pages must import the engine through src/engine/* seams."
             exit 1

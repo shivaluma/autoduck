@@ -1,0 +1,2969 @@
+{
+  "format": "autoduck-cosmetic-catalog/1",
+  "slots": [
+    "bodyColor",
+    "bodySkin",
+    "face",
+    "head",
+    "neck",
+    "outfit",
+    "back",
+    "pet",
+    "aura",
+    "trail",
+    "finish",
+    "nameplate"
+  ],
+  "rarities": [
+    "common",
+    "uncommon",
+    "rare",
+    "epic",
+    "legendary"
+  ],
+  "starterIds": [
+    "body-sunshine",
+    "body-tangerine",
+    "body-mint",
+    "body-sky",
+    "body-lavender",
+    "body-rose",
+    "body-cream",
+    "body-midnight",
+    "head-cap-red",
+    "head-bucket-blue",
+    "head-tiny-crown",
+    "outfit-tee-white",
+    "outfit-office-tie",
+    "outfit-raincoat",
+    "face-happy",
+    "face-shades",
+    "trail-ripples"
+  ],
+  "defaultAppearance": {
+    "bodyColorId": "body-sunshine",
+    "faceId": "face-happy",
+    "headId": "head-cap-red",
+    "outfitId": "outfit-tee-white",
+    "trailId": "trail-ripples"
+  },
+  "items": [
+    {
+      "id": "body-sunshine",
+      "name": "Sunshine",
+      "slot": "bodyColor",
+      "rarity": "common",
+      "collection": "Pond Basics",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-sunshine.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-sunshine.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "bodyColor"
+      ],
+      "version": 2,
+      "color": "#FFD84D"
+    },
+    {
+      "id": "body-tangerine",
+      "name": "Tangerine",
+      "slot": "bodyColor",
+      "rarity": "common",
+      "collection": "Pond Basics",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-tangerine.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-tangerine.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "bodyColor"
+      ],
+      "version": 2,
+      "color": "#FF9B42"
+    },
+    {
+      "id": "body-mint",
+      "name": "Mint Splash",
+      "slot": "bodyColor",
+      "rarity": "common",
+      "collection": "Pond Basics",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-mint.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-mint.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "bodyColor"
+      ],
+      "version": 2,
+      "color": "#58E6B0"
+    },
+    {
+      "id": "body-sky",
+      "name": "Sky Puddle",
+      "slot": "bodyColor",
+      "rarity": "common",
+      "collection": "Pond Basics",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-sky.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-sky.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "bodyColor"
+      ],
+      "version": 2,
+      "color": "#61C9FF"
+    },
+    {
+      "id": "body-rose",
+      "name": "Rose Pop",
+      "slot": "bodyColor",
+      "rarity": "common",
+      "collection": "Pond Basics",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-rose.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-rose.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "bodyColor"
+      ],
+      "version": 2,
+      "color": "#FF78A8"
+    },
+    {
+      "id": "body-cream",
+      "name": "Cream Puff",
+      "slot": "bodyColor",
+      "rarity": "common",
+      "collection": "Pond Basics",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-cream.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-cream.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "bodyColor"
+      ],
+      "version": 2,
+      "color": "#FFF0BD"
+    },
+    {
+      "id": "body-lime",
+      "name": "Lime Soda",
+      "slot": "bodyColor",
+      "rarity": "common",
+      "collection": "Food Fight",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-lime.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-lime.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "food-fight",
+        "bodyColor"
+      ],
+      "version": 2,
+      "color": "#B6F23A"
+    },
+    {
+      "id": "body-peach",
+      "name": "Peach",
+      "slot": "bodyColor",
+      "rarity": "common",
+      "collection": "Food Fight",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-peach.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-peach.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "food-fight",
+        "bodyColor"
+      ],
+      "version": 2,
+      "color": "#FFB38A"
+    },
+    {
+      "id": "body-aqua",
+      "name": "Aqua Splash",
+      "slot": "bodyColor",
+      "rarity": "common",
+      "collection": "Pond Basics",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-aqua.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-aqua.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "bodyColor"
+      ],
+      "version": 2,
+      "color": "#3EDBF0"
+    },
+    {
+      "id": "body-lavender",
+      "name": "Lavender Quack",
+      "slot": "bodyColor",
+      "rarity": "uncommon",
+      "collection": "Pond Basics",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-lavender.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-lavender.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "bodyColor"
+      ],
+      "version": 2,
+      "color": "#B99AFF"
+    },
+    {
+      "id": "body-midnight",
+      "name": "Midnight Pond",
+      "slot": "bodyColor",
+      "rarity": "uncommon",
+      "collection": "Cosmic Pond",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-midnight.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-midnight.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "cosmic-pond",
+        "bodyColor"
+      ],
+      "version": 2,
+      "color": "#4A5490"
+    },
+    {
+      "id": "body-matcha",
+      "name": "Matcha Latte",
+      "slot": "bodyColor",
+      "rarity": "uncommon",
+      "collection": "Food Fight",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-matcha.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-matcha.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "food-fight",
+        "bodyColor"
+      ],
+      "version": 2,
+      "color": "#9CC46A"
+    },
+    {
+      "id": "body-coral",
+      "name": "Coral Reef",
+      "slot": "bodyColor",
+      "rarity": "uncommon",
+      "collection": "Pond Basics",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-coral.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-coral.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "bodyColor"
+      ],
+      "version": 2,
+      "color": "#FF7A6B"
+    },
+    {
+      "id": "body-bubblegum",
+      "name": "Bubblegum",
+      "slot": "bodyColor",
+      "rarity": "uncommon",
+      "collection": "Food Fight",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-bubblegum.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-bubblegum.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "food-fight",
+        "bodyColor"
+      ],
+      "version": 2,
+      "color": "#FF8AD8"
+    },
+    {
+      "id": "body-grape",
+      "name": "Grape Soda",
+      "slot": "bodyColor",
+      "rarity": "uncommon",
+      "collection": "Food Fight",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-grape.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-grape.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "food-fight",
+        "bodyColor"
+      ],
+      "version": 2,
+      "color": "#8B5CF6"
+    },
+    {
+      "id": "body-cocoa",
+      "name": "Cocoa",
+      "slot": "bodyColor",
+      "rarity": "uncommon",
+      "collection": "Office Survivors",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-cocoa.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-cocoa.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "office-survivors",
+        "bodyColor"
+      ],
+      "version": 2,
+      "color": "#A0694A"
+    },
+    {
+      "id": "body-mallard",
+      "name": "Mallard Emerald",
+      "slot": "bodyColor",
+      "rarity": "rare",
+      "collection": "Pond Basics",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-mallard.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-mallard.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "bodyColor"
+      ],
+      "version": 2,
+      "color": "#1F8F5F"
+    },
+    {
+      "id": "body-cherry",
+      "name": "Cherry Gloss",
+      "slot": "bodyColor",
+      "rarity": "rare",
+      "collection": "Viet Duck",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-cherry.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-cherry.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "viet-duck",
+        "bodyColor"
+      ],
+      "version": 2,
+      "color": "#E11D48"
+    },
+    {
+      "id": "body-sapphire",
+      "name": "Sapphire",
+      "slot": "bodyColor",
+      "rarity": "rare",
+      "collection": "Cosmic Pond",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-sapphire.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-sapphire.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "cosmic-pond",
+        "bodyColor"
+      ],
+      "version": 2,
+      "color": "#2563EB"
+    },
+    {
+      "id": "body-pearl",
+      "name": "Pearl",
+      "slot": "bodyColor",
+      "rarity": "rare",
+      "collection": "Pond Royalty",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-pearl.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-pearl.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-royalty",
+        "bodyColor"
+      ],
+      "version": 2,
+      "color": "#F3EEF7"
+    },
+    {
+      "id": "body-ink",
+      "name": "Ink Duck",
+      "slot": "bodyColor",
+      "rarity": "rare",
+      "collection": "Street Duck",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-ink.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-ink.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "street-duck",
+        "bodyColor"
+      ],
+      "version": 2,
+      "color": "#2A2638"
+    },
+    {
+      "id": "body-sunset",
+      "name": "Sunset Ombre",
+      "slot": "bodyColor",
+      "rarity": "epic",
+      "collection": "Viet Duck",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-sunset.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-sunset.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "viet-duck",
+        "bodyColor"
+      ],
+      "version": 2,
+      "animation": "idle",
+      "color": "#FF7A59"
+    },
+    {
+      "id": "body-chrome",
+      "name": "Cyber Chrome",
+      "slot": "bodyColor",
+      "rarity": "epic",
+      "collection": "Cyber Quack",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-chrome.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-chrome.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "cyber-quack",
+        "bodyColor"
+      ],
+      "version": 2,
+      "animation": "idle",
+      "color": "#B8C4D6"
+    },
+    {
+      "id": "body-golden",
+      "name": "Golden Duck",
+      "slot": "bodyColor",
+      "rarity": "legendary",
+      "collection": "Pond Royalty",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-golden.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-golden.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-royalty",
+        "bodyColor"
+      ],
+      "version": 2,
+      "animation": "idle",
+      "color": "#F2B627"
+    },
+    {
+      "id": "bodySkin-cheek-freckles",
+      "name": "Cheek Freckles",
+      "slot": "bodySkin",
+      "rarity": "common",
+      "collection": "Pond Basics",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodySkin/bodySkin-cheek-freckles.svg",
+      "previewAsset": "/cosmetics/v2/previews/bodySkin-cheek-freckles.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "bodySkin"
+      ],
+      "version": 2
+    },
+    {
+      "id": "bodySkin-racing-stripes",
+      "name": "Racing Stripes",
+      "slot": "bodySkin",
+      "rarity": "common",
+      "collection": "Street Duck",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodySkin/bodySkin-racing-stripes.svg",
+      "previewAsset": "/cosmetics/v2/previews/bodySkin-racing-stripes.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "street-duck",
+        "bodySkin"
+      ],
+      "version": 2
+    },
+    {
+      "id": "bodySkin-polka-pond",
+      "name": "Polka Pond",
+      "slot": "bodySkin",
+      "rarity": "common",
+      "collection": "Pond Basics",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodySkin/bodySkin-polka-pond.svg",
+      "previewAsset": "/cosmetics/v2/previews/bodySkin-polka-pond.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "bodySkin"
+      ],
+      "version": 2
+    },
+    {
+      "id": "bodySkin-band-aid-hero",
+      "name": "Band-Aid Hero",
+      "slot": "bodySkin",
+      "rarity": "common",
+      "collection": "Office Survivors",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodySkin/bodySkin-band-aid-hero.svg",
+      "previewAsset": "/cosmetics/v2/previews/bodySkin-band-aid-hero.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "office-survivors",
+        "bodySkin"
+      ],
+      "version": 2
+    },
+    {
+      "id": "bodySkin-tiger-quack",
+      "name": "Tiger Quack",
+      "slot": "bodySkin",
+      "rarity": "uncommon",
+      "collection": "Street Duck",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodySkin/bodySkin-tiger-quack.svg",
+      "previewAsset": "/cosmetics/v2/previews/bodySkin-tiger-quack.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "street-duck",
+        "bodySkin"
+      ],
+      "version": 2
+    },
+    {
+      "id": "bodySkin-cow-spots",
+      "name": "Cow Spots",
+      "slot": "bodySkin",
+      "rarity": "uncommon",
+      "collection": "Food Fight",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodySkin/bodySkin-cow-spots.svg",
+      "previewAsset": "/cosmetics/v2/previews/bodySkin-cow-spots.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "food-fight",
+        "bodySkin"
+      ],
+      "version": 2
+    },
+    {
+      "id": "bodySkin-koi-patches",
+      "name": "Koi Patches",
+      "slot": "bodySkin",
+      "rarity": "uncommon",
+      "collection": "Viet Duck",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodySkin/bodySkin-koi-patches.svg",
+      "previewAsset": "/cosmetics/v2/previews/bodySkin-koi-patches.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "viet-duck",
+        "bodySkin"
+      ],
+      "version": 2
+    },
+    {
+      "id": "bodySkin-street-camo",
+      "name": "Street Camo",
+      "slot": "bodySkin",
+      "rarity": "uncommon",
+      "collection": "Street Duck",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodySkin/bodySkin-street-camo.svg",
+      "previewAsset": "/cosmetics/v2/previews/bodySkin-street-camo.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "street-duck",
+        "bodySkin"
+      ],
+      "version": 2
+    },
+    {
+      "id": "bodySkin-me-tattoo",
+      "name": "\"MẸ\" Sailor Tattoo",
+      "slot": "bodySkin",
+      "rarity": "rare",
+      "collection": "Viet Duck",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodySkin/bodySkin-me-tattoo.svg",
+      "previewAsset": "/cosmetics/v2/previews/bodySkin-me-tattoo.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "viet-duck",
+        "bodySkin"
+      ],
+      "version": 2
+    },
+    {
+      "id": "bodySkin-circuit-feathers",
+      "name": "Circuit Feathers",
+      "slot": "bodySkin",
+      "rarity": "rare",
+      "collection": "Cyber Quack",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodySkin/bodySkin-circuit-feathers.svg",
+      "previewAsset": "/cosmetics/v2/previews/bodySkin-circuit-feathers.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "cyber-quack",
+        "bodySkin"
+      ],
+      "version": 2
+    },
+    {
+      "id": "bodySkin-star-constellations",
+      "name": "Star Constellations",
+      "slot": "bodySkin",
+      "rarity": "rare",
+      "collection": "Cosmic Pond",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodySkin/bodySkin-star-constellations.svg",
+      "previewAsset": "/cosmetics/v2/previews/bodySkin-star-constellations.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "cosmic-pond",
+        "bodySkin"
+      ],
+      "version": 2
+    },
+    {
+      "id": "bodySkin-dragon-scale",
+      "name": "Dragon Scale",
+      "slot": "bodySkin",
+      "rarity": "epic",
+      "collection": "Pond Royalty",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodySkin/bodySkin-dragon-scale.svg",
+      "previewAsset": "/cosmetics/v2/previews/bodySkin-dragon-scale.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-royalty",
+        "bodySkin"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "bodySkin-gold-veins",
+      "name": "Kintsugi Porcelain",
+      "slot": "bodySkin",
+      "rarity": "epic",
+      "collection": "Spirit Lotus",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodySkin/bodySkin-gold-veins.svg",
+      "previewAsset": "/cosmetics/v2/previews/bodySkin-gold-veins.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "spirit-lotus",
+        "bodySkin"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "bodySkin-galaxy-dust",
+      "name": "Galaxy Body",
+      "slot": "bodySkin",
+      "rarity": "legendary",
+      "collection": "Cosmic Pond",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodySkin/bodySkin-galaxy-dust.svg",
+      "previewAsset": "/cosmetics/v2/previews/bodySkin-galaxy-dust.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "cosmic-pond",
+        "bodySkin"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "face-happy",
+      "name": "Happy Beak",
+      "slot": "face",
+      "rarity": "common",
+      "collection": "Pond Basics",
+      "anchor": "face",
+      "asset": "/cosmetics/v2/face/face-happy.svg",
+      "previewAsset": "/cosmetics/v2/previews/face-happy.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "face"
+      ],
+      "version": 2
+    },
+    {
+      "id": "face-sleepy-eyes",
+      "name": "Sleepy Eyes",
+      "slot": "face",
+      "rarity": "common",
+      "collection": "Office Survivors",
+      "anchor": "face",
+      "asset": "/cosmetics/v2/face/face-sleepy-eyes.svg",
+      "previewAsset": "/cosmetics/v2/previews/face-sleepy-eyes.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "office-survivors",
+        "face"
+      ],
+      "version": 2
+    },
+    {
+      "id": "face-angry-brows",
+      "name": "Angry Brows",
+      "slot": "face",
+      "rarity": "common",
+      "collection": "Street Duck",
+      "anchor": "face",
+      "asset": "/cosmetics/v2/face/face-angry-brows.svg",
+      "previewAsset": "/cosmetics/v2/previews/face-angry-brows.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "street-duck",
+        "face"
+      ],
+      "version": 2
+    },
+    {
+      "id": "face-tiny-moustache",
+      "name": "Tiny Moustache",
+      "slot": "face",
+      "rarity": "common",
+      "collection": "Office Survivors",
+      "anchor": "face",
+      "asset": "/cosmetics/v2/face/face-tiny-moustache.svg",
+      "previewAsset": "/cosmetics/v2/previews/face-tiny-moustache.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "office-survivors",
+        "face"
+      ],
+      "version": 2
+    },
+    {
+      "id": "face-monday-face",
+      "name": "Monday Face",
+      "slot": "face",
+      "rarity": "common",
+      "collection": "Office Survivors",
+      "anchor": "face",
+      "asset": "/cosmetics/v2/face/face-monday-face.svg",
+      "previewAsset": "/cosmetics/v2/previews/face-monday-face.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "office-survivors",
+        "face"
+      ],
+      "version": 2
+    },
+    {
+      "id": "face-shades",
+      "name": "Pond Shades",
+      "slot": "face",
+      "rarity": "uncommon",
+      "collection": "Street Duck",
+      "anchor": "face",
+      "asset": "/cosmetics/v2/face/face-shades.svg",
+      "previewAsset": "/cosmetics/v2/previews/face-shades.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "street-duck",
+        "face"
+      ],
+      "version": 2
+    },
+    {
+      "id": "face-nerd-glasses",
+      "name": "Nerd Glasses",
+      "slot": "face",
+      "rarity": "uncommon",
+      "collection": "Office Survivors",
+      "anchor": "face",
+      "asset": "/cosmetics/v2/face/face-nerd-glasses.svg",
+      "previewAsset": "/cosmetics/v2/previews/face-nerd-glasses.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "office-survivors",
+        "face"
+      ],
+      "version": 2
+    },
+    {
+      "id": "face-heart-eyes",
+      "name": "Heart Eyes",
+      "slot": "face",
+      "rarity": "uncommon",
+      "collection": "Pond Basics",
+      "anchor": "face",
+      "asset": "/cosmetics/v2/face/face-heart-eyes.svg",
+      "previewAsset": "/cosmetics/v2/previews/face-heart-eyes.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "face"
+      ],
+      "version": 2
+    },
+    {
+      "id": "face-bandit-mask",
+      "name": "Bandit Mask",
+      "slot": "face",
+      "rarity": "uncommon",
+      "collection": "Street Duck",
+      "anchor": "face",
+      "asset": "/cosmetics/v2/face/face-bandit-mask.svg",
+      "previewAsset": "/cosmetics/v2/previews/face-bandit-mask.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "street-duck",
+        "face"
+      ],
+      "version": 2
+    },
+    {
+      "id": "face-swimming-goggles",
+      "name": "Swim Goggles",
+      "slot": "face",
+      "rarity": "uncommon",
+      "collection": "Pond Basics",
+      "anchor": "face",
+      "asset": "/cosmetics/v2/face/face-swimming-goggles.svg",
+      "previewAsset": "/cosmetics/v2/previews/face-swimming-goggles.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "face"
+      ],
+      "version": 2
+    },
+    {
+      "id": "face-monocle",
+      "name": "Monocle",
+      "slot": "face",
+      "rarity": "rare",
+      "collection": "Pond Royalty",
+      "anchor": "face",
+      "asset": "/cosmetics/v2/face/face-monocle.svg",
+      "previewAsset": "/cosmetics/v2/previews/face-monocle.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-royalty",
+        "face"
+      ],
+      "version": 2
+    },
+    {
+      "id": "face-aviators",
+      "name": "Aviators",
+      "slot": "face",
+      "rarity": "rare",
+      "collection": "Street Duck",
+      "anchor": "face",
+      "asset": "/cosmetics/v2/face/face-aviators.svg",
+      "previewAsset": "/cosmetics/v2/previews/face-aviators.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "street-duck",
+        "face"
+      ],
+      "version": 2
+    },
+    {
+      "id": "face-pixel-eyes",
+      "name": "Pixel Shades",
+      "slot": "face",
+      "rarity": "rare",
+      "collection": "Cyber Quack",
+      "anchor": "face",
+      "asset": "/cosmetics/v2/face/face-pixel-eyes.svg",
+      "previewAsset": "/cosmetics/v2/previews/face-pixel-eyes.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "cyber-quack",
+        "face"
+      ],
+      "version": 2
+    },
+    {
+      "id": "face-laser-visor",
+      "name": "Laser Visor",
+      "slot": "face",
+      "rarity": "epic",
+      "collection": "Cyber Quack",
+      "anchor": "face",
+      "asset": "/cosmetics/v2/face/face-laser-visor.svg",
+      "previewAsset": "/cosmetics/v2/previews/face-laser-visor.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "cyber-quack",
+        "face"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "face-kitsune-mask",
+      "name": "Kitsune Half Mask",
+      "slot": "face",
+      "rarity": "epic",
+      "collection": "Spirit Lotus",
+      "anchor": "face",
+      "asset": "/cosmetics/v2/face/face-kitsune-mask.svg",
+      "previewAsset": "/cosmetics/v2/previews/face-kitsune-mask.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "spirit-lotus",
+        "face"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "face-cosmic-eyes",
+      "name": "Cosmic Eyes",
+      "slot": "face",
+      "rarity": "legendary",
+      "collection": "Cosmic Pond",
+      "anchor": "face",
+      "asset": "/cosmetics/v2/face/face-cosmic-eyes.svg",
+      "previewAsset": "/cosmetics/v2/previews/face-cosmic-eyes.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "cosmic-pond",
+        "face"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "head-cap-red",
+      "name": "Red Race Cap",
+      "slot": "head",
+      "rarity": "common",
+      "collection": "Street Duck",
+      "anchor": "head",
+      "asset": "/cosmetics/v2/head/head-cap-red.svg",
+      "previewAsset": "/cosmetics/v2/previews/head-cap-red.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "street-duck",
+        "head"
+      ],
+      "version": 2
+    },
+    {
+      "id": "head-bucket-blue",
+      "name": "Blue Bucket Hat",
+      "slot": "head",
+      "rarity": "common",
+      "collection": "Street Duck",
+      "anchor": "head",
+      "asset": "/cosmetics/v2/head/head-bucket-blue.svg",
+      "previewAsset": "/cosmetics/v2/previews/head-bucket-blue.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "street-duck",
+        "head"
+      ],
+      "version": 2
+    },
+    {
+      "id": "head-beanie",
+      "name": "Beanie",
+      "slot": "head",
+      "rarity": "common",
+      "collection": "Pond Basics",
+      "anchor": "head",
+      "asset": "/cosmetics/v2/head/head-beanie.svg",
+      "previewAsset": "/cosmetics/v2/previews/head-beanie.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "head"
+      ],
+      "version": 2
+    },
+    {
+      "id": "head-party-cone",
+      "name": "Party Cone",
+      "slot": "head",
+      "rarity": "common",
+      "collection": "Office Survivors",
+      "anchor": "head",
+      "asset": "/cosmetics/v2/head/head-party-cone.svg",
+      "previewAsset": "/cosmetics/v2/previews/head-party-cone.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "office-survivors",
+        "head"
+      ],
+      "version": 2
+    },
+    {
+      "id": "head-traffic-cone",
+      "name": "Traffic Cone",
+      "slot": "head",
+      "rarity": "common",
+      "collection": "Street Duck",
+      "anchor": "head",
+      "asset": "/cosmetics/v2/head/head-traffic-cone.svg",
+      "previewAsset": "/cosmetics/v2/previews/head-traffic-cone.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "street-duck",
+        "head"
+      ],
+      "version": 2
+    },
+    {
+      "id": "head-paper-boat",
+      "name": "Newspaper Hat",
+      "slot": "head",
+      "rarity": "common",
+      "collection": "Office Survivors",
+      "anchor": "head",
+      "asset": "/cosmetics/v2/head/head-paper-boat.svg",
+      "previewAsset": "/cosmetics/v2/previews/head-paper-boat.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "office-survivors",
+        "head"
+      ],
+      "version": 2
+    },
+    {
+      "id": "head-sweatband",
+      "name": "Sweatband",
+      "slot": "head",
+      "rarity": "common",
+      "collection": "Street Duck",
+      "anchor": "head",
+      "asset": "/cosmetics/v2/head/head-sweatband.svg",
+      "previewAsset": "/cosmetics/v2/previews/head-sweatband.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "street-duck",
+        "head"
+      ],
+      "version": 2
+    },
+    {
+      "id": "head-tiny-crown",
+      "name": "Tiny Crown",
+      "slot": "head",
+      "rarity": "uncommon",
+      "collection": "Pond Royalty",
+      "anchor": "head",
+      "asset": "/cosmetics/v2/head/head-tiny-crown.svg",
+      "previewAsset": "/cosmetics/v2/previews/head-tiny-crown.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-royalty",
+        "head"
+      ],
+      "version": 2
+    },
+    {
+      "id": "head-chef-hat",
+      "name": "Chef Hat",
+      "slot": "head",
+      "rarity": "uncommon",
+      "collection": "Food Fight",
+      "anchor": "head",
+      "asset": "/cosmetics/v2/head/head-chef-hat.svg",
+      "previewAsset": "/cosmetics/v2/previews/head-chef-hat.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "food-fight",
+        "head"
+      ],
+      "version": 2
+    },
+    {
+      "id": "head-office-headset",
+      "name": "Office Headset",
+      "slot": "head",
+      "rarity": "uncommon",
+      "collection": "Office Survivors",
+      "anchor": "head",
+      "asset": "/cosmetics/v2/head/head-office-headset.svg",
+      "previewAsset": "/cosmetics/v2/previews/head-office-headset.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "office-survivors",
+        "head"
+      ],
+      "version": 2
+    },
+    {
+      "id": "head-cat-ears",
+      "name": "Cat Ears",
+      "slot": "head",
+      "rarity": "uncommon",
+      "collection": "Pond Basics",
+      "anchor": "head",
+      "asset": "/cosmetics/v2/head/head-cat-ears.svg",
+      "previewAsset": "/cosmetics/v2/previews/head-cat-ears.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "head"
+      ],
+      "version": 2
+    },
+    {
+      "id": "head-bamboo-hat",
+      "name": "Nón Lá",
+      "slot": "head",
+      "rarity": "uncommon",
+      "collection": "Viet Duck",
+      "anchor": "head",
+      "asset": "/cosmetics/v2/head/head-bamboo-hat.svg",
+      "previewAsset": "/cosmetics/v2/previews/head-bamboo-hat.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "viet-duck",
+        "head"
+      ],
+      "version": 2
+    },
+    {
+      "id": "head-frog-hood",
+      "name": "Frog Hood",
+      "slot": "head",
+      "rarity": "uncommon",
+      "collection": "Pond Basics",
+      "anchor": "head",
+      "asset": "/cosmetics/v2/head/head-frog-hood.svg",
+      "previewAsset": "/cosmetics/v2/previews/head-frog-hood.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "head"
+      ],
+      "version": 2
+    },
+    {
+      "id": "head-cowboy-hat",
+      "name": "Cowboy Hat",
+      "slot": "head",
+      "rarity": "rare",
+      "collection": "Street Duck",
+      "anchor": "head",
+      "asset": "/cosmetics/v2/head/head-cowboy-hat.svg",
+      "previewAsset": "/cosmetics/v2/previews/head-cowboy-hat.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "street-duck",
+        "head"
+      ],
+      "version": 2
+    },
+    {
+      "id": "head-wizard-hat",
+      "name": "Wizard Hat",
+      "slot": "head",
+      "rarity": "rare",
+      "collection": "Spirit Lotus",
+      "anchor": "head",
+      "asset": "/cosmetics/v2/head/head-wizard-hat.svg",
+      "previewAsset": "/cosmetics/v2/previews/head-wizard-hat.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "spirit-lotus",
+        "head"
+      ],
+      "version": 2
+    },
+    {
+      "id": "head-viking-horns",
+      "name": "Viking Helm",
+      "slot": "head",
+      "rarity": "rare",
+      "collection": "Pond Royalty",
+      "anchor": "head",
+      "asset": "/cosmetics/v2/head/head-viking-horns.svg",
+      "previewAsset": "/cosmetics/v2/previews/head-viking-horns.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-royalty",
+        "head"
+      ],
+      "version": 2
+    },
+    {
+      "id": "head-motorbike-helmet",
+      "name": "Nón Bảo Hiểm",
+      "slot": "head",
+      "rarity": "rare",
+      "collection": "Viet Duck",
+      "anchor": "head",
+      "asset": "/cosmetics/v2/head/head-motorbike-helmet.svg",
+      "previewAsset": "/cosmetics/v2/previews/head-motorbike-helmet.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "viet-duck",
+        "head"
+      ],
+      "version": 2
+    },
+    {
+      "id": "head-pho-bowl",
+      "name": "Phở Bowl",
+      "slot": "head",
+      "rarity": "rare",
+      "collection": "Food Fight",
+      "anchor": "head",
+      "asset": "/cosmetics/v2/head/head-pho-bowl.svg",
+      "previewAsset": "/cosmetics/v2/previews/head-pho-bowl.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "food-fight",
+        "head"
+      ],
+      "version": 2
+    },
+    {
+      "id": "head-space-dome",
+      "name": "Space Dome",
+      "slot": "head",
+      "rarity": "epic",
+      "collection": "Cosmic Pond",
+      "anchor": "head",
+      "asset": "/cosmetics/v2/head/head-space-dome.svg",
+      "previewAsset": "/cosmetics/v2/previews/head-space-dome.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "cosmic-pond",
+        "head"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "head-cyber-mohawk",
+      "name": "Cyber Mohawk",
+      "slot": "head",
+      "rarity": "epic",
+      "collection": "Cyber Quack",
+      "anchor": "head",
+      "asset": "/cosmetics/v2/head/head-cyber-mohawk.svg",
+      "previewAsset": "/cosmetics/v2/previews/head-cyber-mohawk.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "cyber-quack",
+        "head"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "head-dragon-horns",
+      "name": "Dragon Horns",
+      "slot": "head",
+      "rarity": "epic",
+      "collection": "Pond Royalty",
+      "anchor": "head",
+      "asset": "/cosmetics/v2/head/head-dragon-horns.svg",
+      "previewAsset": "/cosmetics/v2/previews/head-dragon-horns.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-royalty",
+        "head"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "head-dragon-emperor-crown",
+      "name": "Dragon Emperor Crown",
+      "slot": "head",
+      "rarity": "legendary",
+      "collection": "Pond Royalty",
+      "anchor": "head",
+      "asset": "/cosmetics/v2/head/head-dragon-emperor-crown.svg",
+      "previewAsset": "/cosmetics/v2/previews/head-dragon-emperor-crown.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-royalty",
+        "head"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "outfit-tee-white",
+      "name": "Clean White Tee",
+      "slot": "outfit",
+      "rarity": "common",
+      "collection": "Pond Basics",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/outfit/outfit-tee-white.svg",
+      "previewAsset": "/cosmetics/v2/previews/outfit-tee-white.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "outfit"
+      ],
+      "version": 2
+    },
+    {
+      "id": "outfit-office-tie",
+      "name": "Monday Tie",
+      "slot": "outfit",
+      "rarity": "common",
+      "collection": "Office Survivors",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/outfit/outfit-office-tie.svg",
+      "previewAsset": "/cosmetics/v2/previews/outfit-office-tie.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "office-survivors",
+        "outfit"
+      ],
+      "version": 2
+    },
+    {
+      "id": "outfit-pajamas",
+      "name": "Pajamas",
+      "slot": "outfit",
+      "rarity": "common",
+      "collection": "Office Survivors",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/outfit/outfit-pajamas.svg",
+      "previewAsset": "/cosmetics/v2/previews/outfit-pajamas.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "office-survivors",
+        "outfit"
+      ],
+      "version": 2
+    },
+    {
+      "id": "outfit-sailor-shirt",
+      "name": "Sailor Shirt",
+      "slot": "outfit",
+      "rarity": "common",
+      "collection": "Pond Basics",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/outfit/outfit-sailor-shirt.svg",
+      "previewAsset": "/cosmetics/v2/previews/outfit-sailor-shirt.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "outfit"
+      ],
+      "version": 2
+    },
+    {
+      "id": "outfit-football-jersey",
+      "name": "Football Jersey",
+      "slot": "outfit",
+      "rarity": "common",
+      "collection": "Viet Duck",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/outfit/outfit-football-jersey.svg",
+      "previewAsset": "/cosmetics/v2/previews/outfit-football-jersey.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "viet-duck",
+        "outfit"
+      ],
+      "version": 2
+    },
+    {
+      "id": "outfit-chef-apron",
+      "name": "Chef Apron",
+      "slot": "outfit",
+      "rarity": "common",
+      "collection": "Food Fight",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/outfit/outfit-chef-apron.svg",
+      "previewAsset": "/cosmetics/v2/previews/outfit-chef-apron.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "food-fight",
+        "outfit"
+      ],
+      "version": 2
+    },
+    {
+      "id": "outfit-raincoat",
+      "name": "Pond Raincoat",
+      "slot": "outfit",
+      "rarity": "uncommon",
+      "collection": "Pond Basics",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/outfit/outfit-raincoat.svg",
+      "previewAsset": "/cosmetics/v2/previews/outfit-raincoat.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "outfit"
+      ],
+      "version": 2
+    },
+    {
+      "id": "outfit-dev-hoodie",
+      "name": "Dev Hoodie",
+      "slot": "outfit",
+      "rarity": "uncommon",
+      "collection": "Office Survivors",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/outfit/outfit-dev-hoodie.svg",
+      "previewAsset": "/cosmetics/v2/previews/outfit-dev-hoodie.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "office-survivors",
+        "outfit"
+      ],
+      "version": 2
+    },
+    {
+      "id": "outfit-pond-lifeguard",
+      "name": "Pond Lifeguard",
+      "slot": "outfit",
+      "rarity": "uncommon",
+      "collection": "Pond Basics",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/outfit/outfit-pond-lifeguard.svg",
+      "previewAsset": "/cosmetics/v2/previews/outfit-pond-lifeguard.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "outfit"
+      ],
+      "version": 2
+    },
+    {
+      "id": "outfit-biker-vest",
+      "name": "Biker Vest",
+      "slot": "outfit",
+      "rarity": "uncommon",
+      "collection": "Street Duck",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/outfit/outfit-biker-vest.svg",
+      "previewAsset": "/cosmetics/v2/previews/outfit-biker-vest.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "street-duck",
+        "outfit"
+      ],
+      "version": 2
+    },
+    {
+      "id": "outfit-detective-coat",
+      "name": "Detective Coat",
+      "slot": "outfit",
+      "rarity": "uncommon",
+      "collection": "Office Survivors",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/outfit/outfit-detective-coat.svg",
+      "previewAsset": "/cosmetics/v2/previews/outfit-detective-coat.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "office-survivors",
+        "outfit"
+      ],
+      "version": 2
+    },
+    {
+      "id": "outfit-lucky-ao-dai",
+      "name": "Lucky Áo Dài",
+      "slot": "outfit",
+      "rarity": "rare",
+      "collection": "Viet Duck",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/outfit/outfit-lucky-ao-dai.svg",
+      "previewAsset": "/cosmetics/v2/previews/outfit-lucky-ao-dai.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "viet-duck",
+        "outfit"
+      ],
+      "version": 2
+    },
+    {
+      "id": "outfit-racing-suit",
+      "name": "Racing Suit",
+      "slot": "outfit",
+      "rarity": "rare",
+      "collection": "Street Duck",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/outfit/outfit-racing-suit.svg",
+      "previewAsset": "/cosmetics/v2/previews/outfit-racing-suit.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "street-duck",
+        "outfit"
+      ],
+      "version": 2
+    },
+    {
+      "id": "outfit-boss-blazer",
+      "name": "Boss Blazer",
+      "slot": "outfit",
+      "rarity": "rare",
+      "collection": "Office Survivors",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/outfit/outfit-boss-blazer.svg",
+      "previewAsset": "/cosmetics/v2/previews/outfit-boss-blazer.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "office-survivors",
+        "outfit"
+      ],
+      "version": 2
+    },
+    {
+      "id": "outfit-space-suit",
+      "name": "Space Suit",
+      "slot": "outfit",
+      "rarity": "rare",
+      "collection": "Cosmic Pond",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/outfit/outfit-space-suit.svg",
+      "previewAsset": "/cosmetics/v2/previews/outfit-space-suit.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "cosmic-pond",
+        "outfit"
+      ],
+      "version": 2
+    },
+    {
+      "id": "outfit-wizard-robe",
+      "name": "Wizard Robe",
+      "slot": "outfit",
+      "rarity": "rare",
+      "collection": "Spirit Lotus",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/outfit/outfit-wizard-robe.svg",
+      "previewAsset": "/cosmetics/v2/previews/outfit-wizard-robe.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "spirit-lotus",
+        "outfit"
+      ],
+      "version": 2
+    },
+    {
+      "id": "outfit-quack-knight",
+      "name": "Quack Knight",
+      "slot": "outfit",
+      "rarity": "epic",
+      "collection": "Pond Royalty",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/outfit/outfit-quack-knight.svg",
+      "previewAsset": "/cosmetics/v2/previews/outfit-quack-knight.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-royalty",
+        "outfit"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "outfit-cyber-samurai",
+      "name": "Cyber Samurai",
+      "slot": "outfit",
+      "rarity": "epic",
+      "collection": "Cyber Quack",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/outfit/outfit-cyber-samurai.svg",
+      "previewAsset": "/cosmetics/v2/previews/outfit-cyber-samurai.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "cyber-quack",
+        "outfit"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "outfit-spirit-haori",
+      "name": "Spirit Haori",
+      "slot": "outfit",
+      "rarity": "epic",
+      "collection": "Spirit Lotus",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/outfit/outfit-spirit-haori.svg",
+      "previewAsset": "/cosmetics/v2/previews/outfit-spirit-haori.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "spirit-lotus",
+        "outfit"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "outfit-dragon-robe",
+      "name": "Dragon Robe",
+      "slot": "outfit",
+      "rarity": "legendary",
+      "collection": "Pond Royalty",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/outfit/outfit-dragon-robe.svg",
+      "previewAsset": "/cosmetics/v2/previews/outfit-dragon-robe.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-royalty",
+        "outfit"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "pet-rubber-duckling",
+      "name": "Rubber Duckling",
+      "slot": "pet",
+      "rarity": "common",
+      "collection": "Pond Basics",
+      "anchor": "petRight",
+      "asset": "/cosmetics/v2/pet/pet-rubber-duckling.svg",
+      "previewAsset": "/cosmetics/v2/previews/pet-rubber-duckling.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "pet"
+      ],
+      "version": 2
+    },
+    {
+      "id": "pet-origami-frog",
+      "name": "Origami Frog",
+      "slot": "pet",
+      "rarity": "common",
+      "collection": "Office Survivors",
+      "anchor": "petRight",
+      "asset": "/cosmetics/v2/pet/pet-origami-frog.svg",
+      "previewAsset": "/cosmetics/v2/previews/pet-origami-frog.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "office-survivors",
+        "pet"
+      ],
+      "version": 2
+    },
+    {
+      "id": "pet-office-mouse",
+      "name": "Office Mouse",
+      "slot": "pet",
+      "rarity": "common",
+      "collection": "Office Survivors",
+      "anchor": "petRight",
+      "asset": "/cosmetics/v2/pet/pet-office-mouse.svg",
+      "previewAsset": "/cosmetics/v2/previews/pet-office-mouse.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "office-survivors",
+        "pet"
+      ],
+      "version": 2
+    },
+    {
+      "id": "pet-bread-pigeon",
+      "name": "Bánh Mì Pigeon",
+      "slot": "pet",
+      "rarity": "common",
+      "collection": "Food Fight",
+      "anchor": "petRight",
+      "asset": "/cosmetics/v2/pet/pet-bread-pigeon.svg",
+      "previewAsset": "/cosmetics/v2/previews/pet-bread-pigeon.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "food-fight",
+        "pet"
+      ],
+      "version": 2
+    },
+    {
+      "id": "pet-shiba-inu",
+      "name": "Shiba Inu",
+      "slot": "pet",
+      "rarity": "uncommon",
+      "collection": "Pond Basics",
+      "anchor": "petRight",
+      "asset": "/cosmetics/v2/pet/pet-shiba-inu.svg",
+      "previewAsset": "/cosmetics/v2/previews/pet-shiba-inu.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "pet"
+      ],
+      "version": 2
+    },
+    {
+      "id": "pet-calico-cat",
+      "name": "Calico Cat",
+      "slot": "pet",
+      "rarity": "uncommon",
+      "collection": "Pond Basics",
+      "anchor": "petRight",
+      "asset": "/cosmetics/v2/pet/pet-calico-cat.svg",
+      "previewAsset": "/cosmetics/v2/previews/pet-calico-cat.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "pet"
+      ],
+      "version": 2
+    },
+    {
+      "id": "pet-mini-capybara",
+      "name": "Mini Capybara",
+      "slot": "pet",
+      "rarity": "uncommon",
+      "collection": "Pond Basics",
+      "anchor": "petRight",
+      "asset": "/cosmetics/v2/pet/pet-mini-capybara.svg",
+      "previewAsset": "/cosmetics/v2/previews/pet-mini-capybara.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "pet"
+      ],
+      "version": 2
+    },
+    {
+      "id": "pet-coffee-slime",
+      "name": "Cà Phê Slime",
+      "slot": "pet",
+      "rarity": "uncommon",
+      "collection": "Food Fight",
+      "anchor": "petRight",
+      "asset": "/cosmetics/v2/pet/pet-coffee-slime.svg",
+      "previewAsset": "/cosmetics/v2/previews/pet-coffee-slime.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "food-fight",
+        "pet"
+      ],
+      "version": 2
+    },
+    {
+      "id": "pet-tiny-drone",
+      "name": "Tiny Drone",
+      "slot": "pet",
+      "rarity": "rare",
+      "collection": "Cyber Quack",
+      "anchor": "petRight",
+      "asset": "/cosmetics/v2/pet/pet-tiny-drone.svg",
+      "previewAsset": "/cosmetics/v2/previews/pet-tiny-drone.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "cyber-quack",
+        "pet"
+      ],
+      "version": 2,
+      "animation": "hover"
+    },
+    {
+      "id": "pet-golden-carp",
+      "name": "Golden Carp",
+      "slot": "pet",
+      "rarity": "rare",
+      "collection": "Viet Duck",
+      "anchor": "petRight",
+      "asset": "/cosmetics/v2/pet/pet-golden-carp.svg",
+      "previewAsset": "/cosmetics/v2/previews/pet-golden-carp.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "viet-duck",
+        "pet"
+      ],
+      "version": 2,
+      "animation": "float"
+    },
+    {
+      "id": "pet-lucky-black-cat",
+      "name": "Lucky Black Cat",
+      "slot": "pet",
+      "rarity": "rare",
+      "collection": "Spirit Lotus",
+      "anchor": "petRight",
+      "asset": "/cosmetics/v2/pet/pet-lucky-black-cat.svg",
+      "previewAsset": "/cosmetics/v2/previews/pet-lucky-black-cat.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "spirit-lotus",
+        "pet"
+      ],
+      "version": 2,
+      "animation": "wave"
+    },
+    {
+      "id": "pet-baby-dragon",
+      "name": "Baby Dragon",
+      "slot": "pet",
+      "rarity": "epic",
+      "collection": "Pond Royalty",
+      "anchor": "petRight",
+      "asset": "/cosmetics/v2/pet/pet-baby-dragon.svg",
+      "previewAsset": "/cosmetics/v2/previews/pet-baby-dragon.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-royalty",
+        "pet"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "pet-neon-jellyfish",
+      "name": "Neon Jellyfish",
+      "slot": "pet",
+      "rarity": "epic",
+      "collection": "Cyber Quack",
+      "anchor": "petRight",
+      "asset": "/cosmetics/v2/pet/pet-neon-jellyfish.svg",
+      "previewAsset": "/cosmetics/v2/previews/pet-neon-jellyfish.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "cyber-quack",
+        "pet"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "pet-moon-rabbit",
+      "name": "Moon Rabbit",
+      "slot": "pet",
+      "rarity": "legendary",
+      "collection": "Spirit Lotus",
+      "anchor": "petRight",
+      "asset": "/cosmetics/v2/pet/pet-moon-rabbit.svg",
+      "previewAsset": "/cosmetics/v2/previews/pet-moon-rabbit.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "spirit-lotus",
+        "pet"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "aura-fireflies",
+      "name": "Pond Fireflies",
+      "slot": "aura",
+      "rarity": "common",
+      "collection": "Pond Basics",
+      "anchor": "auraCenter",
+      "asset": "/cosmetics/v2/aura/aura-fireflies.svg",
+      "previewAsset": "/cosmetics/v2/previews/aura-fireflies.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "aura"
+      ],
+      "version": 2,
+      "spriteAsset": "/cosmetics/v2/sprites/aura-fireflies.png"
+    },
+    {
+      "id": "aura-coffee-steam",
+      "name": "Coffee Steam",
+      "slot": "aura",
+      "rarity": "common",
+      "collection": "Office Survivors",
+      "anchor": "auraCenter",
+      "asset": "/cosmetics/v2/aura/aura-coffee-steam.svg",
+      "previewAsset": "/cosmetics/v2/previews/aura-coffee-steam.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "office-survivors",
+        "aura"
+      ],
+      "version": 2,
+      "spriteAsset": "/cosmetics/v2/sprites/aura-coffee-steam.png"
+    },
+    {
+      "id": "aura-bubble-halo",
+      "name": "Bubble Halo",
+      "slot": "aura",
+      "rarity": "common",
+      "collection": "Pond Basics",
+      "anchor": "auraCenter",
+      "asset": "/cosmetics/v2/aura/aura-bubble-halo.svg",
+      "previewAsset": "/cosmetics/v2/previews/aura-bubble-halo.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "aura"
+      ],
+      "version": 2,
+      "spriteAsset": "/cosmetics/v2/sprites/aura-bubble-halo.png"
+    },
+    {
+      "id": "aura-lucky-leaves",
+      "name": "Lucky Leaves",
+      "slot": "aura",
+      "rarity": "uncommon",
+      "collection": "Street Duck",
+      "anchor": "auraCenter",
+      "asset": "/cosmetics/v2/aura/aura-lucky-leaves.svg",
+      "previewAsset": "/cosmetics/v2/previews/aura-lucky-leaves.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "street-duck",
+        "aura"
+      ],
+      "version": 2,
+      "spriteAsset": "/cosmetics/v2/sprites/aura-lucky-leaves.png"
+    },
+    {
+      "id": "aura-lotus-breeze",
+      "name": "Lotus Breeze",
+      "slot": "aura",
+      "rarity": "uncommon",
+      "collection": "Viet Duck",
+      "anchor": "auraCenter",
+      "asset": "/cosmetics/v2/aura/aura-lotus-breeze.svg",
+      "previewAsset": "/cosmetics/v2/previews/aura-lotus-breeze.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "viet-duck",
+        "aura"
+      ],
+      "version": 2,
+      "spriteAsset": "/cosmetics/v2/sprites/aura-lotus-breeze.png"
+    },
+    {
+      "id": "aura-storm-cloud",
+      "name": "Storm Cloud",
+      "slot": "aura",
+      "rarity": "rare",
+      "collection": "Office Survivors",
+      "anchor": "auraCenter",
+      "asset": "/cosmetics/v2/aura/aura-storm-cloud.svg",
+      "previewAsset": "/cosmetics/v2/previews/aura-storm-cloud.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "office-survivors",
+        "aura"
+      ],
+      "version": 2,
+      "animation": "storm",
+      "spriteAsset": "/cosmetics/v2/sprites/aura-storm-cloud.png"
+    },
+    {
+      "id": "aura-neon-glitch",
+      "name": "Neon Glitch",
+      "slot": "aura",
+      "rarity": "rare",
+      "collection": "Cyber Quack",
+      "anchor": "auraCenter",
+      "asset": "/cosmetics/v2/aura/aura-neon-glitch.svg",
+      "previewAsset": "/cosmetics/v2/previews/aura-neon-glitch.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "cyber-quack",
+        "aura"
+      ],
+      "version": 2,
+      "animation": "glitch",
+      "spriteAsset": "/cosmetics/v2/sprites/aura-neon-glitch.png"
+    },
+    {
+      "id": "aura-golden-rays",
+      "name": "Golden Rays",
+      "slot": "aura",
+      "rarity": "epic",
+      "collection": "Pond Royalty",
+      "anchor": "auraCenter",
+      "asset": "/cosmetics/v2/aura/aura-golden-rays.svg",
+      "previewAsset": "/cosmetics/v2/previews/aura-golden-rays.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-royalty",
+        "aura"
+      ],
+      "version": 2,
+      "animation": "idle",
+      "spriteAsset": "/cosmetics/v2/sprites/aura-golden-rays.png"
+    },
+    {
+      "id": "aura-ghost-fog",
+      "name": "Ghost Fog",
+      "slot": "aura",
+      "rarity": "epic",
+      "collection": "Spirit Lotus",
+      "anchor": "auraCenter",
+      "asset": "/cosmetics/v2/aura/aura-ghost-fog.svg",
+      "previewAsset": "/cosmetics/v2/previews/aura-ghost-fog.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "spirit-lotus",
+        "aura"
+      ],
+      "version": 2,
+      "animation": "idle",
+      "spriteAsset": "/cosmetics/v2/sprites/aura-ghost-fog.png"
+    },
+    {
+      "id": "aura-dragon-flame",
+      "name": "Thần Long Flame",
+      "slot": "aura",
+      "rarity": "legendary",
+      "collection": "Pond Royalty",
+      "anchor": "auraCenter",
+      "asset": "/cosmetics/v2/aura/aura-dragon-flame.svg",
+      "previewAsset": "/cosmetics/v2/previews/aura-dragon-flame.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-royalty",
+        "aura"
+      ],
+      "version": 2,
+      "animation": "idle",
+      "spriteAsset": "/cosmetics/v2/sprites/aura-dragon-flame.png"
+    },
+    {
+      "id": "trail-ripples",
+      "name": "Fresh Ripples",
+      "slot": "trail",
+      "rarity": "common",
+      "collection": "Pond Basics",
+      "anchor": "tail",
+      "asset": "/cosmetics/v2/trail/trail-ripples.svg",
+      "previewAsset": "/cosmetics/v2/previews/trail-ripples.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "trail"
+      ],
+      "version": 2,
+      "spriteAsset": "/cosmetics/v2/sprites/trail-ripples.png"
+    },
+    {
+      "id": "trail-bubble-wake",
+      "name": "Bubble Wake",
+      "slot": "trail",
+      "rarity": "common",
+      "collection": "Pond Basics",
+      "anchor": "tail",
+      "asset": "/cosmetics/v2/trail/trail-bubble-wake.svg",
+      "previewAsset": "/cosmetics/v2/previews/trail-bubble-wake.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "trail"
+      ],
+      "version": 2,
+      "spriteAsset": "/cosmetics/v2/sprites/trail-bubble-wake.png"
+    },
+    {
+      "id": "trail-paper-boats",
+      "name": "Paper Boats",
+      "slot": "trail",
+      "rarity": "common",
+      "collection": "Office Survivors",
+      "anchor": "tail",
+      "asset": "/cosmetics/v2/trail/trail-paper-boats.svg",
+      "previewAsset": "/cosmetics/v2/previews/trail-paper-boats.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "office-survivors",
+        "trail"
+      ],
+      "version": 2,
+      "spriteAsset": "/cosmetics/v2/sprites/trail-paper-boats.png"
+    },
+    {
+      "id": "trail-lotus-petals",
+      "name": "Lotus Petals",
+      "slot": "trail",
+      "rarity": "uncommon",
+      "collection": "Viet Duck",
+      "anchor": "tail",
+      "asset": "/cosmetics/v2/trail/trail-lotus-petals.svg",
+      "previewAsset": "/cosmetics/v2/previews/trail-lotus-petals.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "viet-duck",
+        "trail"
+      ],
+      "version": 2,
+      "spriteAsset": "/cosmetics/v2/sprites/trail-lotus-petals.png"
+    },
+    {
+      "id": "trail-coffee-spill",
+      "name": "Coffee Spill",
+      "slot": "trail",
+      "rarity": "uncommon",
+      "collection": "Office Survivors",
+      "anchor": "tail",
+      "asset": "/cosmetics/v2/trail/trail-coffee-spill.svg",
+      "previewAsset": "/cosmetics/v2/previews/trail-coffee-spill.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "office-survivors",
+        "trail"
+      ],
+      "version": 2,
+      "spriteAsset": "/cosmetics/v2/sprites/trail-coffee-spill.png"
+    },
+    {
+      "id": "trail-neon-wake",
+      "name": "Neon Wake",
+      "slot": "trail",
+      "rarity": "rare",
+      "collection": "Cyber Quack",
+      "anchor": "tail",
+      "asset": "/cosmetics/v2/trail/trail-neon-wake.svg",
+      "previewAsset": "/cosmetics/v2/previews/trail-neon-wake.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "cyber-quack",
+        "trail"
+      ],
+      "version": 2,
+      "animation": "stream",
+      "spriteAsset": "/cosmetics/v2/sprites/trail-neon-wake.png"
+    },
+    {
+      "id": "trail-pixel-stream",
+      "name": "Pixel Stream",
+      "slot": "trail",
+      "rarity": "rare",
+      "collection": "Cyber Quack",
+      "anchor": "tail",
+      "asset": "/cosmetics/v2/trail/trail-pixel-stream.svg",
+      "previewAsset": "/cosmetics/v2/previews/trail-pixel-stream.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "cyber-quack",
+        "trail"
+      ],
+      "version": 2,
+      "animation": "stream",
+      "spriteAsset": "/cosmetics/v2/sprites/trail-pixel-stream.png"
+    },
+    {
+      "id": "trail-rainbow-wake",
+      "name": "Rainbow Wake",
+      "slot": "trail",
+      "rarity": "epic",
+      "collection": "Pond Basics",
+      "anchor": "tail",
+      "asset": "/cosmetics/v2/trail/trail-rainbow-wake.svg",
+      "previewAsset": "/cosmetics/v2/previews/trail-rainbow-wake.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-basics",
+        "trail"
+      ],
+      "version": 2,
+      "animation": "idle",
+      "spriteAsset": "/cosmetics/v2/sprites/trail-rainbow-wake.png"
+    },
+    {
+      "id": "trail-dragon-sparks",
+      "name": "Dragon Sparks",
+      "slot": "trail",
+      "rarity": "epic",
+      "collection": "Pond Royalty",
+      "anchor": "tail",
+      "asset": "/cosmetics/v2/trail/trail-dragon-sparks.svg",
+      "previewAsset": "/cosmetics/v2/previews/trail-dragon-sparks.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-royalty",
+        "trail"
+      ],
+      "version": 2,
+      "animation": "idle",
+      "spriteAsset": "/cosmetics/v2/sprites/trail-dragon-sparks.png"
+    },
+    {
+      "id": "trail-golden-water",
+      "name": "Golden Wake",
+      "slot": "trail",
+      "rarity": "legendary",
+      "collection": "Pond Royalty",
+      "anchor": "tail",
+      "asset": "/cosmetics/v2/trail/trail-golden-water.svg",
+      "previewAsset": "/cosmetics/v2/previews/trail-golden-water.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "pond-royalty",
+        "trail"
+      ],
+      "version": 2,
+      "animation": "idle",
+      "spriteAsset": "/cosmetics/v2/sprites/trail-golden-water.png"
+    },
+    {
+      "id": "body-sakura-dusk",
+      "name": "Sakura Dusk",
+      "slot": "bodyColor",
+      "rarity": "rare",
+      "collection": "Sakura Spirit",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-sakura-dusk.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-sakura-dusk.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "sakura-spirit",
+        "bodyColor"
+      ],
+      "version": 2,
+      "color": "#3F3A8C"
+    },
+    {
+      "id": "face-sakura-kitsune-blush",
+      "name": "Kitsune Blush",
+      "slot": "face",
+      "rarity": "rare",
+      "collection": "Sakura Spirit",
+      "anchor": "face",
+      "asset": "/cosmetics/v2/face/face-sakura-kitsune-blush.svg",
+      "previewAsset": "/cosmetics/v2/previews/face-sakura-kitsune-blush.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "sakura-spirit",
+        "face"
+      ],
+      "version": 2
+    },
+    {
+      "id": "trail-sakura-petal-stream",
+      "name": "Hoa Anh Petal Stream",
+      "slot": "trail",
+      "rarity": "rare",
+      "collection": "Sakura Spirit",
+      "anchor": "tail",
+      "asset": "/cosmetics/v2/trail/trail-sakura-petal-stream.svg",
+      "previewAsset": "/cosmetics/v2/previews/trail-sakura-petal-stream.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "sakura-spirit",
+        "trail"
+      ],
+      "version": 2,
+      "spriteAsset": "/cosmetics/v2/sprites/trail-sakura-petal-stream.png"
+    },
+    {
+      "id": "head-sakura-lantern-ears",
+      "name": "Lantern Fox Ears",
+      "slot": "head",
+      "rarity": "epic",
+      "collection": "Sakura Spirit",
+      "anchor": "head",
+      "asset": "/cosmetics/v2/head/head-sakura-lantern-ears.svg",
+      "previewAsset": "/cosmetics/v2/previews/head-sakura-lantern-ears.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "sakura-spirit",
+        "head"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "pet-sakura-kitsune",
+      "name": "Kitsune Linh",
+      "slot": "pet",
+      "rarity": "epic",
+      "collection": "Sakura Spirit",
+      "anchor": "petRight",
+      "asset": "/cosmetics/v2/pet/pet-sakura-kitsune.svg",
+      "previewAsset": "/cosmetics/v2/previews/pet-sakura-kitsune.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "sakura-spirit",
+        "pet"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "aura-sakura-torii-moon",
+      "name": "Torii Moonrise",
+      "slot": "aura",
+      "rarity": "epic",
+      "collection": "Sakura Spirit",
+      "anchor": "auraCenter",
+      "asset": "/cosmetics/v2/aura/aura-sakura-torii-moon.svg",
+      "previewAsset": "/cosmetics/v2/previews/aura-sakura-torii-moon.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "sakura-spirit",
+        "aura"
+      ],
+      "version": 2,
+      "animation": "idle",
+      "spriteAsset": "/cosmetics/v2/sprites/aura-sakura-torii-moon.png"
+    },
+    {
+      "id": "outfit-sakura-silk-kimono",
+      "name": "Hoa Anh Silk Kimono",
+      "slot": "outfit",
+      "rarity": "legendary",
+      "collection": "Sakura Spirit",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/outfit/outfit-sakura-silk-kimono.svg",
+      "previewAsset": "/cosmetics/v2/previews/outfit-sakura-silk-kimono.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "sakura-spirit",
+        "outfit"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "body-starlight-pastel",
+      "name": "Pastel Starlight",
+      "slot": "bodyColor",
+      "rarity": "rare",
+      "collection": "Starlight Squad",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-starlight-pastel.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-starlight-pastel.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "starlight-squad",
+        "bodyColor"
+      ],
+      "version": 2,
+      "color": "#F9A8D4"
+    },
+    {
+      "id": "face-starlight-twinkle",
+      "name": "Twinkle Gaze",
+      "slot": "face",
+      "rarity": "rare",
+      "collection": "Starlight Squad",
+      "anchor": "face",
+      "asset": "/cosmetics/v2/face/face-starlight-twinkle.svg",
+      "previewAsset": "/cosmetics/v2/previews/face-starlight-twinkle.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "starlight-squad",
+        "face"
+      ],
+      "version": 2
+    },
+    {
+      "id": "trail-starlight-ribbon",
+      "name": "Ribbon Comet",
+      "slot": "trail",
+      "rarity": "rare",
+      "collection": "Starlight Squad",
+      "anchor": "tail",
+      "asset": "/cosmetics/v2/trail/trail-starlight-ribbon.svg",
+      "previewAsset": "/cosmetics/v2/previews/trail-starlight-ribbon.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "starlight-squad",
+        "trail"
+      ],
+      "version": 2,
+      "spriteAsset": "/cosmetics/v2/sprites/trail-starlight-ribbon.png"
+    },
+    {
+      "id": "head-starlight-tiara",
+      "name": "Crescent Tiara",
+      "slot": "head",
+      "rarity": "epic",
+      "collection": "Starlight Squad",
+      "anchor": "head",
+      "asset": "/cosmetics/v2/head/head-starlight-tiara.svg",
+      "previewAsset": "/cosmetics/v2/previews/head-starlight-tiara.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "starlight-squad",
+        "head"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "pet-starlight-mochi",
+      "name": "Mochi Star Sprite",
+      "slot": "pet",
+      "rarity": "epic",
+      "collection": "Starlight Squad",
+      "anchor": "petRight",
+      "asset": "/cosmetics/v2/pet/pet-starlight-mochi.svg",
+      "previewAsset": "/cosmetics/v2/previews/pet-starlight-mochi.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "starlight-squad",
+        "pet"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "aura-starlight-halo",
+      "name": "Guardian Starfall",
+      "slot": "aura",
+      "rarity": "epic",
+      "collection": "Starlight Squad",
+      "anchor": "auraCenter",
+      "asset": "/cosmetics/v2/aura/aura-starlight-halo.svg",
+      "previewAsset": "/cosmetics/v2/previews/aura-starlight-halo.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "starlight-squad",
+        "aura"
+      ],
+      "version": 2,
+      "animation": "idle",
+      "spriteAsset": "/cosmetics/v2/sprites/aura-starlight-halo.png"
+    },
+    {
+      "id": "outfit-starlight-captain",
+      "name": "Squad Captain Uniform",
+      "slot": "outfit",
+      "rarity": "legendary",
+      "collection": "Starlight Squad",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/outfit/outfit-starlight-captain.svg",
+      "previewAsset": "/cosmetics/v2/previews/outfit-starlight-captain.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "starlight-squad",
+        "outfit"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "body-protocol-crimson-chrome",
+      "name": "Crimson Chrome",
+      "slot": "bodyColor",
+      "rarity": "rare",
+      "collection": "Neon Protocol",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-protocol-crimson-chrome.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-protocol-crimson-chrome.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "neon-protocol",
+        "bodyColor"
+      ],
+      "version": 2,
+      "color": "#B91C2C"
+    },
+    {
+      "id": "face-protocol-scanline-visor",
+      "name": "Scanline Visor",
+      "slot": "face",
+      "rarity": "rare",
+      "collection": "Neon Protocol",
+      "anchor": "face",
+      "asset": "/cosmetics/v2/face/face-protocol-scanline-visor.svg",
+      "previewAsset": "/cosmetics/v2/previews/face-protocol-scanline-visor.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "neon-protocol",
+        "face"
+      ],
+      "version": 2
+    },
+    {
+      "id": "trail-protocol-data-stream",
+      "name": "Data Stream",
+      "slot": "trail",
+      "rarity": "rare",
+      "collection": "Neon Protocol",
+      "anchor": "tail",
+      "asset": "/cosmetics/v2/trail/trail-protocol-data-stream.svg",
+      "previewAsset": "/cosmetics/v2/previews/trail-protocol-data-stream.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "neon-protocol",
+        "trail"
+      ],
+      "version": 2,
+      "spriteAsset": "/cosmetics/v2/sprites/trail-protocol-data-stream.png"
+    },
+    {
+      "id": "head-protocol-hunter-helm",
+      "name": "Hunter Helm",
+      "slot": "head",
+      "rarity": "epic",
+      "collection": "Neon Protocol",
+      "anchor": "head",
+      "asset": "/cosmetics/v2/head/head-protocol-hunter-helm.svg",
+      "previewAsset": "/cosmetics/v2/previews/head-protocol-hunter-helm.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "neon-protocol",
+        "head"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "pet-protocol-sentry-drone",
+      "name": "Sentry Drone",
+      "slot": "pet",
+      "rarity": "epic",
+      "collection": "Neon Protocol",
+      "anchor": "petRight",
+      "asset": "/cosmetics/v2/pet/pet-protocol-sentry-drone.svg",
+      "previewAsset": "/cosmetics/v2/previews/pet-protocol-sentry-drone.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "neon-protocol",
+        "pet"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "aura-protocol-red-alert",
+      "name": "Red Alert Grid",
+      "slot": "aura",
+      "rarity": "epic",
+      "collection": "Neon Protocol",
+      "anchor": "auraCenter",
+      "asset": "/cosmetics/v2/aura/aura-protocol-red-alert.svg",
+      "previewAsset": "/cosmetics/v2/previews/aura-protocol-red-alert.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "neon-protocol",
+        "aura"
+      ],
+      "version": 2,
+      "animation": "idle",
+      "spriteAsset": "/cosmetics/v2/sprites/aura-protocol-red-alert.png"
+    },
+    {
+      "id": "outfit-protocol-overdrive-frame",
+      "name": "Overdrive Frame",
+      "slot": "outfit",
+      "rarity": "legendary",
+      "collection": "Neon Protocol",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/outfit/outfit-protocol-overdrive-frame.svg",
+      "previewAsset": "/cosmetics/v2/previews/outfit-protocol-overdrive-frame.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "neon-protocol",
+        "outfit"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "body-idol-amethyst",
+      "name": "Amethyst Spotlight",
+      "slot": "bodyColor",
+      "rarity": "rare",
+      "collection": "Idol Pop",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-idol-amethyst.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-idol-amethyst.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "idol-pop",
+        "bodyColor"
+      ],
+      "version": 2,
+      "color": "#7C3AED"
+    },
+    {
+      "id": "face-idol-star-shades",
+      "name": "Superstar Shades",
+      "slot": "face",
+      "rarity": "rare",
+      "collection": "Idol Pop",
+      "anchor": "face",
+      "asset": "/cosmetics/v2/face/face-idol-star-shades.svg",
+      "previewAsset": "/cosmetics/v2/previews/face-idol-star-shades.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "idol-pop",
+        "face"
+      ],
+      "version": 2
+    },
+    {
+      "id": "trail-idol-confetti",
+      "name": "Confetti Encore",
+      "slot": "trail",
+      "rarity": "rare",
+      "collection": "Idol Pop",
+      "anchor": "tail",
+      "asset": "/cosmetics/v2/trail/trail-idol-confetti.svg",
+      "previewAsset": "/cosmetics/v2/previews/trail-idol-confetti.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "idol-pop",
+        "trail"
+      ],
+      "version": 2,
+      "spriteAsset": "/cosmetics/v2/sprites/trail-idol-confetti.png"
+    },
+    {
+      "id": "head-idol-headset",
+      "name": "Encore Headset",
+      "slot": "head",
+      "rarity": "epic",
+      "collection": "Idol Pop",
+      "anchor": "head",
+      "asset": "/cosmetics/v2/head/head-idol-headset.svg",
+      "previewAsset": "/cosmetics/v2/previews/head-idol-headset.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "idol-pop",
+        "head"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "pet-idol-lightstick",
+      "name": "Lightstick Buddy",
+      "slot": "pet",
+      "rarity": "epic",
+      "collection": "Idol Pop",
+      "anchor": "petRight",
+      "asset": "/cosmetics/v2/pet/pet-idol-lightstick.svg",
+      "previewAsset": "/cosmetics/v2/previews/pet-idol-lightstick.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "idol-pop",
+        "pet"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "aura-idol-spotlights",
+      "name": "Spotlight Stage",
+      "slot": "aura",
+      "rarity": "epic",
+      "collection": "Idol Pop",
+      "anchor": "auraCenter",
+      "asset": "/cosmetics/v2/aura/aura-idol-spotlights.svg",
+      "previewAsset": "/cosmetics/v2/previews/aura-idol-spotlights.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "idol-pop",
+        "aura"
+      ],
+      "version": 2,
+      "animation": "idle",
+      "spriteAsset": "/cosmetics/v2/sprites/aura-idol-spotlights.png"
+    },
+    {
+      "id": "outfit-idol-holo-stagewear",
+      "name": "Holo Stagewear",
+      "slot": "outfit",
+      "rarity": "legendary",
+      "collection": "Idol Pop",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/outfit/outfit-idol-holo-stagewear.svg",
+      "previewAsset": "/cosmetics/v2/previews/outfit-idol-holo-stagewear.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "idol-pop",
+        "outfit"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "body-outlaw-ember",
+      "name": "Ember Dust",
+      "slot": "bodyColor",
+      "rarity": "rare",
+      "collection": "Dusk Outlaw",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/bodyColor/body-outlaw-ember.svg",
+      "previewAsset": "/cosmetics/v2/previews/body-outlaw-ember.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "dusk-outlaw",
+        "bodyColor"
+      ],
+      "version": 2,
+      "color": "#D9541E"
+    },
+    {
+      "id": "face-outlaw-squint",
+      "name": "Dusk Squint",
+      "slot": "face",
+      "rarity": "rare",
+      "collection": "Dusk Outlaw",
+      "anchor": "face",
+      "asset": "/cosmetics/v2/face/face-outlaw-squint.svg",
+      "previewAsset": "/cosmetics/v2/previews/face-outlaw-squint.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "dusk-outlaw",
+        "face"
+      ],
+      "version": 2
+    },
+    {
+      "id": "trail-outlaw-sulfur",
+      "name": "Sulfur Smoke",
+      "slot": "trail",
+      "rarity": "rare",
+      "collection": "Dusk Outlaw",
+      "anchor": "tail",
+      "asset": "/cosmetics/v2/trail/trail-outlaw-sulfur.svg",
+      "previewAsset": "/cosmetics/v2/previews/trail-outlaw-sulfur.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "dusk-outlaw",
+        "trail"
+      ],
+      "version": 2,
+      "spriteAsset": "/cosmetics/v2/sprites/trail-outlaw-sulfur.png"
+    },
+    {
+      "id": "head-outlaw-stetson",
+      "name": "Hellfire Stetson",
+      "slot": "head",
+      "rarity": "epic",
+      "collection": "Dusk Outlaw",
+      "anchor": "head",
+      "asset": "/cosmetics/v2/head/head-outlaw-stetson.svg",
+      "previewAsset": "/cosmetics/v2/previews/head-outlaw-stetson.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "dusk-outlaw",
+        "head"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "pet-outlaw-skull",
+      "name": "Lil' Bone Bandit",
+      "slot": "pet",
+      "rarity": "epic",
+      "collection": "Dusk Outlaw",
+      "anchor": "petRight",
+      "asset": "/cosmetics/v2/pet/pet-outlaw-skull.svg",
+      "previewAsset": "/cosmetics/v2/previews/pet-outlaw-skull.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "dusk-outlaw",
+        "pet"
+      ],
+      "version": 2,
+      "animation": "idle"
+    },
+    {
+      "id": "aura-outlaw-halo",
+      "name": "Fallen Halo",
+      "slot": "aura",
+      "rarity": "epic",
+      "collection": "Dusk Outlaw",
+      "anchor": "auraCenter",
+      "asset": "/cosmetics/v2/aura/aura-outlaw-halo.svg",
+      "previewAsset": "/cosmetics/v2/previews/aura-outlaw-halo.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "dusk-outlaw",
+        "aura"
+      ],
+      "version": 2,
+      "animation": "idle",
+      "spriteAsset": "/cosmetics/v2/sprites/aura-outlaw-halo.png"
+    },
+    {
+      "id": "outfit-outlaw-duster",
+      "name": "Dusk Reaper Duster",
+      "slot": "outfit",
+      "rarity": "legendary",
+      "collection": "Dusk Outlaw",
+      "anchor": "body",
+      "asset": "/cosmetics/v2/outfit/outfit-outlaw-duster.svg",
+      "previewAsset": "/cosmetics/v2/previews/outfit-outlaw-duster.svg",
+      "shopEligible": true,
+      "gachaEligible": true,
+      "tags": [
+        "dusk-outlaw",
+        "outfit"
+      ],
+      "version": 2,
+      "animation": "idle"
+    }
+  ]
+}
