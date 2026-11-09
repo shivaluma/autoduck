@@ -1,0 +1,45 @@
+{
+  "generator": "collate-gen-v1",
+  "node": "v24.17.0",
+  "icu": "78.3",
+  "unicode": "17.0",
+  "cldr": "48.0",
+  "defaultLocale": "en-US",
+  "sourceCollator": "en",
+  "seed": "0x5eedc011",
+  "pairs": 1000000,
+  "streamSha256": "5b6660d32c3ff67f2733218ddeb797473846befa208b2883bac23767debb24cd",
+  "signs": {
+    "less": 430521,
+    "equal": 138704,
+    "greater": 430775
+  },
+  "invalidIds": 0,
+  "byteOrderDiffersFromLocaleCompare": 172364,
+  "collatorDisagreementsWithLocaleCompare": {
+    "localeCompare": 0,
+    "undefined": 0,
+    "en": 0,
+    "vi": 0
+  },
+  "jsModelMismatches": 0,
+  "exhaustiveUpToLength3": {
+    "localeCompare": {
+      "ids": 278915,
+      "mismatches": 0
+    },
+    "undefined": {
+      "ids": 278915,
+      "mismatches": 0
+    },
+    "en": {
+      "ids": 278915,
+      "mismatches": 0
+    },
+    "vi": {
+      "ids": 278915,
+      "mismatches": 0
+    }
+  },
+  "order": "_-:0123456789aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ"
+}
