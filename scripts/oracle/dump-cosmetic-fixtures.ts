@@ -116,12 +116,13 @@ const indexById = new Map(ids.map((id, index) => [id, index]))
 
 /** An id set as a catalog bitmask (hex, bit i = catalog[i]) plus the ids outside the catalog. */
 function encodeSet(set: Iterable<string>) {
-  let mask = 0n
+  // BigInt() rather than 0n/1n literals: tsconfig targets ES2017 and `next build` type-checks scripts/.
+  let mask = BigInt(0)
   const extra: string[] = []
   for (const id of new Set(set)) {
     const index = indexById.get(id)
     if (index === undefined) extra.push(id)
-    else mask |= 1n << BigInt(index)
+    else mask |= BigInt(1) << BigInt(index)
   }
   return { mask: mask.toString(16), extra }
 }

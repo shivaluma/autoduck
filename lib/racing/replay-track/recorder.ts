@@ -1,6 +1,6 @@
 import type { RaceSimulationState } from '@/packages/race-core/src'
 import { hazardTypeSchema, pickupSpawnTypeSchema, wildItemIdSchema } from '@/packages/race-protocol/src'
-import { NO_DUCK, PICKUP_STATES, PROJECTILE_KINDS, ENTITY_CLASS } from './format'
+import { NO_DUCK, PICKUP_STATES, PROJECTILE_KINDS, ENTITY_CLASS } from '@/src/race/replay-track/format'
 
 /**
  * Live DTRK recorder. It is purely observational: it only reads the simulation state, and

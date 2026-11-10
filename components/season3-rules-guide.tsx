@@ -13,9 +13,9 @@ import {
   SEASON3_RULES_META,
   TRACK_BOXES,
   WILD_ITEMS_LIST,
-} from '@/lib/season3-rules-content'
-import { loadoutComboBadge, loadoutComboLabel } from '@/packages/race-core/src/items/classes'
-import { AUTO_LOADOUT_PRESETS } from '@/packages/race-core/src/items/catalog'
+} from '@/src/season3/season3-rules-content'
+import { loadoutComboBadge, loadoutComboLabel } from '@/src/engine/catalog'
+import { AUTO_LOADOUT_PRESETS } from '@/src/engine/catalog'
 import { RaceItemIcon } from '@/components/racing/race-item-icon'
 
 function Section({

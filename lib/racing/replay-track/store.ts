@@ -1,10 +1,11 @@
 import { gunzipSync } from 'node:zlib'
 import { createHash } from 'node:crypto'
 import type { RaceResult } from '@/packages/race-protocol/src'
-import { decodeReplayTrack, type DecodedReplayTrack } from './decode'
+import { decodeReplayTrack, type DecodedReplayTrack } from '@/src/race/replay-track/decode'
 import { encodeReplayTrack, packReplayTrack, type ReplayTrackMeta } from './encode'
-import { DTRK_FORMAT, type ReplayTrackFidelity, type ReplayTrackSource } from './format'
+import { DTRK_FORMAT, type ReplayTrackFidelity, type ReplayTrackSource } from '@/src/race/replay-track/format'
 import type { ReplayTrackRecorder, ReplayTrackRecording } from './recorder'
+import { resolveHeadTrackGeometryId } from '@/lib/racing/track-geometry'
 
 /** Columns of the RaceReplayTrack table (prisma/schema.prisma), minus createdAt. */
 export interface ReplayTrackRow {
@@ -141,6 +142,11 @@ export interface StoreReplayTrackInput {
   resultDigest: string
   persist: ReplayTrackPersister
   engineCommit?: string | null
+  /**
+   * Geometry id for the header and row. Defaults to the committed export of HEAD `createRiverTrack`
+   * (public/race-tracks/<trackVersion>@<sha8>.json), or null when that file is missing.
+   */
+  trackGeometry?: string | null
   /** Best effort; a throw here only leaves statsJson null. */
   stats?: () => string | null | Promise<string | null>
   log?: (message: string, error?: unknown) => void
@@ -165,6 +171,7 @@ export async function storeRecordedReplayTrack(input: StoreReplayTrackInput): Pr
       raceId: input.raceId,
       resultDigest: input.resultDigest,
       engineCommit: input.engineCommit === undefined ? replayTrackEngineCommit() : input.engineCommit,
+      trackGeometry: input.trackGeometry === undefined ? resolveHeadTrackGeometryId(input.result.trackVersion) : input.trackGeometry,
     })
     let statsJson: string | null = null
     try {

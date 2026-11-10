@@ -14,7 +14,7 @@ import {
   quantiseProgress,
   quantiseSpeed,
   type ReplayTrackHeader,
-} from './format'
+} from '@/src/race/replay-track/format'
 import type { ReplayTrackRecording } from './recorder'
 
 export type ReplayTrackMeta = Pick<ReplayTrackHeader, 'raceId' | 'tickRate' | 'trackVersion' | 'trackGeometry' | 'engine' | 'source' | 'fidelity' | 'resultDigest'>

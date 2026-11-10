@@ -1,5 +1,5 @@
-import { ITEM_CLASS_BY_ID, loadoutComboBadge, loadoutComboLabel } from '@/packages/race-core/src/items/classes'
-import type { RaceItemId } from '@/packages/race-protocol/src'
+import { ITEM_CLASS_BY_ID, loadoutComboBadge, loadoutComboLabel } from '@/src/engine/catalog'
+import type { RaceItemId } from '@/src/engine/protocol'
 
 export type LoadoutPairingTier = 'recommended' | 'solid' | 'niche' | 'hybrid'
 

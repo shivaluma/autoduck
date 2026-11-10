@@ -14,14 +14,13 @@ permissions:
   contents: read
 
 env:
-  # Matches the Node in the runtime image (mcr.microsoft.com/playwright:v1.59.1-noble).
+  # Matches the Node in the runtime image (node:24.14.1-bookworm-slim, see Dockerfile).
   NODE_VERSION: '24.14.1'
   PNPM_VERSION: '11.22.0'
   COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
   NEXT_TELEMETRY_DISABLED: '1'
 
 # TODO(plan step 0.4): add the `track-format` job (replay-track encode/decode fixtures).
-# TODO(plan step 0.5): add the `client-boundary` job (no packages/race-*, lib/season3*, lib/racing/ imports outside src/engine/* seams).
 
 
 # bash -eo pipefail: a failing command piped into tee still fails the step.
@@ -59,6 +58,19 @@ jobs:
       - run: pnpm test
       - run: pnpm build
       - run: pnpm cosmetics:validate
+
+      # Plan 0.8 / D14 / D19: the Rust server embeds these generated files; TS stays the source of truth.
+      - name: Exports for the Rust server are in sync with TS (crates/server/data)
+        run: |
+          pnpm cosmetics:export-catalog --check
+          pnpm db:export-migration-ids --check
+
+      # The oracle dumpers only read TS modules; their fixtures live on the rewrite branches. This makes
+      # sure they still run against main's TS (outputs go to the runner's temp dir, not the repo).
+      - name: Oracle fixture dumpers run against main's TS
+        run: |
+          node --import tsx scripts/oracle/dump-cosmetic-fixtures.ts "$RUNNER_TEMP/cosmetics.json.gz"
+          node --no-use-std-math-pow --import tsx scripts/oracle/dump-meta-fixtures.ts --out "$RUNNER_TEMP/meta-parity.json.gz"
 
   migrations:
     name: migrations (fresh DB, idempotent app migrations)
@@ -101,6 +113,37 @@ jobs:
             echo "::error::The second run re-applied migrations; every app migration must be recorded once and be idempotent."
             exit 1
           fi
+
+  client-boundary:
+    name: client-boundary (browser code reaches the engine only through src/engine seams)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      # Plan D18/D26: src/ and components/ must not reference packages/race-*, lib/season3(-race), or
+      # lib/racing/ anywhere outside the src/engine/* seams (which re-export the TS engine on main and the
+      # Rust/WASM build on the rewrite branch). The browser-side DTRK decoder and format live in
+      # src/race/replay-track; lib/racing/replay-track imports them from there.
+      - name: No engine or server imports outside src/engine/*
+        run: |
+          pattern="packages/race-|lib/season3(-race)?(\.ts)?['\"]|lib/racing/"
+          if hits="$(grep -rnE "$pattern" src components | grep -v '^src/engine/')"; then
+            echo "$hits"
+            echo "::error::Browser code must import the engine through src/engine/{catalog,protocol,sim}.ts, not packages/race-*, lib/season3* or lib/racing/."
+            exit 1
+          fi
+          echo "client-boundary: clean"
+
+      - name: Client pages use the seams too
+        run: |
+          mapfile -t files < <(grep -rlE "^['\"]use client['\"]" app || true)
+          if [ "${#files[@]}" -gt 0 ] && hits="$(grep -nE "packages/race-|@/lib/season3|@/lib/racing/" "${files[@]}")"; then
+            echo "$hits"
+            echo "::error::'use client' pages must import the engine through src/engine/* seams."
+            exit 1
+          fi
+          echo "client pages: clean"
 
   docker:
     name: docker (build, size, push on main)

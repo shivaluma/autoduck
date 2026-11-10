@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import type { DuckSnapshot, RaceItemId, WildItemId } from '@/packages/race-protocol/src'
+import type { DuckSnapshot, RaceItemId, WildItemId } from '@/src/engine/protocol'
 import { Season3Avatar } from '@/components/season3-avatar'
 
 export type LeaderboardPlayer = {

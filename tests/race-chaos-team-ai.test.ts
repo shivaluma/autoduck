@@ -385,7 +385,7 @@ test('Full simulation in Duo and Constructors has ZERO friendly fire incidents',
     },
   })
 
-  const result = simulateRace(duoConfig, { recordEvents: true })
+  const result = simulateRace(duoConfig, { recordEvents: true, allowVersion: true })
   assert.ok(result.events.length > 0)
 
   const teammateMap = new Map<string, Set<string>>()

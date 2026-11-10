@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto'
+import { randomUUID } from '@/lib/test-ids'
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { applyQuackTransaction } from '@/lib/cosmetics/economy'

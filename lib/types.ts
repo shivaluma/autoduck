@@ -13,14 +13,18 @@ export interface RaceStatus {
     trackVersion: string | null
     seedCommit: string | null
     seed: string | null
-    config: import('@/packages/race-protocol/src').RaceConfig | null
-    players: import('@/packages/race-protocol/src').RacePlayerConfig[]
-    chaosConfig: import('@/packages/race-protocol/src').RaceChaosConfig | null
+    config: import('@/src/engine/protocol').RaceConfig | null
+    players: import('@/src/engine/protocol').RacePlayerConfig[]
+    chaosConfig: import('@/src/engine/protocol').RaceChaosConfig | null
     resultDigest: string | null
-    events: import('@/packages/race-protocol/src').RaceEvent[]
-    loadouts: import('@/packages/race-protocol/src').RaceLoadout[]
+    events: import('@/src/engine/protocol').RaceEvent[]
+    loadouts: import('@/src/engine/protocol').RaceLoadout[]
     liveTick?: number | null
-    liveManualInputs?: import('@/packages/race-protocol/src').RecordedWildItemInput[]
+    liveManualInputs?: import('@/src/engine/protocol').RecordedWildItemInput[]
+    /** How a finished race is replayed (plan §4.6). */
+    replay?: import('@/src/race/types').RaceReplayInfo | null
+    /** Frozen post-race stats (RaceReplayTrack.statsJson), when stored. */
+    postRaceStats?: import('@/src/race/post-race-stats').PostRaceStats | null
   } | null
   // Legacy v2 keys, always empty since legacy v2 was removed.
   consumedChests?: []

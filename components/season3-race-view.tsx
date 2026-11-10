@@ -10,9 +10,12 @@ import { PostRaceStatsPanel } from '@/components/racing/post-race-stats-panel'
 import { LiveLeaderboardSnapshot } from '@/components/racing/live-leaderboard-snapshot'
 import { RaceEventTimeline } from '@/components/racing/race-event-timeline'
 import { CombatEncountersPanel } from '@/components/racing/combat-encounters-panel'
+import { useReplayTrack } from '@/components/racing/use-replay-track'
+import { readStoredEvents } from '@/src/race/event-vocab'
+import { planLiveView } from '@/src/race/replay-plan'
 import type { RaceStatus } from '@/lib/types'
 import type { DuckAppearance } from '@/lib/cosmetics/types'
-import type { DuckSnapshot, RaceEvent } from '@/packages/race-protocol/src'
+import type { DuckSnapshot, RaceEvent } from '@/src/engine/protocol'
 import { GameLink, GamePanel, UiIcon } from '@/components/game-ui'
 import type { UiIconName } from '@/lib/race-fx/manifest'
 
@@ -91,6 +94,10 @@ export function Season3RaceView({ raceId }: { raceId: number }) {
       window.clearInterval(interval)
     }
   }, [raceId])
+
+  // Stored events arrive in id order; timelines, combat and stats read them ordered by tick.
+  const storedEvents = useMemo(() => readStoredEvents(race?.engine?.events ?? []), [race?.engine?.events])
+  const trackState = useReplayTrack(race?.status === 'finished' ? race.engine?.replay : null)
 
   const ranking = useMemo(() => [...(race?.participants ?? [])].sort((left, right) => (left.initialRank ?? 99) - (right.initialRank ?? 99)), [race])
   const officialRanking = useMemo(() => ranking.filter((player) => !player.isGhost && !player.isClone), [ranking])
@@ -187,9 +194,9 @@ export function Season3RaceView({ raceId }: { raceId: number }) {
           raceId={raceId}
           players={racePlayers}
           chaosType={race.engine.chaosConfig?.type}
-          liveConfig={race.engine.config}
-          liveSyncTick={race.engine.liveTick ?? undefined}
-          liveManualInputs={race.engine.liveManualInputs}
+          source={race.engine.config && planLiveView(race.engine.config) === 'live'
+            ? { kind: 'live', config: race.engine.config, syncTick: race.engine.liveTick ?? undefined, manualInputs: race.engine.liveManualInputs }
+            : { kind: 'snapshot', trackVersion: race.engine.trackVersion }}
           onReplayInspect={handleLiveInspect}
           onLiveFinished={handleLiveFinished}
         />
@@ -259,14 +266,15 @@ export function Season3RaceView({ raceId }: { raceId: number }) {
       </section>
 
       {/* Replay Player with synced Leaderboard & Event Log */}
-      {race.engine?.config && (
+      {race.engine && (race.engine.config || race.engine.replay?.mode === 'track') && (
         <Season3ReplayPlayer
           key={raceId}
           raceId={raceId}
           players={racePlayers}
           config={race.engine.config}
           events={race.engine.events}
-          resultDigest={race.engine.resultDigest}
+          replay={race.engine.replay}
+          trackState={trackState}
         />
       )}
 
@@ -275,14 +283,20 @@ export function Season3RaceView({ raceId }: { raceId: number }) {
       </div>
 
       <div key={resultTab} className="gx-pop-in space-y-6">
-      {resultTab === 'combat' && race.engine?.events && race.engine.events.length > 0 && (
-        <CombatEncountersPanel events={race.engine.events} players={racePlayers} />
+      {resultTab === 'combat' && storedEvents.timeline.length > 0 && (
+        <CombatEncountersPanel events={storedEvents.timeline} players={racePlayers} />
       )}
-      {resultTab === 'stats' && race.engine?.config && race.engine.events.length > 0 && (
-        <PostRaceStatsPanel config={race.engine.config} events={race.engine.events} players={racePlayers} />
+      {resultTab === 'stats' && race.engine && storedEvents.timeline.length > 0 && (
+        <PostRaceStatsPanel
+          config={race.engine.config}
+          events={storedEvents.timeline}
+          players={racePlayers}
+          stats={race.engine.postRaceStats ?? null}
+          track={trackState.status === 'ready' ? trackState.track : null}
+        />
       )}
-      {resultTab === 'timeline' && race.engine?.events && race.engine.events.length > 0 && (
-        <RaceEventTimeline events={race.engine.events} players={racePlayers} />
+      {resultTab === 'timeline' && storedEvents.timeline.length > 0 && (
+        <RaceEventTimeline events={storedEvents.timeline} players={racePlayers} />
       )}
       {resultTab === 'result' && <>
       {/* Official Final Rankings */}
