@@ -18,9 +18,11 @@ default = []
 test-rng = []
 
 [dependencies]
-# Engine crates: stage A only uses versions (race-protocol). Never enable
-# race-core's `ts-compat` here (phase1-notes `## build_id`).
+# Engine crates: versions (race-protocol); Chaos rules, card draws, loadouts and the RNG for the
+# Season 3 meta layer (race-core, stage B). Never enable race-core's `ts-compat` here
+# (phase1-notes `## build_id`).
 race-protocol = { workspace = true, features = ["std"] }
+race-core = { workspace = true, features = ["std"] }
 
 axum = { version = "=0.8.9", default-features = false, features = ["http1", "json", "query", "tokio", "tower-log", "tracing", "matched-path", "original-uri"] }
 tokio = { version = "=1.54.1", features = ["rt-multi-thread", "macros", "net", "signal", "time", "fs", "sync", "process"] }

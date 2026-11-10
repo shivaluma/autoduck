@@ -114,6 +114,7 @@ dependencies = [
  "hyper-util",
  "jsonwebtoken",
  "libc",
+ "race-core",
  "race-protocol",
  "rand",
  "reqwest",

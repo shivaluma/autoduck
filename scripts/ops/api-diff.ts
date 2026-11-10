@@ -275,21 +275,55 @@ function buildGetRequests(dbPath: string, secret: string): Step[] {
   get('/api/admin/cosmetics', { 'x-race-secret': secret })
   get(`/api/admin/cosmetics?secret=${encodeURIComponent(secret)}`, undefined, 'query secret (header only)')
 
+  // Admin Season 3 (stage B): dashboard and ops report; POST actions are diffed by the admin harness.
+  get('/api/admin/season3')
+  get('/api/admin/season3', { 'x-race-secret': 'wrong-secret-wrong-secret' })
+  get('/api/admin/season3', { 'x-race-secret': `  ${secret}  ` }, 'padded secret')
+  get(`/api/admin/season3?secret=${encodeURIComponent(secret)}`, undefined, 'query secret')
+  get('/api/admin/season3?report=ops')
+  get('/api/admin/season3?report=ops', { 'x-race-secret': secret })
+  get(`/api/admin/season3?report=ops&secret=${encodeURIComponent(secret)}`)
+  get('/api/admin/season3/', { 'x-race-secret': secret }, 'non-canonical path')
+  steps.push({ method: 'OPTIONS', path: '/api/admin/season3', label: 'preflight' })
+  steps.push({ method: 'DELETE', path: '/api/admin/season3', label: 'wrong method' })
+
+  // Season 3 player page (stage B): every token, none, empty and unknown. POST actions and
+  // redeem are diffed by scripts/ops/season3-player-diff.ts.
+  get('/api/season3')
+  get('/api/season3?token=')
+  get('/api/season3?token=nope')
+  get('/api/season3?token=a&token=b')
+  for (const token of tokens) get(`/api/season3?${q(token)}`)
+  get('/api/season3/', undefined, 'non-canonical path')
+  steps.push({ method: 'OPTIONS', path: '/api/season3', label: 'preflight' })
+  steps.push({ method: 'DELETE', path: '/api/season3', label: 'wrong method' })
+  steps.push({ method: 'GET', path: '/api/season3/redeem', label: 'redeem is POST only' })
+
   get('/api/auth/google')
   get('/api/auth/google?token=nope')
   for (const token of tokens) get(`/api/auth/google?${q(token)}`)
 
-  const raceIds = [...races, ...badIds, '1e3', '0x1A', '12abc', ' 38', '9223372036854775807', '9223372036854775808']
+  // Canonical ids only on main since 8c0be4f (parseRaceIdParam): 400 for '041'/'+1'/'12abc', 404 above 2^31 - 1.
+  const raceIds = [...races, ...badIds, '1e3', '0x1A', '12abc', ' 38', '041', '+1', '38 ', '2147483647', '2147483648', '9223372036854775807', '9223372036854775808']
   for (const id of raceIds) {
     const path = `/api/races/${encodeURIComponent(id)}`
     get(path)
     get(`${path}?token=nope`)
   }
   for (const id of races) for (const token of tokens.slice(0, 4)) get(`/api/races/${id}?${q(token)}`)
-  for (const id of [...new Set([...tracks, ...races.slice(-3), 'abc', '99999'])]) get(`/api/races/${encodeURIComponent(id)}/track`)
+  for (const id of [...new Set([...tracks, ...races.slice(-3), 'abc', '99999', '0', '01', '0x1', '1.0', '2147483648', '9007199254740993'])]) get(`/api/races/${encodeURIComponent(id)}/track`)
+  for (const id of tracks.slice(0, 2)) {
+    get(`/api/races/${id}/track`, { 'accept-encoding': 'gzip' }, 'gzip')
+    get(`/api/races/${id}/track`, { 'accept-encoding': 'identity' }, 'decompressed')
+  }
 
   for (const id of [...users, ...badIds]) get(`/api/avatars/${encodeURIComponent(id)}`)
   return steps
+}
+
+/** The admin ops report's `generatedAt` is the request time on each server. */
+function maskGeneratedAt(text: string): string {
+  return text.replace(/^(\{"report":"ops","generatedAt":")[^"]*"/, '$1<now>"')
 }
 
 async function runGet() {
@@ -300,7 +334,7 @@ async function runGet() {
   if (args.has('requests-out')) writeFileSync(arg('requests-out'), JSON.stringify(steps, null, 1))
   const rows: Row[] = []
   for (const step of steps) {
-    const [ra, rb] = await Promise.all([send(a, step), send(b, step)])
+    const [ra, rb] = await Promise.all([send(a, step, maskGeneratedAt), send(b, step, maskGeneratedAt)])
     rows.push(compareOutcomes(step, ra, rb, accept))
   }
   const { lines, unaccepted } = report(`GET diff ${a} (A) vs ${b} (B)`, rows, accept)

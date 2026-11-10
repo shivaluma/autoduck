@@ -201,7 +201,7 @@ value pair.
 | id | Difference |
 |---|---|
 | `api-miss-json-404` (+`-headers`) | An `/api` miss is a JSON 404 in Rust; Next serves its HTML 404 page with page cache headers. |
-| `track-route-rust-only` (+`-headers`) | `/api/races/:id/track` exists only in Rust. Rust may answer 200, 304, 400 or 404. |
+| ~~`track-route-rust-only`~~ (+`-headers`) | Removed in stage B: main has the track route since step 0.5, and both sides now answer identically. |
 | `api-no-store` | Rust adds `Cache-Control: no-store` to `/api` answers that set no policy (only absent → `no-store`). |
 | `allow-on-405` | Rust lists `Allow` on 405 (RFC 9110); Next sends none. |
 | `uncaught-throw-500-body` | Where TS throws uncaught (500, empty body), Rust returns 500 `{"error":"Internal Server Error"}`. |
@@ -210,7 +210,7 @@ Deliberate differences the diff does not exercise:
 
 | Difference | Why |
 |---|---|
-| `grant-all` always returns 500, as on main | On SQLite, Prisma rejects `createMany({ skipDuplicates })`, so the admin button is broken on main. Rust copies the 500 for parity. **Decision for the plan owner:** fix main (upsert loop) and switch Rust to the `INSERT … ON CONFLICT DO NOTHING` described in `admin_cosmetics.rs`, or keep the 500 until cutover. |
+| ~~`grant-all` always returns 500, as on main~~ | Resolved in stage B: main fixed it (`854f8d7`, `grantMissingCosmetics`), and Rust now inserts every missing target with `ON CONFLICT DO NOTHING` and answers `{ok, count}`; the mutation diff's two grant-all steps match on both sides. |
 | Request bodies over 64 KiB → 413 `{"error":"Payload Too Large"}` | TS has no limit. Every real body is under 1 KiB (the CSP sink allows 16 KiB). |
 | Invalid UTF-8 in a path segment (`/api/cosmetics/profile/%FF`) → 400 JSON (avatars: 400 `Invalid user`) | Next answers 500 `text/plain`. |
 | `/api` requests are capped at 30 s → 408 JSON; headers and idle keep-alive at 30 s | Node: 60 s headers, 300 s request. The stage-B SSE route must be exempt. |
@@ -268,16 +268,18 @@ Review 3 (API shape):
   fatal, all required ids, recovery 0 rows), then the GET diff on it. Only `dev.db` copies were
   available here. Production may carry raw-`ALTER` drift that `dev.db` lacks, and the new fatal
   rules (unique index for `ON CONFLICT`, NOT NULL extras) must be confirmed there.
-- **`lib/test-ids.ts` hook on main.** It exists only in the local ts-ref worktree. The patch is in
-  `docs/rewrite/patches/main-test-ids.patch` and applies cleanly to main at `7abf5ba`. It
+- **`lib/test-ids.ts` hook on main.** *(Stage B: the stage-A part landed on main as `cc36a26`;
+  the patch file now holds only the stage-B delta, see "Stage B: re-run on main `8c0be4f`".)*
+  It existed only in the local ts-ref worktree. The patch is in
+  `docs/rewrite/patches/main-test-ids.patch` and applied cleanly to main at `7abf5ba`. It
   needs to land on main so the mutation diff can run against CI images. It touches
   `admin/cosmetics`, `gacha/pull`, `lib/cosmetics/gacha.ts` and `lib/auth/google.ts`, and adds
   `lib/test-ids.ts`. It is honoured only under `NODE_ENV=test`.
 - **Staging app.** The Dokploy app `autoduck-staging` has not been created: no production or
   Dokploy access from here. It needs a different `RACE_SECRET_KEY` and `staging.duadzit.wtf` in
   the Google OAuth origins. The staging sentinel guard is implemented and tested both ways.
-- **`grant-all`.** The plan owner decides: fix on main, or keep the 500 (see the accept list).
-- **Replay block** in `GET /api/races/:id`. Main has none yet (step 0.5), so Rust emits none and
+- ~~**`grant-all`.**~~ Fixed on main (`854f8d7`) and ported in stage B.
+- ~~**Replay block**~~ (ported in stage B: `engine.replay` and `engine.postRaceStats`). Was: in `GET /api/races/:id`. Main has none yet (step 0.5), so Rust emits none and
   clients can't discover `/track` yet.
 - **Image build (Phase 7).**
   - `aws-lc-sys` (from `jsonwebtoken`'s `aws_lc_rs` backend) compiles C; the builder stage may
@@ -290,3 +292,230 @@ Review 3 (API shape):
   or upstream concurrency cap, and no HSTS (it belongs on the TLS proxy).
 - **Stage B.** season3 GET/POST, admin season3 incl. `reseed-week`, wild-item, live SSE (exempt
   it from the 30 s `/api` deadline) and start-race.
+
+## Stage B, step 1: Season 3 meta layer
+
+`crates/server/src/season3/` ports the meta layer, pure over data. Routes come next.
+The server now depends on `race-core` (`features = ["std"]`, never `ts-compat`); race-core itself
+is unchanged.
+
+| Module | TS source | Contents |
+|---|---|---|
+| `cards` | `lib/season3.ts` | `chaosLabel`, `parse_chaos_type`, the server `ChaosCard` (group members as `String(member)`), re-exports of the race-core draws (`select`/`prepare`/`open_week`/`set_chaos`/`toggle_skip`, `chaos:week:N`, `chaos:manual:N:<ms>`) |
+| `resolve` | `lib/season3.ts` | `assertRanking`, `resolveSeason3Race`, `applyScarEconomy`, `resolvePredictions`, `selectChampion` |
+| `news` | `lib/season3.ts`, `lib/season3-race.ts` | `generateDuckNews` (JS `trim`), recap QP lines, Golden Box line, `finalVerdict` |
+| `mapping` | `lib/season3-race-mapping.ts` | `mapSeason3RaceRanking`, **joined by userId** |
+| `schedule` | `lib/season3-schedule.ts` | Monday ICT gate, including the Invalid Date range |
+| `test_mode` | `lib/season3-test-mode.ts` | `canStartSeason3TestRace`, `getSeason3RaceMode` |
+| `payload` | inline in both season3 routes and `season3-race.ts` | strict/lenient `parseChaosGroups`, `parseSkippedPlayerIds`, `chaosPayload`, JS `String()` |
+| `loadout` | `lib/racing/loadout.ts` | `parseItemIds`, `serializeItemIds`, `auto_loadout_json` |
+| `balance` | inline in the admin GET | `summarizeTelemetry` (item, loadout) and the pickup summary, with TS arithmetic order |
+| `resolution` | `executeSeason3Race` after the simulation, `lib/racing/golden-reward.ts` | `plan_resolution` → `ResolutionPlan`: the `CHAOS_RESOLVED` event, participant updates (ghosts too), King reset, player updates, prediction points, QP grants with idempotency keys, Golden Box grant and event, recap, final verdict. Phase 5 T2 applies it. |
+
+**Oracle.** `scripts/oracle/dump-season3-meta-fixtures.ts` writes
+`crates/server/tests/fixtures/season3-meta.json.gz` (`season3-meta-v1`, mulberry32 inputs,
+reproducible; `--check` verifies it). For the `t2` cases it runs the **real**
+`executeSeason3Race`. `module.registerHooks` (`scripts/oracle/season3-meta/hooks.ts`) swaps only
+its I/O imports (Prisma, runtime, persistence, live session, replay, telemetry, the QP ledger
+write) for recording stubs (`season3-meta/stubs/`). The fixture records:
+
+- the persisted `CHAOS_RESOLVED` event;
+- every call inside the resolve `$transaction`, in order;
+- the return value;
+- the thrown error.
+
+`tests/season3_meta.rs` renders the Rust plan as the same call list and compares the JSON text
+exactly.
+
+**Parity: 6,960/6,960 cases, 100%.**
+
+| Kind | Cases |
+|---|---|
+| `t2` | 3,000: 2,436 resolved (606 test races, 523 Golden Box grants, 567 with a ghost, 1,151 with a Shield used), 564 throwing. All 7 Chaos types are covered. The throwing cases are foreign or missing standings, fewer than 2 official ducks, DUO/CONSTRUCTORS outsiders and missing teams, a missing Wanted player, and a non-array group. |
+| `resolve` | 1,510 (10 hand cases from `season3.test.ts`) |
+| `payload` | 600 |
+| `mapping` | 400 |
+| `predictions` | 300 |
+| `news` | 300 |
+| `schedule` | 300 |
+| `scarEconomy` | 200 |
+| `champion` | 200 |
+| `balance` | 150 |
+
+A mutation check (`raceCount` +2) fails 1,830 `t2` cases. Ported tests: `season3_meta.rs`
+(the 17 TS tests + chaos labels + fixture) and `race_loadout.rs` (the 3 TS tests + column
+helpers).
+
+**Deliberate differences / notes for the route step:**
+
+- **Join by userId** (plan): TS keys the mapping by `user.name`, so duplicate names collide and a
+  rename mid-week fails the race. The fixture uses unique names, where both joins agree.
+- **Payload number outside f64** (`[[1e400]]`): `serde_json` fails, so the payload reads as
+  absent, where `JSON.parse` gives `Infinity` → `null`. This is the same class of difference as
+  the stage-A request bodies. No writer stores it, and it is excluded from the fixture.
+- **Non-array group** in `chaosPayload` (an admin can store one via `groups`): TS throws a V8
+  `TypeError` (`group.map is not a function`). Rust returns `GroupsError` with the same message.
+- **Ghost finish order** ties use byte order. Ids are `String(userId)` (digits), where ICU and
+  byte order agree.
+- **Balance telemetry** depends on row order: groups appear in first-seen order and the sort is
+  stable. Prisma's `findMany` has no `orderBy` there. The admin GET port must read rows in the
+  order SQLite returns them for that query (likely the `(raceId, playerId, itemId)` unique
+  index) and diff it against TS.
+- **`CHAOS_RESOLVED.tick`** is kept as `f64` (`Math.ceil(durationMs / (1000 / tickRate))`).
+  Phase 5 narrows it to the event's integer tick.
+
+## Stage B: player routes (`/api/season3`, `/api/season3/redeem`)
+
+`src/routes/season3.rs` ports `app/api/season3/route.ts` (GET and every POST action) and
+`app/api/season3/redeem/route.ts` (kept, plan Q7 default). Data access is in
+`src/season3/player.rs`: the reads copy the SQL Prisma 7 issues for `getActiveSeason()` and the
+redeem lookup (captured with the query log), and the upserts are Prisma's native
+`INSERT … ON CONFLICT DO UPDATE` with the same columns.
+
+| Request | Behaviour kept from TS |
+|---|---|
+| `GET` | `JSON.stringify` bytes (`js_json`): `chaosGroups` omitted when the payload isn't an array of arrays, `skippedPlayerIds`/groups re-serialised as V8 does (`-0` → `0`, `1e21` → `1e+21`). A viewer with no appearance or no inventory gets the starter grant, then a fresh read. |
+| `appearance` | grant + `saveAppearance` + `cosmeticsOnboarded` in one transaction; a non-object `appearance` fails `normalizeAppearance` (500, rolled back). |
+| `favorite` | a truthy non-string `cosmeticId` is a Prisma validation error (500); `""` is stored; no appearance row is P2025 (500). |
+| `save-preset` | the appearance is saved first, outside a transaction, so a non-string `presetName` answers 500 with the appearance already written. The name is `trim().slice(0, 30)` in UTF-16 units; a split surrogate pair is stored as U+FFFD (as better-sqlite3 writes it). `appearanceJson` is `JSON.stringify` of the saved `PlayerAppearance` row. |
+| `load-preset` | only `Number.isInteger`; `1e19` fails Prisma's Int (500); stored JSON `null`/array/invalid → 500. |
+| `shield`, `loadout`, prediction | as TS, including `useShield === false` only, `(itemIds ?? []).map` (non-array → 500), Zod/`validateLoadout` errors → 500, and any other `action` falling through to the prediction. |
+| errors | anything TS throws inside its `try` answers 500 with the route's message (`Failed to fetch Season 3`, `Failed to save prediction`, `Redeem failed`). |
+
+Deliberate difference: `redeem` checks before its transaction as TS does, then re-checks the
+points and stock inside `BEGIN IMMEDIATE`, so concurrent redeems can't overspend or oversell.
+Sequential behaviour is identical.
+
+**Diff.** `scripts/ops/season3-player-diff.ts` replays a request sequence against ts-ref
+`next start` (A) and `autoduck serve` (B) on `.backup` copies of one base DB: the stage-A dev.db
+snapshot plus a scenario from `scripts/ops/season3-player-diff/` (`sqlite3 base.db < main.sql`).
+Bodies are compared byte for byte (key order included) after masking run-minted cuids and
+timestamps; then every table is compared.
+
+| Scenario | Steps | Result |
+|---|---|---|
+| `main`: week 1 resolved with predictions, week 2 open with odd `chaosPayload`/`skippedPlayerIdsJson`, live races, loadouts, shield choices, broken presets, inactive/sold-out rewards, a player without appearance and one without inventory | 137 (58×200, 31×400, 5×401, 6×404, 1×405, 8×409, 28×500) | identical; 10 tables changed, all equal |
+| `closed`: no open week, non-array payload, invalid skipped JSON | 7 | identical |
+| `noseason`: completed season (GET `{"season":null}`, POST 404, redeem still works) | 6 | identical |
+
+A mutation check (one reward renamed in B's copy only) fails 3 rows, so the comparison bites.
+
+Tests: `tests/season3_routes.rs` (10): every action and rejection on a baseline-schema DB, plus
+a smoke run of every player's page on the dev.db copy named by `AUTODUCK_TEST_DEV_DB`.
+
+## Stage B: admin route (`/api/admin/season3`)
+
+`src/routes/admin_season3.rs` (HTTP: auth, body parsing) over `src/season3/admin/`:
+
+| Module | Contents |
+|---|---|
+| `rows` | `SeasonWeek`/`SeasonReward`/`SeasonLoadout`/prediction/shield/telemetry rows as Prisma returns them, and the Prisma 7 query shapes (captured with the query log) |
+| `dashboard` | GET: season, players by name, weeks with readiness lists, rewards, balance (`season3::balance` over telemetry read in SQLite's order for Prisma's `raceId IN (…)` query) |
+| `ops` | `GET ?report=ops`: in-flight races, race counts, the replay-track gate (§4.5) and fidelity counts, the two raw gate queries verbatim |
+| `actions` | every POST action; `start-race` → `501 {"error":"not in stage B"}` after TS's `weekId` check; new `reseed-week` |
+| `seed` | `createRaceSeed()` (32 bytes from `SysRng`, hex) and the `set-chaos` clock (`Date.now()`); deterministic under `test-rng` |
+| `js` | `JsNum` (`Number#toString` on the wire), `ToNumber`, Prisma `Int` coercion |
+
+Behaviour kept from TS (all checked by the diff below):
+
+- The body is parsed before auth (`Invalid JSON` 400 without a secret); `body.secret` counts only
+  when it is a string; a `null` body is the TypeError 500.
+- The POST `season` include has no `orderBy` on players, so the lobby (Chaos shuffles,
+  auto-loadout upserts, `selectChampion` ties) is SQLite's `(seasonId, userId)` index order; the
+  GET orders players by name. `create-season` answers its players in the re-read order.
+- Prisma `Int` arguments: numbers truncated (`weekId: 1.7` → week 1, `userIds: [1.5]` → 1), any
+  other type → 500 (`Season 3 action failed`). `Math.max(1, body.weeks ?? 12)` uses `ToNumber`
+  (`"6"` → 6, `[3]` → 3, `true` → 1). `end-season` echoes the raw `championUserId` (`1.7`) and
+  stores the truncated one; an unknown user is an FK violation (500) on both sides.
+- `open-week`/`set-chaos` store admin `groups` as `JSON.stringify(body.groups)` (any array); the
+  dashboard shows `chaosGroups` only for an array of arrays.
+- Default key `S3` collides with the completed season (unique key) → 500, as on main.
+- `create-season`'s default year is the UTC year: the production container sets no `TZ`.
+
+Deliberate differences:
+
+- Every action runs in one `BEGIN IMMEDIATE` transaction, reads included (TS reads outside its
+  transactions). Not observable for serial requests.
+- **`reseed-week`** (new): `weekId` required; 404 for an unknown week; 409 unless the week belongs
+  to the active season, is `locked` with `raceId` NULL, and the latest official (`isTest = 0`)
+  race whose `raceSeed` equals the week's seed is `failed`. A failed official race returns its
+  week to `locked`/`raceId NULL` (`executeSeason3Race`'s catch, D22), so the seed is the link to
+  "its last race". It draws a new seed, appends the old one to `previousRaceSeeds` (JSON array),
+  re-rolls the `auto` loadouts from the new seed (as `lock`; start-race would do it anyway) and
+  logs an `audit` line with `sha256` commitments of both seeds, never the seeds (D17). Answer:
+  `{ok, week, failedRaceId, previousRaceSeedCount}`. Main has `SeasonWeek.previousRaceSeeds`
+  since `ea1dc1e` (step 0.8): the baseline includes it, so the verifier makes it required, and
+  `SeasonWeekRow` (admin and player) carries it in Prisma's field order. The interim
+  `409 {"error":"needs schema 0.8"}` fallback was removed with the merge.
+- `start-race`: 501 (Phase 5).
+
+**RNG for the diff.** `test-rng` builds with `AUTODUCK_TEST_RNG_SEED` draw seeds from a third
+mulberry32 stream (`seed ^ 0x5eed5eed`, eight values as `%08x`) and fix the `set-chaos` clock at
+`1767225600000`. The TS side does the same in `lib/test-ids.ts` (`randomSeedHex`,
+`chaosClockMs`), wired into `lib/racing/audit.ts` (`createRaceSeed`) and the admin route
+(`randomUUID`, the manual stream). **`docs/rewrite/patches/main-test-ids.patch` now has 7 files**
+(+ `app/api/admin/season3/route.ts`, `lib/racing/audit.ts`); it still applies to main at
+`7abf5ba` (`git apply --check -R` on ts-ref). TS `tests/replay-track.test.ts` passes with it.
+
+**Diff.** `scripts/ops/admin-season3-diff/run.sh` runs the TS route handler in-process (ts-ref +
+patch, `NODE_ENV=test`, `TZ=UTC`) and `autoduck serve` (`--features test-rng`) on `.backup`
+copies of one base DB: the stage-A dev.db snapshot plus `prepare.py` (week-1 predictions,
+loadouts incl. `ready`/`draft`, shield choices, item/pickup telemetry for races 28–37). The plan
+(`spec.mjs`) interleaves SQL steps (resolve a week, link a race, odd stored JSON) with requests.
+Bodies are compared as JSON with numbers by source text and key order kept, after masking uuids,
+run-minted cuids and timestamps; then every table and the D13 format of Rust-written DATETIMEs.
+
+| Run | Result |
+|---|---|
+| admin diff, 124 requests (66×200, 27×400, 10×500, 9×409, 5×401, 4×201, 3×404) + 13 SQL steps | **0 differing**; 9 tables changed, all equal; 521 DATETIMEs D13 |
+| same with a different Rust seed (mutation check) | Chaos draws, seeds and dependent rows differ: the comparison bites |
+| stage-A GET diff + 10 new `/api/admin/season3` requests (dashboard, ops, auth variants, OPTIONS, DELETE, trailing slash) on the enriched base | 424 requests, **0 unaccepted** (`generatedAt` masked in `api-diff.ts get`) |
+
+The plan covers: auth via query/header/body/padded secret, invalid/empty/`null`/array/number
+bodies, every action's validation branches, all 7 Chaos types through `set-chaos` and
+`open-week` (RANDOM, explicit, invalid names, manual targets incl. a skipped ghost, manual groups
+incl. non-arrays), odd `skippedPlayerIdsJson` (`-0`, `1e21`, duplicates), lock/unlock/relock with
+`ready` loadouts kept, season-full, extend-season bounds, end-season champion selection and
+coercions, and four `create-season` runs (userIds filters, `weeks`/`year`/`name` coercions).
+
+Tests: `tests/admin_season3.rs` (5): auth/parsing, the full lifecycle, `reseed-week` (refusals,
+the re-seed after a failed official race, auto loadouts from the new seed), the ops report gate,
+and a run of the actions on the dev.db copy named by `AUTODUCK_TEST_DEV_DB`.
+
+## Stage B: re-run on main `8c0be4f`
+
+Main moved during stage B (`50aa369` → `8c0be4f`). `rewrite-server` merged it (`a9f12ba`; the only
+conflict, `scripts/oracle/dump-cosmetic-fixtures.ts`, takes main's `BigInt()` form). What changed
+for the server:
+
+| Main commit | Server change |
+|---|---|
+| `ea1dc1e` `SeasonWeek.previousRaceSeeds` (0.8) | Baseline regenerated (one column). `SeasonWeekRow` gains the field; every admin `week` object now carries it. `reseed-week` reads it from the row; the `needs schema 0.8` 409 is gone. A DB without the column fails the verifier (missing column, fatal) as for any other 0.8 column. |
+| `cc36a26` `lib/test-ids.ts` on main | `docs/rewrite/patches/main-test-ids.patch` shrinks to the stage-B delta: 3 files (`lib/test-ids.ts` `randomSeedHex`/`chaosClockMs` + seeds stream, `lib/racing/audit.ts`, `app/api/admin/season3/route.ts`). Applies to `8c0be4f`; TS `test-ids`, `replay-track` and `season3` tests pass with it (32/32). |
+| `854f8d7` grant-all fix | `admin/cosmetics` `grant-all` ported: every missing target inserted (`ON CONFLICT DO NOTHING`, source `ADMIN_GRANT_ALL`), `GRANT_ALL_COSMETICS` event `{"count","slot"}`, answer `{ok, count}` (count = all targets). |
+| `8c0be4f` canonical race ids | `parse_race_id` is now `parseRaceIdParam`: only `/^[1-9][0-9]*$/`; above 2^31 − 1 → 404 (detail: `Race not found`; track: `No replay track for this race`). Goldens regenerated (+10 id cases). |
+| `season3-test-mode` moved to `src/season3/` | Meta fixture regenerated: all 6,960 case results unchanged, only the `lib/season3-race.ts` oracle hash. |
+
+ts-ref is now `8c0be4f` + the patch + the local `turbopack.root` tweak, `prisma generate`,
+`next build`. The diff snapshot is the stage-A snapshot plus `ALTER TABLE "SeasonWeek" ADD COLUMN
+"previousRaceSeeds" TEXT`; `prisma migrate diff` from it to main's schema is empty.
+
+| Run (release `autoduck`, `test-rng`) | Result |
+|---|---|
+| `api-diff.ts get` (+ `/api/season3` every token, none, empty, unknown, duplicate; trailing slash, OPTIONS, DELETE; `/api/season3/redeem` GET; canonical-id race and track cases, gzip and identity tracks) | 456 requests, 23 identical, 433 accepted, **0 unaccepted** |
+| `api-diff.ts mutate` | 130 requests, **0 unaccepted** (3 `uncaught-throw-500-body`, was 5: grant-all now succeeds on both); all 39 tables identical; 347 DATETIMEs D13 |
+| `admin-season3-diff` (+ stored `previousRaceSeeds`, 5 `reseed-week` refusals) | 130 responses, **0 differing**, 5 accepted (`reseed-week-rust-only`, pinned both sides); 9 tables changed, all equal; 521 DATETIMEs D13 |
+| same with `RSEED=7` (mutation check) | 43 responses and 2 tables differ: the comparison bites |
+| `season3-player-diff` `main` / `closed` / `noseason` | 137 / 7 / 6 steps, all clean |
+| `cargo test -p autoduck-server` (+ `dev_db`, `admin_season3`, `season3_routes` on the 0.8 dev.db copy), clippy `-D warnings` with `test-rng`, `sqlx prepare --check` | pass |
+| `dump-season3-meta-fixtures.ts --check` | up to date, 6,960 cases, `season3_meta` passes |
+
+Accept-list changes: `track-route-rust-only` (+`-headers`) removed (stale: main serves the route);
+`uncaught-throw-500-body` no longer mentions grant-all. The admin diff's only accept rule,
+`reseed-week-rust-only`, pins TS to `400 {"error":"Unknown Season 3 admin action"}` and Rust to
+the exact refusal of each step (400 / 404 / 409 / 409 / 500); the successful re-seed changes the
+DB on Rust only, so it is tested in `tests/admin_season3.rs` instead.
+
+Not in stage B (Phase 5): `start-race` (501 `not in stage B` after TS's `weekId` check), live
+SSE, wild-item, the runtime and T1/T2 orchestration (`season3::resolution::plan_resolution` is
+ready for T2).
