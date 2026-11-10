@@ -290,8 +290,9 @@ Review 3 (API shape):
   `dump-cosmetic-fixtures.ts --check` are not in CI yet; the Rust job has no Node.
 - **Limits not done.** There is no connection cap (`ConcurrencyLimit`), no avatar response cache
   or upstream concurrency cap, and no HSTS (it belongs on the TLS proxy).
-- **Stage B.** season3 GET/POST, admin season3 incl. `reseed-week`, wild-item, live SSE (exempt
-  it from the 30 s `/api` deadline) and start-race.
+- ~~**Stage B.**~~ season3 GET/POST and admin season3 incl. `reseed-week` are ported (see the
+  stage-B sections). Left for Phase 5: wild-item, live SSE (exempt it from the 30 s `/api`
+  deadline), start-race and T1/T2; see "Stage B: review fixes and open items".
 
 ## Stage B, step 1: Season 3 meta layer
 
@@ -327,11 +328,13 @@ write) for recording stubs (`season3-meta/stubs/`). The fixture records:
 `tests/season3_meta.rs` renders the Rust plan as the same call list and compares the JSON text
 exactly.
 
-**Parity: 6,960/6,960 cases, 100%.**
+**Parity: 7,960/7,960 cases, 100%** (6,960 at first; the `t2x` family was added after the
+stage-B review, see "Stage B: review fixes and open items").
 
 | Kind | Cases |
 |---|---|
 | `t2` | 3,000: 2,436 resolved (606 test races, 523 Golden Box grants, 567 with a ghost, 1,151 with a Shield used), 564 throwing. All 7 Chaos types are covered. The throwing cases are foreign or missing standings, fewer than 2 official ducks, DUO/CONSTRUCTORS outsiders and missing teams, a missing Wanted player, and a non-array group. |
+| `t2x` | 1,000 wider `t2` inputs: lobbies up to 16, a second prediction by the same predictor in either order, empty `pickupId`s, 46 unknown stored `chaosType`s (`RANDOM`, `normal`, `""`, `BOUNTY`); 230 throwing |
 | `resolve` | 1,510 (10 hand cases from `season3.test.ts`) |
 | `payload` | 600 |
 | `mapping` | 400 |
@@ -437,13 +440,16 @@ Deliberate differences:
 - Every action runs in one `BEGIN IMMEDIATE` transaction, reads included (TS reads outside its
   transactions). Not observable for serial requests.
 - **`reseed-week`** (new): `weekId` required; 404 for an unknown week; 409 unless the week belongs
-  to the active season, is `locked` with `raceId` NULL, and the latest official (`isTest = 0`)
-  race whose `raceSeed` equals the week's seed is `failed`. A failed official race returns its
+  to the active season, is `locked` with `raceId` NULL and `resolvedAt` NULL, and the latest
+  official (`isTest = 0`) race whose `raceSeed` equals the week's seed is `failed` **before it
+  finished**: engine state `CREATED`…`RACING` and no `CHAOS_RESOLVED` event (a separate 409
+  message, with an `audit` log line naming the engine state, otherwise). A failed official race returns its
   week to `locked`/`raceId NULL` (`executeSeason3Race`'s catch, D22), so the seed is the link to
   "its last race". It draws a new seed, appends the old one to `previousRaceSeeds` (JSON array),
   re-rolls the `auto` loadouts from the new seed (as `lock`; start-race would do it anyway) and
   logs an `audit` line with `sha256` commitments of both seeds, never the seeds (D17). Answer:
-  `{ok, week, failedRaceId, previousRaceSeedCount}`. Main has `SeasonWeek.previousRaceSeeds`
+  `{ok, weekId, seedCommit, failedRaceId, previousRaceSeedCount}` (`seedCommit` = `sha256` of
+  the new seed; no seed in the answer, D17). Main has `SeasonWeek.previousRaceSeeds`
   since `ea1dc1e` (step 0.8): the baseline includes it, so the verifier makes it required, and
   `SeasonWeekRow` (admin and player) carries it in Prisma's field order. The interim
   `409 {"error":"needs schema 0.8"}` fallback was removed with the merge.
@@ -519,3 +525,50 @@ DB on Rust only, so it is tested in `tests/admin_season3.rs` instead.
 Not in stage B (Phase 5): `start-race` (501 `not in stage B` after TS's `weekId` check), live
 SSE, wild-item, the runtime and T1/T2 orchestration (`season3::resolution::plan_resolution` is
 ready for T2).
+
+## Stage B: review fixes and open items
+
+Two adversarial reviews ran on `d338258` (meta parity; data safety and security). Neither found a
+parity bug or a blocker. Disposition:
+
+| Review | Finding | Disposition |
+|---|---|---|
+| 1 M1 | Admins can store Chaos cards that fail every resolution (ghost or absent Wanted target, groups with a ghost or foreign id); TS behaves the same, and the race only fails at T2 after running live. `reseed-week` cannot fix it. | Stage-B JSON stays identical to TS (no validation in `set-chaos`/`open-week`: that is a behaviour change needing a decision). Added `season3::resolution::preflight_card`, which runs the real resolution on the configured official players and returns the error the race would hit; test `preflight_rejects_cards_that_cannot_resolve` covers main's dev.db week 1 (CONSTRUCTORS with the ghost). **Phase 5: `start-race` calls it before T1 and refuses with 409** (a deliberate difference from TS). Documented on `reseed-week`. |
+| 1 L1 | Unknown stored `chaosType` error text differed | Fixed: Rust now says `Cannot read properties of undefined (reading 'resolve')` like V8. The fixture gained the `t2x` family (46 unknown-type cases, all matching). Object.prototype names (`toString`, …) still differ (TS: `… is not a function`); only a direct DB edit reaches either. |
+| 1 L2 | `reseed-week` accepted races that failed after finishing | Fixed: the failed race's `engineState` must be before `FINISHED` (separate 409, audit line with the state). |
+| 1 L3 | Ghost status comes from the current name | Phase 5: take it from the stored race config (noted on `ResolutionInput`). |
+| 1 I1 | Load order of players/predictions matters | Documented on `ResolutionInput` (Prisma default order, no `ORDER BY name`). |
+| 2 #1 | `reseed-week` could re-open a week whose effects were applied | Fixed: also requires `SeasonWeek.resolvedAt IS NULL` and no `CHAOS_RESOLVED` event on the failed race. Tested (`FINISHED`/`RESOLVED`/`ARCHIVED`, event, resolved week). |
+| 2 #2 | `reseed-week` answered the new seed | Fixed: answers `{ok, weekId, seedCommit, failedRaceId, previousRaceSeedCount}`; the test checks no seed appears. |
+| 2 #3 | Player writes didn't re-check the week inside their transaction | Fixed (deliberate difference from TS, invisible serially): shield, loadout and prediction re-read the week inside `BEGIN IMMEDIATE`; a locked/closed week or a newly skipped player answers the pre-check's 409, a newly skipped prediction target its 400. Test `player_writes_recheck_the_week_inside_the_write_transaction` holds the writer, commits `lock`/skip in between, and fails without the fix. |
+| 1 extra | Reviewer's wider dumper (seed 987654321, 20,000 `t2`) | 23,960/23,960 matched; its generator widening is now the committed `t2x` family. |
+
+**Gates after the fixes** (release `autoduck`, `--features test-rng`, ts-ref `8c0be4f` + patch,
+`snapshot08.db`):
+
+| Check | Result |
+|---|---|
+| `cargo fmt --all --check`; `clippy --workspace --all-targets -D warnings`; same for the server with `test-rng` | pass |
+| `SQLX_OFFLINE=true cargo test -p autoduck-server` with `AUTODUCK_TEST_DEV_DB` on a snapshot08 copy | all pass (`season3_meta` 20, `season3_routes` 11, `admin_season3` 5, `race_loadout` 5, `dev_db` 4, …) |
+| `cargo sqlx prepare --workspace --check` | pass (no new `query!` macros) |
+| `dump-season3-meta-fixtures.ts --check` | up to date, 7,960 cases |
+| `api-diff.ts get` | 456 requests, 23 identical, 433 accepted, **0 unaccepted** |
+| `api-diff.ts mutate` | 130 requests, **0 unaccepted**, 39 tables identical |
+| `admin-season3-diff` | 130 responses, **0 differing**, 5 accepted (`reseed-week-rust-only`), 9 changed tables equal, 521 DATETIMEs D13 |
+| `season3-player-diff` `main` / `closed` / `noseason` | 137 / 7 / 6 steps, clean |
+
+Accept list: unchanged by the fixes (`reseed-week-rust-only` pins only refusals; the new
+`reseed-week` answer is Rust-only and tested in `tests/admin_season3.rs`).
+
+**Open items for Phase 5** (carried from TS, not stage-B bugs):
+
+- `start-race` must call `preflight_card` before T1 (review 1 M1), and must validate admin
+  `groups` (stored unchecked, as TS).
+- `set-chaos`, `lock`, `unlock` and `toggle-skip` accept a `weekId` from any season (TS too);
+  only `reseed-week` checks the active season.
+- If the failure handler cannot write the week back, it stays `racing` with the failed `raceId`;
+  `reseed-week` cannot recover that state (needs a recovery path in Phase 5).
+- Ghost status at T2 from the stored config (L3); load order as documented on
+  `ResolutionInput` (I1).
+- Validating cards at `set-chaos`/`open-week` (target an active non-ghost; groups an exact split
+  of the official active players) is a behaviour change: needs a decision.
