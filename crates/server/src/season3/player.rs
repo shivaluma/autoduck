@@ -615,6 +615,24 @@ pub async fn mark_onboarded(
     Ok(())
 }
 
+/// Re-reads the week inside the write transaction (not in TS): `Some(skippedPlayerIdsJson)` when
+/// it is still `open`, `None` once an admin locked, resolved or removed it. The route's pre-check
+/// reads on the reader pool before `BEGIN IMMEDIATE`, so a concurrent `lock` or `toggle-skip`
+/// could otherwise commit in between and a player write land on a locked week, or bring back a
+/// skipped player's rows.
+pub async fn open_week_skip_list(
+    conn: &mut SqliteConnection,
+    week_id: i64,
+) -> Result<Option<Option<String>>, sqlx::Error> {
+    let row: Option<(String, Option<String>)> = sqlx::query_as(
+        r#"SELECT "status", "skippedPlayerIdsJson" FROM "SeasonWeek" WHERE "id" = ?"#,
+    )
+    .bind(week_id)
+    .fetch_optional(conn)
+    .await?;
+    Ok(row.and_then(|(status, skipped)| (status == "open").then_some(skipped)))
+}
+
 /// `seasonShieldChoice.deleteMany({ where: { weekId, seasonPlayerId } })`.
 pub async fn delete_shield_choice(
     conn: &mut SqliteConnection,

@@ -645,3 +645,99 @@ async fn dev_db_copy_serves_every_player() {
         assert!(body["viewer"]["appearance"].is_object());
     }
 }
+
+/// A player write whose pre-check passed must not land once an admin `lock` or `toggle-skip`
+/// committed in between (review B, finding 3). The test holds the single writer, lets the
+/// request pass its reader-side pre-check and queue for the writer, commits the admin change,
+/// then releases: the in-transaction re-check answers the pre-check's 409.
+#[tokio::test]
+async fn player_writes_recheck_the_week_inside_the_write_transaction() {
+    async fn race_with_admin(f: &Fixture, body: Value, admin_sql: &str) -> (StatusCode, Value) {
+        let mut held = f.db.begin_write().await.unwrap();
+        let request = tokio::spawn({
+            let app = f.app.clone();
+            async move {
+                let request = Request::builder()
+                    .method(Method::POST)
+                    .uri("/api/season3")
+                    .header("content-type", "application/json")
+                    .body(Body::from(body.to_string()))
+                    .unwrap();
+                let response = app.oneshot(request).await.unwrap();
+                let status = response.status();
+                let bytes = response.into_body().collect().await.unwrap().to_bytes();
+                (status, serde_json::from_slice::<Value>(&bytes).unwrap())
+            }
+        });
+        // The pre-check runs on the reader pool; give it time to reach `BEGIN IMMEDIATE`.
+        tokio::time::sleep(std::time::Duration::from_millis(300)).await;
+        assert!(
+            !request.is_finished(),
+            "the request did not wait for the writer"
+        );
+        sqlx::raw_sql(sqlx::AssertSqlSafe(admin_sql.to_owned()))
+            .execute(&mut *held)
+            .await
+            .unwrap();
+        held.commit().await.unwrap();
+        request.await.unwrap()
+    }
+    let closed = (StatusCode::CONFLICT, error("Tuần đã đóng hoặc đã resolve"));
+    let skipped = (
+        StatusCode::CONFLICT,
+        error("Host đã cho bạn nghỉ race tuần này"),
+    );
+    let lock = r#"UPDATE "SeasonWeek" SET "status" = 'locked' WHERE "id" = 2"#;
+    let reopen = r#"UPDATE "SeasonWeek" SET "status" = 'open' WHERE "id" = 2"#;
+    let f = fixture().await;
+    let writes = [
+        json!({"token": "token-1", "action": "shield"}),
+        json!({"token": "token-1", "action": "loadout", "itemIds": ["NITRO"]}),
+        json!({"token": "token-1", "targetUserId": 2}),
+    ];
+    for body in &writes {
+        assert_eq!(
+            race_with_admin(&f, body.clone(), lock).await,
+            closed,
+            "{body}"
+        );
+        exec(&f.db, reopen).await;
+    }
+    // Skipping the player (Alpha, user 1) between the checks.
+    let skip_alpha = r#"UPDATE "SeasonWeek" SET "skippedPlayerIdsJson" = '[3,1]' WHERE "id" = 2"#;
+    let unskip = r#"UPDATE "SeasonWeek" SET "skippedPlayerIdsJson" = '[3]' WHERE "id" = 2"#;
+    for body in &writes {
+        assert_eq!(
+            race_with_admin(&f, body.clone(), skip_alpha).await,
+            skipped,
+            "{body}"
+        );
+        exec(&f.db, unskip).await;
+    }
+    // Skipping the prediction target (Bravo, user 2) between the checks.
+    let skip_bravo = r#"UPDATE "SeasonWeek" SET "skippedPlayerIdsJson" = '[3,2]' WHERE "id" = 2"#;
+    assert_eq!(
+        race_with_admin(&f, writes[2].clone(), skip_bravo).await,
+        (StatusCode::BAD_REQUEST, error("Target không đua tuần này"))
+    );
+    exec(&f.db, unskip).await;
+    for table in ["SeasonShieldChoice", "SeasonLoadout", "SeasonPrediction"] {
+        assert_eq!(
+            count(
+                &f,
+                &format!(r#"SELECT COUNT(*) FROM "{table}" WHERE "weekId" = 2"#)
+            )
+            .await,
+            0,
+            "{table}"
+        );
+    }
+    // Without an admin change in between, the same writes land.
+    for body in &writes {
+        assert_eq!(
+            race_with_admin(&f, body.clone(), "SELECT 1").await.0,
+            StatusCode::OK,
+            "{body}"
+        );
+    }
+}

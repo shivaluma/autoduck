@@ -522,6 +522,7 @@ async fn post_inner(state: &AppState, bytes: &[u8]) -> Result<Response, Failure>
             return Err(ApiError::bad_request("Bạn không có Shield để xác nhận").into());
         }
         let mut tx = state.db().begin_write().await?;
+        recheck_open_week(&mut tx, week.id, player.user_id).await?;
         if js::property(&body, "useShield") == Some(&Value::Bool(false)) {
             player::delete_shield_choice(&mut tx, week.id, player.id).await?;
             tx.commit().await?;
@@ -561,6 +562,7 @@ async fn post_inner(state: &AppState, bytes: &[u8]) -> Result<Response, Failure>
         let status = if ready { "ready" } else { "draft" };
         let item_ids_json = serialize_item_ids(&item_ids)?;
         let mut tx = state.db().begin_write().await?;
+        recheck_open_week(&mut tx, week.id, player.user_id).await?;
         player::upsert_loadout(
             &mut tx,
             week.id,
@@ -598,12 +600,38 @@ async fn post_inner(state: &AppState, bytes: &[u8]) -> Result<Response, Failure>
         return Err(ApiError::bad_request("Target không đua tuần này").into());
     }
     let mut tx = state.db().begin_write().await?;
+    if skipped_contains(
+        &recheck_open_week(&mut tx, week.id, player.user_id).await?,
+        target_player.user_id,
+    ) {
+        return Err(ApiError::bad_request("Target không đua tuần này").into());
+    }
     player::upsert_prediction(&mut tx, week.id, player, target_player.user_id).await?;
     tx.commit().await?;
     Ok(json_ok(&json!({
         "ok": true,
         "message": "Prediction đã khóa cho tuần này.",
     })))
+}
+
+/// The pre-checks above, repeated inside the write transaction (a deliberate difference from TS,
+/// which only checks before writing): the week must still be `open` and the player not skipped.
+/// The single writer serialises this with admin `lock`/`toggle-skip`, so no shield choice,
+/// loadout or prediction lands on a locked week or for a skipped player. Answers the same 409s
+/// as the pre-check; returns the current skip list.
+async fn recheck_open_week(
+    conn: &mut sqlx::SqliteConnection,
+    week_id: i64,
+    user_id: i64,
+) -> Result<Vec<f64>, Failure> {
+    let Some(skipped_json) = player::open_week_skip_list(conn, week_id).await? else {
+        return Err(ApiError::conflict("Tuần đã đóng hoặc đã resolve").into());
+    };
+    let skipped = parse_skipped_player_ids(skipped_json.as_deref());
+    if skipped_contains(&skipped, user_id) {
+        return Err(ApiError::conflict("Host đã cho bạn nghỉ race tuần này").into());
+    }
+    Ok(skipped)
 }
 
 /// The keys `normalizeAppearance` can read from `value`: an object's own entries; any other
