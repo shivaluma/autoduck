@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE \"User\" SET \"googleId\" = ?, \"email\" = ?, \"avatarUrl\" = ?, \"updatedAt\" = ?\n           WHERE \"id\" = ?\n           RETURNING \"id\" AS \"id!: i64\", \"name\" AS \"name!: String\", \"email\"",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!: i64",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "User",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "name!: String",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "User",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "name": "email",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "User",
+            "name": "email"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": [
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "0852aa03c94f13e3f6916e47f342b39f9160f75e6a39025b9275b8a9c8ee136e"
+}

@@ -113,7 +113,7 @@ async function runEvaluation() {
         if (itemTelemetry[item]) itemTelemetry[item].equipped++
       }
 
-      let usedItemsDuck1 = new Set<string>()
+      const usedItemsDuck1 = new Set<string>()
 
       const res = simulateRace(createConfig(seedIndex, PLAYER_COUNT, loadouts), {
         recordEvents: false,

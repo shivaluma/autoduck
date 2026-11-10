@@ -5,8 +5,6 @@ services:
       - "3000:3000"
     environment:
       - DATABASE_URL=file:/app/data/autoduck.db
-      - Z_AI_API_KEY=${Z_AI_API_KEY}
-      - SIMULATE_RACE=false
       - NODE_ENV=production
       - RACE_SECRET_KEY=${RACE_SECRET_KEY}
       - R2_ACCOUNT_ID=${R2_ACCOUNT_ID}
@@ -16,9 +14,7 @@ services:
       - R2_PUBLIC_URL=${R2_PUBLIC_URL}
     volumes:
       - autoduck-data:/app/data
-      - autoduck-videos:/app/tmp/videos
     restart: unless-stopped
 
 volumes:
   autoduck-data:
-  autoduck-videos:

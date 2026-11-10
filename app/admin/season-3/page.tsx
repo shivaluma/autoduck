@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Season3ChaosCard } from '@/components/season3-chaos-card'
 import { Season3Avatar } from '@/components/season3-avatar'
 import { Season3PointTooltip } from '@/components/season3-point-tooltip'
-import { canStartSeason3TestRace } from '@/lib/season3-test-mode'
+import { canStartSeason3TestRace } from '@/src/season3/season3-test-mode'
 
 const CHAOS_OPTIONS = [
   {

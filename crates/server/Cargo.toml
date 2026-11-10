@@ -1,0 +1,62 @@
+[package]
+name = "autoduck-server"
+description = "AutoDuck HTTP server: axum + sqlx over the Prisma-compatible SQLite DB (rewrite plan Phase 3)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+default-run = "autoduck"
+
+[[bin]]
+name = "autoduck"
+path = "src/main.rs"
+
+[features]
+default = []
+# Plan Phase 3: AUTODUCK_TEST_RNG_SEED is honoured only in builds with this feature.
+test-rng = []
+
+[dependencies]
+# Engine crates: versions (race-protocol); Chaos rules, card draws, loadouts and the RNG for the
+# Season 3 meta layer (race-core, stage B). Never enable race-core's `ts-compat` here
+# (phase1-notes `## build_id`).
+race-protocol = { workspace = true, features = ["std"] }
+race-core = { workspace = true, features = ["std"] }
+
+axum = { version = "=0.8.9", default-features = false, features = ["http1", "json", "query", "tokio", "tower-log", "tracing", "matched-path", "original-uri"] }
+tokio = { version = "=1.54.1", features = ["rt-multi-thread", "macros", "net", "signal", "time", "fs", "sync", "process"] }
+tower = { version = "=0.5.3", default-features = false, features = ["util"] }
+tower-http = { version = "=0.7.1", default-features = false, features = ["fs"] }
+http = { version = "=1.5.0" }
+# Our own accept loop (http/mod.rs): axum::serve sets no hyper timer, so headers could be
+# trickled forever (review 2, finding 1). Both are already in the graph via axum/reqwest.
+hyper = { version = "=1.12.0", default-features = false, features = ["server", "http1"] }
+hyper-util = { version = "=0.1.21", default-features = false, features = ["server", "http1", "server-graceful", "service", "tokio"] }
+# D12: no chrono/time/migrate. DATETIME columns can only be read as String/DbTime.
+sqlx = { version = "=0.9.0", default-features = false, features = ["runtime-tokio", "sqlite", "macros"] }
+serde = { workspace = true, features = ["std"] }
+# Server-only feature set (D12). D4(e) diffs this graph against race-wasm's.
+serde_json = { workspace = true, features = ["std", "raw_value", "preserve_order"] }
+sha2 = { workspace = true }
+subtle = { version = "=2.6.1", default-features = false }
+tracing = { version = "=0.1.44" }
+tracing-subscriber = { version = "=0.3.23", default-features = false, features = ["std", "fmt", "ansi", "env-filter", "smallvec", "tracing-log"] }
+clap = { workspace = true, features = ["env"] }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+libc = { version = "=0.2.191" }
+# D13: cuid-style ids, request UUIDs and the gacha roll (cosmetics/ids.rs, cosmetics/gacha.rs).
+rand = { version = "=0.10.3", default-features = false, features = ["std", "std_rng", "sys_rng", "thread_rng"] }
+# Race detail: JSON.stringify-compatible numbers (routes/races/js_json.rs).
+ryu-js = { workspace = true }
+# Race track route: gunzip for clients that don't accept gzip (plan §4.6).
+flate2 = { workspace = true }
+# Google JWKS and the avatar proxy (D12: reqwest with rustls). No system proxy, no cookies.
+reqwest = { version = "=0.13.5", default-features = false, features = ["rustls"] }
+# RS256 signature check of Google ID tokens; claims are validated by our own code (auth/google.rs).
+jsonwebtoken = { version = "=11.1.0", default-features = false, features = ["aws_lc_rs"] }
+
+[dev-dependencies]
+tempfile = { version = "=3.27.0" }
+http-body-util = { version = "=0.1.5" }

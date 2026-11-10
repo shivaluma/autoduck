@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE \"Race\" SET \"status\" = 'failed'\n                       WHERE \"id\" = ? AND \"status\" IN ('pending', 'running') AND \"engineState\" = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "614ae6fb1978fd0115d07ac5a99d0205ea89348d8b0b96a0eb632f6d330273c9"
+}

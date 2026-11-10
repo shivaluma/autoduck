@@ -1,4 +1,4 @@
-import { randomInt } from 'node:crypto'
+import { randomInt } from '@/lib/test-ids'
 import { COSMETIC_CATALOG } from './catalog'
 import type { CosmeticDefinition, CosmeticRarity } from './types'
 

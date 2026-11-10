@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT p.\"accessToken\" AS \"access_token!: String\" FROM \"SeasonPlayer\" p\n           WHERE p.\"seasonId\" = (SELECT s.\"id\" FROM \"Season\" s WHERE s.\"status\" = 'active' ORDER BY s.\"id\" LIMIT 1)\n             AND p.\"userId\" = ?\n           ORDER BY p.\"id\" LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "access_token!: String",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "SeasonPlayer",
+            "name": "accessToken"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "589175b70c905aee83980d50f75e2dd903914dd64468bda60c0388e8ff94e347"
+}

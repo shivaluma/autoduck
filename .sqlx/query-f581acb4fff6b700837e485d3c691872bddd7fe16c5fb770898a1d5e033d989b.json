@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT u.\"id\" AS \"id!: i64\", u.\"name\" AS \"name!: String\", u.\"email\", u.\"googleId\" AS \"google_id\"\n               FROM \"SeasonPlayer\" p JOIN \"User\" u ON u.\"id\" = p.\"userId\"\n               WHERE p.\"accessToken\" = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!: i64",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "User",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "name!: String",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "User",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "name": "email",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "User",
+            "name": "email"
+          }
+        }
+      },
+      {
+        "name": "google_id",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "User",
+            "name": "googleId"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "f581acb4fff6b700837e485d3c691872bddd7fe16c5fb770898a1d5e033d989b"
+}

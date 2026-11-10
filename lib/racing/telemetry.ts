@@ -16,6 +16,7 @@ export interface RaceItemTelemetryRow {
   succeeded: boolean
 }
 
+/** Runs the no-loadout counterfactual with HEAD code, so the config must be the current engine/balance pair (version guard). */
 export function buildRaceItemTelemetry(raceId: number, config: RaceConfig, officialResult: RaceResult): RaceItemTelemetryRow[] {
   const ghostPlayerIds = new Set(config.players.filter((player) => player.isGhost).map((player) => player.playerId))
   const baseline = simulateRace({ ...config, raceId: `${config.raceId}-counterfactual`, loadouts: [] }, { recordEvents: false })

@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT \"id\" AS \"id!: i64\", \"status\" AS \"status!\", \"engineState\" AS \"engineState!\", \"engineVersion\"\n           FROM \"Race\"\n           WHERE \"status\" IN ('pending', 'running')\n             AND NOT COALESCE(CAST(substr(\"engineVersion\", 1, instr(\"engineVersion\", '.') - 1) AS INT) >= 2, 0)\n           ORDER BY \"id\"",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!: i64",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "Race",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "status!",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "Race",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "name": "engineState!",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "Race",
+            "name": "engineState"
+          }
+        }
+      },
+      {
+        "name": "engineVersion",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "Race",
+            "name": "engineVersion"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      null,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "aa1f5c5f1d6cd97f97940318f4920af4efedd40493a6e628e906aa57eee0206e"
+}

@@ -32,7 +32,8 @@ fn main() {
     let rustc_vv = String::from_utf8(output.stdout).expect("rustc -vV is UTF-8");
 
     let ts_compat = env::var_os("CARGO_FEATURE_TS_COMPAT").is_some();
-    let id = engine_build_id::compute(&root, &rustc_vv, ts_compat);
+    let cargo = PathBuf::from(env::var_os("CARGO").unwrap_or_else(|| "cargo".into()));
+    let id = engine_build_id::compute(&root, &rustc_vv, ts_compat, &cargo);
 
     for path in &id.watch {
         println!("cargo:rerun-if-changed={}", path.display());

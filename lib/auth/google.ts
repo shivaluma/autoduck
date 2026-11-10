@@ -1,5 +1,6 @@
 import { createRemoteJWKSet, errors, jwtVerify, type JWTVerifyGetKey } from 'jose'
 import { prisma } from '@/lib/db'
+import { testGoogleJwksUrl } from '@/lib/test-ids'
 
 export interface GoogleProfile {
   /** Google's stable account id (`sub`). Always a verified value. */
@@ -18,7 +19,7 @@ const GOOGLE_JWKS_URL = new URL('https://www.googleapis.com/oauth2/v3/certs')
 
 let googleJwks: JWTVerifyGetKey | null = null
 function defaultGoogleJwks() {
-  googleJwks ??= createRemoteJWKSet(GOOGLE_JWKS_URL)
+  googleJwks ??= createRemoteJWKSet(testGoogleJwksUrl() ? new URL(testGoogleJwksUrl()!) : GOOGLE_JWKS_URL)
   return googleJwks
 }
 

@@ -1,0 +1,82 @@
+{
+  "description": "DTRK/1 fixture recorded from scripts/lib/replay-track-fixture.ts buildFixtureConfig()",
+  "format": "dtrk/1",
+  "engineVersion": "1.2.0",
+  "balanceVersion": "S3.15",
+  "trackVersion": "river-01-v2",
+  "config": {
+    "raceId": "9001",
+    "seed": "0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d",
+    "protocolVersion": "1.0.0",
+    "engineVersion": "1.2.0",
+    "balanceVersion": "S3.15",
+    "trackVersion": "river-01-v2",
+    "tickRate": 60,
+    "players": [
+      {
+        "playerId": "1",
+        "name": "Fixture A"
+      },
+      {
+        "playerId": "2",
+        "name": "Fixture B"
+      },
+      {
+        "playerId": "3",
+        "name": "Fixture C"
+      }
+    ],
+    "loadouts": [
+      {
+        "playerId": "1",
+        "itemIds": [
+          "NITRO",
+          "HOMING_ROCKET"
+        ],
+        "source": "AUTO"
+      },
+      {
+        "playerId": "2",
+        "itemIds": [
+          "BANANA",
+          "BUBBLE_SHIELD"
+        ],
+        "source": "AUTO"
+      },
+      {
+        "playerId": "3",
+        "itemIds": [
+          "FEATHER",
+          "QUACK_HORN"
+        ],
+        "source": "AUTO"
+      }
+    ],
+    "pickupConfig": {
+      "enabled": true,
+      "goldenBoxEnabled": true,
+      "goldenBoxProbability": 0.15,
+      "hazardsEnabled": true,
+      "positionAwareLoot": true,
+      "spawnMultiplier": 1.25,
+      "regularPickupCap": 3,
+      "manualItemsEnabled": true,
+      "autoItemsEnabled": true,
+      "chaosBoxEnabled": false,
+      "forceItem": "MINI_ROCKET",
+      "disabledItems": [],
+      "idealManualPlayerIds": [],
+      "forceGoldenBox": false
+    }
+  },
+  "resultDigest": "8ec8210afee98e92dd62a9da50ffc62e984b078d4bab1612ac19990ef7f25073",
+  "byteSha256": "1df4b777ba56c0ab3d67919e9b8e9002dc3e1349cae1be9e3a482a1014bb2191",
+  "tickCount": 3498,
+  "rawBytes": 117849,
+  "gzipBytes": 50452,
+  "finishOrder": [
+    "1",
+    "2",
+    "3"
+  ]
+}

@@ -1,4 +1,4 @@
-import type { RaceEventType } from '@/packages/race-protocol/src'
+import type { RaceEventType } from '@/src/engine/protocol'
 
 type SoundCue = 'COUNTDOWN' | 'START' | 'BOX_POP' | 'ITEM_REVEAL' | 'ROCKET_LAUNCH' | 'ROCKET_IMPACT' | 'SHIELD_POP' | 'BANANA_SLIP' | 'NITRO' | 'TAILWIND' | 'HORN' | 'FEATHER' | 'HAZARD' | 'GOLD_AMBIENT' | 'GOLD_REWARD' | 'FINISH'
 

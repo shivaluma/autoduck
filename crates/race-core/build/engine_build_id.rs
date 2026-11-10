@@ -22,10 +22,17 @@
 //    `[workspace.package]`, and every `[profile.*]`, `[patch.*]` and
 //    `[replace]` section.
 // 5. `.cargo/config.toml` at the workspace root, if it exists.
-// 6. The engine subgraph of `Cargo.lock`: starting from the `[dependencies]`
-//    (normal, not dev or build) declared by race-core and race-protocol,
-//    every reachable package as `name version source checksum`, sorted.
-//    `ts-rs` is excluded: it only generates `.ts` files and never ships.
+// 6. The engine's resolved dependency graph, each package as
+//    `name version source checksum` (source and checksum from `Cargo.lock`),
+//    sorted. The graph is what cargo's feature resolver builds for race-core
+//    and race-protocol alone (`cargo tree -p race-core -p race-protocol
+//    -F race-core/std -e normal --target all --frozen`): normal edges only,
+//    every target, the engine's own features. Walking `Cargo.lock` instead is
+//    wrong: its edges are the union over every feature any workspace member
+//    enables, so a server-only `serde_json/preserve_order` added
+//    `indexmap`/`foldhash` under the engine's `serde_json` and changed the id.
+//    `--target all` keeps native and wasm on one id; `std` is enabled so the
+//    graph is the server's superset of the browser's (std is not hashed).
 // 7. The compiler: the `release:`, `commit-hash:` and `LLVM version:` lines of
 //    `$RUSTC -vV` (not `host:`, so the Mac and CI agree).
 // 8. The `channel` of `rust-toolchain.toml`.
@@ -38,7 +45,7 @@ use std::path::{Path, PathBuf};
 
 use sha2::{Digest, Sha256};
 
-pub const DOMAIN_TAG: &[u8] = b"autoduck/engine-build-id/v2\0";
+pub const DOMAIN_TAG: &[u8] = b"autoduck/engine-build-id/v3\0";
 
 /// Directories whose `*.rs` files are the engine source tree.
 pub const SOURCE_DIRS: [&str; 2] = ["crates/race-core/src", "crates/race-protocol/src"];
@@ -55,11 +62,11 @@ pub const BUILD_FILES: [&str; 4] = [
     "crates/race-protocol/Cargo.toml",
 ];
 
-/// Workspace crates whose normal dependencies root the lockfile walk.
+/// Workspace crates whose resolved dependency graph is hashed.
 pub const ENGINE_CRATES: [&str; 2] = ["race-core", "race-protocol"];
 
-/// Normal dependencies that never reach engine output (std-only codegen).
-pub const EXCLUDED_DEPS: [&str; 1] = ["ts-rs"];
+/// Features the engine graph is resolved with (see frame 6).
+pub const ENGINE_GRAPH_FEATURES: &str = "race-core/std,race-protocol/std";
 
 /// Everything the build script needs to report back to cargo.
 pub struct BuildId {
@@ -70,8 +77,9 @@ pub struct BuildId {
     pub watch: Vec<PathBuf>,
 }
 
-/// Computes the id. `rustc_vv` is the full output of `$RUSTC -vV`.
-pub fn compute(root: &Path, rustc_vv: &str, ts_compat: bool) -> BuildId {
+/// Computes the id. `rustc_vv` is the full output of `$RUSTC -vV`; `cargo`
+/// is the cargo binary that resolves the engine graph (`$CARGO`).
+pub fn compute(root: &Path, rustc_vv: &str, ts_compat: bool, cargo: &Path) -> BuildId {
     let mut hasher = Sha256::new();
     hasher.update(DOMAIN_TAG);
     let mut watch = Vec::new();
@@ -97,17 +105,8 @@ pub fn compute(root: &Path, rustc_vv: &str, ts_compat: bool) -> BuildId {
     let lock_path = root.join("Cargo.lock");
     watch.push(lock_path.clone());
     let lock = parse_lock(&read_string(&lock_path));
-    let mut roots: Vec<String> = Vec::new();
-    for krate in ENGINE_CRATES {
-        roots.push(krate.to_owned());
-        let manifest = read_string(&root.join(format!("crates/{krate}/Cargo.toml")));
-        for dep in normal_dependency_names(&manifest) {
-            if !EXCLUDED_DEPS.contains(&dep.as_str()) {
-                roots.push(dep);
-            }
-        }
-    }
-    let engine_packages = reachable(&lock, &roots);
+    let resolved = resolve_engine_graph(cargo, root);
+    let engine_packages = engine_lock_packages(&lock, &resolved);
 
     // 4. Workspace manifest.
     let manifest_path = root.join("Cargo.toml");
@@ -125,16 +124,7 @@ pub fn compute(root: &Path, rustc_vv: &str, ts_compat: bool) -> BuildId {
         frame(&mut hasher, ".cargo/config.toml", &read(&config_path));
     }
 
-    let mut lock_text = String::new();
-    for p in &engine_packages {
-        lock_text.push_str(&format!(
-            "{} {} {} {}\n",
-            p.name,
-            p.version,
-            p.source.as_deref().unwrap_or("-"),
-            p.checksum.as_deref().unwrap_or("-")
-        ));
-    }
+    let lock_text = engine_lock_text(&engine_packages);
     frame(&mut hasher, "Cargo.lock#engine", lock_text.as_bytes());
 
     // 7. Compiler.
@@ -367,10 +357,7 @@ pub fn workspace_manifest_digest_input(text: &str, engine_packages: &[&str]) -> 
         let keep: Vec<&String> = if header == "workspace.dependencies" {
             entries
                 .iter()
-                .filter(|e| {
-                    let key = entry_key(e);
-                    engine_packages.contains(&key) && !EXCLUDED_DEPS.contains(&key)
-                })
+                .filter(|e| engine_packages.contains(&entry_key(e)))
                 .collect()
         } else if header == "workspace.package" {
             entries
@@ -397,22 +384,6 @@ pub fn workspace_manifest_digest_input(text: &str, engine_packages: &[&str]) -> 
         }
     }
     out
-}
-
-/// Keys of `[dependencies]` and `[target.*.dependencies]` in a crate manifest.
-pub fn normal_dependency_names(manifest: &str) -> Vec<String> {
-    let mut names = Vec::new();
-    for (header, entries) in toml_sections(manifest) {
-        let is_normal = header == "dependencies"
-            || (header.starts_with("target.") && header.ends_with(".dependencies"));
-        if !is_normal {
-            continue;
-        }
-        for entry in entries {
-            names.push(entry_key(&entry).to_owned());
-        }
-    }
-    names
 }
 
 pub struct LockPackage {
@@ -469,64 +440,101 @@ pub fn parse_lock(text: &str) -> Vec<LockPackage> {
     packages
 }
 
-/// Finds the lock package a dependency spec refers to.
-fn resolve_spec<'a>(lock: &'a [LockPackage], spec: &str) -> &'a LockPackage {
-    let mut parts = spec.splitn(3, ' ');
-    let name = parts.next().unwrap_or("");
-    let version = parts.next();
-    let matches: Vec<&LockPackage> = lock
-        .iter()
-        .filter(|p| p.name == name && version.is_none_or(|v| p.version == v))
-        .collect();
-    match matches.as_slice() {
-        [one] => one,
-        [] => panic!("ENGINE_BUILD_ID: `{spec}` not found in Cargo.lock"),
-        _ => panic!("ENGINE_BUILD_ID: `{spec}` is ambiguous in Cargo.lock"),
+/// Runs `cargo tree` for the engine crates alone and returns the resolved
+/// packages as `(name, version)`, sorted and deduplicated. `--frozen`: the
+/// outer build has already brought `Cargo.lock` up to date, and this must
+/// never touch the network or rewrite the lock. `cargo tree` takes no build
+/// lock, so running it from a build script is safe.
+pub fn resolve_engine_graph(cargo: &Path, root: &Path) -> Vec<(String, String)> {
+    let mut cmd = std::process::Command::new(cargo);
+    cmd.arg("tree")
+        .arg("--manifest-path")
+        .arg(root.join("Cargo.toml"))
+        .args(["--frozen", "--quiet", "-e", "normal", "--target", "all"])
+        .args(["--prefix", "none", "--charset", "ascii", "--format", "{p}"])
+        .args(["--features", ENGINE_GRAPH_FEATURES]);
+    for krate in ENGINE_CRATES {
+        cmd.args(["-p", krate]);
     }
+    // A target set for the outer build must not narrow the graph.
+    cmd.env_remove("CARGO_BUILD_TARGET");
+    let output = cmd.output().unwrap_or_else(|e| {
+        panic!(
+            "ENGINE_BUILD_ID: cannot run `{} tree`: {e}",
+            cargo.display()
+        )
+    });
+    assert!(
+        output.status.success(),
+        "ENGINE_BUILD_ID: `cargo tree` for the engine graph failed:\n{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    parse_tree_output(&String::from_utf8(output.stdout).expect("cargo tree output is UTF-8"))
 }
 
-/// Packages reachable from `roots` (names), sorted by `(name, version)`.
-/// `roots[i]` may be a bare name; workspace crates' own lock entries list
-/// dev and build dependencies too, so only the roots' named deps are entered.
-pub fn reachable<'a>(lock: &'a [LockPackage], roots: &[String]) -> Vec<&'a LockPackage> {
-    let mut seen: Vec<&LockPackage> = Vec::new();
-    let mut stack: Vec<&LockPackage> = Vec::new();
-    for root in roots {
-        // A root names either an engine crate or one of its declared deps;
-        // the declared dep is resolved through the engine crate's own
-        // dependency list so a duplicate (`name version`) picks the right one.
-        let spec = ENGINE_CRATES
-            .iter()
-            .filter_map(|krate| lock.iter().find(|p| p.name == *krate))
-            .flat_map(|p| p.dependencies.iter())
-            .find(|d| d.split(' ').next() == Some(root.as_str()))
-            .cloned()
-            .unwrap_or_else(|| root.clone());
-        stack.push(resolve_spec(lock, &spec));
-    }
-    while let Some(pkg) = stack.pop() {
-        if seen.iter().any(|p| std::ptr::eq(*p, pkg)) {
+/// Parses `cargo tree --prefix none --format {p}` lines
+/// (`name vX.Y.Z [(path|proc-macro)] [(*)]`) into sorted, unique
+/// `(name, version)` pairs.
+pub fn parse_tree_output(text: &str) -> Vec<(String, String)> {
+    let mut out: Vec<(String, String)> = Vec::new();
+    for line in text.lines() {
+        let line = line.trim();
+        if line.is_empty() {
             continue;
         }
-        seen.push(pkg);
-        if ENGINE_CRATES.contains(&pkg.name.as_str()) {
-            // Workspace crates: only follow deps that are themselves roots.
-            for dep in &pkg.dependencies {
-                let name = dep.split(' ').next().unwrap_or("");
-                if roots.iter().any(|r| r == name) {
-                    stack.push(resolve_spec(lock, dep));
-                }
-            }
-        } else {
-            for dep in &pkg.dependencies {
-                stack.push(resolve_spec(lock, dep));
-            }
-        }
+        let mut parts = line.split_whitespace();
+        let name = parts.next().expect("package name");
+        let version = parts
+            .next()
+            .and_then(|v| v.strip_prefix('v'))
+            .unwrap_or_else(|| panic!("ENGINE_BUILD_ID: unexpected `cargo tree` line `{line}`"));
+        out.push((name.to_owned(), version.to_owned()));
     }
-    seen.sort_by(|a, b| {
+    out.sort();
+    out.dedup();
+    out
+}
+
+/// The lock entries of the resolved engine packages, sorted by
+/// `(name, version)`. Every resolved package must have exactly one entry.
+pub fn engine_lock_packages<'a>(
+    lock: &'a [LockPackage],
+    resolved: &[(String, String)],
+) -> Vec<&'a LockPackage> {
+    let mut out: Vec<&LockPackage> = resolved
+        .iter()
+        .map(|(name, version)| {
+            let matches: Vec<&LockPackage> = lock
+                .iter()
+                .filter(|p| &p.name == name && &p.version == version)
+                .collect();
+            match matches.as_slice() {
+                [one] => *one,
+                [] => panic!("ENGINE_BUILD_ID: `{name} {version}` not found in Cargo.lock"),
+                _ => panic!("ENGINE_BUILD_ID: `{name} {version}` is ambiguous in Cargo.lock"),
+            }
+        })
+        .collect();
+    out.sort_by(|a, b| {
         (a.name.as_str(), a.version.as_str()).cmp(&(b.name.as_str(), b.version.as_str()))
     });
-    seen
+    out
+}
+
+/// The hashed text of frame 6: one `name version source checksum` line per
+/// engine package.
+pub fn engine_lock_text(packages: &[&LockPackage]) -> String {
+    let mut text = String::new();
+    for p in packages {
+        text.push_str(&format!(
+            "{} {} {} {}\n",
+            p.name,
+            p.version,
+            p.source.as_deref().unwrap_or("-"),
+            p.checksum.as_deref().unwrap_or("-")
+        ));
+    }
+    text
 }
 
 /// The `release:`, `commit-hash:` and `LLVM version:` lines of `rustc -vV`.

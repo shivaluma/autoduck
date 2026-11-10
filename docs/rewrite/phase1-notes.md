@@ -98,7 +98,7 @@ stale id when cargo skipped the build script (an mtime-preserving restore over a
 cached `target/`). The hash covers, in order (each frame is
 `name \0 len:u64le bytes`):
 
-1. A domain tag (`autoduck/engine-build-id/v2`).
+1. A domain tag (`autoduck/engine-build-id/v3`).
 2. Every `*.rs` file under `crates/race-core/src` and
    `crates/race-protocol/src`, sorted by `/` path. Editor and merge leftovers
    (`*~`, `*.orig`, `*.rej`, `*.swp`, `*.bak`, `#x#`, dotfiles) are ignored.
@@ -114,10 +114,20 @@ cached `target/`). The hash covers, in order (each frame is
 5. `.cargo/config.toml`, if it exists. It is only watched when present,
    because cargo treats a missing `rerun-if-changed` path as always dirty.
    The self-check test catches a newly created file.
-6. The engine subgraph of `Cargo.lock`: starting from the `[dependencies]`
-   declared by race-core and race-protocol (normal dependencies only; dev and
-   build dependencies are excluded, and so is `ts-rs`, which only generates
-   `.ts` files), every reachable package as `name version source checksum`.
+6. The engine's resolved dependency graph, each package as
+   `name version source checksum` (source and checksum from `Cargo.lock`).
+   The graph comes from cargo's own feature resolver for the engine crates
+   alone: `cargo tree -p race-core -p race-protocol -F race-core/std,
+   race-protocol/std -e normal --target all --frozen` (run by the build
+   script through `$CARGO`; `cargo tree` takes no build lock). Normal edges
+   only, so dev/build deps and tooling (`flate2`, `clap`, `rayon`, `ts-rs`,
+   `wasm-bindgen`) stay out. *(Phase 6 fix: the first version walked
+   `Cargo.lock` edges, which are the union over every feature any workspace
+   member enables, so the server's `serde_json/preserve_order` put
+   `indexmap`/`foldhash` under the engine's `serde_json` and changed the id.
+   Domain tag bumped to `v3`.)* `--target all` keeps native and wasm on one
+   id; `std` is enabled so the graph is the server's superset (std itself is
+   still not hashed).
 7. The compiler: the `release:`, `commit-hash:` and `LLVM version:` lines of
    `$RUSTC -vV`. `host:` is left out so the Mac and CI agree.
 8. The `channel` of `rust-toolchain.toml`. Other keys (components, targets,
@@ -131,9 +141,9 @@ Choices:
   from wasm, which breaks the D16 build-id match.
 - The target triple and the profile are never hashed. Engine code has no
   `debug_assert!`, so debug and release behave the same.
-- **Verified:** the lockfile walk excludes tooling crates (`flate2`, `clap`,
+- **Verified:** the engine graph excludes tooling crates (`flate2`, `clap`,
   `rayon`, `ts-rs`, `wasm-bindgen`, `anyhow`, race-cli, race-wasm; unit test
-  `engine_lock_subgraph_ignores_tooling_deps`), so a race-cli-only dependency
+  `engine_graph_ignores_tooling_and_server_deps`), so a race-cli-only dependency
   can't change the id; the self-check
   test passes in debug and release; the native `race-cli build-id` and the
   shipped package's `engineBuildId()` print the same id (CI checks this too).
@@ -1202,7 +1212,7 @@ and otherwise listed under "Open issues" below. There were no blockers.
 | Finding | Disposition |
 |---|---|
 | R1 M1: id ignores the root `Cargo.toml` | Fixed. Engine `[workspace.dependencies]` entries, `edition`, `[profile.*]`, `[patch.*]`, `[replace]` and `.cargo/config.toml` are hashed (see `## build_id`). race-protocol also gets `overflow-checks = true`. |
-| R1 M2: whole `Cargo.lock` hashed | Fixed. Only the engine subgraph (normal deps of race-core/race-protocol, minus `ts-rs`) is hashed; adding a race-cli dependency leaves the id alone (unit test `engine_lock_subgraph_ignores_tooling_deps`). |
+| R1 M2: whole `Cargo.lock` hashed | Fixed. Only the engine subgraph (normal deps of race-core/race-protocol, minus `ts-rs`) is hashed; adding a race-cli dependency leaves the id alone (unit test `engine_lock_subgraph_ignores_tooling_deps`; since Phase 6 `engine_graph_ignores_tooling_and_server_deps` and `unrelated_lock_packages_do_not_change_the_id`). |
 | R1 m3: editor leftovers change the id | Fixed. Only `*.rs` is hashed, leftovers are ignored, other files and symlinks fail the build. |
 | R1 m4: toolchain file, not compiler | Fixed. `rustc -vV` release/commit-hash/LLVM lines and only the `channel` key are hashed. |
 | R1 m5: backdated mtime leaves a stale id | Fixed. Shared `build/engine_build_id.rs` plus the race-cli self-check test (run in CI). |

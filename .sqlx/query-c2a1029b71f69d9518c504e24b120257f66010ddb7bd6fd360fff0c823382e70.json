@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE \"User\" SET \"googleId\" = NULL, \"email\" = NULL, \"updatedAt\" = ? WHERE \"id\" = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "c2a1029b71f69d9518c504e24b120257f66010ddb7bd6fd360fff0c823382e70"
+}

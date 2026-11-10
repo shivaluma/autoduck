@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT \"id\" AS \"id!\" FROM \"AppMigration\" WHERE \"id\" GLOB ? ORDER BY \"id\" LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "AppMigration",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "f29ec9e13bff5c0a3f066ee151beeba7c9cf3a1253404d0a1f2e95c0bcd1e112"
+}

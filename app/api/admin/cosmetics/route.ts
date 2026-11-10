@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
+import { randomUUID } from '@/lib/test-ids'
 import { prisma } from '@/lib/db'
 import { COSMETIC_BY_ID, COSMETIC_CATALOG } from '@/lib/cosmetics/catalog'
 import { applyQuackTransaction } from '@/lib/cosmetics/economy'
+import { grantMissingCosmetics } from '@/lib/cosmetics/admin-grant'
 import { isAdminSecret } from '@/lib/auth/admin-secret'
 
 function authorized(request: Request) {
@@ -76,7 +78,7 @@ export async function POST(request: Request) {
     if (!player || !Number.isInteger(body.amount) || body.amount === 0) return NextResponse.json({ error: 'Player/amount không hợp lệ' }, { status: 400 })
     try {
       await prisma.$transaction(async (tx: typeof prisma) => {
-        await applyQuackTransaction(tx, { seasonPlayerId: player.id, amount: body.amount!, reason: 'ADMIN_ADJUSTMENT', idempotencyKey: `admin:${crypto.randomUUID()}`, metadata: { actor: 'host' } })
+        await applyQuackTransaction(tx, { seasonPlayerId: player.id, amount: body.amount!, reason: 'ADMIN_ADJUSTMENT', idempotencyKey: `admin:${randomUUID()}`, metadata: { actor: 'host' } })
         await tx.cosmeticAdminEvent.create({ data: { action: 'ADJUST_QP', actor: 'host', playerId: player.id, metadataJson: JSON.stringify({ amount: body.amount }) } })
       })
       return NextResponse.json({ ok: true })
@@ -98,15 +100,8 @@ export async function POST(request: Request) {
       : COSMETIC_CATALOG
 
     await prisma.$transaction(async (tx: typeof prisma) => {
-      await tx.playerCosmetic.createMany({
-        data: targetItems.map((item) => ({
-          seasonPlayerId: player.id,
-          cosmeticId: item.id,
-          source: 'ADMIN_GRANT_ALL',
-          isNew: true,
-        })),
-        skipDuplicates: true,
-      })
+      // No createMany({ skipDuplicates }): Prisma rejects it on SQLite, which made grant-all a 500.
+      await grantMissingCosmetics(tx, player.id, targetItems.map((item) => item.id), 'ADMIN_GRANT_ALL')
       await tx.cosmeticAdminEvent.create({
         data: {
           action: 'GRANT_ALL_COSMETICS',

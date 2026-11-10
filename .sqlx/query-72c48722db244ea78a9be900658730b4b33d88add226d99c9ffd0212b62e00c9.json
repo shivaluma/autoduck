@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT \"id\" AS \"id!: i64\", \"name\" AS \"name!\", \"avatarUrl\" AS \"avatar_url?\",\n                  \"shields\" AS \"shields!: i64\"\n           FROM \"User\" WHERE \"id\" IN (SELECT \"value\" FROM json_each(?))",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!: i64",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "User",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "name!",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "User",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "name": "avatar_url?",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "User",
+            "name": "avatarUrl"
+          }
+        }
+      },
+      {
+        "name": "shields!: i64",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "User",
+            "name": "shields"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "72c48722db244ea78a9be900658730b4b33d88add226d99c9ffd0212b62e00c9"
+}

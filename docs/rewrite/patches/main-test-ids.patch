@@ -1,0 +1,96 @@
+diff --git a/app/api/admin/season3/route.ts b/app/api/admin/season3/route.ts
+index 276b89c..3e4f391 100644
+--- a/app/api/admin/season3/route.ts
++++ b/app/api/admin/season3/route.ts
+@@ -1,4 +1,4 @@
+-import { randomUUID } from 'node:crypto'
++import { chaosClockMs, randomUUID } from '@/lib/test-ids'
+ import { NextResponse } from 'next/server'
+ import { prisma } from '@/lib/db'
+ import {
+@@ -376,7 +376,7 @@ export async function POST(request: Request) {
+       if (activePlayers.length < 2 || activePlayers.length > 16) return fail('Race cần 2–16 dzịt active')
+ 
+       const chaosSeed = createRaceSeed()
+-      const rng = createRaceRng(chaosSeed, `chaos:manual:${week.weekNumber}:${Date.now()}`)
++      const rng = createRaceRng(chaosSeed, `chaos:manual:${week.weekNumber}:${chaosClockMs()}`)
+ 
+       let chaosType: ChaosType
+       let targetUserId: number | null = null
+diff --git a/lib/racing/audit.ts b/lib/racing/audit.ts
+index 1b0f6c3..ead7570 100644
+--- a/lib/racing/audit.ts
++++ b/lib/racing/audit.ts
+@@ -1,4 +1,5 @@
+-import { createHash, randomBytes } from 'node:crypto'
++import { createHash } from 'node:crypto'
++import { randomSeedHex } from '@/lib/test-ids'
+ import type { RaceConfig, RaceResult } from '@/packages/race-protocol/src'
+ 
+ export function canonicalize(value: unknown): string {
+@@ -11,7 +12,7 @@ export function canonicalize(value: unknown): string {
+ }
+ 
+ export function createRaceSeed() {
+-  return randomBytes(32).toString('hex')
++  return randomSeedHex()
+ }
+ 
+ export function createRaceCommit(config: RaceConfig) {
+diff --git a/lib/test-ids.ts b/lib/test-ids.ts
+index 6b4e331..e14e5fa 100644
+--- a/lib/test-ids.ts
++++ b/lib/test-ids.ts
+@@ -1,11 +1,13 @@
+-import { randomInt as cryptoRandomInt, randomUUID as cryptoRandomUUID } from 'node:crypto'
++import { randomBytes as cryptoRandomBytes, randomInt as cryptoRandomInt, randomUUID as cryptoRandomUUID } from 'node:crypto'
+ 
+ // Deterministic-id hook for the Rust/TS mutation diff (rewrite plan Phase 3). Honoured only when
+ // NODE_ENV === 'test' and AUTODUCK_TEST_RNG_SEED is a u32. The env is read through a computed key
+ // so the bundler cannot inline NODE_ENV at build time.
+ // Rolls: mulberry32(seed), randomInt(n) = next() % n — the same stream as the Rust `test-rng`
+ // feature (crates/server/src/cosmetics/ids.rs). UUIDs come from a second mulberry32 stream; the
+-// diff compares them structurally (Rust's id stream is a different generator).
++// diff compares them structurally (Rust's id stream is a different generator). Race and Chaos
++// seeds come from a third mulberry32 stream (seed ^ 0x5eed5eed) and the set-chaos clock is fixed
++// (crates/server/src/season3/admin/seed.rs), so admin Season 3 draws match the Rust `test-rng` build.
+ const env = (name: string) => process.env[name]
+ 
+ function mulberry32(seed: number) {
+@@ -19,7 +21,7 @@ function mulberry32(seed: number) {
+   }
+ }
+ 
+-type Streams = { rolls: () => number; ids: () => number }
++type Streams = { rolls: () => number; ids: () => number; seeds: () => number }
+ let streams: Streams | null | undefined
+ 
+ function seeded(): Streams | null {
+@@ -27,7 +29,7 @@ function seeded(): Streams | null {
+   const raw = env('AUTODUCK_TEST_RNG_SEED')?.trim()
+   const seed = raw && /^\d+$/.test(raw) ? Number(raw) : NaN
+   streams = env(['NODE', 'ENV'].join('_')) === 'test' && Number.isInteger(seed) && seed <= 0xffffffff
+-    ? { rolls: mulberry32(seed), ids: mulberry32((seed ^ 0x9e3779b9) >>> 0) }
++    ? { rolls: mulberry32(seed), ids: mulberry32((seed ^ 0x9e3779b9) >>> 0), seeds: mulberry32((seed ^ 0x5eed5eed) >>> 0) }
+     : null
+   if (streams) console.warn(`AUTODUCK_TEST_RNG_SEED=${seed}: gacha rolls and ids are deterministic`)
+   return streams
+@@ -48,6 +50,18 @@ export function randomUUID(): string {
+   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20, 32)}`
+ }
+ 
++/** `createRaceSeed()`: 32 random bytes as hex (eight `seeds` draws under the test hook). */
++export function randomSeedHex(): string {
++  const s = seeded()
++  if (!s) return cryptoRandomBytes(32).toString('hex')
++  return Array.from({ length: 8 }, () => s.seeds().toString(16).padStart(8, '0')).join('')
++}
++
++/** The `Date.now()` of the set-chaos `chaos:manual:<week>:<ms>` stream (fixed under the test hook). */
++export function chaosClockMs(): number {
++  return seeded() ? 1_767_225_600_000 : Date.now()
++}
++
+ /** Google JWKS endpoint override for the local test JWKS (test env only). */
+ export function testGoogleJwksUrl(): string | null {
+   return env(['NODE', 'ENV'].join('_')) === 'test' ? env('AUTODUCK_GOOGLE_JWKS_URL')?.trim() || null : null

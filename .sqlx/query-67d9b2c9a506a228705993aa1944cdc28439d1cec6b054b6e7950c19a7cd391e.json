@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE \"SeasonWeek\" SET \"status\" = 'locked', \"raceId\" = NULL, \"updatedAt\" = ?\n                           WHERE \"status\" = 'racing' AND \"raceId\" = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "67d9b2c9a506a228705993aa1944cdc28439d1cec6b054b6e7950c19a7cd391e"
+}

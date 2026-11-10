@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO \"User\" (\"name\", \"avatarUrl\", \"scars\", \"shields\", \"shieldsUsed\", \"totalKhaos\",\n                 \"cleanStreak\", \"isBoss\", \"bossSince\", \"createdAt\", \"updatedAt\")\n               VALUES (?, ?, ?, ?, ?, ?, 0, 0, NULL, ?, ?)\n               RETURNING \"id\" AS \"id!: i64\"",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!: i64",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "User",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "132d1f93363ddebeb6edaedf05ed5a134339f8f58875d83abb7d1b087e0595ca"
+}
