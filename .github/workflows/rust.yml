@@ -2,9 +2,10 @@
 #
 # Jobs: rust (fmt, clippy with and without --all-features, tests, usize and
 # getrandom guards), wasm (no_std proof on wasm32v1-none, the shipped
-# wasm-bindgen package and its engineBuildId), determinism (native vs
-# wasm32-wasip1 under wasmtime on x86_64 and aarch64, default features and
-# ts-compat; includes the pinned libm outputs and the fixed state_hash),
+# wasm-bindgen package, its engineBuildId and the pinned race digests in
+# Node), determinism (native vs wasm32-wasip1 under wasmtime on x86_64 and
+# aarch64, default features and ts-compat; includes the pinned libm outputs,
+# the fixed state_hash and 42 pinned full races),
 # serde-features (D4(e) serde_json feature diff).
 #
 # The toolchain comes from rust-toolchain.toml: the channel is read from the
@@ -114,6 +115,11 @@ jobs:
           node-version: 24
       - name: Load the package in Node and run the perf stub
         run: node crates/race-wasm/bench/run-node.mjs --iterations 3 --warmup 1
+      - name: Shipped package reproduces the pinned native digests in Node (D26)
+        # 42 full races (every Chaos type, 16 ducks, manual wild-item inputs)
+        # through runCaseDigest; the same `default` digests are checked
+        # natively and under wasm32-wasip1 by the determinism job.
+        run: node scripts/ci/wasm-determinism.mjs
       - name: Shipped engineBuildId equals the native (server) build id
         # race-cli doesn't enable race-core/ts-compat, so this is the id a
         # server built with `-p` reports. Never build the server with
@@ -175,9 +181,11 @@ jobs:
         env:
           CARGO_TARGET_WASM32_WASIP1_RUNNER: wasmtime run --dir=${{ github.workspace }}
         run: cargo test -p race-core -p race-protocol --features race-core/ts-compat --release --locked --target wasm32-wasip1
-      # Phase 2+: compare the per-60-tick state_hash chain and digest of the
-      # corpus across native, wasm32-wasip1 and the shipped package (race-wasm-pkg
-      # artifact from the wasm job) in Node, then Playwright in three browsers (D26).
+      # The four steps above include tests/determinism_pinned.rs: 42 full
+      # races pinned per feature set (state chain over every tick, motion,
+      # events, standings), so native and wasm32-wasip1 must both reproduce
+      # them; the wasm job checks the same `default` digests through the
+      # shipped package in Node. Phase 5 adds Playwright in three browsers (D26).
 
   serde-features:
     name: serde_json feature diff (D4(e))

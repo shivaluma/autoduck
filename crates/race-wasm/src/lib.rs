@@ -2,8 +2,14 @@
 //!
 //! Built for the browser by `scripts/build-wasm.sh` with `-C panic=abort`.
 //! Phase 1 exports `engineBuildId()`, `versions()` and the perf-harness stub
-//! `benchStubResim()` (see `crates/race-wasm/bench/README.md`); Phase 5 adds
-//! the live driver and `normalizeConfig(json: &str)` (D8).
+//! `benchStubResim()` (see `crates/race-wasm/bench/README.md`). Phase 2 adds
+//! `runCaseDigest(line)`, the D26 determinism probe CI runs on the shipped
+//! package in Node (`scripts/ci/wasm-determinism.mjs`). Phase 5 adds the live
+//! driver and `normalizeConfig(json: &str)` (D8).
+//!
+//! After any trap (`panic=abort` lowers a panic to `unreachable`) the instance
+//! must be discarded: it stays callable, but a kept `Simulation` would carry
+//! on from a half-stepped state (Phase 2 review 2 INFO 7).
 
 use race_protocol::versions;
 use serde::Serialize;
@@ -49,6 +55,21 @@ pub fn versions() -> String {
         engine_build_id: race_core::ENGINE_BUILD_ID,
     };
     serde_json::to_string(&v).expect("versions serialise")
+}
+
+/// Runs one `race-cli corpus gen` line (config JSON, optionally with
+/// `oracleManualInputs`) to the end with this module's engine and returns its
+/// whole-race digest as JSON (`race_core::sim::CaseDigest`: `finished`,
+/// `finalTick`, `stateChainSha256`, `motionSha256`, `eventCount`,
+/// `eventsSha256`, `standings`). CI compares it with the `default` digests
+/// pinned in `crates/race-core/tests/fixtures/determinism-pinned.json`.
+///
+/// # Errors
+/// The line is not a valid config (the message as a JS string).
+#[wasm_bindgen(js_name = runCaseDigest)]
+pub fn run_case_digest(line: &str) -> Result<String, String> {
+    let digest = race_core::sim::digest_corpus_line(line, race_core::sim::EngineMath::default())?;
+    serde_json::to_string(&digest).map_err(|error| error.to_string())
 }
 
 /// Phase 1 perf-harness stub (plan §3 Phase 1, "Measurement"; C9 catch-up).

@@ -1,6 +1,6 @@
 //! `race-cli`: native tooling for the Rust engine (Phase 1).
 //!
-//! `corpus gen` is complete. `oracle diff` runs the Rust engine against a TS
+//! `corpus gen` is complete; `corpus pin` maintains the determinism fixture. `oracle diff` runs the Rust engine against a TS
 //! oracle trace (needs `--features ts-compat`). `oracle meta` checks Season meta
 //! parity (needs `--features ts-compat`). `gate` is a stub that exits with
 //! status 2.
@@ -11,6 +11,7 @@
 mod corpus;
 mod meta;
 mod oracle;
+mod pin;
 
 use std::process::ExitCode;
 
@@ -60,6 +61,20 @@ enum CorpusCommand {
         /// combo, forced golden boxes, manual wild-item inputs).
         #[arg(long, value_parser = corpus::Profile::parse, default_value = "full")]
         profile: corpus::Profile,
+    },
+    /// Recompute the pinned whole-race digests of this build's feature set
+    /// (`default`, or `tsCompat` with `--features ts-compat`) in the
+    /// determinism fixture.
+    Pin {
+        /// Fixture path.
+        #[arg(
+            long,
+            default_value = "crates/race-core/tests/fixtures/determinism-pinned.json"
+        )]
+        fixture: String,
+        /// Compare only; exit 1 if a digest differs.
+        #[arg(long)]
+        check: bool,
     },
 }
 
@@ -134,6 +149,15 @@ fn main() -> ExitCode {
             Ok(()) => ExitCode::SUCCESS,
             Err(err) => {
                 eprintln!("race-cli corpus gen: {err:#}");
+                ExitCode::FAILURE
+            }
+        },
+        Command::Corpus {
+            command: CorpusCommand::Pin { fixture, check },
+        } => match pin::run_pin(&fixture, check) {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(err) => {
+                eprintln!("race-cli corpus pin: {err:#}");
                 ExitCode::FAILURE
             }
         },

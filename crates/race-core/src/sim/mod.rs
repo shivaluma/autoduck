@@ -15,6 +15,8 @@
 //! - [`collisions`][collisions]: `resolveCollisions`;
 //! - [`ranks`][ranks]: `updateRanks`;
 //! - [`result`]: `resultFromSimulation`, `simulateRace`, snapshots.
+//! - [`case_digest`]: whole-race determinism digests (tooling and CI, not
+//!   a TS port).
 //!
 //! Items, pickups and the auto-use AI are separate modules
 //! ([`crate::items`], [`crate::pickups`], [`crate::auto_use`]); the step calls
@@ -26,6 +28,7 @@
 //! [`crate::math::js_round`]; `Math.max/min` keep JS NaN/-0 semantics; JS
 //! `Map`s are insertion-ordered [`IdMap`]s.
 
+pub mod case_digest;
 pub mod collisions;
 pub mod create;
 pub mod events;
@@ -41,6 +44,9 @@ use core::cmp::Ordering;
 
 use race_protocol::ids::PlayerId;
 
+pub use case_digest::{
+    CaseDigest, CorpusCase, DigestStanding, digest_case, digest_corpus_line, parse_corpus_line,
+};
 pub use create::{
     create_simulation, evaluate_pacing_multiplier, generate_duck_pacing_segments,
     queue_wild_item_input,
