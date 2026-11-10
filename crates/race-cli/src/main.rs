@@ -8,6 +8,7 @@
 // Native-only tool: the D4(b) determinism bans don't apply here.
 #![allow(clippy::disallowed_methods, clippy::disallowed_types)]
 
+mod balance;
 mod corpus;
 mod meta;
 mod oracle;
@@ -35,6 +36,11 @@ enum Command {
     Oracle {
         #[command(subcommand)]
         command: OracleCommand,
+    },
+    /// Paired Rust-vs-Rust balance reports (Phase 6, `docs/balance/S3.16.md`).
+    Balance {
+        #[command(subcommand)]
+        command: BalanceCommand,
     },
     /// Run a named gate (G1, G3, ...).
     Gate,
@@ -75,6 +81,32 @@ enum CorpusCommand {
         /// Compare only; exit 1 if a digest differs.
         #[arg(long)]
         check: bool,
+    },
+}
+
+#[derive(Subcommand)]
+enum BalanceCommand {
+    /// Simulate the fixed balance corpus and write per-race outcomes (JSON).
+    Run {
+        /// Number of races.
+        #[arg(long, default_value_t = 300)]
+        cases: u64,
+        /// Output JSON path.
+        #[arg(long, default_value = "balance.json")]
+        out: String,
+        /// Set `pickupConfig.goldenBoxProbability` explicitly (default: left
+        /// out, so the resolver default applies).
+        #[arg(long)]
+        golden_box_probability: Option<f64>,
+    },
+    /// Print the markdown report of `before` -> `after` (two `balance run`
+    /// outputs of the same corpus).
+    Compare {
+        before: String,
+        after: String,
+        /// Section title.
+        #[arg(long, default_value = "Balance comparison")]
+        title: String,
     },
 }
 
@@ -198,6 +230,43 @@ fn main() -> ExitCode {
             Ok(()) => ExitCode::SUCCESS,
             Err(err) => {
                 eprintln!("race-cli oracle meta: {err:#}");
+                ExitCode::FAILURE
+            }
+        },
+        Command::Balance {
+            command:
+                BalanceCommand::Run {
+                    cases,
+                    out,
+                    golden_box_probability,
+                },
+        } => match balance::run(
+            &balance::RunOptions {
+                cases,
+                golden_box_probability,
+            },
+            &out,
+        ) {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(err) => {
+                eprintln!("race-cli balance run: {err:#}");
+                ExitCode::FAILURE
+            }
+        },
+        Command::Balance {
+            command:
+                BalanceCommand::Compare {
+                    before,
+                    after,
+                    title,
+                },
+        } => match balance::compare(&before, &after, &title) {
+            Ok(text) => {
+                print!("{text}");
+                ExitCode::SUCCESS
+            }
+            Err(err) => {
+                eprintln!("race-cli balance compare: {err:#}");
                 ExitCode::FAILURE
             }
         },
