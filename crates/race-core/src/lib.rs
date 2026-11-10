@@ -39,3 +39,9 @@ pub mod collate_compat;
 pub mod js_math;
 
 pub use build_id::ENGINE_BUILD_ID;
+
+/// `true` when this build is the faithful S3.15 port (feature `ts-compat`,
+/// the TS-oracle build); `false` for the shipped S3.16 engine. Each Phase B
+/// fix (F1-F13, `docs/balance/S3.16.md`) branches on this constant, so both
+/// behaviours compile and are linted in every build.
+pub const TS_COMPAT: bool = cfg!(feature = "ts-compat");

@@ -61,9 +61,13 @@ pub use step::step_simulation;
 
 /// `left.localeCompare(right)` for ids.
 ///
-/// With `ts-compat` this is the ICU root-collation model of V8's
-/// `localeCompare` (D6, `collate_compat::compare`); without it, the Phase B
-/// byte order. Ids are D6-validated, so both are total orders.
+/// **F1 (S3.16):** byte order (`Ord for str`), which on the D6 id alphabet
+/// equals UTF-16 code-unit order and does not depend on a host locale. With
+/// `ts-compat` it is the ICU root-collation model of V8's `localeCompare`
+/// (D6, `collate_compat::compare`), the S3.15 order. Ids are D6-validated
+/// when a config is parsed (every id field is a validated newtype), so both
+/// are total orders. Every id comparison in the engine goes through here or
+/// through `chaos.rs`'s `locale_compare`, which makes the same choice.
 #[inline]
 #[must_use]
 pub fn id_cmp(left: &str, right: &str) -> Ordering {
