@@ -475,8 +475,9 @@ impl EvalCtx<'_> {
     }
 
     /// `planBananaAim(ctx, duck, maxOffset, dropBehind, hitRadius,
-    /// slowDistance)` (`evaluate.ts:171-207`).
-    fn plan_banana_aim(
+    /// slowDistance)` (`evaluate.ts:171-207`). `pub` like the TS export, for
+    /// the white-box port `tests/race_aim.rs`.
+    pub fn plan_banana_aim(
         &mut self,
         duck: &DuckPhysicsState,
         max_offset: f64,
