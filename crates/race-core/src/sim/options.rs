@@ -1,6 +1,6 @@
 //! `SimulationOptions` (`simulation.ts:82-91`) and the engine maths switch.
 
-use alloc::rc::Rc;
+use alloc::sync::Arc;
 use alloc::vec::Vec;
 use core::fmt;
 
@@ -19,11 +19,15 @@ pub enum LootPick {
 
 /// Balance tooling only (never set for official races): overrides the loot a
 /// duck rolls from regular boxes. Returning `None` rolls normally.
+///
+/// An `Arc<dyn Fn + Send + Sync>` (not `Rc`) so a [`super::Simulation`]
+/// stays `Send`: the server driver moves live simulations between threads
+/// (Phase 2 review 2 MINOR 5).
 #[derive(Clone)]
-pub struct WildLootOverride(pub Rc<LootFn>);
+pub struct WildLootOverride(pub Arc<LootFn>);
 
 /// The override callback: `None` rolls normally.
-pub type LootFn = dyn Fn(&PlayerId) -> Option<LootPick>;
+pub type LootFn = dyn Fn(&PlayerId) -> Option<LootPick> + Send + Sync;
 
 impl fmt::Debug for WildLootOverride {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -155,16 +159,29 @@ pub enum SimError {
     /// `resultFromSimulation` on a race that has not finished.
     NotFinished,
     /// `simulateRace`: the race did not finish within `max_ticks` ticks.
-    DidNotFinish { max_ticks: u32 },
+    /// `custom_budget` is set when `SimOptions::max_ticks` overrode the TS
+    /// budget (`maximumDurationSeconds * tickRate`).
+    DidNotFinish { max_ticks: u32, custom_budget: bool },
 }
 
 impl fmt::Display for SimError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::NotFinished => f.write_str("Race has not finished"),
-            Self::DidNotFinish { max_ticks } => {
-                write!(f, "Race did not finish within {max_ticks} ticks")
-            }
+            // The TS message (`simulation.ts:683`) names the default budget
+            // in seconds; a Rust-only `max_ticks` override names its ticks.
+            Self::DidNotFinish {
+                max_ticks,
+                custom_budget: true,
+            } => write!(f, "Race did not finish within {max_ticks} ticks"),
+            Self::DidNotFinish {
+                custom_budget: false,
+                ..
+            } => write!(
+                f,
+                "Race did not finish within {}s",
+                crate::config::core_balance::MAXIMUM_DURATION_SECONDS
+            ),
         }
     }
 }

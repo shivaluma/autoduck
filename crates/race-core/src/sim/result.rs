@@ -80,6 +80,7 @@ pub fn simulate_race(
     options: SimOptions,
     mut sink: Option<&mut dyn EventSink>,
 ) -> Result<SimResult, SimError> {
+    let custom_budget = options.max_ticks.is_some();
     let max_ticks = options
         .max_ticks
         .unwrap_or_else(|| maximum_ticks(config.tick_rate));
@@ -88,7 +89,10 @@ pub fn simulate_race(
         step_simulation(&mut sim, reborrow_sink(&mut sink));
     }
     if !sim.finished {
-        return Err(SimError::DidNotFinish { max_ticks });
+        return Err(SimError::DidNotFinish {
+            max_ticks,
+            custom_budget,
+        });
     }
     result_from_simulation(&sim)
 }

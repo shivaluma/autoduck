@@ -196,3 +196,11 @@ pub fn id_set_add(set: &mut IdSet, id: &PlayerId) {
 pub fn id_set_has(set: &[PlayerId], id: &str) -> bool {
     set.iter().any(|member| member.as_str() == id)
 }
+
+/// A live [`Simulation`] must stay `Send` (and `Sync`, it has no interior
+/// mutability) so the server driver can move it into `spawn_blocking` or
+/// hold it across `.await` (Phase 2 review 2 MINOR 5).
+const _: () = {
+    const fn assert_send_sync<T: Send + Sync>() {}
+    assert_send_sync::<Simulation>();
+};
