@@ -280,9 +280,31 @@ async fn admin_dashboard_and_actions() {
         assert_eq!(status, StatusCode::OK, "{body} → {reply}");
         assert_eq!(reply, json!({"ok": true}));
     }
-    // Parity with main: grant-all always fails there (Prisma rejects skipDuplicates on SQLite).
-    let (status, _) = admin_post(&f, json!({"action": "grant-all", "playerId": 1})).await;
-    assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR);
+    // grant-all (fixed on main in 854f8d7): the missing targets are granted, owned ones kept,
+    // and the count is every target.
+    let catalog_len = autoduck_server::cosmetics::catalog().items.len();
+    let (status, reply) =
+        admin_post(&f, json!({"action": "grant-all", "playerId": 1, "slot": 5})).await;
+    assert_eq!(
+        (status, reply),
+        (StatusCode::OK, json!({"ok": true, "count": 0}))
+    );
+    let (status, reply) = admin_post(&f, json!({"action": "grant-all", "playerId": 1})).await;
+    assert_eq!(
+        (status, reply),
+        (StatusCode::OK, json!({"ok": true, "count": catalog_len}))
+    );
+    let (status, reply) = admin_post(
+        &f,
+        json!({"action": "grant-all", "playerId": 1, "slot": "all"}),
+    )
+    .await;
+    assert_eq!(
+        (status, reply),
+        (StatusCode::OK, json!({"ok": true, "count": catalog_len}))
+    );
+    let (status, _) = admin_post(&f, json!({"action": "grant-all", "playerId": 999})).await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
     for (body, status) in [
         (
             json!({"action": "adjust-qp", "playerId": 1, "amount": 0}),
@@ -329,7 +351,15 @@ async fn admin_dashboard_and_actions() {
         .iter()
         .map(|event| event["action"].as_str().unwrap())
         .collect();
-    assert_eq!(events.len(), 4);
+    // 4 actions above plus the three successful grant-all calls.
+    assert_eq!(events.len(), 7);
+    assert_eq!(
+        events
+            .iter()
+            .filter(|action| **action == "GRANT_ALL_COSMETICS")
+            .count(),
+        3
+    );
     let configure = dashboard["events"]
         .as_array()
         .unwrap()

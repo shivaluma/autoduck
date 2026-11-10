@@ -15,23 +15,6 @@
     "reason": "Same responses as api-miss-json-404: Next's HTML not-found page carries its page caching headers (ETag, private no-cache) that a JSON error does not; Rust sends no-store (api-no-store)."
   },
   {
-    "id": "track-route-rust-only",
-    "method": "GET",
-    "path": "^/api/races/[^/]+/track$",
-    "status": 404,
-    "bStatus": [200, 304, 400, 404],
-    "reason": "Plan §4.6: GET /api/races/:id/track is new in Rust (main has no track route, so Next answers its HTML 404). Rust answers the track (200/304), JSON 400 for a non-numeric id (same parse as the detail route) or JSON 404 when no RaceReplayTrack row exists. Covered by crates/server/tests/races.rs."
-  },
-  {
-    "id": "track-route-rust-only-headers",
-    "method": "GET",
-    "path": "^/api/races/[^/]+/track$",
-    "status": 404,
-    "bStatus": [200, 304, 400, 404],
-    "header": "cache-control|etag",
-    "reason": "Same route as track-route-rust-only: its caching headers (ETag, immutable with a matching ?h=, no-cache or no-store otherwise) exist only in Rust; Next's HTML 404 sends its page headers."
-  },
-  {
     "id": "api-no-store",
     "path": "^/api/",
     "header": "cache-control",
@@ -53,6 +36,6 @@
     "path": "^/api/(admin/cosmetics|cosmetics/shop|gacha/pull)$",
     "status": 500,
     "emptyReferenceBody": true,
-    "reason": "Requests that make the TS handler throw outside its try/catch (malformed JSON body, a string playerId, grant-all hitting a PrismaClientValidationError) get Next's framework 500 with an empty body. Rust reproduces the same failure cases with the same 500 status and the same (absent) DB effect, checked by the mutation DB diff, but answers with the API's single error shape {\"error\":\"Internal Server Error\"} (crates/server/src/error.rs) instead of an empty body."
+    "reason": "Requests that make the TS handler throw outside its try/catch (malformed JSON body, a string playerId) get Next's framework 500 with an empty body. Rust reproduces the same failure cases with the same 500 status and the same (absent) DB effect, checked by the mutation DB diff, but answers with the API's single error shape {\"error\":\"Internal Server Error\"} (crates/server/src/error.rs) instead of an empty body."
   }
 ]

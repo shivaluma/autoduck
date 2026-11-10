@@ -1,16 +1,23 @@
-//! `GET /api/races/{id}/track?h=<byteSha256>` (plan §4.6; there is no TS route on `main`).
+//! `GET /api/races/{id}/track?h=<byteSha256>`: port of `app/api/races/[id]/track/route.ts` and
+//! `replayTrackResponse` (`lib/racing/replay-track/serve.ts`) on `main`.
 //!
-//! Serves the stored `RaceReplayTrack.bytes` (gzip of the DTRK/1 payload) as they are:
+//! Serves the stored `RaceReplayTrack.bytes` (gzip of the DTRK/1 payload):
 //!
-//! - `Content-Encoding: gzip` when the client accepts gzip; otherwise the payload is gunzipped
-//!   with `flate2` (and checked against `byteSha256`).
+//! - `Content-Encoding: gzip` when `Accept-Encoding` lists `gzip` or `*` with a positive `q`
+//!   (TS `acceptsGzip`); otherwise the payload is gunzipped on the server.
 //! - `ETag: "<byteSha256>"` (the hash of the **uncompressed** payload, so both encodings share
-//!   it) and `Vary: Accept-Encoding`. `If-None-Match` answers 304.
+//!   it), `Vary: Accept-Encoding`, `X-Content-Type-Options: nosniff`. A matching `If-None-Match`
+//!   (TS `etagMatches`) answers 304 with the same headers.
 //! - `Cache-Control: public, max-age=31536000, immutable` only when `h` equals `byteSha256`;
-//!   without `h`, or with a stale one, `no-cache`, so a re-recorded track is never pinned.
-//! - Not found: no row, or an `UNAVAILABLE` row without bytes → 404 `{"error":"Replay track not
-//!   found"}`. A bad id → 400 `{"error":"Invalid race ID"}` (same `parseInt` rules as the detail
-//!   route); an unreadable row → 500 `{"error":"Failed to fetch replay track"}`.
+//!   without `h`, or with a stale one, `no-cache`.
+//! - No row, or a row without bytes or `byteSha256` → 404 `{"error":"No replay track for this
+//!   race"}` with `Cache-Control: no-cache`, as is a canonical id above 2^31 − 1. A
+//!   non-canonical id (`parseRaceIdParam`) → 400 `{"error":"Invalid race ID"}`; a DB or gunzip
+//!   error → 500 `{"error":"Failed to fetch replay track"}`.
+//!
+//! Deliberate difference: the gunzipped payload is checked against `byteSha256` (and capped at
+//! [`MAX_TRACK_PAYLOAD`]) before it is served; TS serves whatever `gunzipSync` returns. The
+//! recorder stores the hash of the payload it gzips, so the check only fires on a corrupt row.
 
 use std::io::Read;
 
@@ -21,7 +28,6 @@ use axum::response::{IntoResponse, Response};
 use flate2::read::MultiGzDecoder;
 use sha2::{Digest, Sha256};
 
-use super::{RaceIdParam, parse_race_id};
 use crate::auth::query_param;
 use crate::error::ApiError;
 use crate::http::AppState;
@@ -40,11 +46,12 @@ pub async fn get(
         Ok(Path(segment)) => segment,
         Err(_) => return ApiError::bad_request("Invalid race ID").into_response(),
     };
-    let race_id = match parse_race_id(&segment) {
-        RaceIdParam::Invalid => return ApiError::bad_request("Invalid race ID").into_response(),
-        // No row can have this id; Prisma would have thrown, but this route is ours.
-        RaceIdParam::OutOfRange => return not_found(),
-        RaceIdParam::Id(id) => id,
+    let race_id = match super::parse_race_id(&segment) {
+        super::RaceIdParam::Invalid => {
+            return ApiError::bad_request("Invalid race ID").into_response();
+        }
+        super::RaceIdParam::NotFound => return not_found(),
+        super::RaceIdParam::Id(id) => id,
     };
 
     let row = sqlx::query!(
@@ -63,6 +70,7 @@ pub async fn get(
     };
 
     let hinted = query_param(uri.query(), "h").is_some_and(|h| h == sha);
+    // Not reachable with a recorder-written hash (hex); TS would throw building the header (500).
     let etag = format!("\"{sha}\"");
     let Ok(etag_value) = HeaderValue::from_str(&etag) else {
         return failed(&format!("race {race_id}: byteSha256 is not a valid ETag"));
@@ -74,6 +82,10 @@ pub async fn get(
         HeaderValue::from_static(if hinted { IMMUTABLE } else { NO_CACHE }),
     );
     headers.insert(header::VARY, HeaderValue::from_static("Accept-Encoding"));
+    headers.insert(
+        header::X_CONTENT_TYPE_OPTIONS,
+        HeaderValue::from_static("nosniff"),
+    );
 
     if if_none_match(&request_headers, &etag) {
         return (StatusCode::NOT_MODIFIED, headers).into_response();
@@ -93,7 +105,11 @@ pub async fn get(
 }
 
 fn not_found() -> Response {
-    ApiError::not_found("Replay track not found").into_response()
+    let mut response = ApiError::not_found("No replay track for this race").into_response();
+    response
+        .headers_mut()
+        .insert(header::CACHE_CONTROL, HeaderValue::from_static(NO_CACHE));
+    response
 }
 
 fn failed(error: &dyn std::fmt::Display) -> Response {
@@ -139,44 +155,50 @@ fn hex(bytes: &[u8]) -> String {
         .collect()
 }
 
-/// RFC 9110 §13.1.2 weak comparison: `*`, or any listed tag equal to ours (`W/` ignored).
+/// TS `etagMatches`: the header split on `,`, each candidate trimmed and stripped of a leading
+/// `W/`, then equal to our ETag or `*`. Several header lines read as one joined by `, `.
 fn if_none_match(headers: &HeaderMap, etag: &str) -> bool {
     headers
         .get_all(header::IF_NONE_MATCH)
         .iter()
         .filter_map(|value| value.to_str().ok())
         .flat_map(|value| value.split(','))
-        .map(str::trim)
-        .any(|tag| tag == "*" || tag.strip_prefix("W/").unwrap_or(tag) == etag)
+        .map(|candidate| {
+            let candidate = candidate.trim_matches(is_js_trim);
+            candidate.strip_prefix("W/").unwrap_or(candidate)
+        })
+        .any(|tag| tag == etag || tag == "*")
 }
 
-/// `Accept-Encoding` lists `gzip`, `x-gzip` or `*` with a non-zero q-value. An explicit
-/// `gzip;q=0` wins over `*`. A missing header means identity only (RFC 9110 §12.5.3 allows any
-/// coding, but the track must stay readable by `fetch` without a header).
+/// TS `acceptsGzip`: some `,`-separated item, lower-cased and trimmed, has the coding `gzip` or
+/// `*` and either no `q=` parameter or one whose `Number(…)` is positive. A missing header is
+/// identity only. (`gzip;q=0, *` accepts gzip through `*`; `x-gzip` is not recognised.)
 pub fn accepts_gzip(headers: &HeaderMap) -> bool {
-    let mut gzip: Option<bool> = None;
-    let mut star: Option<bool> = None;
-    for value in headers.get_all(header::ACCEPT_ENCODING) {
-        let Ok(value) = value.to_str() else { continue };
-        for item in value.split(',') {
-            let mut parts = item.split(';');
-            let coding = parts.next().unwrap_or("").trim().to_ascii_lowercase();
-            let mut q_positive = true;
-            for param in parts {
-                if let Some((name, q)) = param.split_once('=')
-                    && name.trim().eq_ignore_ascii_case("q")
-                {
-                    q_positive = q.trim().parse::<f64>().is_ok_and(|q| q > 0.0);
-                }
+    headers
+        .get_all(header::ACCEPT_ENCODING)
+        .iter()
+        .filter_map(|value| value.to_str().ok())
+        .flat_map(|value| value.split(','))
+        .any(|part| {
+            let part = part.trim_matches(is_js_trim).to_lowercase();
+            let mut pieces = part.split(';');
+            let coding = pieces.next().unwrap_or("");
+            if coding != "gzip" && coding != "*" {
+                return false;
             }
-            match coding.as_str() {
-                "gzip" | "x-gzip" => gzip = Some(gzip.unwrap_or(false) || q_positive),
-                "*" => star = Some(star.unwrap_or(false) || q_positive),
-                _ => {}
+            match pieces
+                .map(|param| param.trim_matches(is_js_trim))
+                .find(|param| param.starts_with("q="))
+            {
+                None => true,
+                Some(q) => crate::cosmetics::js::number_from_string(&q[2..]) > 0.0,
             }
-        }
-    }
-    gzip.or(star).unwrap_or(false)
+        })
+}
+
+/// `String#trim` characters (ECMAScript WhiteSpace and LineTerminator).
+fn is_js_trim(c: char) -> bool {
+    super::is_js_whitespace(c)
 }
 
 #[cfg(test)]
@@ -196,13 +218,17 @@ mod tests {
 
     #[test]
     fn accept_encoding() {
+        // TS `acceptsGzip` (lib/racing/replay-track/serve.ts).
         let yes = [
             "gzip",
             "gzip, deflate, br, zstd",
             "br;q=1.0, GZIP;q=0.5",
-            "x-gzip",
             "*",
             "identity, *;q=0.1",
+            "gzip;q=0, *",
+            "gzip; q=0x1",
+            "gzip;level=1",
+            " gzip;q=1 ",
         ];
         for value in yes {
             assert!(
@@ -216,8 +242,12 @@ mod tests {
             "br, deflate",
             "gzip;q=0",
             "gzip; q=0.000",
-            "gzip;q=0, *",
+            "gzip;q=",
+            "gzip;q=abc",
             "*;q=0",
+            "x-gzip",
+            "gzip;Q=0;q=0",
+            "gzip ;q=1",
         ];
         for value in no {
             assert!(
@@ -248,6 +278,11 @@ mod tests {
             etag
         ));
         assert!(if_none_match(&with(header::IF_NONE_MATCH, &["*"]), etag));
+        assert!(if_none_match(&with(header::IF_NONE_MATCH, &["W/*"]), etag));
+        assert!(!if_none_match(
+            &with(header::IF_NONE_MATCH, &["w/\"abc\""]),
+            etag
+        ));
         assert!(!if_none_match(
             &with(header::IF_NONE_MATCH, &["\"abd\""]),
             etag

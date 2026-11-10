@@ -66,9 +66,24 @@ INSERT INTO "Race" ("id","status","createdAt","engineState","engineVersion","rac
   (6,'pending','2026-08-22T11:00:00.000+00:00','LOCKED','2.0.0',NULL,'null'),
   (7,'pending','2026-08-22T12:00:00.000+00:00','LOCKED','2.0.0','seed-7','');
 
--- 8, 9: stored JSON that JSON.parse refuses → 500 (with and without an engine version).
+-- 8, 9: stored JSON that JSON.parse refuses (read as null / {} by parseJsonOr on main).
 INSERT INTO "Race" ("id","status","createdAt","engineVersion","engineConfigJson") VALUES
   (8,'finished','2026-08-23T10:00:00.000+00:00',NULL,'{bad'),
   (9,'finished','2026-08-23T11:00:00.000+00:00','1.2.0','{}');
 INSERT INTO "RaceEngineEvent" ("id","raceId","type","tick","timestampWithinRaceMs","metadataJson","createdAt") VALUES
   (10,9,'RACE_STARTED',0,0,'not json','2026-08-23T11:00:00.000+00:00');
+
+-- Replay tracks (plan §4.6, `replay`/`postRaceStats` and GET /api/races/:id/track). Race 2's bytes
+-- are gzip(mtime 0) of tests/races.rs `track_payload()`.
+--   2: finished, RECORDED, valid geometry id, statsJson with odd numbers/keys → mode track.
+--   3: failed, UNAVAILABLE without bytes → mode none.
+--   4: running with a track → mode none, no postRaceStats.
+--   9: finished, VERIFIED_DIGEST, sha but no bytes, malformed geometry id, statsJson not JSON.
+--   6: pending with stats → postRaceStats null.
+INSERT INTO "RaceReplayTrack" ("raceId","format","source","fidelity","engineImpl","engineVersion","balanceVersion","trackVersion","trackGeometry","tickRate","tickCount","byteSha256","bytes","statsJson","createdAt") VALUES
+  (2,'dtrk/1','LIVE_TS','RECORDED','ts','1.2.0','S3.11','river-01-v2','river-01-v2@deadbeef',60,90,'6d8eda4b99ed63bb9c1d6e31d2561f7baa84ffdd851afb94527cf531fa629cc2',X'1f8b0800000000000213edcfd7420e000080519111422a54b20a951452a1c84843a8fe7e424365532aa3a961ef54a46134b48b260d9155f64c850a6d0d2d8a5ce931baf8ce1b1c7da1c04464401f91818344070f193a4c6cf88891e2a3468f91182b29253d6efc041959b989f293264f993a4d4171fa8c994aca2ab35467aba9cf993b4f63bea696f682858b7474172fd15bba6cf90afd95068646c6ab4c56af596b6a662eb010ae5b6fb961e3262b6b1bdbcd76f60e5bb66edbbe63e7aedd7b1c9df63abbb8eedb7fe0a09bbb87a797f7211f5f3fffc3478e1e3b7ee2e4a9d367ce9e3b1f70213028f8e2a590cba161e11157ae5ebb1e19151d7323362e3e2131293925f5e6adb4f48cccacecdb777272f3f2ef16dcbb5ff8e0e1a3c74f8a8a9f3e7bfee2e5abd76fdebe7bffa1e4636959f9a7cf5f2a2aabbe7efb5e5d535b57dfd0f8a3a9b9a5f5675b7b4767d7afdfdd3d7ffef6fea34e9d3a75ead4a953a74e9d3a75ead4a953a74e9d3a75ead4a953a74e9d3a75ead4a953a74e9d3a75ead4a953a74e9d3a75ead4a953a74e9d3a75ead4a953a74e9d3a75ead4a953a74e9d3a75ead4a953a74e9d3af57e55ff0f4b2d318a284e0000','{"b":1.0,"a":[2e21,-0,5e-7],"10":"ten","nested":{"z":null}}','2026-08-19T19:05:00.000+00:00'),
+  (3,'dtrk/1','BACKFILL','UNAVAILABLE','ts','1.2.0','S3.11','river-01-v2',NULL,60,0,NULL,NULL,NULL,'2026-08-20T10:00:00.000+00:00'),
+  (4,'dtrk/1','LIVE_TS','RECORDED','ts','1.2.0','S3.11','river-01-v2','river-01-v2@0123abcd',60,10,'6d8eda4b99ed63bb9c1d6e31d2561f7baa84ffdd851afb94527cf531fa629cc2',X'1f8b0800000000000213edcfd7420e000080519111422a54b20a951452a1c84843a8fe7e424365532aa3a961ef54a46134b48b260d9155f64c850a6d0d2d8a5ce931baf8ce1b1c7da1c04464401f91818344070f193a4c6cf88891e2a3468f91182b29253d6efc041959b989f293264f993a4d4171fa8c994aca2ab35467aba9cf993b4f63bea696f682858b7474172fd15bba6cf90afd95068646c6ab4c56af596b6a662eb010ae5b6fb961e3262b6b1bdbcd76f60e5bb66edbbe63e7aedd7b1c9df63abbb8eedb7fe0a09bbb87a797f7211f5f3fffc3478e1e3b7ee2e4a9d367ce9e3b1f70213028f8e2a590cba161e11157ae5ebb1e19151d7323362e3e2131293925f5e6adb4f48cccacecdb777272f3f2ef16dcbb5ff8e0e1a3c74f8a8a9f3e7bfee2e5abd76fdebe7bffa1e4636959f9a7cf5f2a2aabbe7efb5e5d535b57dfd0f8a3a9b9a5f5675b7b4767d7afdfdd3d7ffef6fea34e9d3a75ead4a953a74e9d3a75ead4a953a74e9d3a75ead4a953a74e9d3a75ead4a953a74e9d3a75ead4a953a74e9d3a75ead4a953a74e9d3a75ead4a953a74e9d3a75ead4a953a74e9d3a75ead4a953a74e9d3af57e55ff0f4b2d318a284e0000','{}','2026-08-21T10:00:00.000+00:00'),
+  (9,'dtrk/1','BACKFILL','VERIFIED_DIGEST','ts','1.1.0','S3.10','river-01-v2','river-01-v2@DEADBEEF',60,0,'abc"def',NULL,'not json','2026-08-23T11:00:00.000+00:00'),
+  (6,'dtrk/1','LIVE_TS','RECORDED','ts','2.0.0','S4.0','river-02','x@00000000
+',60,0,NULL,NULL,'{"a":1}','2026-08-22T11:00:00.000+00:00');

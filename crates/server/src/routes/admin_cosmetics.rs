@@ -583,19 +583,42 @@ async fn post_action(
             Ok(ok(None))
         }
         Some("grant-all") => {
-            if player.is_none() {
+            let Some(player) = player else {
                 return Err(ApiError::bad_request("Player không hợp lệ"));
+            };
+            // `grantMissingCosmetics` (main, `lib/cosmetics/admin-grant.ts`): every target the
+            // player doesn't own yet is inserted with source `ADMIN_GRANT_ALL`; owned rows are left
+            // alone. The answer and the event count every target, owned or not.
+            let targets: Vec<&CosmeticItem> =
+                slot_filter(slot).unwrap_or_else(|| catalog().items.iter().collect());
+            let mut tx = state.db().begin_write().await?;
+            let now = DbTime::now();
+            for item in &targets {
+                sqlx::query(
+                    r#"INSERT INTO "PlayerCosmetic" ("id", "seasonPlayerId", "cosmeticId", "source", "isNew", "obtainedAt")
+                       VALUES (?, ?, ?, 'ADMIN_GRANT_ALL', 1, ?) ON CONFLICT ("seasonPlayerId", "cosmeticId") DO NOTHING"#,
+                )
+                .bind(cuid())
+                .bind(player.id)
+                .bind(&item.id)
+                .bind(now)
+                .execute(&mut *tx)
+                .await?;
             }
-            // Parity with main: Prisma rejects `createMany({ skipDuplicates: true })` on SQLite
-            // ("Unknown argument `skipDuplicates`"), so on main this action always fails with
-            // 500 before writing anything (verified against the TS app). Rust answers the same
-            // until a fix is decided; the intended behaviour is one
-            // `INSERT … ON CONFLICT DO NOTHING` per target (`slot_filter`, source
-            // `ADMIN_GRANT_ALL`) plus a `GRANT_ALL_COSMETICS` event with
-            // `{"count":N,"slot":…}`, answering `{"ok":true,"count":N}`.
-            Err(ApiError::internal(
-                "grant-all: Prisma rejects createMany skipDuplicates on SQLite (TS parity)",
-            ))
+            insert_event(
+                &mut tx,
+                "GRANT_ALL_COSMETICS",
+                Some(player.id),
+                None,
+                Some(format!(
+                    r#"{{"count":{},"slot":{}}}"#,
+                    targets.len(),
+                    slot_json(slot)
+                )),
+            )
+            .await?;
+            tx.commit().await?;
+            Ok(ok(Some(("count", json!(targets.len())))))
         }
         Some("revoke-all") => {
             let Some(player) = player else {

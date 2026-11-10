@@ -7,14 +7,10 @@
 
 mod common;
 
-use std::io::Write;
-
-use autoduck_server::db::{Db, DbTime};
+use autoduck_server::db::Db;
 use autoduck_server::http::{self, AppState};
 use axum::body::Body;
 use axum::http::{HeaderMap, Method, Request, StatusCode, header};
-use flate2::Compression;
-use flate2::write::GzEncoder;
 use http_body_util::BodyExt;
 use sha2::{Digest, Sha256};
 use sqlx::{Connection, SqliteConnection};
@@ -40,32 +36,14 @@ async fn fixture() -> Fixture {
         .unwrap();
     sqlx::raw_sql(FIXTURE_SQL).execute(&mut conn).await.unwrap();
 
-    let track_payload: Vec<u8> = b"DTRK\x01\x00\x00\x00"
-        .iter()
-        .copied()
-        .chain((0..20_000u32).map(|i| (i % 251) as u8))
-        .collect();
-    let mut encoder = GzEncoder::new(Vec::new(), Compression::best());
-    encoder.write_all(&track_payload).unwrap();
-    let track_gzip = encoder.finish().unwrap();
-    let track_sha = hex(&Sha256::digest(&track_payload));
-    let now = DbTime::now();
-    sqlx::query(
-        r#"INSERT INTO "RaceReplayTrack" ("raceId","format","source","fidelity","engineImpl",
-             "engineVersion","balanceVersion","trackVersion","trackGeometry","tickRate","tickCount",
-             "byteSha256","bytes","createdAt")
-           VALUES (2,'dtrk/1','LIVE_TS','RECORDED','ts','1.2.0','S3.11','river-01-v2',
-             'river-01-v2@deadbeef',60,90,?,?,?),
-                  (3,'dtrk/1','BACKFILL','UNAVAILABLE','ts','1.2.0','S3.11','river-01-v2',
-             NULL,60,0,NULL,NULL,?)"#,
-    )
-    .bind(&track_sha)
-    .bind(&track_gzip)
-    .bind(now)
-    .bind(now)
-    .execute(&mut conn)
-    .await
-    .unwrap();
+    // fixture.sql stores gzip(track_payload()) for races 2 and 4.
+    let track_payload = track_payload();
+    let (track_sha, track_gzip): (String, Vec<u8>) =
+        sqlx::query_as(r#"SELECT "byteSha256", "bytes" FROM "RaceReplayTrack" WHERE "raceId" = 2"#)
+            .fetch_one(&mut conn)
+            .await
+            .unwrap();
+    assert_eq!(track_sha, hex(&Sha256::digest(&track_payload)));
     conn.close().await.unwrap();
 
     let config = common::config(dir.path(), &db, &[]);
@@ -77,6 +55,14 @@ async fn fixture() -> Fixture {
         track_gzip,
         track_sha,
     }
+}
+
+fn track_payload() -> Vec<u8> {
+    b"DTRK\x01\x00\x00\x00"
+        .iter()
+        .copied()
+        .chain((0..20_000u32).map(|i| (i % 251) as u8))
+        .collect()
 }
 
 fn hex(bytes: &[u8]) -> String {
@@ -281,27 +267,37 @@ async fn track_serves_gzip_with_etag_and_cache_rules() {
 #[tokio::test]
 async fn track_errors() {
     let f = fixture().await;
-    // 3: UNAVAILABLE (no bytes); 1: no row; 404: no race.
+    // 3: UNAVAILABLE (no bytes); 9: byteSha256 but no bytes; 1: no row; 404: no race;
+    // `parseRaceIdParam`: a canonical id above 2^31 - 1 is a plain 404 too.
     for path in [
         "/api/races/3/track",
+        "/api/races/9/track",
         "/api/races/1/track",
         "/api/races/404/track",
+        "/api/races/2147483648/track",
+        "/api/races/9007199254740992/track",
     ] {
         let reply = call(&f.app, Method::GET, path, &[("accept-encoding", "gzip")]).await;
         assert_eq!(reply.status, StatusCode::NOT_FOUND, "{path}");
-        assert_eq!(reply.text(), r#"{"error":"Replay track not found"}"#);
+        assert_eq!(reply.text(), r#"{"error":"No replay track for this race"}"#);
+        assert_eq!(
+            reply.header(header::CACHE_CONTROL),
+            Some("no-cache"),
+            "{path}"
+        );
     }
-    let reply = call(&f.app, Method::GET, "/api/races/abc/track", &[]).await;
-    assert_eq!(reply.status, StatusCode::BAD_REQUEST);
-    assert_eq!(reply.text(), r#"{"error":"Invalid race ID"}"#);
-    // `parseInt` rules, as in the detail route.
-    let reply = call(
-        &f.app,
-        Method::GET,
+    // Only `/^[1-9][0-9]*$/` is an id (`parseInt` used to read "2.9x" or "0002" as race 2).
+    for path in [
+        "/api/races/abc/track",
         "/api/races/0x2/track",
-        &[("accept-encoding", "gzip")],
-    )
-    .await;
-    assert_eq!(reply.status, StatusCode::OK);
-    assert_eq!(reply.body, f.track_gzip);
+        "/api/races/-9007199254740992/track",
+        "/api/races/2.9x/track",
+        "/api/races/%20+2/track",
+        "/api/races/0002/track",
+        "/api/races/0/track",
+    ] {
+        let reply = call(&f.app, Method::GET, path, &[]).await;
+        assert_eq!(reply.status, StatusCode::BAD_REQUEST, "{path}");
+        assert_eq!(reply.text(), r#"{"error":"Invalid race ID"}"#);
+    }
 }

@@ -547,6 +547,7 @@ CREATE TABLE IF NOT EXISTS "SeasonWeek" (
     "raceSeed" TEXT,
     "chaosSeed" TEXT,
     "skippedPlayerIdsJson" TEXT,
+    "previousRaceSeeds" TEXT,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
     CONSTRAINT "SeasonWeek_seasonId_fkey" FOREIGN KEY ("seasonId") REFERENCES "Season" ("id") ON DELETE CASCADE ON UPDATE CASCADE,

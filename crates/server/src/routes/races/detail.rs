@@ -9,6 +9,14 @@
 //! same order. Related users are joined by id (`userId`, `predictorUserId`,
 //! `targetUserId`), never by name.
 //!
+//! - `engine.replay` (plan §4.6, `replayInfo` on `main`): `mode: "track"` with the track and
+//!   geometry URLs only for a `finished` race whose `RaceReplayTrack` has a `byteSha256` and is
+//!   not `UNAVAILABLE`; `verify` is always `"none"`. `engine.postRaceStats` is the stored
+//!   `statsJson` of a finished race (`parseJsonOr(…, null)`).
+//! - Events come in emission order (`ORDER BY id`): meta events (`CHAOS_RESOLVED`,
+//!   `QP_TRACK_REWARD_GRANTED`) last.
+//! - Stored JSON is read like `parseJsonOr`: an empty or unparsable `engineConfigJson` is `null`,
+//!   an empty or unparsable `metadataJson` is `{}`.
 //! - `engine.seed`/`engine.config` follow `publicRaceEngineVisibility` (`lib/racing/public-engine.ts`):
 //!   revealed only while the race is `pending`, `running` or `finished`; `engine.players` always
 //!   comes from the stored config.
@@ -16,9 +24,8 @@
 //!   yet (stage A), so they are what TS returns when `getLiveRaceSession` finds none: `null`/`[]`.
 //! - The legacy v2 keys (`consumedChests`, `awardedChests`, `dragonAward`, `dragonScaleEvents`)
 //!   are constants, as on `main`.
-//! - Errors: a non-numeric id → 400 `Invalid race ID`; no row → 404 `Race not found`; anything
-//!   that throws in TS (a DB error, unparsable stored JSON, an id Prisma can't fit in i64) → 500
-//!   `Failed to fetch race`.
+//! - Errors: a non-canonical id → 400 `Invalid race ID`; no row, or an id above 2^31 − 1 → 404
+//!   `Race not found`; anything that throws in TS (a DB error) → 500 `Failed to fetch race`.
 
 use std::collections::BTreeMap;
 
@@ -47,9 +54,7 @@ pub async fn get(
     };
     let race_id = match parse_race_id(&segment) {
         RaceIdParam::Invalid => return invalid_id(),
-        RaceIdParam::OutOfRange => {
-            return failed(&"race id does not fit a 64-bit signed integer");
-        }
+        RaceIdParam::NotFound => return ApiError::not_found("Race not found").into_response(),
         RaceIdParam::Id(id) => id,
     };
     match load(&state, race_id, token.as_deref()).await {
@@ -128,6 +133,15 @@ struct EventRow {
     source_player_id: Option<String>,
     target_player_id: Option<String>,
     metadata_json: String,
+}
+
+struct ReplayTrackRow {
+    fidelity: String,
+    engine_version: String,
+    balance_version: String,
+    track_geometry: Option<String>,
+    byte_sha256: Option<String>,
+    stats_json: Option<String>,
 }
 
 struct PredictionRow {
@@ -209,10 +223,21 @@ async fn load(
                   "timestampWithinRaceMs" AS "timestamp_within_race_ms!: f64",
                   "sourcePlayerId" AS "source_player_id?", "targetPlayerId" AS "target_player_id?",
                   "metadataJson" AS "metadata_json!"
-           FROM "RaceEngineEvent" WHERE "raceId" = ? ORDER BY "tick" ASC, "id" ASC"#,
+           FROM "RaceEngineEvent" WHERE "raceId" = ? ORDER BY "id" ASC"#,
         race_id
     )
     .fetch_all(&mut *conn)
+    .await?;
+
+    let replay_track = sqlx::query_as!(
+        ReplayTrackRow,
+        r#"SELECT "fidelity" AS "fidelity!", "engineVersion" AS "engine_version!",
+                  "balanceVersion" AS "balance_version!", "trackGeometry" AS "track_geometry?",
+                  "byteSha256" AS "byte_sha256?", "statsJson" AS "stats_json?"
+           FROM "RaceReplayTrack" WHERE "raceId" = ? LIMIT 1"#,
+        race_id
+    )
+    .fetch_optional(&mut *conn)
     .await?;
 
     let week_id = sqlx::query_scalar!(
@@ -260,28 +285,16 @@ async fn load(
             .ok_or(LoadError::MissingUser(what, id))
     };
 
-    // `race.engineConfigJson ? JSON.parse(race.engineConfigJson) : null`, parsed whether or not
-    // the race has an engine version (a parse error is a 500 either way).
-    let engine_config = match race.engine_config_json.as_deref() {
-        Some(text) if !text.is_empty() => {
-            js_json::parse(text).map_err(|source| LoadError::Json {
-                what: "Race.engineConfigJson",
-                source,
-            })?
-        }
-        _ => Value::Null,
-    };
+    // `parseJsonOr(race.engineConfigJson, null)`: never Zod-parsed, so configs of other engine
+    // versions are served as stored.
+    let engine_config = parse_json_or(race.engine_config_json.as_deref(), Value::Null);
 
     let engine = match race.engine_version.as_deref() {
         Some(version) if !version.is_empty() => {
             let reveal = matches!(race.status.as_str(), "pending" | "running" | "finished");
             let mut event_values = Vec::with_capacity(events.len());
             for event in &events {
-                let metadata =
-                    js_json::parse(&event.metadata_json).map_err(|source| LoadError::Json {
-                        what: "RaceEngineEvent.metadataJson",
-                        source,
-                    })?;
+                let metadata = parse_json_or(Some(&event.metadata_json), json!({}));
                 event_values.push(json!({
                     "raceId": race.id.to_string(),
                     "type": event.event_type,
@@ -309,6 +322,15 @@ async fn load(
                 "liveTick": Value::Null,
                 "liveManualInputs": [],
                 "resultDigest": race.result_digest,
+                "replay": replay_info(race.id, &race.status, replay_track.as_ref()),
+                "postRaceStats": if race.status == "finished" {
+                    parse_json_or(
+                        replay_track.as_ref().and_then(|t| t.stats_json.as_deref()),
+                        Value::Null,
+                    )
+                } else {
+                    Value::Null
+                },
                 "events": event_values,
             })
         }
@@ -410,6 +432,48 @@ async fn load(
         "seasonPredictions": season_predictions,
     });
     Ok(Some(js_json::stringify(&body)))
+}
+
+/// `parseJsonOr(value, fallback)` (`app/api/races/[id]/route.ts`): the fallback for `null`, `""`
+/// or text `JSON.parse` rejects.
+///
+/// `serde_json` also rejects two inputs `JSON.parse` accepts (a number outside f64, e.g. `1e400`,
+/// and a lone surrogate escape); they read as the fallback here. No writer stores either.
+fn parse_json_or(value: Option<&str>, fallback: Value) -> Value {
+    match value {
+        Some(text) if !text.is_empty() => js_json::parse(text).unwrap_or(fallback),
+        _ => fallback,
+    }
+}
+
+/// `replayInfo(raceId, status, track)` (`app/api/races/[id]/route.ts`, plan §4.6).
+fn replay_info(race_id: i64, status: &str, track: Option<&ReplayTrackRow>) -> Value {
+    let playable = track
+        .filter(|t| status == "finished" && t.byte_sha256.is_some() && t.fidelity != "UNAVAILABLE");
+    let sha = playable.and_then(|t| t.byte_sha256.as_deref());
+    json!({
+        "mode": if playable.is_some() { "track" } else { "none" },
+        "fidelity": track.map(|t| t.fidelity.as_str()),
+        "trackUrl": sha.map(|sha| format!("/api/races/{race_id}/track?h={sha}")),
+        "geometryUrl": playable.and_then(|t| track_geometry_url(t.track_geometry.as_deref())),
+        "engineVersion": track.map(|t| t.engine_version.as_str()),
+        "balanceVersion": track.map(|t| t.balance_version.as_str()),
+        "byteSha256": sha,
+        "verify": "none",
+    })
+}
+
+/// `trackGeometryUrl` (`src/race/polyline-track.ts`): `/race-tracks/<id>.json` when the id
+/// matches `/^[A-Za-z0-9._-]+@[0-9a-f]{8}$/`, else `None`.
+pub fn track_geometry_url(track_geometry: Option<&str>) -> Option<String> {
+    let id = track_geometry?;
+    let (name, sha8) = id.rsplit_once('@')?;
+    let name_ok = !name.is_empty()
+        && name
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'.' | b'_' | b'-'));
+    let sha_ok = sha8.len() == 8 && sha8.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'));
+    (name_ok && sha_ok).then(|| format!("/race-tracks/{id}.json"))
 }
 
 /// `config?.<key> ?? <default>`: `None` when the config isn't an object, lacks the key, or holds

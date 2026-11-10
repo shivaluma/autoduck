@@ -1,0 +1,86 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT \"fidelity\" AS \"fidelity!\", \"engineVersion\" AS \"engine_version!\",\n                  \"balanceVersion\" AS \"balance_version!\", \"trackGeometry\" AS \"track_geometry?\",\n                  \"byteSha256\" AS \"byte_sha256?\", \"statsJson\" AS \"stats_json?\"\n           FROM \"RaceReplayTrack\" WHERE \"raceId\" = ? LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "fidelity!",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "RaceReplayTrack",
+            "name": "fidelity"
+          }
+        }
+      },
+      {
+        "name": "engine_version!",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "RaceReplayTrack",
+            "name": "engineVersion"
+          }
+        }
+      },
+      {
+        "name": "balance_version!",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "RaceReplayTrack",
+            "name": "balanceVersion"
+          }
+        }
+      },
+      {
+        "name": "track_geometry?",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "RaceReplayTrack",
+            "name": "trackGeometry"
+          }
+        }
+      },
+      {
+        "name": "byte_sha256?",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "RaceReplayTrack",
+            "name": "byteSha256"
+          }
+        }
+      },
+      {
+        "name": "stats_json?",
+        "ordinal": 5,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "RaceReplayTrack",
+            "name": "statsJson"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "1126739c353b95f5844cea94fba968fc4e0f1e3092478bd8ecd3f1e06a7a7490"
+}

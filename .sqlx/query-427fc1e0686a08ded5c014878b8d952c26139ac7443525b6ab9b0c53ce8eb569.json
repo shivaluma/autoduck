@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT \"type\" AS \"event_type!\", \"tick\" AS \"tick!: i64\",\n                  \"timestampWithinRaceMs\" AS \"timestamp_within_race_ms!: f64\",\n                  \"sourcePlayerId\" AS \"source_player_id?\", \"targetPlayerId\" AS \"target_player_id?\",\n                  \"metadataJson\" AS \"metadata_json!\"\n           FROM \"RaceEngineEvent\" WHERE \"raceId\" = ? ORDER BY \"tick\" ASC, \"id\" ASC",
+  "query": "SELECT \"type\" AS \"event_type!\", \"tick\" AS \"tick!: i64\",\n                  \"timestampWithinRaceMs\" AS \"timestamp_within_race_ms!: f64\",\n                  \"sourcePlayerId\" AS \"source_player_id?\", \"targetPlayerId\" AS \"target_player_id?\",\n                  \"metadataJson\" AS \"metadata_json!\"\n           FROM \"RaceEngineEvent\" WHERE \"raceId\" = ? ORDER BY \"id\" ASC",
   "describe": {
     "columns": [
       {
@@ -82,5 +82,5 @@
       false
     ]
   },
-  "hash": "f8fe20ad92bf45cbcfc4e44e297d58cb452987232277653a6b61b915fbcf5e3d"
+  "hash": "427fc1e0686a08ded5c014878b8d952c26139ac7443525b6ab9b0c53ce8eb569"
 }

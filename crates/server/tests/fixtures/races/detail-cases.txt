@@ -21,3 +21,13 @@
 /api/races/abc
 /api/races/%20%202.9x
 /api/races/9223372036854775807
+/api/races/2abc
+/api/races/02
+/api/races/+2
+/api/races/-2
+/api/races/0
+/api/races/2.0
+/api/races/2e0
+/api/races/2147483647
+/api/races/2147483648
+/api/races/99999999999
