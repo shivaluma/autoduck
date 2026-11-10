@@ -236,9 +236,14 @@ pub struct DiffOptions {
 #[derive(Clone, Debug, PartialEq, Eq)]
 enum CaseOutcome {
     Match,
-    /// Both sides refused the case (TS threw, Rust could not resolve it).
+    /// Both sides refused the config (TS threw while parsing, Rust could not
+    /// resolve it).
     BothFailed(String),
-    /// TS failed but Rust accepted the config.
+    /// TS threw after parsing (`create`/`step`/...) and Rust panicked at the
+    /// same step with the same message, with identical hashes before it.
+    BothThrew(String),
+    /// TS threw but Rust accepted the config or ran past the throw (or threw
+    /// elsewhere / with another message).
     TsFailed(String),
     /// The Rust engine panicked (e.g. an unported `todo!`) or errored.
     RustPanic(String),
@@ -614,18 +619,16 @@ fn compare_case(record: &TraceRecord, line: Option<&str>, host: engine::RunSetup
     let Some(line) = line else {
         return CaseOutcome::RustConfig(format!("case {} is not in the corpus", record.case));
     };
+    let ts_parse_failed = !record.ok && record.stage.as_deref() == Some("parse");
     let input = match engine::parse_config(line) {
         Ok(input) => input,
-        Err(error) if !record.ok => return CaseOutcome::BothFailed(error),
+        // Only a TS *parse* failure is the same refusal; a config TS
+        // accepted and then threw on is a Rust config bug (review 1 LOW 1).
+        Err(error) if ts_parse_failed => return CaseOutcome::BothFailed(error),
         Err(error) => return CaseOutcome::RustConfig(error),
     };
     if !record.ok {
-        return CaseOutcome::TsFailed(format!(
-            "{} at tick {}: {}",
-            record.stage.as_deref().unwrap_or("?"),
-            record.tick.unwrap_or(0),
-            record.error.as_deref().unwrap_or("?")
-        ));
+        return compare_ts_failure(record, input, host);
     }
     let max_ticks = record.max_ticks;
     let run = catch_unwind(AssertUnwindSafe(|| engine::run(input, host, max_ticks)));
@@ -733,6 +736,92 @@ fn compare_case(record: &TraceRecord, line: Option<&str>, host: engine::RunSetup
             details,
         })
     }
+}
+
+/// A TS record with `ok: false` past the parse stage: run Rust anyway and
+/// require a panic at the same step with the same message, after identical
+/// state and event hashes (review 1 LOW 2, review 2 MINOR 4).
+#[cfg(feature = "ts-compat")]
+fn compare_ts_failure(
+    record: &TraceRecord,
+    input: engine::CaseInput,
+    host: engine::RunSetup,
+) -> CaseOutcome {
+    use std::panic::{AssertUnwindSafe, catch_unwind};
+    let stage = record.stage.as_deref().unwrap_or("?");
+    let ts_tick = record.tick.unwrap_or(0);
+    let ts_error = record.error.as_deref().unwrap_or("?");
+    let ts_text = format!("TS {stage} threw after tick {ts_tick}: {ts_error}");
+    if stage == "parse" {
+        return CaseOutcome::TsFailed(format!("{ts_text}; Rust accepted the config"));
+    }
+    let max_ticks = race_core::config::maximum_ticks(input.config.tick_rate);
+    let trace = match catch_unwind(AssertUnwindSafe(|| engine::run(input, host, max_ticks))) {
+        Ok(Ok(trace)) => trace,
+        Ok(Err(error)) => {
+            return CaseOutcome::TsFailed(format!("{ts_text}; Rust errored: {error}"));
+        }
+        // A panic outside the step loop: createSimulation (or the first
+        // observation).
+        Err(payload) => {
+            let message = engine::panic_message(payload.as_ref());
+            return if stage == "create" && message == ts_error {
+                CaseOutcome::BothThrew(format!("create: {message}"))
+            } else {
+                CaseOutcome::TsFailed(format!(
+                    "{ts_text}; Rust panicked outside a step: {message}"
+                ))
+            };
+        }
+    };
+    let Some((rust_tick, message)) = &trace.panic else {
+        return CaseOutcome::TsFailed(format!(
+            "{ts_text}; Rust ran to tick {} without panicking",
+            trace.final_tick
+        ));
+    };
+    if stage != "step" || *rust_tick != ts_tick + 1 || message != ts_error {
+        return CaseOutcome::TsFailed(format!(
+            "{ts_text}; Rust panicked stepping tick {rust_tick}: {message}"
+        ));
+    }
+    // The ticks observed before the throw (0..=ts_tick) must agree.
+    if !record.tick_hashes.is_empty() {
+        let observed = usize::try_from(ts_tick).map_or(usize::MAX, |tick| tick + 1);
+        let states = first_mismatch(
+            &record.tick_hashes,
+            record.hash_prefix_bytes * 2,
+            record.hash_prefix_bytes,
+            trace
+                .tick_hashes
+                .get(..observed)
+                .unwrap_or(&trace.tick_hashes),
+        );
+        let events = first_mismatch(
+            &record.tick_event_hashes,
+            record.event_prefix_bytes * 2,
+            record.event_prefix_bytes,
+            trace
+                .tick_event_hashes
+                .get(..observed)
+                .unwrap_or(&trace.tick_event_hashes),
+        );
+        if states.is_some() || events.is_some() {
+            return CaseOutcome::Diverged(Divergence {
+                first_state_tick: states,
+                first_event_tick: events,
+                details: vec![format!(
+                    "then both threw stepping tick {rust_tick}: {message}"
+                )],
+            });
+        }
+        return CaseOutcome::BothThrew(format!(
+            "step {rust_tick}: {message} (ticks 0..={ts_tick} exact)"
+        ));
+    }
+    CaseOutcome::BothThrew(format!(
+        "step {rust_tick}: {message} (trace has no pre-throw hashes)"
+    ))
 }
 
 /// Reads the corpus lines (case index = 0-based line number).
@@ -892,6 +981,7 @@ fn run_engine_diff(
             let key = match &outcome {
                 CaseOutcome::Match => "match",
                 CaseOutcome::BothFailed(_) => "both-failed",
+                CaseOutcome::BothThrew(_) => "both-threw",
                 CaseOutcome::TsFailed(_) => "ts-failed",
                 CaseOutcome::RustPanic(message) => {
                     let kind = message
@@ -907,7 +997,10 @@ fn run_engine_diff(
                 CaseOutcome::Diverged(_) => "diverged",
             };
             *totals.entry(key).or_default() += 1;
-            if !matches!(outcome, CaseOutcome::Match | CaseOutcome::BothFailed(_)) {
+            if !matches!(
+                outcome,
+                CaseOutcome::Match | CaseOutcome::BothFailed(_) | CaseOutcome::BothThrew(_)
+            ) {
                 if shown < options.show {
                     shown += 1;
                     eprintln!("  case {case}: {}", describe(&outcome));
@@ -955,7 +1048,8 @@ fn describe(outcome: &CaseOutcome) -> String {
     match outcome {
         CaseOutcome::Match => "match".to_owned(),
         CaseOutcome::BothFailed(error) => format!("both failed: {error}"),
-        CaseOutcome::TsFailed(error) => format!("TS failed, Rust did not: {error}"),
+        CaseOutcome::BothThrew(error) => format!("both threw at the same step: {error}"),
+        CaseOutcome::TsFailed(error) => format!("TS failed, Rust differs: {error}"),
         CaseOutcome::RustPanic(message) => format!("Rust panicked: {message}"),
         CaseOutcome::RustConfig(error) => format!("Rust config error: {error}"),
         CaseOutcome::Diverged(divergence) => format!(

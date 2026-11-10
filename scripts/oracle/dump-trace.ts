@@ -295,6 +295,10 @@ export function parseCaseLine(line: string) {
 function runCase(caseIndex: number, line: string, options: CaseOptions): CaseRecord {
   let stage = 'parse'
   let tick = 0
+  // Hoisted so a failure record carries the hashes of the ticks observed
+  // before the throw (race-cli checks Rust stops at the same step).
+  const tickHashes: string[] = []
+  const tickEventHashes: string[] = []
   try {
     const { config, manualInputs } = parseCaseLine(line)
     stage = 'create'
@@ -306,8 +310,6 @@ function runCase(caseIndex: number, line: string, options: CaseOptions): CaseRec
     const maxTicks = options.maxTicks ?? CORE_BALANCE.maximumDurationSeconds * config.tickRate
 
     const sink = new StateBytes()
-    const tickHashes: string[] = []
-    const tickEventHashes: string[] = []
     let chain: Buffer = Buffer.alloc(32)
     let motion: Buffer = Buffer.alloc(32)
     let lastMotionTick = -1
@@ -410,6 +412,14 @@ function runCase(caseIndex: number, line: string, options: CaseOptions): CaseRec
       stage,
       tick,
       error: error instanceof Error ? error.message : String(error),
+      ...(tickHashes.length > 0
+        ? {
+          hashPrefixBytes: options.hashPrefixBytes,
+          eventPrefixBytes: options.eventPrefixBytes,
+          tickHashes: tickHashes.join(''),
+          tickEventHashes: tickEventHashes.join(''),
+        }
+        : {}),
     }
   }
 }

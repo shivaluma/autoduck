@@ -112,7 +112,7 @@ Then one JSON line per case:
 | Key | Meaning |
 |---|---|
 | `case` | 0-based corpus line. |
-| `ok` | `false` means the TS side threw. The record then has `stage` (`parse`, `create`, `step`, `hash`, `events`), `tick` and `error`. |
+| `ok` | `false` means the TS side threw. The record then has `stage` (`parse`, `create`, `step`, `hash`, `events`), `tick` (the last completed tick; a `step` throw happened while stepping `tick + 1`) and `error`, plus `hashPrefixBytes`, `eventPrefixBytes`, `tickHashes` and `tickEventHashes` for the ticks observed before the throw (absent for `parse`/`create`). `race-cli oracle diff` runs Rust on such a case too and counts it as `both-threw` only when Rust panics at the same step with the same message and identical earlier hashes. |
 | `raceId`, `players`, `engineVersion`, `balanceVersion` | From the parsed config. |
 | `finished`, `finalTick`, `maxTicks` | The loop is `observe(); while (!finished && tick < maxTicks) { step; observe() }`. |
 | `stateHashVersion` | `sh1` (below). |
