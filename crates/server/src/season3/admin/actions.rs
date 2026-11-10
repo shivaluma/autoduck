@@ -19,11 +19,15 @@
 //! - `Math.max(1, body.weeks ?? 12)` uses `ToNumber`.
 //!
 //! `reseed-week` is new (plan Phase 3, risk R24): allowed only when the week is `locked` with no
-//! race attached, and the latest official race run with its current seed `failed`. It draws a
-//! new race seed, appends the old one to `SeasonWeek.previousRaceSeeds` (JSON array), re-rolls
-//! the auto loadouts from the new seed (as `lock` does) and logs an audit line with seed
-//! commitments (never the seeds). The column is schema 0.8 (`ea1dc1e` on main), which the
-//! verifier requires, so it always exists here.
+//! race attached and not resolved, and the latest official race run with its current seed
+//! `failed` before it finished (engine state before `FINISHED`, no `CHAOS_RESOLVED` event). A
+//! race that finished was shown live, and one that resolved already applied the season effects:
+//! neither may be re-rolled. It draws a new race seed, appends the old one to
+//! `SeasonWeek.previousRaceSeeds` (JSON array), re-rolls the auto loadouts from the new seed (as
+//! `lock` does) and logs an audit line with seed commitments. Neither the log nor the answer
+//! carries a seed (D17). The column is schema 0.8 (`ea1dc1e` on main), which the verifier
+//! requires, so it always exists here. A re-seed cannot fix a Chaos card that fails resolution
+//! (a ghost Wanted target, groups outside the lobby): only `set-chaos`/`toggle-skip` do.
 
 use axum::Json;
 use axum::http::StatusCode;
@@ -979,13 +983,26 @@ async fn unlock(conn: &mut SqliteConnection, body: &Value, season: &ActiveSeason
 #[serde(rename_all = "camelCase")]
 struct Reseeded {
     ok: bool,
-    week: SeasonWeekRow,
+    week_id: i64,
+    /// `sha256(raceSeed)` of the new seed: the answer never carries a seed (D17).
+    seed_commit: String,
     failed_race_id: i64,
     previous_race_seed_count: usize,
 }
 
 const RESEED_REFUSED: &str =
     "Chỉ re-seed được khi tuần đang locked và race gần nhất của seed hiện tại đã failed";
+const RESEED_REFUSED_FINISHED: &str = "Race gần nhất của seed hiện tại đã chạy xong (đã phát live hoặc đã resolve): không re-seed được";
+
+/// Engine states a race can fail in before its result exists (`lib/racing/state-machine.ts`).
+const PRE_FINISH_ENGINE_STATES: [&str; 6] = [
+    "CREATED",
+    "CHAOS_REVEALED",
+    "PREPARING",
+    "LOCKED",
+    "COUNTDOWN",
+    "RACING",
+];
 
 async fn reseed_week(
     conn: &mut SqliteConnection,
@@ -1004,20 +1021,40 @@ async fn reseed_week(
     }
     // A failed official race returns its week to `locked` with `raceId` NULL
     // (`executeSeason3Race`'s catch, and D22 recovery); the race keeps the seed it ran with.
-    let (Some(old_seed), "locked", None) =
-        (week.race_seed.clone(), week.status.as_str(), week.race_id)
-    else {
+    let (Some(old_seed), "locked", None, None) = (
+        week.race_seed.clone(),
+        week.status.as_str(),
+        week.race_id,
+        week.resolved_at.as_ref(),
+    ) else {
         return Err(fail(StatusCode::CONFLICT, RESEED_REFUSED));
     };
-    let last: Option<(i64, String)> = sqlx::query_as(
-        r#"SELECT "id", "status" FROM "Race" WHERE "raceSeed" = ? AND "isTest" = 0 ORDER BY "id" DESC LIMIT 1"#,
+    let last: Option<(i64, String, Option<String>, bool)> = sqlx::query_as(
+        r#"SELECT "id", "status", "engineState", EXISTS (SELECT 1 FROM "RaceEngineEvent" WHERE "RaceEngineEvent"."raceId" = "Race"."id" AND "RaceEngineEvent"."type" = 'CHAOS_RESOLVED') FROM "Race" WHERE "raceSeed" = ? AND "isTest" = 0 ORDER BY "id" DESC LIMIT 1"#,
     )
     .bind(&old_seed)
     .fetch_optional(&mut *conn)
     .await?;
-    let Some((failed_race_id, _)) = last.filter(|(_, status)| status == "failed") else {
+    let Some((failed_race_id, _, engine_state, resolved_event)) =
+        last.filter(|(_, status, _, _)| status == "failed")
+    else {
         return Err(fail(StatusCode::CONFLICT, RESEED_REFUSED));
     };
+    let failed_before_finish = engine_state
+        .as_deref()
+        .is_some_and(|state| PRE_FINISH_ENGINE_STATES.contains(&state));
+    if !failed_before_finish || resolved_event {
+        tracing::warn!(
+            target: "audit",
+            action = "reseed-week",
+            week_id = week.id,
+            failed_race_id,
+            engine_state = engine_state.as_deref().unwrap_or("NULL"),
+            resolved_event,
+            "Season 3 re-seed refused: the failed race had finished"
+        );
+        return Err(fail(StatusCode::CONFLICT, RESEED_REFUSED_FINISHED));
+    }
 
     let mut previous: Vec<String> = match week.previous_race_seeds.as_deref() {
         None | Some("") => Vec::new(),
@@ -1049,6 +1086,7 @@ async fn reseed_week(
         week_id = week.id,
         week_number = week.week_number,
         failed_race_id,
+        engine_state = engine_state.as_deref().unwrap_or("NULL"),
         old_seed_commit = %seed_commit(&old_seed),
         new_seed_commit = %seed_commit(&new_seed),
         previous_seeds = previous.len(),
@@ -1056,7 +1094,8 @@ async fn reseed_week(
     );
     Ok(ok_json(&Reseeded {
         ok: true,
-        week: reload_week(conn, week.id).await?,
+        week_id: week.id,
+        seed_commit: seed_commit(&new_seed),
         failed_race_id,
         previous_race_seed_count: previous.len(),
     }))

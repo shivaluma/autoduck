@@ -455,22 +455,90 @@ async fn reseed_week_after_a_failed_race() {
         post(&f, json!({ "action": "reseed-week", "weekId": week_id })).await,
         refused
     );
-    // The latest official race with the seed failed (the week went back to locked, raceId NULL).
+    // A race that failed after it finished (shown live, or resolution failed) is never re-rolled.
+    let finished_refusal = (
+        StatusCode::CONFLICT,
+        error(
+            "Race gần nhất của seed hiện tại đã chạy xong (đã phát live hoặc đã resolve): không re-seed được",
+        ),
+    );
+    for (id, engine_state) in [(12, "FINISHED"), (13, "RESOLVED"), (14, "ARCHIVED")] {
+        exec(
+            &f,
+            &format!(
+                r#"INSERT INTO "Race" ("id", "status", "createdAt", "isTest", "engineState", "raceSeed")
+                   VALUES ({id}, 'failed', '{now}', 0, '{engine_state}', '{seed}')"#
+            ),
+        )
+        .await;
+        assert_eq!(
+            post(&f, json!({ "action": "reseed-week", "weekId": week_id })).await,
+            finished_refusal,
+            "{engine_state}"
+        );
+    }
+    // Pre-finish engine state, but a CHAOS_RESOLVED event exists: refused too.
     exec(
         &f,
         &format!(
             r#"INSERT INTO "Race" ("id", "status", "createdAt", "isTest", "engineState", "raceSeed")
-               VALUES (12, 'failed', '{now}', 0, 'RACING', '{seed}')"#
+               VALUES (15, 'failed', '{now}', 0, 'RACING', '{seed}');
+               INSERT INTO "RaceEngineEvent" ("raceId", "type", "tick", "timestampWithinRaceMs", "metadataJson", "createdAt")
+               VALUES (15, 'CHAOS_RESOLVED', 0, 0, '{{}}', '{now}')"#
         ),
     )
     .await;
+    assert_eq!(
+        post(&f, json!({ "action": "reseed-week", "weekId": week_id })).await,
+        finished_refusal
+    );
+    // The latest official race with the seed failed while racing (the week went back to locked,
+    // raceId NULL).
+    exec(
+        &f,
+        &format!(
+            r#"INSERT INTO "Race" ("id", "status", "createdAt", "isTest", "engineState", "raceSeed")
+               VALUES (16, 'failed', '{now}', 0, 'RACING', '{seed}')"#
+        ),
+    )
+    .await;
+    // A resolved week is never re-seeded, whatever its races say.
+    exec(
+        &f,
+        &format!(r#"UPDATE "SeasonWeek" SET "resolvedAt" = '{now}'"#),
+    )
+    .await;
+    assert_eq!(
+        post(&f, json!({ "action": "reseed-week", "weekId": week_id })).await,
+        refused
+    );
+    exec(&f, r#"UPDATE "SeasonWeek" SET "resolvedAt" = NULL"#).await;
     let (status, body) = post(&f, json!({ "action": "reseed-week", "weekId": week_id })).await;
     assert_eq!(status, StatusCode::OK, "{body}");
-    assert_eq!(body["failedRaceId"], 12);
+    assert_eq!(body["failedRaceId"], 16);
     assert_eq!(body["previousRaceSeedCount"], 1);
-    let new_seed = body["week"]["raceSeed"].as_str().unwrap().to_owned();
+    assert_eq!(body["weekId"], week_id);
+    let new_seed: String = scalar(&f, r#"SELECT "raceSeed" FROM "SeasonWeek""#).await;
     assert_ne!(new_seed, seed);
-    assert_eq!(body["week"]["status"], "locked");
+    // The answer carries a commitment, never a seed (D17).
+    assert_eq!(
+        body["seedCommit"].as_str().unwrap(),
+        autoduck_server::season3::admin::seed::seed_commit(&new_seed)
+    );
+    let text = body.to_string();
+    assert!(!text.contains(&new_seed) && !text.contains(&seed), "{text}");
+    assert_eq!(
+        body.as_object().unwrap().keys().collect::<Vec<_>>(),
+        [
+            "ok",
+            "weekId",
+            "seedCommit",
+            "failedRaceId",
+            "previousRaceSeedCount"
+        ]
+    );
+    let status_now: String = scalar(&f, r#"SELECT "status" FROM "SeasonWeek""#).await;
+    assert_eq!(status_now, "locked");
     let stored: String = scalar(&f, r#"SELECT "previousRaceSeeds" FROM "SeasonWeek""#).await;
     assert_eq!(stored, serde_json::to_string(&[&seed]).unwrap());
     // Auto loadouts follow the new seed.
