@@ -6,7 +6,8 @@
  *
  * Gzip JSON, format `season3-meta-v1`; every input comes from a seeded mulberry32, so the file is
  * reproducible byte for byte (`--check` regenerates in memory and compares). `--count` is the
- * number of end-to-end resolution cases (default 3,000; the gate needs at least 1,000).
+ * number of end-to-end resolution cases (default 3,000; the gate needs at least 1,000); the
+ * `t2x` family adds a third as many again.
  *
  * Case kinds (expected values are the exact `JSON.stringify` text of the oracle's result, or
  * `{"error": message, "name": errorClass}` when it throws):
@@ -313,8 +314,13 @@ function genGroupsPayload(type: ChaosType, official: SeasonPlayerInput[], everyo
   ])
 }
 
-function genT2() {
-  const count = gen.between(2, 12)
+/**
+ * `extended` (the `t2x` family, added after the stage-B review) widens the inputs without
+ * touching the `t2` draws: lobbies up to 16, a second prediction by the same predictor in either
+ * order, empty `pickupId`s, and unknown stored `chaosType`s.
+ */
+function genT2(extended = false) {
+  const count = gen.between(2, extended ? 16 : 12)
   const userIds = uniqueIds(count, 1, 300)
   const seasonPlayerIds = uniqueIds(count, 1, 900)
   const names = uniqueNames(count)
@@ -377,7 +383,10 @@ function genT2() {
     if (!gen.chance(70)) return []
     const roll = gen.below(100)
     const targetUserId = roll < 5 ? player.userId : roll < 9 ? gen.between(301, 400) : gen.pick(players.filter((other) => other.userId !== player.userId)).userId
-    return [{ id: predictionIds[index]!, predictorPlayerId: player.id, predictorUserId: player.userId, targetUserId, pointsAwarded: 0 }]
+    const rows = [{ id: predictionIds[index]!, predictorPlayerId: player.id, predictorUserId: player.userId, targetUserId, pointsAwarded: 0 }]
+    if (!extended) return rows
+    if (gen.chance(10)) rows.push({ id: 10_000 + predictionIds[index]!, predictorPlayerId: player.id, predictorUserId: player.userId, targetUserId: gen.pick(players).userId, pointsAwarded: 0 })
+    return gen.chance(50) ? rows : rows.reverse()
   })
 
   const tickRate = gen.chance(90) ? 60 : 30
@@ -407,7 +416,8 @@ function genT2() {
     else if (sourceRoll < 94) event.sourcePlayerId = String(gen.between(500, 600))
     const pickupRoll = gen.below(100)
     if (pickupRoll < 85) (event.metadata as Record<string, unknown>).pickupId = `golden-${gen.between(0, 9)}-${tick}`
-    else if (pickupRoll < 92) (event.metadata as Record<string, unknown>).pickupId = gen.between(1, 9)
+    else if (pickupRoll < (extended ? 89 : 92)) (event.metadata as Record<string, unknown>).pickupId = gen.between(1, 9)
+    else if (extended && pickupRoll < 95) (event.metadata as Record<string, unknown>).pickupId = ''
     events.push(event)
   }
   for (let index = gen.between(0, 4); index > 0; index -= 1) {
@@ -431,7 +441,7 @@ function genT2() {
       weekNumber: gen.between(1, 12),
       status: 'racing',
       raceId,
-      chaosType: type as string,
+      chaosType: (extended && gen.chance(4) ? gen.pick(['RANDOM', 'normal', '', 'BOUNTY']) : type) as string,
       chaosTargetUserId: targetUserId,
       chaosTargetUserId2: targetUserId2,
       chaosPayload,
@@ -746,6 +756,10 @@ async function build(count: number) {
   for (let index = 0; index < count; index += 1) {
     const input = genT2()
     cases.push({ kind: 't2', input, expected: await runT2(input) })
+  }
+  for (let index = 0; index < Math.ceil(count / 3); index += 1) {
+    const input = genT2(true)
+    cases.push({ kind: 't2x', input, expected: await runT2(input) })
   }
   const oracleFiles = [
     'lib/season3.ts',

@@ -26,7 +26,7 @@ use autoduck_server::season3::payload::{
 };
 use autoduck_server::season3::resolution::{
     MetaEvent, MetaPlayer, ResolutionError, ResolutionInput, ResolutionPlan, WeekPrediction,
-    plan_resolution,
+    plan_resolution, preflight_card,
 };
 use autoduck_server::season3::resolve::{
     ChampionCandidate, Prediction, PreviousKing, Season3RankingEntry, apply_scar_economy,
@@ -874,7 +874,7 @@ fn season3_meta_parity_with_the_ts_oracle() {
     for (index, case) in cases.iter().enumerate() {
         let kind = case["kind"].as_str().unwrap();
         let comparisons: Vec<(&str, String, String)> = match kind {
-            "t2" => check_t2(case),
+            "t2" | "t2x" => check_t2(case),
             other => {
                 let actual = match other {
                     "resolve" => check_resolve(case),
@@ -929,4 +929,93 @@ fn season3_meta_parity_with_the_ts_oracle() {
         total - passed,
         mismatches.join("\n")
     );
+}
+
+/// Review M1: cards the admin route stores unchecked (as TS) that fail every resolution. The
+/// first is week 1 of main's `prisma/dev.db` (CONSTRUCTORS with the ghost, user 14, in a team).
+#[test]
+fn preflight_rejects_cards_that_cannot_resolve() {
+    let roster = [
+        (1, "Zịt Lợi"),
+        (2, "Zịt Minh"),
+        (3, "Zịt Tâm"),
+        (4, "Zịt Tân"),
+        (5, "Zịt Thanh"),
+        (6, "Zịt Tuấn"),
+        (7, "Zịt Dũng"),
+        (14, "Thomas"),
+    ];
+    let players: Vec<MetaPlayer<'_>> = roster
+        .iter()
+        .map(|&(user_id, name)| MetaPlayer {
+            season_player_id: user_id * 10,
+            user_id,
+            name,
+            scars: 0,
+            shields: 0,
+            is_king: user_id == 2,
+            king_streak: 2,
+        })
+        .collect();
+    let configured: Vec<i64> = roster.iter().map(|&(id, _)| id).collect();
+    let input = |chaos_type, target: Option<i64>, payload: Option<&'static str>| ResolutionInput {
+        race_id: 1,
+        is_test: false,
+        season_id: 1,
+        week_id: 1,
+        week_number: 1,
+        chaos_type,
+        chaos_target_user_id: target,
+        chaos_target_user_id2: None,
+        chaos_payload: payload,
+        predictions: &[],
+        season_players: &players,
+        shield_choice_player_ids: &[],
+        configured_user_ids: &configured,
+        standings: &[],
+        events: &[],
+        duration_ms: 60_000.0,
+        tick_rate: 60.0,
+    };
+    for (chaos_type, target, payload) in [
+        ("CONSTRUCTORS", None, Some("[[2,5,4,7],[3,6,1,14]]")),
+        ("DUO", None, Some("[[2,14],[5,4],[7,3],[6,1]]")),
+        ("DUO", None, Some("[[2,999],[5,4],[7,3],[6,1]]")),
+        ("BOUNTY_HUNT", Some(14), None),
+        ("BOUNTY_HUNT", None, None),
+        ("RANDOM", None, None),
+    ] {
+        let card = input(chaos_type, target, payload);
+        let error = preflight_card(&card).expect_err(chaos_type);
+        // The same error the real resolution raises for any finish order.
+        let standings: Vec<RawStanding<'_>> = [5, 3, 1, 2, 7, 6, 4]
+            .iter()
+            .zip(1..)
+            .map(|(&user_id, rank)| RawStanding {
+                rank,
+                user_id,
+                name: "",
+            })
+            .collect();
+        let real = plan_resolution(&ResolutionInput {
+            standings: &standings,
+            ..card
+        });
+        assert_eq!(real.err(), Some(error.clone()), "{chaos_type}");
+        if chaos_type == "RANDOM" {
+            assert_eq!(
+                error.to_string(),
+                "Cannot read properties of undefined (reading 'resolve')"
+            );
+        }
+    }
+    for (chaos_type, target, payload) in [
+        ("CONSTRUCTORS", None, Some("[[2,5,4,7],[3,6,1]]")),
+        ("DUO", None, Some("[[2,3],[5,4],[7,6],[1]]")),
+        ("BOUNTY_HUNT", Some(3), None),
+        ("NORMAL", None, None),
+        ("REVERSE", Some(14), None),
+    ] {
+        preflight_card(&input(chaos_type, target, payload)).expect(chaos_type);
+    }
 }

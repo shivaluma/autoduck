@@ -99,9 +99,14 @@ pub struct ResolutionInput<'a> {
     pub chaos_target_user_id2: Option<i64>,
     /// `SeasonWeek.chaosPayload`, as stored.
     pub chaos_payload: Option<&'a str>,
-    /// Every prediction of the week, in load order.
+    /// Every prediction of the week, in load order: Prisma's default (`id`/rowid order, no
+    /// `ORDER BY`). The order of prediction outcomes, QP grants and recap lines follows it.
     pub predictions: &'a [WeekPrediction],
-    /// The season's players, in load order (all of them; filtered here).
+    /// The season's players, in load order (all of them; filtered here): the `season.players`
+    /// include without `orderBy`, i.e. SQLite's `(seasonId, userId)` index order, never by name.
+    /// Which of two Kings counts and the recap order depend on it. Ghost status comes from the
+    /// player's current name (as TS); Phase 5 should take it from the stored race config so a
+    /// rename to or from the ghost name mid-race cannot fail the mapping.
     pub season_players: &'a [MetaPlayer<'a>],
     /// `SeasonPlayer.id`s with a `SeasonShieldChoice` this week.
     pub shield_choice_player_ids: &'a [i64],
@@ -279,7 +284,12 @@ impl fmt::Display for ResolutionError {
         match self {
             Self::Mapping(error) => error.fmt(f),
             Self::Groups(error) => error.fmt(f),
-            Self::UnknownChaosType(value) => write!(f, "Unknown Chaos card {value:?}"),
+            // V8's text for `CHAOS_RULES[id].resolve` on an unknown id (the stored value is in
+            // the variant's Debug output). Object.prototype names (`toString`, …) give
+            // "… is not a function" in TS instead; both need a direct DB edit to reach.
+            Self::UnknownChaosType(_) => {
+                f.write_str("Cannot read properties of undefined (reading 'resolve')")
+            }
             Self::Resolve(error) => error.fmt(f),
         }
     }
@@ -629,6 +639,45 @@ pub fn plan_resolution(input: &ResolutionInput<'_>) -> Result<ResolutionPlan, Re
         participant_updates,
         season,
     })
+}
+
+/// Start-race preflight for the week's Chaos card (review M1; not in TS, wired in Phase 5): runs
+/// [`plan_resolution`] on a ranking of the configured official (non-ghost) players in config
+/// order, with no predictions, events or Shield choices. A card that fails here fails for every
+/// finish order (a ghost or absent Wanted target, DUO/CONSTRUCTORS groups naming a ghost, a
+/// foreign or skipped player, a missing team, an unknown `chaosType`), so `start-race` can refuse
+/// it before T1 instead of running the race live and failing at T2. `reseed-week` cannot fix
+/// such a card: only `set-chaos`/`toggle-skip` redraw it.
+///
+/// `input.standings`, `events`, `predictions` and `shield_choice_player_ids` are ignored.
+///
+/// # Errors
+/// The [`ResolutionError`] the real resolution would raise.
+pub fn preflight_card(input: &ResolutionInput<'_>) -> Result<(), ResolutionError> {
+    let standings: Vec<RawStanding<'_>> = input
+        .configured_user_ids
+        .iter()
+        .filter_map(|user_id| {
+            input
+                .season_players
+                .iter()
+                .find(|player| player.user_id == *user_id && !is_ghost_duck(player.name))
+        })
+        .zip(1..)
+        .map(|(player, rank)| RawStanding {
+            rank,
+            user_id: player.user_id,
+            name: player.name,
+        })
+        .collect();
+    plan_resolution(&ResolutionInput {
+        standings: &standings,
+        events: &[],
+        predictions: &[],
+        shield_choice_player_ids: &[],
+        ..*input
+    })
+    .map(|_| ())
 }
 
 fn as_refs(values: &[String]) -> Vec<&str> {
