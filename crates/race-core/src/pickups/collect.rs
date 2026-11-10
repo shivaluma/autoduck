@@ -43,7 +43,7 @@ use crate::items::{
 };
 use crate::js_sort::v8_sort_by;
 use crate::math::{abs, cmp_f64_js, js_clamp, js_max, js_min, js_sign};
-use crate::rng::{DeterministicRng, create_race_rng};
+use crate::rng::{DeterministicRng, create_race_rng, engine_stream};
 use crate::sim::{DuckPhysicsState, Emitter, LootPick, id_cmp, id_set_has};
 
 /// `'front' | 'middle' | 'back'`.
@@ -178,9 +178,10 @@ pub fn roll_wild_item(
     }
     let mut rng = create_race_rng(
         config.seed.as_str(),
-        &format!(
-            "pickup-loot:{}:{}:{}",
-            config.race_id, pickup_id, duck.player_id
+        &engine_stream(
+            "pickup-loot",
+            config.race_id.as_str(),
+            &format!("{pickup_id}:{}", duck.player_id),
         ),
     );
     let bucket = if pickup_state.config.position_aware_loot {

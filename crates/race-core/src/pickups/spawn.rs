@@ -25,7 +25,7 @@ use super::config::pickup_balance;
 use super::state::{HazardSpawn, PickupSpawn};
 use crate::js_sort::v8_sort_by;
 use crate::math::{cmp_f64_js, js_clamp, js_max, js_min, js_round, trunc};
-use crate::rng::{DeterministicRng, create_race_rng};
+use crate::rng::{DeterministicRng, create_race_rng, engine_stream};
 use crate::sim::id_cmp;
 use crate::track::{HazardZone, PickupZone, RaceTrack};
 
@@ -96,7 +96,7 @@ pub fn create_regular_boxes(
     }
     let mut rng = create_race_rng(
         config.seed.as_str(),
-        &format!("pickup-spawn:{}", config.race_id),
+        &engine_stream("pickup-spawn", config.race_id.as_str(), ""),
     );
     let mut spawns: Vec<PickupSpawn> = Vec::new();
     for zone in &track.pickup_zones {
@@ -145,7 +145,7 @@ pub fn create_golden_box(
     }
     let mut rng = create_race_rng(
         config.seed.as_str(),
-        &format!("gold-box:{}", config.race_id),
+        &engine_stream("gold-box", config.race_id.as_str(), ""),
     );
     if !resolved.force_golden_box && rng.next_f64() >= resolved.golden_box_probability {
         return None;
@@ -210,7 +210,10 @@ pub fn create_hazards(
     if !resolved.hazards_enabled {
         return Vec::new();
     }
-    let mut rng = create_race_rng(config.seed.as_str(), &format!("hazards:{}", config.race_id));
+    let mut rng = create_race_rng(
+        config.seed.as_str(),
+        &engine_stream("hazards", config.race_id.as_str(), ""),
+    );
     let count_roll = rng.next_f64();
     let count: usize = if count_roll < 0.45 {
         0

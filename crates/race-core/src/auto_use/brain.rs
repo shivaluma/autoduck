@@ -6,14 +6,12 @@
 //! `noteBrainEvent` (every emitted event goes through it). `noteNeighbours`
 //! is ported too; only the evaluation (M3) calls it.
 
-use alloc::format;
-
 use race_protocol::config::ResolvedRaceConfig;
 use race_protocol::events::{AiIntent, Temperament};
 use race_protocol::ids::{ItemKey, PlayerId, RaceItemId};
 
 use crate::math::{abs, js_min};
-use crate::rng::create_race_rng;
+use crate::rng::{create_race_rng, engine_stream};
 use crate::sim::{DuckPhysicsState, EngineMath, IdMap};
 
 /// `TEMPERAMENTS` (`brain.ts:9`), in TS order (the RNG indexes it).
@@ -167,8 +165,8 @@ pub type Brains = IdMap<DuckBrain>;
 /// Half-life of a grudge (`brain.ts:80`).
 pub const GRUDGE_HALF_LIFE_SECONDS: f64 = 10.0;
 
-/// `createDuckBrains(config)` (`brain.ts:82-88`). The stream label carries
-/// the race id (`temperament:<raceId>:<playerId>`, kept in Phase A).
+/// `createDuckBrains(config)` (`brain.ts:82-88`). Stream label
+/// `temperament:<playerId>` (F2; `ts-compat`: `temperament:<raceId>:<playerId>`).
 #[must_use]
 pub fn create_duck_brains(config: &ResolvedRaceConfig) -> Brains {
     config
@@ -177,7 +175,11 @@ pub fn create_duck_brains(config: &ResolvedRaceConfig) -> Brains {
         .map(|player| {
             let mut rng = create_race_rng(
                 config.seed.as_str(),
-                &format!("temperament:{}:{}", config.race_id, player.player_id),
+                &engine_stream(
+                    "temperament",
+                    config.race_id.as_str(),
+                    player.player_id.as_str(),
+                ),
             );
             let temperament = TEMPERAMENTS[rng.index(TEMPERAMENTS.len())];
             (

@@ -181,6 +181,30 @@ pub fn create_race_rng(seed: &str, stream: &str) -> DeterministicRng {
     DeterministicRng::new(&key)
 }
 
+/// The label of an **engine** RNG stream.
+///
+/// **F2 (S3.16):** `<kind>` or `<kind>:<rest>`, without the race id, so a
+/// race's outcome is fixed by its seed and config alone (renaming a race, or
+/// re-running a week as a new `Race` row with the same seed, changes
+/// nothing). With `ts-compat` it is the S3.15 label `<kind>:<raceId>` or
+/// `<kind>:<raceId>:<rest>`. The Season meta streams (`chaos:week:N`,
+/// `chaos:manual:N:<ms>`, `auto-loadout:<id>`) never carried a race id and
+/// do not use this helper (D5).
+#[must_use]
+pub fn engine_stream(kind: &str, race_id: &str, rest: &str) -> String {
+    let mut label = String::with_capacity(kind.len() + race_id.len() + rest.len() + 2);
+    label.push_str(kind);
+    if crate::TS_COMPAT {
+        label.push(':');
+        label.push_str(race_id);
+    }
+    if !rest.is_empty() {
+        label.push(':');
+        label.push_str(rest);
+    }
+    label
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

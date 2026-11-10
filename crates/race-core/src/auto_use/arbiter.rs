@@ -30,7 +30,7 @@ use crate::items::ItemRaceState;
 use crate::js_sort::v8_sort_by;
 use crate::math::{cmp_f64_js, js_max, js_round};
 use crate::pickups::PickupRaceState;
-use crate::rng::create_race_rng;
+use crate::rng::{create_race_rng, engine_stream};
 use crate::sim::{DuckPhysicsState, Emitter, id_cmp};
 use crate::track::RaceTrack;
 use race_protocol::ids::RaceItemId;
@@ -81,7 +81,11 @@ fn reaction_delay_ticks(
 ) -> f64 {
     let mut rng = create_race_rng(
         config.seed.as_str(),
-        &format!("auto-use-delay:{}:{player_id}:{tick}", config.race_id),
+        &engine_stream(
+            "auto-use-delay",
+            config.race_id.as_str(),
+            &format!("{player_id}:{tick}"),
+        ),
     );
     js_round(
         rng.range(
@@ -101,7 +105,11 @@ fn cooldown_ticks(
 ) -> f64 {
     let mut rng = create_race_rng(
         config.seed.as_str(),
-        &format!("auto-use-cooldown:{}:{player_id}:{tick}", config.race_id),
+        &engine_stream(
+            "auto-use-cooldown",
+            config.race_id.as_str(),
+            &format!("{player_id}:{tick}"),
+        ),
     );
     js_round(
         rng.range(
