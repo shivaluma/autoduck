@@ -1,5 +1,3 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
-
 ## ĐUA DZỊT — Season 3
 
 Season 3 is isolated from the v2 chest/boss/dragon modifiers. Its deterministic server engine runs the automated race, then resolves one Chaos card, Season Shields, King status, secret predictions, Duck News, and prediction-point rewards.
@@ -27,37 +25,31 @@ pnpm race:profile
 
 Official races store the immutable config, seed commitment, engine/balance/track versions, raw event stream, result digest, live fallback snapshots, and same-seed item telemetry. Replay refuses unsupported engine or balance versions instead of silently using current tuning.
 
-## Getting Started
+## Getting Started (Vite SPA + API, plan Phase 4)
 
-First, run the development server:
+The pages are a Vite + React 19 SPA (`index.html`, `src/main.tsx`, `src/router.tsx`, `src/pages/*`). During
+the transition the API is still the Next.js route handlers in `app/api` (or the Rust server, `crates/server`).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```fish
+pnpm dev            # both: Next API on :3000 (runs db:bootstrap first) + Vite on :5173. Open http://localhost:5173
+pnpm dev:api:next   # only the Next API on :3000
+pnpm dev:web        # only Vite on :5173; proxies /api to $API_URL (default http://127.0.0.1:3000)
+env API_URL=http://127.0.0.1:4000 pnpm dev:web   # proxy to an API on another port (e.g. the Rust server)
+
+pnpm build          # tsc + vite build -> dist/ (SPA only)
+pnpm check:bundle   # dist/ has no server code; home, rules and race load no engine, Phaser, Zod or WASM up front
+pnpm build:api:next # next build (API route handlers, standalone output)
+pnpm start          # after both builds: one Next standalone server on :3000 serving the API and the SPA (as Docker does)
+pnpm codegen:engine # race-cli codegen -> src/engine/generated/{catalog,versions}.json (from the Rust catalog)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The Docker image builds both and copies `dist/` into `public/`; `next.config.ts` falls back to
+`public/index.html` for every non-API path, so one Next process serves the SPA and the API. The empty
+`pages/` directory only keeps Next from treating `src/pages` as Pages Router pages (see `pages/README.md`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Vite listens on `localhost` only (IPv6 `[::1]` on macOS), so open http://localhost:5173, not 127.0.0.1
+(or run `pnpm dev:web --host 127.0.0.1`). For Google sign-in in development, the OAuth client's Authorized
+JavaScript origins must include `http://localhost:5173`; the button reads its client id from
+`GET /api/auth/google` (`GOOGLE_CLIENT_ID` on the server).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+More detail (route table, how Next and Vite run side by side, expected differences): `docs/rewrite/phase4-notes.md`.
