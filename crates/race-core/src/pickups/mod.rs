@@ -12,9 +12,10 @@
 //! | [`wild`] | `createWildRocket`, `createWildBanana`, `wildHornReach`, `HELD_HANDLERS`, `activateWildItem` (`:374-493`); the `autoReason` emit wrapper of `auto-use/execute.ts:256` |
 //!
 //! The engine's `pickupConfig(config)` (`:86-121`) is not ported: the
-//! resolved config already holds it (`race_protocol::config`; the 0.18
-//! engine fallback vs. Zod's 0.12 `goldenBoxProbability` is settled by
-//! `resolve_ts_compat`).
+//! resolved config already holds it (`race_protocol::config`). F3: the
+//! resolver's 0.15 is the single `goldenBoxProbability` default; the TS
+//! engine's 0.18 fallback was never reachable and `resolve_ts_compat` keeps
+//! Zod's 0.12 for the oracle.
 
 pub mod catalog;
 pub mod collect;

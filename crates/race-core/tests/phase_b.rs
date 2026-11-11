@@ -132,3 +132,34 @@ fn f2_renaming_a_race_changes_its_outcome_only_in_ts_compat() {
         && first.standings == renamed.standings;
     assert_eq!(same, !race_core::TS_COMPAT);
 }
+
+// ---------------------------------------------------------------------------
+// F3: one goldenBoxProbability default
+// ---------------------------------------------------------------------------
+
+#[test]
+fn f3_golden_box_probability_has_one_default() {
+    let omitted = lobby("41", NORMAL);
+    let explicit = omitted.replace(
+        r#""forceGoldenBox":false"#,
+        r#""forceGoldenBox":false,"goldenBoxProbability":0.15"#,
+    );
+    assert_ne!(omitted, explicit);
+    assert_eq!(
+        resolve(&omitted).pickup_config.golden_box_probability,
+        race_protocol::config::DEFAULT_GOLDEN_BOX_PROBABILITY
+    );
+    assert_eq!(race_protocol::config::DEFAULT_GOLDEN_BOX_PROBABILITY, 0.15);
+    // The engine has no fallback of its own: leaving the key out is exactly
+    // 0.15.
+    assert_eq!(digest(&omitted), digest(&explicit));
+}
+
+#[cfg(feature = "ts-compat")]
+#[test]
+fn f3_ts_compat_resolver_keeps_the_zod_default() {
+    let input: race_protocol::config::RaceConfigInput =
+        serde_json::from_str(&lobby("41", NORMAL)).expect("config parses");
+    let resolved = input.resolve_ts_compat().expect("config resolves");
+    assert_eq!(resolved.pickup_config.golden_box_probability, 0.12);
+}
