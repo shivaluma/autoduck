@@ -16,3 +16,4 @@ prisma/generated/
 next-env.d.ts
 .pnpm-build-approvals.json
 .playwright-mcp/
+.cache/

@@ -16,9 +16,24 @@ const round = (value: number, digits: number) => {
   return Object.is(rounded, -0) ? 0 : rounded
 }
 
-/** Plain-data copy of a HEAD `createRiverTrack(trackVersion)`: sim definition plus a sampled centreline. */
-export function exportTrackGeometry(trackVersion: string): TrackGeometryFile {
-  const track = createRiverTrack(trackVersion)
+/** The parts of a `createRiverTrack` result the export reads; older commits may lack the zone and gate lists. */
+export interface ExportableTrack {
+  version: string
+  length: number
+  pickupLayoutVersion?: string
+  currents?: unknown
+  pickupZones?: unknown
+  hazardZones?: unknown
+  boostGates?: unknown
+  sample(progress: number, lateralOffset: number): { x: number; y: number; tangentX: number; tangentY: number; width: number }
+}
+
+/**
+ * Plain-data copy of a track object: sim definition plus a sampled centreline. Takes the track rather than
+ * calling HEAD `createRiverTrack`, so the historical resolver can export the geometry of the commit that
+ * actually ran a race (plan D10). Lists an old commit didn't have are exported as [].
+ */
+export function exportTrackGeometryFromTrack(track: ExportableTrack, trackVersion: string): TrackGeometryFile {
   const points: number[] = []
   for (let index = 0; index <= TRACK_GEOMETRY_SEGMENTS; index += 1) {
     const point = track.sample(index / TRACK_GEOMETRY_SEGMENTS, 0)
@@ -30,14 +45,19 @@ export function exportTrackGeometry(trackVersion: string): TrackGeometryFile {
     sim: JSON.parse(JSON.stringify({
       version: track.version,
       length: track.length,
-      pickupLayoutVersion: track.pickupLayoutVersion,
-      currents: track.currents,
-      pickupZones: track.pickupZones,
-      hazardZones: track.hazardZones,
-      boostGates: track.boostGates,
+      pickupLayoutVersion: track.pickupLayoutVersion ?? '',
+      currents: track.currents ?? [],
+      pickupZones: track.pickupZones ?? [],
+      hazardZones: track.hazardZones ?? [],
+      boostGates: track.boostGates ?? [],
     })) as TrackGeometryFile['sim'],
     render: { segments: TRACK_GEOMETRY_SEGMENTS, lateralScale: LATERAL_SCALE, points },
   }
+}
+
+/** Plain-data copy of a HEAD `createRiverTrack(trackVersion)`: sim definition plus a sampled centreline. */
+export function exportTrackGeometry(trackVersion: string): TrackGeometryFile {
+  return exportTrackGeometryFromTrack(createRiverTrack(trackVersion), trackVersion)
 }
 
 /** The exact file bytes and their content address `<trackVersion>@<sha8>`. */

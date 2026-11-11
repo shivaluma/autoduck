@@ -98,6 +98,14 @@ COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/lib ./lib
 COPY --from=builder /app/package.json ./package.json
 
+# Historical replay tracks imported at boot by scripts/replay-tracks/ensure-imported.ts (plan step 0.6).
+# Their geometry files (public/race-tracks) come with ./public above. The import's post-race stats use
+# src/ and packages/ (zod is their only dependency; Next's standalone output doesn't carry it).
+COPY --from=builder /app/artifacts/replay-tracks ./artifacts/replay-tracks
+COPY --from=builder /app/src ./src
+COPY --from=builder /app/packages ./packages
+COPY --from=builder /app/node_modules/.pnpm/zod@4.3.6/node_modules/zod ./node_modules/zod
+
 # Copy startup script
 COPY scripts/start.sh ./start.sh
 RUN chmod +x ./start.sh

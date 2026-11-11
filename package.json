@@ -16,6 +16,8 @@
     "race:validate-pickups": "tsx scripts/validate-race-pickups.ts",
     "race:replay": "tsx scripts/race-replay.ts",
     "replay:fixture": "tsx scripts/replay-track-fixture.ts",
+    "replay:resolve": "tsx scripts/replay-tracks/resolve-historical.ts",
+    "replay:import": "tsx scripts/replay-tracks/ensure-imported.ts",
     "race:tracks": "tsx scripts/race-tracks/export.ts",
     "race:profile": "tsx scripts/race-profile.ts",
     "cosmetics:generate": "tsx scripts/generate-cosmetics.ts",

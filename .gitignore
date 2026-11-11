@@ -69,3 +69,6 @@ tmp/
 
 # build approvals
 .pnpm-build-approvals.json
+
+# historical engine extractions (scripts/replay-tracks/resolve-historical.ts)
+/.cache/

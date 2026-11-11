@@ -19,6 +19,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Scratch output (videos, local experiments).
     "tmp/**",
+    // Historical engine extractions (scripts/replay-tracks/resolve-historical.ts).
+    ".cache/**",
   ]),
 ]);
 
