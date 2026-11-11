@@ -149,8 +149,6 @@ fn create_wild_rocket(
         kind: ProjectileSource::Wild,
         speed_per_second: pickup_balance::mini_rocket::PROJECTILE_SPEED,
         hit_radius: pickup_balance::mini_rocket::HIT_RADIUS,
-        slow_multiplier: pickup_balance::mini_rocket::SLOW_MULTIPLIER,
-        slow_duration_seconds: pickup_balance::mini_rocket::SLOW_DURATION_SECONDS,
         retargeted: false,
     }
 }

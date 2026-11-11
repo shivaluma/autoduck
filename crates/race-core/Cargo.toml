@@ -12,7 +12,7 @@ build = "build.rs"
 default = []
 std = ["race-protocol/std", "serde/std", "serde_json/std"]
 # D3/D6: TS-oracle compatibility (V8 hypot/exp/pow ports, ICU id collation).
-ts-compat = ["race-protocol/ts-compat"]
+ts-compat = ["race-protocol/ts-compat", "race-protocol/s3-15-config"]
 
 [dependencies]
 race-protocol = { workspace = true }

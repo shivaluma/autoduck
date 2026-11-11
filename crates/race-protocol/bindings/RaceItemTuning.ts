@@ -2,5 +2,15 @@
 
 /**
  * Resolved item tuning; every multiplier is concrete.
+ *
+ * **F9 (S3.16):** `rocketSlowMultiplier`, `bananaKnockbackMultiplier` and
+ * `bananaSlowMultiplier` never changed a race (S3.15 dropped the banana
+ * knobs and stored the rocket one on a projectile field nothing read: a
+ * rocket hit staggers with its own constants), so the default
+ * build no longer carries them: the input still accepts and range-checks
+ * them for wire compatibility, and the `s3-15-config` feature (enabled by
+ * race-core's `ts-compat`) keeps them in the resolved config (and so in its
+ * `engineConfigJson`). `tests/dead_knob.rs` proves
+ * every knob left here changes a race.
  */
-export type RaceItemTuning = { nitroSpeedMultiplier: number, rocketSlowMultiplier: number, bananaKnockbackMultiplier: number, bananaSlowMultiplier: number, };
+export type RaceItemTuning = { nitroSpeedMultiplier: number, };

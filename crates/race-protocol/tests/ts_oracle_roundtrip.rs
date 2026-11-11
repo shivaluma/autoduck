@@ -329,8 +329,21 @@ fn configs_resolve_like_the_ts_engine() {
                 .unwrap_or(Value::Array(vec![]))
         );
         let pickup = serde_json::to_value(&resolved.pickup_config).unwrap();
+        #[allow(unused_mut)]
+        let mut zod_pickup = zod["pickupConfig"].clone();
+        // F9: the S3.16 shape drops the knobs the engine never read.
+        #[cfg(not(feature = "s3-15-config"))]
+        if let Some(object) = zod_pickup.as_object_mut() {
+            for key in [
+                "manualItemsEnabled",
+                "chaosBoxEnabled",
+                "idealManualPlayerIds",
+            ] {
+                object.remove(key);
+            }
+        }
         let mut diffs = Vec::new();
-        json_eq(&pickup, &zod["pickupConfig"], "$.pickupConfig", &mut diffs);
+        json_eq(&pickup, &zod_pickup, "$.pickupConfig", &mut diffs);
         assert!(diffs.is_empty(), "{diffs:?}");
 
         // D2: a fresh config gets the 2.0 versions, not the TS 1.x ones.

@@ -11,6 +11,9 @@
 //! node --import tsx scripts/oracle/dump-config-effective.ts --corpus corpus.jsonl
 //! ```
 
+// The S3.15 resolved-config shape (the F9 knobs) needs race-core's
+// `ts-compat`, which this crate's `ts-compat` feature enables.
+#![cfg(feature = "ts-compat")]
 #![allow(clippy::disallowed_methods, clippy::disallowed_types)]
 
 use std::collections::BTreeSet;

@@ -80,8 +80,6 @@ fn rocket(kind: ProjectileSource, retargeted: bool) -> RocketRuntime {
         kind,
         speed_per_second: 0.1,
         hit_radius: 0.01,
-        slow_multiplier: 0.5,
-        slow_duration_seconds: 1.0,
         retargeted,
         launch_at_tick: 90,
     }

@@ -178,8 +178,10 @@ fn present_pickup_config_uses_the_single_golden_box_default() {
     );
     assert_eq!(pickup.golden_box_probability, 0.15);
     assert!(pickup.enabled && pickup.golden_box_enabled && pickup.hazards_enabled);
-    assert!(pickup.manual_items_enabled && pickup.auto_items_enabled && pickup.position_aware_loot);
-    assert!(!pickup.chaos_box_enabled && !pickup.force_golden_box);
+    assert!(pickup.auto_items_enabled && pickup.position_aware_loot);
+    assert!(!pickup.force_golden_box);
+    #[cfg(feature = "s3-15-config")]
+    assert!(pickup.manual_items_enabled && !pickup.chaos_box_enabled);
     assert_eq!(pickup.spawn_multiplier, 1.0);
     assert_eq!(pickup.regular_pickup_cap, 3);
     assert_eq!(pickup.force_item, None);

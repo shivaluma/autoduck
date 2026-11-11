@@ -738,8 +738,6 @@ pub fn fire_prep_rocket(
         kind: ProjectileSource::Prep,
         speed_per_second: item_balance::rocket::PROJECTILE_SPEED,
         hit_radius: item_balance::rocket::HIT_RADIUS,
-        slow_multiplier: item_state.tuning.rocket_slow_multiplier,
-        slow_duration_seconds: item_balance::rocket::SLOW_DURATION_SECONDS,
         retargeted: false,
     });
     item_state

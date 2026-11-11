@@ -131,8 +131,6 @@ pub struct RocketRuntime {
     pub kind: ProjectileSource,
     pub speed_per_second: f64,
     pub hit_radius: f64,
-    pub slow_multiplier: f64,
-    pub slow_duration_seconds: f64,
     pub retargeted: bool,
     pub launch_at_tick: i64,
 }
