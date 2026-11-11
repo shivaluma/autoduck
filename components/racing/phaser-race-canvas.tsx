@@ -827,6 +827,9 @@ export function PhaserRaceCanvas({
           }
           let showcaseIndex = 0
           const showPlayer = () => {
+            // A short live countdown can end (destroying the label) before this timer's last call;
+            // setText on a destroyed Text throws inside Phaser's step and stops the canvas for good.
+            if (!showcase.active) return
             const player = scenePlayers[showcaseIndex % scenePlayers.length]!
             const names = player.appearance ? ['head', 'outfit', 'pet', 'aura'].flatMap((slot) => {
               const id = player.appearance?.[`${slot}Id` as keyof DuckAppearance]
@@ -838,9 +841,10 @@ export function PhaserRaceCanvas({
             showcaseIndex += 1
           }
           showPlayer()
-          this.time.addEvent({ delay: Math.max(250, 2800 / scenePlayers.length), repeat: scenePlayers.length - 2, callback: showPlayer })
+          const showcaseTimer = this.time.addEvent({ delay: Math.max(250, 2800 / scenePlayers.length), repeat: scenePlayers.length - 2, callback: showPlayer })
           let value = 3
           this.time.addEvent({ delay: stepMs, repeat: 3, callback: () => {
+            if (!countdown.active) return
             value -= 1
             const color = tickColors[Math.max(0, value)] ?? '#ffffff'
             countdown.setText(value > 0 ? String(value) : 'QUACK!')
@@ -855,6 +859,7 @@ export function PhaserRaceCanvas({
               this.tweens.add({ targets: flash, alpha: 0, duration: 280, onComplete: () => flash.destroy() })
             }
             if (value < 0) {
+              showcaseTimer.remove()
               this.tweens.add({ targets: [overlay, countdown, countdownLabel, showcase], alpha: 0, duration: reducedMotion ? 120 : 280, onComplete: () => { overlay.destroy(); countdown.destroy(); countdownLabel.destroy(); showcase.destroy() } })
             }
           } })
