@@ -127,16 +127,36 @@ fn expire_wild_effects(
                 tick_rate,
             );
         }
-        if runtime.tailwind_until_tick > 0 && tick_i == runtime.tailwind_until_tick {
+        if runtime.tailwind_until_tick > 0 && effect_ended(tick_i, runtime.tailwind_until_tick) {
+            if !crate::TS_COMPAT {
+                runtime.tailwind_until_tick = 0;
+            }
             emit.emit(
                 EventKind::TailwindEnded(EmptyMeta {}),
                 Some(player_id),
                 None,
             );
         }
-        if runtime.magnet_until_tick > 0 && tick_i == runtime.magnet_until_tick {
+        if runtime.magnet_until_tick > 0 && effect_ended(tick_i, runtime.magnet_until_tick) {
+            if !crate::TS_COMPAT {
+                runtime.magnet_until_tick = 0;
+            }
             emit.emit(EventKind::MagnetEnded(EmptyMeta {}), Some(player_id), None);
         }
+    }
+}
+
+/// Whether a TAILWIND/MAGNET window ending at `until` has ended at `tick`.
+///
+/// S3.15 (`ts-compat`) tests `tick === until`, so a window whose end tick is
+/// never visited (the duck finished, or the window was cut short) never
+/// emits its `*_ENDED` event. **F7 (S3.16):** `tick >= until`; the caller
+/// then clears the window so the event fires exactly once.
+fn effect_ended(tick: i64, until: i64) -> bool {
+    if crate::TS_COMPAT {
+        tick == until
+    } else {
+        tick >= until
     }
 }
 
@@ -278,4 +298,16 @@ pub fn snapshot_pickup_world(
         })
         .collect();
     (pickups, hazards)
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn f7_effect_end_events_fire_on_or_after_the_end_tick() {
+        assert!(super::effect_ended(100, 100));
+        // A window whose end tick was skipped still ends in S3.16; S3.15
+        // only ever ended it on the exact tick.
+        assert_eq!(super::effect_ended(101, 100), !crate::TS_COMPAT);
+        assert!(!super::effect_ended(99, 100));
+    }
 }
