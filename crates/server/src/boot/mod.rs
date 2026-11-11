@@ -9,6 +9,9 @@
 //! 7. `integrity_check`, fatal — [`guards::check_integrity`]; then prune old backups.
 //! 8. Schema verifier (D14) — [`crate::db::schema`].
 //! 9. Required TS migration ids — [`crate::db::migrations`].
+//!    9b. Owned mode only: `rs-ponr`, `rs-0010-drop-legacy-v2` (archive first),
+//!    `rs-0011-wal-journal` — [`crate::db::owned`]; the pools are reopened if the journal
+//!    mode changed.
 //! 10. `ensure_imported` — [`replay_import`]: read-only check of the replay-track manifest.
 //! 11. Crash recovery (D22) — [`recovery`].
 //! 12. Bind HTTP — the caller ([`crate::cli`]).
@@ -21,7 +24,7 @@ pub mod replay_import;
 
 use crate::config::{AppEnv, Config, SchemaMode};
 use crate::db::migrations::{self, PONR_MARKER_ID};
-use crate::db::{Db, schema};
+use crate::db::{Db, owned, pool, schema};
 
 pub use lock::InstanceLock;
 
@@ -35,8 +38,8 @@ pub enum BootError {
     Schema { count: usize, details: String },
     #[error("required TS migrations are missing: {0}")]
     Migrations(String),
-    #[error("{0}")]
-    SchemaMode(String),
+    #[error(transparent)]
+    Owned(#[from] owned::OwnedError),
     #[error("database error during boot: {0}")]
     Sql(#[from] sqlx::Error),
 }
@@ -67,9 +70,23 @@ pub async fn run(config: &Config) -> Result<Booted, BootError> {
     // 3. Missing file.
     guards::check_exists(&config.db_path)?;
 
-    let db = Db::open(&config.db_path).await?;
-    let result = run_db_guards(config, &db).await;
-    match result {
+    let mut db = Db::open(&config.db_path).await?;
+    tracing::info!(journal_mode = ?db.journal, "pools opened");
+    if let Err(error) = run_checks(config, &db).await {
+        db.close().await;
+        return Err(error);
+    }
+
+    // 9b. Owned mode: adopt the schema, archive + drop legacy v2, WAL. Only after every check
+    // above passed.
+    if config.schema_mode == SchemaMode::Owned {
+        match migrate_owned(config, db).await {
+            Ok(reopened) => db = reopened,
+            Err(error) => return Err(error),
+        }
+    }
+
+    match run_after_checks(config, &db).await {
         Ok(recovery) => Ok(Booted { db, lock, recovery }),
         Err(error) => {
             db.close().await;
@@ -78,11 +95,52 @@ pub async fn run(config: &Config) -> Result<Booted, BootError> {
     }
 }
 
-/// Steps 4–11 on open pools (separate so tests can run them without the lock).
+/// Step 9b. Runs the pending owned-schema steps, then reopens the pools if the file's journal
+/// mode changed: a pooled connection opened under the old mode would set it again on connect
+/// (and leaving WAL needs exclusive access, so a new reader would fail with SQLITE_BUSY).
+/// Closes the pools on error.
+async fn migrate_owned(config: &Config, db: Db) -> Result<Db, BootError> {
+    let migrated = owned::migrate(&db, &config.backup_dir).await;
+    let report = match migrated {
+        Ok(report) => report,
+        Err(error) => {
+            db.close().await;
+            return Err(error.into());
+        }
+    };
+    if report.changed_anything() {
+        tracing::info!(?report, "owned-schema migrations applied");
+    } else {
+        tracing::info!("owned schema: nothing to migrate");
+    }
+    let mode = match pool::file_journal_mode(&config.db_path).await {
+        Ok(mode) => mode,
+        Err(error) => {
+            db.close().await;
+            return Err(error.into());
+        }
+    };
+    if mode == db.journal {
+        return Ok(db);
+    }
+    db.close().await;
+    let reopened = Db::open_with(&config.db_path, mode).await?;
+    tracing::info!(journal_mode = ?mode, "pools reopened");
+    Ok(reopened)
+}
+
+/// Steps 4–11 on open pools (separate so tests can run them without the lock). Compat mode
+/// only: the owned-schema step 9b needs the pools reopened, so only [`run`] performs it.
 pub async fn run_db_guards(
     config: &Config,
     db: &Db,
 ) -> Result<recovery::RecoveryReport, BootError> {
+    run_checks(config, db).await?;
+    run_after_checks(config, db).await
+}
+
+/// Steps 4–9: read-only apart from the best-effort backup.
+async fn run_checks(config: &Config, db: &Db) -> Result<(), BootError> {
     let mut reader = db.reader.acquire().await?;
 
     // 4. Empty database.
@@ -115,8 +173,8 @@ pub async fn run_db_guards(
         backup::prune_old(&config.backup_dir, backup::BackupPolicy::default().keep);
     }
 
-    // 8. Schema verifier, compat mode: no DDL ever.
-    check_schema_mode(config, &mut reader).await?;
+    // 8. Schema verifier (both modes; compat never runs DDL).
+    log_schema_mode(config, &mut reader).await?;
     let report = schema::verify(&mut reader).await?;
     for drift in &report.drift {
         tracing::info!(%drift, "schema drift (non-fatal)");
@@ -145,6 +203,12 @@ pub async fn run_db_guards(
         tracing::info!(count = applied.len(), "required TS migrations present");
     }
 
+    Ok(())
+}
+
+/// Steps 10–11.
+async fn run_after_checks(config: &Config, db: &Db) -> Result<recovery::RecoveryReport, BootError> {
+    let mut reader = db.reader.acquire().await?;
     // 10. ensure_imported: read-only, never fatal (the TS image imported every manifest race
     // before the cutover).
     replay_import::run(&mut reader, &config.replay_manifest).await;
@@ -155,26 +219,25 @@ pub async fn run_db_guards(
     Ok(recovery)
 }
 
-async fn check_schema_mode(
+async fn log_schema_mode(
     config: &Config,
     conn: &mut sqlx::SqliteConnection,
 ) -> Result<(), BootError> {
-    if config.schema_mode == SchemaMode::Compat {
-        return Ok(());
-    }
     let marker = sqlx::query_scalar!(
         r#"SELECT "id" AS "id!" FROM "AppMigration" WHERE "id" = ?"#,
         PONR_MARKER_ID
     )
     .fetch_optional(conn)
     .await?;
-    Err(BootError::SchemaMode(match marker {
-        None => format!(
-            "AUTODUCK_SCHEMA_MODE=owned needs the \"AppMigration\" marker row {PONR_MARKER_ID:?} (point of no return); refusing to start"
+    match (config.schema_mode, marker.is_some()) {
+        (SchemaMode::Owned, true) => tracing::info!("schema mode: owned"),
+        (SchemaMode::Owned, false) => tracing::warn!(
+            "schema mode: owned, first owned boot: {PONR_MARKER_ID} will be recorded after the checks pass"
         ),
-        Some(_) => {
-            "AUTODUCK_SCHEMA_MODE=owned is not implemented in this build (Phase 9); use compat"
-                .to_owned()
-        }
-    }))
+        (SchemaMode::Compat, false) => tracing::info!("schema mode: compat (no DDL)"),
+        (SchemaMode::Compat, true) => tracing::warn!(
+            "schema mode: compat on a database past the point of no return ({PONR_MARKER_ID}); no migrations run"
+        ),
+    }
+    Ok(())
 }

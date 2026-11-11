@@ -77,8 +77,14 @@ COPY --from=server /out/autoduck /usr/local/bin/autoduck
 COPY --from=web /app/dist ./dist
 # Boot step 10 compares this manifest with the RaceReplayTrack rows (read-only).
 COPY artifacts/replay-tracks/manifest.json ./artifacts/replay-tracks/manifest.json
-# /app/data is the autoduck-data volume (SQLite, lock, boot backups); /app/tmp/videos is the old,
-# unused autoduck-videos mount point.
+# /app/data is the autoduck-data volume (SQLite, lock, boot backups, legacy archive);
+# /app/tmp/videos is the old, unused autoduck-videos mount point.
+# Owned schema mode (plan Phase 9, D14/D15): the first boot records rs-ponr, archives the legacy v2
+# tables (VACUUM INTO /app/data/backups/autoduck-legacy-archive-<UTC>.db, verified) and drops them,
+# then switches the DB to WAL. From then on the DB is three files: autoduck.db, autoduck.db-wal and
+# autoduck.db-shm. Never copy autoduck.db alone (it can miss committed transactions still in the
+# -wal): back up with `autoduck backup --force` or `sqlite3 /app/data/autoduck.db ".backup <file>"`,
+# or stop the container first and copy all three files together.
 RUN mkdir -p /app/data/backups /app/tmp/videos
 
 # Dokploy sets only DATABASE_URL, RACE_SECRET_KEY and the Google ids, so everything else defaults
@@ -86,7 +92,7 @@ RUN mkdir -p /app/data/backups /app/tmp/videos
 # and/or NEXT_PUBLIC_GOOGLE_CLIENT_ID; the SPA reads the client id at runtime from
 # GET /api/auth/google.
 ENV AUTODUCK_ENV=production \
-    AUTODUCK_SCHEMA_MODE=compat \
+    AUTODUCK_SCHEMA_MODE=owned \
     HOST=0.0.0.0 \
     PORT=3000 \
     DATABASE_URL="file:/app/data/autoduck.db" \

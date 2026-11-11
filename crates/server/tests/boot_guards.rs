@@ -272,21 +272,152 @@ async fn missing_live_table_is_fatal() {
     );
 }
 
+async fn scalar_i64(db: &std::path::Path, sql: &str) -> i64 {
+    let mut conn = create_or_open(db).await;
+    let value: i64 = sqlx::query_scalar(sqlx::AssertSqlSafe(sql.to_owned()))
+        .fetch_one(&mut conn)
+        .await
+        .unwrap();
+    conn.close().await.unwrap();
+    value
+}
+
 #[tokio::test]
-async fn owned_schema_mode_needs_the_ponr_marker() {
+async fn owned_mode_adopts_archives_drops_legacy_and_enables_wal() {
+    use autoduck_server::db::owned::{ARCHIVE_PREFIX, DROP_LEGACY_ID, WAL_ID};
     let dir = tempfile::tempdir().unwrap();
     let db = dir.path().join("autoduck.db");
     populated_db(&db).await;
+    let mut conn = create_or_open(&db).await;
+    sqlx::raw_sql(
+        r#"INSERT INTO "WeeklyTick" ("weekKey") VALUES ('2026-W01'), ('2026-W02');
+           INSERT INTO "MysteryChest" ("ownerId", "earnedFromRaceId", "effect", "rngSeed") VALUES (1, 1, 'x', 's');"#,
+    )
+    .execute(&mut conn)
+    .await
+    .unwrap();
+    conn.close().await.unwrap();
+    let owned = [("AUTODUCK_SCHEMA_MODE", "owned"), ("AUTODUCK_BACKUP", "0")];
+
+    let booted = boot::run(&config(dir.path(), &db, &owned)).await.unwrap();
+    assert_eq!(
+        booted.db.journal,
+        sqlx::sqlite::SqliteJournalMode::Wal,
+        "pools reopened in WAL"
+    );
+    booted.db.close().await;
+    drop(booted);
+
+    // Archive: one file, holding the legacy rows.
+    let archives: Vec<_> = std::fs::read_dir(dir.path().join("backups"))
+        .unwrap()
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter(|path| {
+            path.file_name()
+                .unwrap()
+                .to_string_lossy()
+                .starts_with(ARCHIVE_PREFIX)
+        })
+        .collect();
+    assert_eq!(archives.len(), 1, "{archives:?}");
+    assert_eq!(
+        scalar_i64(&archives[0], r#"SELECT COUNT(*) FROM "WeeklyTick""#).await,
+        2
+    );
+    assert_eq!(
+        scalar_i64(&archives[0], r#"SELECT COUNT(*) FROM "MysteryChest""#).await,
+        1
+    );
+
+    // Live DB: legacy gone, live data kept, ledger rows written, WAL.
+    assert_eq!(
+        scalar_i64(
+            &db,
+            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name IN ('WeeklyTick', 'MysteryChest', 'Shield', 'DragonOrb')"
+        )
+        .await,
+        0
+    );
+    assert_eq!(
+        scalar_i64(&db, r#"SELECT COUNT(*) FROM "SeasonPlayer""#).await,
+        1
+    );
+    let ledger = format!(
+        r#"SELECT COUNT(*) FROM "AppMigration" WHERE "id" IN ('rs-ponr', '{DROP_LEGACY_ID}', '{WAL_ID}')"#
+    );
+    assert_eq!(scalar_i64(&db, &ledger).await, 3);
+    assert_eq!(
+        autoduck_server::db::pool::file_journal_mode(&db)
+            .await
+            .unwrap(),
+        sqlx::sqlite::SqliteJournalMode::Wal
+    );
+
+    // Second boot: nothing to do, no second archive.
+    let booted = boot::run(&config(dir.path(), &db, &owned)).await.unwrap();
+    booted.db.close().await;
+    drop(booted);
+    assert_eq!(
+        std::fs::read_dir(dir.path().join("backups"))
+            .unwrap()
+            .count(),
+        1
+    );
+    assert_eq!(
+        scalar_i64(&db, r#"SELECT COUNT(*) FROM "AppMigration""#).await,
+        { autoduck_server::db::migrations::required_ts_migrations().len() as i64 + 3 }
+    );
+
+    // A compat boot of the owned DB still works (rollback to the previous image's mode).
+    let booted = boot::run(&config(dir.path(), &db, &[("AUTODUCK_BACKUP", "0")]))
+        .await
+        .unwrap();
+    booted.db.close().await;
+}
+
+#[tokio::test]
+async fn owned_mode_fails_the_boot_without_dropping_when_the_archive_fails() {
+    let dir = tempfile::tempdir().unwrap();
+    let db = dir.path().join("autoduck.db");
+    populated_db(&db).await;
+    // The backup "directory" is a file: the archive can't be written.
+    let blocker = dir.path().join("not-a-dir");
+    std::fs::write(&blocker, b"x").unwrap();
     let error = boot::run(&config(
         dir.path(),
         &db,
-        &[("AUTODUCK_SCHEMA_MODE", "owned"), ("AUTODUCK_BACKUP", "0")],
+        &[
+            ("AUTODUCK_SCHEMA_MODE", "owned"),
+            ("AUTODUCK_BACKUP", "0"),
+            ("AUTODUCK_BACKUP_DIR", blocker.to_str().unwrap()),
+        ],
     ))
     .await
     .unwrap_err();
-    assert!(
-        matches!(error, BootError::SchemaMode(ref m) if m.contains("rs-ponr")),
-        "{error}"
+    assert!(matches!(error, BootError::Owned(_)), "{error}");
+    assert!(error.to_string().contains("nothing was dropped"), "{error}");
+    assert_eq!(
+        scalar_i64(
+            &db,
+            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'WeeklyTick'"
+        )
+        .await,
+        1
+    );
+    assert_eq!(
+        scalar_i64(
+            &db,
+            r#"SELECT COUNT(*) FROM "AppMigration" WHERE "id" LIKE 'rs-0%'"#
+        )
+        .await,
+        0
+    );
+    assert_eq!(
+        autoduck_server::db::pool::file_journal_mode(&db)
+            .await
+            .unwrap(),
+        sqlx::sqlite::SqliteJournalMode::Delete
     );
 }
 

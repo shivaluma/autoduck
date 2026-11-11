@@ -222,9 +222,19 @@ async fn attempt(
     }
 
     let target = dir.join(backup_name(DbTime::now()));
+    match vacuum_into_durable(conn, &target).await {
+        Ok(()) => BackupOutcome::Written { path: target },
+        Err(error) => BackupOutcome::Failed(error),
+    }
+}
+
+/// `VACUUM INTO <target>.partial`, `chmod 0600`, fsync, rename to `target`, fsync the directory.
+/// A consistent snapshot in `DELETE` and `WAL` mode alike (never a file copy). On failure the
+/// partial file is removed and `target` doesn't exist.
+pub async fn vacuum_into_durable(conn: &mut SqliteConnection, target: &Path) -> Result<(), String> {
     let partial = PathBuf::from(format!("{}.partial", target.display()));
     let Some(partial_str) = partial.to_str() else {
-        return BackupOutcome::Failed("backup path is not UTF-8".to_owned());
+        return Err("backup path is not UTF-8".to_owned());
     };
     if let Err(error) = sqlx::query("VACUUM INTO ?")
         .bind(partial_str)
@@ -232,26 +242,28 @@ async fn attempt(
         .await
     {
         let _ = std::fs::remove_file(&partial);
-        return BackupOutcome::Failed(format!("VACUUM INTO failed: {error}"));
+        return Err(format!("VACUUM INTO failed: {error}"));
     }
     restrict(&partial, 0o600);
     if let Err(error) = std::fs::File::open(&partial).and_then(|file| file.sync_all()) {
         let _ = std::fs::remove_file(&partial);
-        return BackupOutcome::Failed(format!("cannot fsync the partial backup: {error}"));
+        return Err(format!("cannot fsync the partial backup: {error}"));
     }
-    if let Err(error) = std::fs::rename(&partial, &target) {
+    if let Err(error) = std::fs::rename(&partial, target) {
         let _ = std::fs::remove_file(&partial);
-        return BackupOutcome::Failed(format!("cannot rename the partial backup: {error}"));
+        return Err(format!("cannot rename the partial backup: {error}"));
     }
     // Make the rename itself durable. A failure here leaves a complete, synced file.
-    if let Err(error) = std::fs::File::open(dir).and_then(|dir| dir.sync_all()) {
+    if let Some(dir) = target.parent()
+        && let Err(error) = std::fs::File::open(dir).and_then(|dir| dir.sync_all())
+    {
         tracing::warn!(%error, dir = %dir.display(), "could not fsync the backup directory");
     }
-    BackupOutcome::Written { path: target }
+    Ok(())
 }
 
 /// Best-effort `chmod`; a failure (foreign owner, odd filesystem) is logged, not fatal.
-fn restrict(path: &Path, mode: u32) {
+pub(crate) fn restrict(path: &Path, mode: u32) {
     use std::os::unix::fs::PermissionsExt;
     if let Err(error) = std::fs::set_permissions(path, std::fs::Permissions::from_mode(mode)) {
         tracing::warn!(%error, path = %path.display(), "could not restrict permissions");

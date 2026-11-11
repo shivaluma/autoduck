@@ -59,8 +59,8 @@ env DATABASE_URL=sqlite:/tmp/x/autoduck.db cargo sqlx prepare --workspace --chec
 Environment: `DATABASE_URL` (`file:`/`sqlite:` stripped by our code; absolute path required
 outside dev), `PORT`, `HOST`, `AUTODUCK_ENV` (`dev`/`staging`/production), `AUTODUCK_DIST_DIR`,
 `AUTODUCK_LOCK_PATH`, `AUTODUCK_LOCK_WAIT_SECS` (default 150), `AUTODUCK_BACKUP` (`0` disables),
-`AUTODUCK_BACKUP_DIR`, `AUTODUCK_ALLOW_EMPTY_DB`, `AUTODUCK_SCHEMA_MODE` (`compat`; `owned` is
-refused in this build), `RACE_SECRET_KEY`, `GOOGLE_CLIENT_ID`, `NEXT_PUBLIC_GOOGLE_CLIENT_ID`,
+`AUTODUCK_BACKUP_DIR`, `AUTODUCK_ALLOW_EMPTY_DB`, `AUTODUCK_SCHEMA_MODE` (`compat`; `owned` since Phase 9, see
+`phase9-db-notes.md`), `RACE_SECRET_KEY`, `GOOGLE_CLIENT_ID`, `NEXT_PUBLIC_GOOGLE_CLIENT_ID`,
 `AUTODUCK_GOOGLE_JWKS_URL` (dev only), `AUTODUCK_TEST_RNG_SEED` (`test-rng` builds in dev only).
 
 The API + mutation diff runs both servers on separate `.backup` copies of one snapshot:

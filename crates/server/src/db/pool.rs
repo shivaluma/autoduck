@@ -5,8 +5,12 @@
 //!   `SQLITE_BUSY`.
 //! - **Reader:** up to 8 `read_only` connections, so an accidental write fails loudly.
 //!   No reader transaction may stay open across an `.await` that waits on the network.
-//! - Pragmas are explicit on every connection: `journal_mode=DELETE` (until the point of no
-//!   return), `foreign_keys=ON`, `busy_timeout=5s`, `synchronous=FULL`, no `optimize_on_close`.
+//! - Pragmas are explicit on every connection: `journal_mode`, `foreign_keys=ON`,
+//!   `busy_timeout=5s`, `synchronous=FULL`, no `optimize_on_close`. The journal mode is the one
+//!   the file already has ([`file_journal_mode`]): `DELETE` until the point of no return, `WAL`
+//!   once the owned-schema migration `rs-0011-wal-journal` switched it ([`crate::db::owned`]).
+//!   Opening the pools never changes the mode, so a CLI command (`backup`, `seed`) can't flip a
+//!   WAL database back to `DELETE` or the reverse.
 //!   The file is never created (`create_if_missing(false)`).
 
 use std::path::{Path, PathBuf};
@@ -26,40 +30,77 @@ pub struct Db {
     pub writer: SqlitePool,
     pub reader: SqlitePool,
     pub path: PathBuf,
+    /// The journal mode every pooled connection sets explicitly.
+    pub journal: SqliteJournalMode,
 }
 
 /// The options every connection shares. `read_only` is the only difference between pools.
-pub fn connect_options(path: &Path, read_only: bool) -> SqliteConnectOptions {
-    SqliteConnectOptions::new()
-        .filename(path)
-        .create_if_missing(false)
-        .read_only(read_only)
-        .journal_mode(SqliteJournalMode::Delete)
+pub fn connect_options(
+    path: &Path,
+    read_only: bool,
+    journal: SqliteJournalMode,
+) -> SqliteConnectOptions {
+    base_options(path, read_only)
+        .journal_mode(journal)
         .foreign_keys(true)
         .busy_timeout(BUSY_TIMEOUT)
         .synchronous(SqliteSynchronous::Full)
 }
 
+/// No pragmas beyond sqlx's `foreign_keys=ON`; in particular no `journal_mode`, so the file's
+/// own mode is left alone.
+fn base_options(path: &Path, read_only: bool) -> SqliteConnectOptions {
+    SqliteConnectOptions::new()
+        .filename(path)
+        .create_if_missing(false)
+        .read_only(read_only)
+        .busy_timeout(BUSY_TIMEOUT)
+}
+
+/// The journal mode stored in the file: `Wal` for a WAL database, `Delete` otherwise (SQLite
+/// persists only WAL; every other mode reads back as the connection default, `delete`). Uses a
+/// read-write connection that sets no `journal_mode`, so it changes nothing (a hot rollback
+/// journal is rolled back, as the writer pool would do anyway).
+pub async fn file_journal_mode(path: &Path) -> Result<SqliteJournalMode, sqlx::Error> {
+    let mut conn = SqliteConnection::connect_with(&base_options(path, false)).await?;
+    let mode: String = sqlx::query_scalar("PRAGMA journal_mode")
+        .fetch_one(&mut conn)
+        .await?;
+    conn.close().await?;
+    Ok(if mode.eq_ignore_ascii_case("wal") {
+        SqliteJournalMode::Wal
+    } else {
+        SqliteJournalMode::Delete
+    })
+}
+
 impl Db {
-    /// Opens both pools. Fails if the file doesn't exist; the caller has already checked, this
-    /// is the second guard.
+    /// Opens both pools with the file's own journal mode ([`file_journal_mode`]). Fails if the
+    /// file doesn't exist; the caller has already checked, this is the second guard.
     pub async fn open(path: &Path) -> Result<Self, sqlx::Error> {
+        let journal = file_journal_mode(path).await?;
+        Self::open_with(path, journal).await
+    }
+
+    /// Opens both pools with an explicit journal mode.
+    pub async fn open_with(path: &Path, journal: SqliteJournalMode) -> Result<Self, sqlx::Error> {
         let writer = SqlitePoolOptions::new()
             .min_connections(0)
             .max_connections(1)
             .acquire_timeout(Duration::from_secs(30))
-            .connect_with(connect_options(path, false))
+            .connect_with(connect_options(path, false, journal))
             .await?;
         let reader = SqlitePoolOptions::new()
             .min_connections(0)
             .max_connections(READER_CONNECTIONS)
             .acquire_timeout(Duration::from_secs(30))
-            .connect_with(connect_options(path, true))
+            .connect_with(connect_options(path, true, journal))
             .await?;
         Ok(Db {
             writer,
             reader,
             path: path.to_path_buf(),
+            journal,
         })
     }
 
@@ -74,10 +115,12 @@ impl Db {
     }
 }
 
-/// A one-off read-only connection with the same pragmas, for CLI checks (`verify-db`,
-/// `check-schema`) that must not touch the file.
+/// A one-off read-only connection for CLI checks (`verify-db`, `check-schema`) that must not
+/// touch the file. It sets no `journal_mode` (a read-only connection can't change it), so it
+/// works on `DELETE` and `WAL` files alike.
 pub async fn connect_read_only(path: &Path) -> Result<SqliteConnection, sqlx::Error> {
-    SqliteConnection::connect_with(&connect_options(path, true)).await
+    SqliteConnection::connect_with(&base_options(path, true).synchronous(SqliteSynchronous::Full))
+        .await
 }
 
 #[cfg(test)]
@@ -149,7 +192,8 @@ mod tests {
             .unwrap();
         // BEGIN IMMEDIATE holds the RESERVED lock: a second writer can't start until commit.
         let mut other = SqliteConnection::connect_with(
-            &connect_options(&path, false).busy_timeout(Duration::from_millis(50)),
+            &connect_options(&path, false, SqliteJournalMode::Delete)
+                .busy_timeout(Duration::from_millis(50)),
         )
         .await
         .unwrap();
@@ -166,6 +210,67 @@ mod tests {
             .unwrap();
         assert_eq!(count, 1);
         db.close().await;
+    }
+
+    #[tokio::test]
+    async fn open_keeps_the_file_journal_mode() {
+        let (_dir, path) = temp_db().await;
+        assert_eq!(
+            file_journal_mode(&path).await.unwrap(),
+            SqliteJournalMode::Delete
+        );
+        // Switch the file to WAL with the writer while the reader pool has an idle connection
+        // (the owned-schema migration does exactly this), then reopen.
+        let db = Db::open(&path).await.unwrap();
+        sqlx::query("SELECT 1").execute(&db.reader).await.unwrap();
+        let mode: String = sqlx::query_scalar("PRAGMA journal_mode = WAL")
+            .fetch_one(&db.writer)
+            .await
+            .unwrap();
+        assert_eq!(mode, "wal");
+        // The idle reader follows the file.
+        let count: i64 = sqlx::query_scalar(r#"SELECT COUNT(*) FROM "T""#)
+            .fetch_one(&db.reader)
+            .await
+            .unwrap();
+        assert_eq!(count, 0);
+        db.close().await;
+
+        assert_eq!(
+            file_journal_mode(&path).await.unwrap(),
+            SqliteJournalMode::Wal
+        );
+        let db = Db::open(&path).await.unwrap();
+        assert_eq!(db.journal, SqliteJournalMode::Wal);
+        sqlx::query(r#"INSERT INTO "T" ("v") VALUES ('w')"#)
+            .execute(&db.writer)
+            .await
+            .unwrap();
+        for pool in [&db.writer, &db.reader] {
+            let journal: String = sqlx::query_scalar("PRAGMA journal_mode")
+                .fetch_one(pool)
+                .await
+                .unwrap();
+            assert_eq!(journal, "wal");
+            let count: i64 = sqlx::query_scalar(r#"SELECT COUNT(*) FROM "T""#)
+                .fetch_one(pool)
+                .await
+                .unwrap();
+            assert_eq!(count, 1);
+        }
+        db.close().await;
+        // Read-only checks work on a WAL file too.
+        let mut conn = connect_read_only(&path).await.unwrap();
+        let count: i64 = sqlx::query_scalar(r#"SELECT COUNT(*) FROM "T""#)
+            .fetch_one(&mut conn)
+            .await
+            .unwrap();
+        assert_eq!(count, 1);
+        conn.close().await.unwrap();
+        assert_eq!(
+            file_journal_mode(&path).await.unwrap(),
+            SqliteJournalMode::Wal
+        );
     }
 
     #[tokio::test]

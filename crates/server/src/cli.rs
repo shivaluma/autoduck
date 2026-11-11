@@ -12,7 +12,7 @@ use clap::{Parser, Subcommand};
 
 use crate::boot::{self, backup, guards, lock, recovery};
 use crate::config::Config;
-use crate::db::{Db, migrations, pool, schema};
+use crate::db::{Db, migrations, owned, pool, schema};
 use crate::http::{self, AppState};
 
 #[derive(Parser, Debug)]
@@ -44,7 +44,7 @@ pub enum Command {
     },
     /// Seed an empty database with the starter users (refuses a non-empty database).
     Seed,
-    /// Not in this build (schema is TS-owned until the point of no return).
+    /// Not in this build (owned-schema migrations run at boot with AUTODUCK_SCHEMA_MODE=owned).
     Migrate,
     /// Not in this build.
     DiffSince,
@@ -223,6 +223,30 @@ async fn verify_db(config: &Config) -> anyhow::Result<()> {
             missing.join(", ")
         ));
     }
+    let owned_ids = [
+        migrations::PONR_MARKER_ID,
+        owned::DROP_LEGACY_ID,
+        owned::WAL_ID,
+    ];
+    let state: Vec<String> = owned_ids
+        .iter()
+        .map(|id| {
+            let done = if applied.iter().any(|a| a == id) {
+                "applied"
+            } else {
+                "pending"
+            };
+            format!("{id} {done}")
+        })
+        .collect();
+    let journal: String = sqlx::query_scalar("PRAGMA journal_mode")
+        .fetch_one(&mut conn)
+        .await?;
+    println!(
+        "schema mode {:?}: {}; journal_mode={journal}",
+        config.schema_mode,
+        state.join(", ")
+    );
     let (candidates, stuck) = recovery::dry_run(&mut conn).await?;
     println!(
         "recovery: {} engine>=2 race(s) to recover {candidates:?}; TS-era stuck {stuck:?} (never modified)",

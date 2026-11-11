@@ -15,7 +15,7 @@
 //! (review 1, finding 6): a missing unique index that an `ON CONFLICT` target needs
 //! ([`CONFLICT_TARGETS`]), and an extra `NOT NULL` column without a default in a live table
 //! (every Rust INSERT would fail). Everything else (attribute drift, other missing or extra
-//! indexes, extra tables or nullable/defaulted columns, the 12 inert legacy tables) is reported
+//! indexes, extra tables or nullable/defaulted columns, the 11 inert legacy tables) is reported
 //! as non-fatal drift and logged.
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -24,9 +24,12 @@ use sqlx::{Connection, SqliteConnection};
 
 use super::BASELINE_SQL;
 
-/// Tables the Rust server reads or writes: 25 live Prisma models plus `RaceReplayTrack`.
-pub const LIVE_TABLES: [&str; 26] = [
+/// Tables the Rust server reads or writes: 25 live Prisma models, `RaceReplayTrack`, and
+/// `CommentaryLog` (a v2 table that race detail still reads for old races' commentary, so it is
+/// kept by `rs-0010-drop-legacy-v2`).
+pub const LIVE_TABLES: [&str; 27] = [
     "AppMigration",
+    "CommentaryLog",
     "CosmeticAdminEvent",
     "CosmeticConfig",
     "CosmeticPreset",
@@ -61,10 +64,11 @@ pub const CONFLICT_TARGETS: [(&str, &[&str]); 2] = [
     ("PlayerCosmetic", &["seasonPlayerId", "cosmeticId"]),
 ];
 
-/// Legacy v2 tables (D25): kept until after the point of no return, never queried by Rust.
-pub const LEGACY_TABLES: [&str; 12] = [
+/// Legacy v2 tables (D25): never queried by Rust. Archived and dropped by the owned-schema
+/// migration `rs-0010-drop-legacy-v2` ([`crate::db::owned`]); once that id is in the ledger the
+/// verifier stops expecting them.
+pub const LEGACY_TABLES: [&str; 11] = [
     "CommentaryJob",
-    "CommentaryLog",
     "DragonItem",
     "DragonItemEvent",
     "DragonOrb",
@@ -386,9 +390,21 @@ pub fn compare(expected: &SchemaShape, live: &SchemaShape) -> SchemaReport {
     report
 }
 
-/// Introspects `conn` and compares it with the baseline.
+/// Introspects `conn` and compares it with the baseline. After `rs-0010-drop-legacy-v2` the
+/// legacy tables are no longer expected (so they aren't logged as drift on every boot).
 pub async fn verify(conn: &mut SqliteConnection) -> Result<SchemaReport, sqlx::Error> {
-    let expected = expected_shape().await?;
+    let mut expected = expected_shape().await?;
+    // A missing ledger is already fatal (missing live table); treat it as "not dropped".
+    let dropped: Option<i64> = sqlx::query_scalar(r#"SELECT 1 FROM "AppMigration" WHERE "id" = ?"#)
+        .bind(super::owned::DROP_LEGACY_ID)
+        .fetch_optional(&mut *conn)
+        .await
+        .unwrap_or(None);
+    if dropped.is_some() {
+        for table in LEGACY_TABLES {
+            expected.remove(table);
+        }
+    }
     let live = introspect(conn).await?;
     Ok(compare(&expected, &live))
 }

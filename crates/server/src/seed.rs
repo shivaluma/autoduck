@@ -106,6 +106,12 @@ pub async fn seed(db: &Db) -> Result<usize, SeedError> {
     if users > 0 || players > 0 {
         return Err(SeedError::NotEmpty { users, players });
     }
+    // The legacy v2 `Shield` table is dropped by the owned-schema migration
+    // `rs-0010-drop-legacy-v2`; seed its rows only where it still exists.
+    let legacy_shields: Option<i64> =
+        sqlx::query_scalar("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'Shield'")
+            .fetch_optional(&mut *tx)
+            .await?;
     let now = DbTime::now();
     for player in &PLAYERS {
         let user_id = sqlx::query_scalar!(
@@ -124,7 +130,7 @@ pub async fn seed(db: &Db) -> Result<usize, SeedError> {
         )
         .fetch_one(&mut *tx)
         .await?;
-        if player.shields > 0 && player.shields < 9999 {
+        if legacy_shields.is_some() && player.shields > 0 && player.shields < 9999 {
             for _ in 0..player.shields {
                 sqlx::query!(
                     r#"INSERT INTO "Shield" ("ownerId", "earnedAt", "charges", "weeksUnused", "status")

@@ -581,7 +581,7 @@ This works because of four rules:
 
    `scripts/replay-tracks/ensure-imported.ts` is replaced by the Rust step. The Rust `replay_import` keeps reading `artifacts/replay-tracks/`. `economy:simulate`/`gacha:simulate` become `autoduck sim economy|gacha`.
 2. **Owned mode.** Insert the `rs-ponr` marker row and set `AUTODUCK_SCHEMA_MODE=owned`.
-3. **Archive legacy tables.** `VACUUM INTO autoduck-legacy-archive-YYYYMMDD.db` (kept off-box), then `rs-0010-drop-legacy-v2`, dropping children before parents (`DragonItemEvent` … `WeeklyTick`).
+3. **Archive legacy tables.** `VACUUM INTO autoduck-legacy-archive-YYYYMMDD.db` (kept off-box), then `rs-0010-drop-legacy-v2`, dropping children before parents (`DragonItemEvent` … `WeeklyTick`). As built: 11 tables; `CommentaryLog` is kept because race detail reads it (`docs/rewrite/phase9-db-notes.md`).
 4. **WAL**, in its own deploy. Backups already use `.backup`/`VACUUM INTO`.
 5. **Non-root** (optional), in a separate deploy: an entrypoint runs `chown -R app /app/data && exec setpriv --reuid app …`.
 6. **Volumes and env.** Drop the `autoduck-videos` volume and the dead env vars. **Keep the R2 bucket and credentials** (avatars and off-box backups).

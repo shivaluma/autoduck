@@ -108,7 +108,8 @@ jobs:
           cache-to: type=gha,mode=max
 
       # The image refuses a missing DB (and never creates one), then boots on a scratch DB with the
-      # baseline schema and answers /api/health and the SPA.
+      # baseline schema and answers /api/health and the SPA. The image runs in owned schema mode:
+      # the boot archives and drops the (empty) legacy tables and switches the DB to WAL.
       - name: Boot smoke test
         run: |
           data="$RUNNER_TEMP/data"; mkdir -p "$data"
@@ -129,6 +130,11 @@ jobs:
           docker stop smoke
           docker logs smoke 2>&1 | tail -40
           docker rm smoke
+          docker run --rm -v "$data:/app/data" --entrypoint sqlite3 "$IMAGE" /app/data/autoduck.db \
+            "PRAGMA journal_mode; SELECT id FROM AppMigration WHERE id LIKE 'rs-%' ORDER BY id;" \
+            | tee /dev/stderr | tr '\n' ' ' | grep -qx 'wal rs-0010-drop-legacy-v2 rs-0011-wal-journal rs-ponr '
+          docker run --rm -v "$data:/app/data" --entrypoint ls "$IMAGE" /app/data/backups \
+            | grep -q '^autoduck-legacy-archive-'
 
       - name: Report image size
         run: |
