@@ -1,10 +1,11 @@
 /**
  * How the race page shows a finished race (plan §4.6):
  * - a recorded track whenever one exists (any engine version; nothing is simulated),
- * - otherwise a local re-simulation, only for the current engine/balance pair (and never engine major ≥ 2),
+ * - otherwise a local re-simulation, only for the engine/balance pair the browser engine implements
+ *   (src/engine/sim-versions.ts `SIM_VERSIONS`; never engine major ≥ 2 until Phase 5),
  * - otherwise no canvas: "Replay không khả dụng cho race này".
  */
-import { RACE_BALANCE_VERSION, RACE_ENGINE_VERSION } from '@/src/engine/protocol'
+import { SIM_VERSIONS } from '@/src/engine/sim-versions'
 import { engineMajor } from './event-vocab'
 import type { RaceReplayInfo } from './types'
 
@@ -14,8 +15,8 @@ export function canResimulate(config: { engineVersion?: unknown; balanceVersion?
   if (!config) return false
   const major = engineMajor(config.engineVersion)
   return major !== null && major < 2
-    && config.engineVersion === RACE_ENGINE_VERSION
-    && config.balanceVersion === RACE_BALANCE_VERSION
+    && config.engineVersion === SIM_VERSIONS.engineVersion
+    && config.balanceVersion === SIM_VERSIONS.balanceVersion
 }
 
 export function planReplay(input: {

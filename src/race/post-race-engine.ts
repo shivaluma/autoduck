@@ -5,8 +5,7 @@
  */
 import type { RaceConfig, RaceFinishEntry, RecordedWildItemInput } from '@/src/engine/protocol'
 import { createSimulation, simulateRace, stepSimulation } from '@/src/engine/sim'
-import type { DecodedReplayTrack } from '@/src/race/replay-track/decode'
-import { aggregateMotion, type PostRaceMotion } from './post-race-stats'
+import type { PostRaceMotion } from './post-race-stats'
 
 /** Per-duck average/peak speed over a re-simulation (samples after every step, capped at 180 s). */
 export function collectPostRaceMotion(config: RaceConfig, manualInputs: readonly RecordedWildItemInput[]): PostRaceMotion {
@@ -44,14 +43,4 @@ export function collectPostRaceBaselineRank(config: RaceConfig): Map<string, num
   } catch {
     return null
   }
-}
-
-/** Motion from a recorded track's speed column (ticks 1…last), the same sampling as the re-simulation. */
-export function motionFromTrack(track: DecodedReplayTrack): PostRaceMotion {
-  const { sampleCount, firstTick, speedQ, progressQ, header } = track
-  const lastTick = Math.min(track.lastTick, firstTick + 180 * header.tickRate)
-  return aggregateMotion(header.ducks, (tick, duck) => {
-    const at = duck * sampleCount + (tick - firstTick)
-    return { speed: speedQ[at]! / header.q.speed, finished: progressQ[at]! >= header.q.progress }
-  }, firstTick + 1, lastTick)
 }
