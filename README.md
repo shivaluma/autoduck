@@ -8,22 +8,19 @@ Chaos cards: Normal, Reverse, Duo, Triple Elimination, Cut Line, Constructors, a
 - Host control: `/admin/season-3` with `RACE_SECRET_KEY`. Host can skip inactive ducks, lock/unlock preparation, run a no-side-effect test race, then start the authoritative Monday race; ranking and Season 3 resolution are automatic.
 - Race Lab: `/dev/race-lab` with `RACE_SECRET_KEY` for seed, Chaos, loadout, tuning, speed, state, and event inspection.
 - Season 3 API: `/api/season3`, `/api/admin/season3`, `/api/season3/redeem`
-- Database auto-bootstrap runs before `pnpm dev`, `pnpm start`, and Docker startup: it performs `prisma db push`, then applies idempotent app migrations. Each applied migration is recorded in `AppMigration.runAt`. pnpm native build permissions live in `pnpm-workspace.yaml` so the SQLite adapter is available on first boot.
-- Run it manually with `pnpm db:bootstrap`; use `pnpm db:migrate:app` only when you want to run the app migration step without Prisma schema sync.
+- Database: one SQLite file. The Rust server never creates or migrates it on boot: it refuses a missing or empty DB, takes a `VACUUM INTO` backup, runs `integrity_check` and verifies the schema (`CLAUDE.md`, "Database").
 
 The Season 3 champion is calculated from `championshipPoints` and race wins only; prediction points never affect championship ranking.
 
-### Racing engine commands
+### Racing engine
 
-```bash
-pnpm test
-pnpm test:race
-pnpm race:simulate --races 100000
-pnpm race:replay <raceId>
-pnpm race:profile
+The engine is `crates/race-core` (Rust; WASM in the browser). Official races store the immutable config, seed commitment, engine/balance/track versions, raw event stream, result digest and a recorded DTRK/1 replay track, so old races replay from their stored track whatever the current engine.
+
+```fish
+env SQLX_OFFLINE=true cargo test --workspace
+cargo run -p race-cli --release -- golden check     # engine output unchanged for the current version
+cargo run -p race-cli --release -- balance mixed --races 2000
 ```
-
-Official races store the immutable config, seed commitment, engine/balance/track versions, raw event stream, result digest, live fallback snapshots, and same-seed item telemetry. Replay refuses unsupported engine or balance versions instead of silently using current tuning.
 
 ## Getting Started (Rust server + Vite SPA)
 
@@ -32,7 +29,7 @@ is the Rust server in `crates/server` (binary `autoduck`, axum + sqlx over the S
 the built SPA in production.
 
 ```fish
-pnpm dev            # both: Rust API on :3000 (runs db:bootstrap first) + Vite on :5173. Open http://localhost:5173
+pnpm dev            # both: Rust API on :3000 + Vite on :5173. Open http://localhost:5173
 pnpm dev:api        # only the Rust API on :3000 (AUTODUCK_ENV=dev, prisma/dev.db)
 pnpm dev:web        # only Vite on :5173; proxies /api to $API_URL (default http://127.0.0.1:3000)
 
@@ -48,4 +45,4 @@ Vite listens on `localhost` only (IPv6 `[::1]` on macOS), so open http://localho
 JavaScript origins must include `http://localhost:5173`; the button reads its client id from
 `GET /api/auth/google` (`GOOGLE_CLIENT_ID` on the server).
 
-More detail: `docs/rewrite-plan.md` (Phase 8), `docs/rewrite/phase3-notes.md` (server) and `docs/rewrite/phase4-notes.md` (SPA).
+Production runs the same image (`./Dockerfile`) on Dokploy. More detail: `CLAUDE.md`, `docs/rewrite-plan.md`, `docs/rewrite/phase3-notes.md` (server) and `docs/rewrite/phase4-notes.md` (SPA).

@@ -4,66 +4,42 @@ Every Season 3 race (official and test) gets a **recorded track**: what each duc
 rocket looked like on every tick. It is stored in the `RaceReplayTrack` table. The goal is that replays stop
 depending on the engine version: the canvas can play a track back without re-simulating from the seed.
 
-This is plan step 0.4 (`docs/rewrite-plan.md` in the rewrite branch: §4.2 format, §4.3 table, §4.5 gates,
-D10, D23, risk R2).
+This is plan step 0.4 (`docs/rewrite-plan.md`: §4.2 format, §4.3 table, §4.5 gates, D10, D23, risk R2). The format
+was designed and first recorded by the TS engine; since the Phase 8 cutover the Rust server records it, and the TS
+recorder was deleted in Phase 9 (tag `ts-engine-final` has it).
 
-Code: `lib/racing/replay-track/` (server) and `src/race/replay-track/` (browser-safe, moved there in plan step 0.5).
+Code:
 
-| File | Role |
+| Where | Role |
 |---|---|
-| `src/race/replay-track/format.ts` | Constants, header type, canonical header JSON and quantisation. No Node imports. |
-| `lib/racing/replay-track/recorder.ts` | Live recorder. `push(state)` never throws. Also has the `REPLAY_TRACK_RECORDING` kill switch. |
-| `lib/racing/replay-track/encode.ts` | Recording → uncompressed DTRK/1 payload; `packReplayTrack` gzips it and hashes it. Node only. |
-| `src/race/replay-track/decode.ts` | Payload → per-tick world (`worldAt(tick)`), finish ticks and final ranks. Safe in the browser. |
-| `lib/racing/replay-track/store.ts` | After resolve: finalize → encode → gzip → gunzip → decode → self-check → insert. Never throws. |
-| `lib/racing/replay-track/serve.ts` | `GET /api/races/:id/track` response (gzip, ETag, caching). |
+| `crates/race-protocol/src/replay_track.rs` | Container, header and quantisation constants. |
+| `crates/race-core/src/replay/` | `TrackRecorder` (one push per tick), the DTRK/1 encoder/decoder, `encode_and_check` self-check, `TRACK_GEOMETRY_ID`. |
+| `crates/server/src/live/race.rs` | Inserts the `RaceReplayTrack` row in the resolve transaction (T1, D23). |
+| `crates/server/src/live/post.rs` | After resolve, best effort: the frozen post-race stats (`statsJson`). |
+| `src/race/replay-track/{format,decode}.ts` | Browser decoder: payload → per-tick world (`worldAt(tick)`), finish ticks, final ranks. |
 
 ## How a race is recorded
 
-`lib/season3-race.ts` makes a recorder unless `REPLAY_TRACK_RECORDING=0`. Recording only reads state;
-it never changes the race:
-
-- Tick 0 is pushed from `beforeTick` when `state.tick === 0`. Each later tick is pushed from `afterTick`.
-  This is the same state that `snapshotRaceWorld` would see for that tick.
-- `push` copies the duck fields into growable typed arrays: `Float64Array` progress and speed,
-  `Float32Array` lateral and `Uint8Array` rank. It records wild-item, effect, regular-pickup-count and entity
-  fields only when they change. It keeps no `snapshotRaceWorld` objects.
-- `push` catches every error. The first failure logs one line and disables the recorder, and the race goes on.
-  A logger that throws is swallowed too.
-
-After the meta transaction, and after a test race moves to ARCHIVED, `storeRecordedReplayTrack` runs:
-
-1. `finalize()` checks the entity sample counts (the static-position assertion, see §3) and returns the recording.
-2. Encode, gzip, gunzip, check sha256, decode.
-3. **Self-check:** the decoded finish order (final rank, official ducks only) must equal `result.standings`.
-   Each duck's decoded finish tick must agree with its `finishTimeMs`
-   (`(tick-1)·dt ≤ finishTimeMs ≤ tick·dt`). The last tick must be the `RACE_FINISHED` tick.
-4. `statsJson` = `JSON.stringify(buildPostRaceStats(config, events, players))`, with the inputs the race page
-   uses: DB-ordered events including `CHAOS_RESOLVED` / `QP_TRACK_REWARD_GRANTED`, and non-clone
-   participants ordered by `initialRank`. It costs about 2 extra simulations (~250 ms). If it fails,
-   `statsJson` is just `null`.
-5. Insert the row:
+The live driver pushes every tick's world into the `TrackRecorder`; recording only reads state and never changes the
+race. At resolve the track is encoded, gzipped, decoded again and self-checked (finish order and finish ticks against
+the standings, last tick = `RACE_FINISHED` tick) and the row is written:
 
 | Column | Value |
 |---|---|
 | `format` | `dtrk/1` |
-| `source` | `LIVE_TS` |
+| `source` | `LIVE_RUST` (`LIVE_TS` for races recorded by the retired TS server, `BACKFILL` for historical imports) |
 | `fidelity` | `RECORDED` |
-| `engineImpl` | `ts` |
+| `engineImpl` | `rust` (`ts` before the cutover) |
 | `engineCommit` | `SOURCE_COMMIT` or `GIT_SHA`, otherwise `null` |
-| `engineBuild` | `null` |
+| `engineBuild` | `ENGINE_BUILD_ID` |
 | `engineVersion`, `balanceVersion`, `trackVersion`, `tickRate` | from the result |
-| `trackGeometry` | `<trackVersion>@<sha8>` of the committed HEAD geometry export (see [Geometry](#geometry)), or `null` if that file is missing. Rows written before 0.5 have `null`. |
+| `trackGeometry` | `TRACK_GEOMETRY_ID` (`<trackVersion>@<sha8>`, see [Geometry](#geometry)) |
 | `tickCount` | final simulation tick (= `RACE_FINISHED` tick); there are `tickCount + 1` samples, ticks `0..tickCount` |
 | `stride` | 1 |
 | `reproducedDigest` | `Race.resultDigest` |
 | `byteSha256` | sha256 of the **uncompressed** payload |
-| `bytes` | gzip |
-| `note` | `null`, or a diagnostic such as `moving entities: N` |
-
-Any failure (disabled recorder, self-check, encode or DB) writes **no row** and logs one line:
-`[replay-track] race <id>: no track stored (<reason>)`. The §4.5 gate finds such races, and they are backfilled
-at HEAD.
+| `bytes` | the gzip |
+| `statsJson` | post-race stats, written after resolve (`null` if that step fails) |
 
 ## Payload layout
 
@@ -180,14 +156,14 @@ The round-trip guarantees, from `tests/replay-track.test.ts`:
 The canvas draws the river, gates and zones from a geometry file, not from HEAD code, so a track keeps the geometry it
 was recorded on (plan D10; `river-01-v2` gained boost gates without a version bump).
 
-- `pnpm race:tracks` (`scripts/race-tracks/export.ts`) exports HEAD `createRiverTrack(DEFAULT_TRACK_VERSION)` to
-  `public/race-tracks/<trackVersion>@<sha8>.json`. `sha8` is the start of the sha256 of the file's bytes
-  (canonical JSON, keys sorted). `pnpm race:tracks --check` fails if the committed file for HEAD is missing.
+- Each file is `public/race-tracks/<trackVersion>@<sha8>.json`; `sha8` is the start of the sha256 of the file's bytes
+  (canonical JSON, keys sorted). The Rust engine's current one is `TRACK_GEOMETRY_ID`;
+  `crates/race-core/tests/replay_track.rs` fails if the committed file is missing or its hash differs. (The TS
+  exporter `pnpm race:tracks` was retired in Phase 9.)
 - The file has `sim` (length, currents, pickup and hazard zones, boost gates) and `render` (the centreline sampled at
   1024 segments as `[x, y, tangentX, tangentY, width]`, `lateralScale` 0.42). `src/race/polyline-track.ts` turns it
-  into the `sample(progress, lateral)` the canvas uses; it stays within 0.05 px of HEAD (`tests/replay-viewer.test.ts`).
-- New recordings name the HEAD file in the header and the row (`resolveHeadTrackGeometryId`). The race API exposes it as
-  `replay.geometryUrl`. Without a geometry id or file, the canvas falls back to HEAD `createRiverTrack`.
+  into the `sample(progress, lateral)` the canvas uses.
+- New recordings name the file in the header and the row. The race API exposes it as `replay.geometryUrl`.
 - If HEAD geometry changes, export a new file and keep the old one: stored tracks still reference it.
 
 ## Viewer (plan step 0.5, §4.6)
@@ -216,9 +192,8 @@ The race page (`components/racing/season3-replay-player.tsx`) then:
 3. **Otherwise:** no canvas, `Replay không khả dụng cho race này`. Results, timeline, combat and event-derived stats
    still show; the speed columns are hidden.
 
-Configs are never Zod-parsed by the viewer, and the TS engine's version guard (`createSimulation`/`simulateRace` throw
-unless the config is the current pair or `{ allowVersion: true }` is passed) makes a wrong-version re-simulation
-impossible.
+The viewer re-simulates only configs whose engine/balance pair the shipped WASM engine supports
+(`src/race/replay-plan.ts`), so a wrong-version re-simulation can't happen.
 
 **Events.** `src/race/event-vocab.ts` splits the id-ordered rows: engine events (asserted never to go back in tick)
 drive FX; meta events (`CHAOS_RESOLVED`, `QP_TRACK_REWARD_GRANTED`) are only shown in the timeline, where every event is
@@ -235,9 +210,9 @@ the track's speed column, or from a re-simulation for the current pair only.
 
 ## Fixture
 
-`fixtures/replay-track/short-race.dtrk.gz` and `short-race.json` hold a 3-duck race (config in
-`scripts/lib/replay-track-fixture.ts`). The test re-records it and compares `byteSha256`. If the format, the
-engine or the balance changes on purpose, regenerate it with `pnpm replay:fixture`.
+`fixtures/replay-track/short-race.dtrk.gz` and `short-race.json` hold a 3-duck race recorded by the TS engine.
+`crates/race-core/tests/replay_track.rs` pushes its decoded worlds through the Rust `TrackRecorder` and must reproduce
+the bytes exactly.
 
 ## Sizes
 
@@ -276,6 +251,9 @@ Races finished before 0.4 was deployed are covered by the historical tracks belo
 
 Races that ran before live recording are backfilled offline and imported at boot.
 
+The resolver and importer below were TS scripts, deleted in Phase 9; run them from tag `ts-engine-final` if a gap ever
+needs filling.
+
 - **Resolver:** `pnpm replay:resolve --db <sanitised copy> [--race N ...] [--workers 4] [--budget-min 25]`
   (`scripts/replay-tracks/resolve-historical.ts`). It opens the DB read-only. For each finished race with a
   config and no track row it tries the TS engine commits (first-parent history of `packages/race-core`,
@@ -307,7 +285,5 @@ First run (2026-11-11, sanitised copy, Node 24.17 / ICU 78.3): all 130 finished 
 
 ## Operations
 
-- **Kill switch:** set `REPLAY_TRACK_RECORDING=0` and restart. Races resolve normally and no row is written.
 - **Check a race:** `sqlite3 /app/data/<db> 'SELECT raceId, fidelity, tickCount, length(bytes), byteSha256 FROM RaceReplayTrack ORDER BY raceId DESC LIMIT 5'`.
-- **Schema:** `RaceReplayTrack` is a new model plus an optional relation on `Race`. `prisma db push` applies it
-  without `--accept-data-loss`.
+- **Schema:** `RaceReplayTrack` is part of the baseline (`crates/server/migrations/0001_baseline.sql`).

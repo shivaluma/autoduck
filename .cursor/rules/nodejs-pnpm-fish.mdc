@@ -1,11 +1,11 @@
 ---
-description: Enforce pnpm package manager and Fish shell syntax for Node.js commands
+description: Enforce pnpm, cargo conventions and Fish shell syntax
 alwaysApply: true
 ---
 
-# Node.js, pnpm & Fish Shell Standards
+# Node.js, pnpm, cargo & Fish Shell Standards
 
-This project uses **Node.js** with **pnpm** and runs in a **Fish shell** environment.
+This project uses **Node.js** with **pnpm** (SPA, generators) and **Rust** with **cargo** (server, engine), and runs in a **Fish shell** environment.
 
 ## 1. Package Manager: pnpm Only
 
@@ -22,7 +22,6 @@ Always use `pnpm` for all dependency and script operations. Never use `npm`, `ya
 pnpm install
 pnpm add -D tsx
 pnpm dev
-pnpm --filter race-core test
 
 # ❌ BAD
 npm install
@@ -68,4 +67,30 @@ pnpm build; and pnpm start
 # ❌ BAD
 . .env
 export $(cat .env | xargs)
+```
+
+## 3. Rust: cargo
+
+The API server and the race engine are Rust (`crates/*`, one cargo workspace). The toolchain is pinned in
+`rust-toolchain.toml`; never change it without re-freezing the golden digests (`race-cli golden freeze`).
+
+- **sqlx offline**: always pass `env SQLX_OFFLINE=true` (the query macros read the committed `.sqlx/`). After
+  changing a query, run `cargo sqlx prepare --workspace` against a dev DB and commit `.sqlx/`.
+- **Before committing Rust**: `cargo fmt --all`, then
+  `env SQLX_OFFLINE=true cargo clippy --workspace --all-targets -- -D warnings` and
+  `env SQLX_OFFLINE=true cargo test --workspace`.
+- **Server builds** use `-p autoduck-server`, never `--workspace --all-features` (that enables
+  `race-core/ts-compat` and changes `ENGINE_BUILD_ID`).
+- **Engine changes** (`crates/race-core`, `crates/race-protocol/src`): bump the balance or engine version and run
+  `cargo run -p race-cli --release -- golden freeze`; `golden check` must pass.
+
+```fish
+# ✅ GOOD
+env SQLX_OFFLINE=true cargo test --workspace
+env SQLX_OFFLINE=true cargo run -p autoduck-server --bin autoduck -- verify-db
+cargo run -p race-cli --release -- golden check
+
+# ❌ BAD
+SQLX_OFFLINE=true cargo test
+cargo build --workspace --all-features --release
 ```

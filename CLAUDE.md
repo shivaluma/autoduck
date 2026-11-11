@@ -4,73 +4,90 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-AutoDuck / "ĐUA DZỊT" is a weekly office duck race with Season 3 meta-game systems (Season Shields, scars, Chaos cards, predictions, cosmetics/gacha). Since the Phase 8 cutover (`docs/rewrite-plan.md`) production is the **Rust server** in `crates/server` (binary `autoduck`, axum + sqlx over SQLite, in compat mode: the schema is still owned by `prisma/schema.prisma`) serving the **Vite SPA** (React 19, Tailwind 4, shadcn/radix UI; `index.html`, `src/`, `components/`). The race engine is `crates/race-core` (native on the server, WASM in the browser via `crates/race-wasm`). Next.js is gone. Much UI copy and many docs are in Vietnamese.
+AutoDuck / "ĐUA DZỊT" is a weekly office duck race with Season 3 meta-game systems (Season Shields, scars, Chaos cards, predictions, cosmetics/gacha). Production is the **Rust server** (`crates/server`, binary `autoduck`, axum + sqlx over one SQLite file) serving the **Vite SPA** (React 19, Tailwind 4, shadcn/radix UI; `index.html`, `src/`, `components/`). The race engine is `crates/race-core`: native on the server, WASM in the browser (`crates/race-wasm`). The TS engine, the Next.js app and Prisma are retired (git tag `ts-engine-final`; the last TS production image is tag `ts-final`). Much UI copy and many docs are in Vietnamese. History and decisions: `docs/rewrite-plan.md` (D-numbers) and `docs/rewrite/`.
 
-## Tooling rules (from `.cursor/rules`)
+## Tooling rules (also in `.cursor/rules`)
 
-- Use **pnpm only** (never npm/yarn/bun).
-- The user's shell is **fish**: for env vars use `env KEY=value cmd` or `set -x KEY value`, not `export` / inline `KEY=value cmd`.
+- **pnpm only** (never npm/yarn/bun). **cargo** for Rust; the toolchain is pinned in `rust-toolchain.toml`.
+- The user's shell is **fish**: set env vars with `env KEY=value cmd` or `set -x KEY value`, never `export` or inline `KEY=value cmd`.
+- sqlx macros read the committed `.sqlx/` data: run cargo with `env SQLX_OFFLINE=true`. After changing a query, regenerate it with `cargo sqlx prepare --workspace` against a dev DB.
+- Build the server with `-p autoduck-server`, never `--workspace --all-features`: feature unification would turn on `race-core/ts-compat` and change `ENGINE_BUILD_ID`.
 
-## Operating rules (rewrite plan D28)
+## Operating rules (D28)
 
-- **Pushes to `main` auto-deploy to production.** Never push a deploy-triggering change to `main` on a Monday (ICT, UTC+7): the weekly race runs then. Commit locally and push on Tuesday instead. Treat every push to `main` as deploy-triggering, docs- and CI-only commits included.
-- Dokploy builds `./Dockerfile` (Rust server + SPA) from `main`. It needs replicas 1 and **stop-first** updates with a stop grace period of at least 150 s (D21: the server takes an exclusive lock on `/app/data/autoduck.lock`).
-- **The TS engine is frozen** from the rewrite branch cut: `packages/race-*`, `lib/racing/{audit,persistence,runtime}.ts` and `lib/season3-race.ts`. Don't change them. The `engine-freeze` workflow fails PRs touching them unless they carry the `engine-hotfix` label; direct pushes aren't gated, so the rule is on you. A hotfix bumps `RACE_BALANCE_VERSION` and adds a Rust port item in the same change. Details: `docs/balance/README.md`.
-- Files the Rust server embeds are generated from TS and checked in CI with `--check`: `pnpm cosmetics:export-catalog` (`crates/server/data/cosmetic-{catalog,legacy}.json`) after editing `lib/cosmetics/{catalog,legacy,legacy-v1}.ts`, and `pnpm db:export-migration-ids` (`crates/server/data/required-ts-migrations.json`) after adding an app migration.
+- **Pushes to `main` are production releases.** Never push a deploy-triggering change to `main` on a Monday (ICT, UTC+7): the weekly race runs then. Commit and push on Tuesday instead. Treat every push to `main` as deploy-triggering, docs- and CI-only commits included.
+- Deploys are **manual through the Dokploy MCP** (the Dokploy webhook is broken). Back up the DB first (`autoduck backup --force` in the container). Dokploy builds `./Dockerfile` from `main` with replicas 1 and **stop-first** updates, stop grace period ≥ 150 s (D21: the server holds an exclusive lock on `/app/data/autoduck.lock`).
+- Never force-push shared branches.
+
+## Layout
+
+```
+crates/race-protocol   wire types, configs, version constants (src/versions.rs), ts-rs bindings
+crates/race-core       deterministic engine: sim, track, items, pickups, auto-use AI, Chaos, DTRK recorder, post-race stats
+crates/race-wasm       browser engine (scripts/build-wasm.sh -> crates/race-wasm/pkg, run in a Web Worker)
+crates/race-cli        native tooling (commands below)
+crates/server          `autoduck`: HTTP API, live races (SSE), Season 3 meta, cosmetics, boot guards
+src/                   SPA: router, pages, src/engine (WASM seam, protocol types, generated catalog/versions), src/race
+components/            UI and the Phaser race canvas (components/racing; React never owns the frame loop)
+lib/cosmetics, lib/race-fx   TS cosmetic catalog and race-fx manifest (sources for the generators and the SPA)
+scripts/               cosmetics and race-fx generators, export-catalog, build-wasm, bundle check, dev runner
+```
+
+The engine must stay deterministic: no wall clock, no OS randomness, `libm` maths only; all randomness comes from the seed. Clippy's `disallowed_*` lists (`clippy.toml`) enforce it.
 
 ## Commands
 
 ```fish
-pnpm dev                 # db:bootstrap, then the Rust API on :3000 (AUTODUCK_ENV=dev) + Vite on :5173
-pnpm dev:api | dev:web   # one of the two
-pnpm build               # wasm engine + tsc + vite build -> dist/
+pnpm install
+pnpm dev                     # Rust API on :3000 (AUTODUCK_ENV=dev, prisma/dev.db) + Vite on :5173; open http://localhost:5173
+pnpm dev:api | dev:web       # one of the two
+pnpm build                   # wasm engine + tsc + vite build -> dist/
+pnpm lint | test | check:bundle
+pnpm cosmetics:generate | cosmetics:validate | cosmetics:export-catalog [--check] | race:fx | gacha:simulate | economy:simulate
+pnpm codegen:engine          # race-cli codegen -> src/engine/generated/{catalog,versions}.json
+
 env SQLX_OFFLINE=true cargo test --workspace
-env SQLX_OFFLINE=true cargo clippy --workspace --all-targets -- -D warnings
+env SQLX_OFFLINE=true cargo clippy --workspace --all-targets -- -D warnings   # CI also runs it with --all-features
+cargo fmt --all --check
+node scripts/ci/wasm-determinism.mjs   # after pnpm build:wasm: the shipped package reproduces the 42 pinned digests
+
+cargo run -p race-cli --release -- build-id          # ENGINE_BUILD_ID; must equal the wasm engineBuildId()
+cargo run -p race-cli --release -- golden check      # frozen digests per version (CI golden-version)
+cargo run -p race-cli --release -- golden freeze     # after a version bump only; never rewrites a frozen digest
+cargo run -p race-cli --release -- corpus pin --check
+cargo run -p race-cli --release -- fuzz --cases 2000 [--adversarial]
+cargo run -p race-cli --release -- balance mixed|matrix|wild|run|compare ...   # see docs/balance/README.md
+
 docker build -t autoduck .   # production image
-pnpm lint                # eslint (flat config)
-pnpm test                # node:test via tsx over tests/**/*.test.ts
-pnpm test:race           # tests/race-core.test.ts only
-node --import tsx --test tests/season3.test.ts                       # single test file
-node --import tsx --test --test-name-pattern "replay" tests/race-core.test.ts   # single test by name
-
-pnpm db:bootstrap        # scripts/auto-migrate.sh: prisma db push --accept-data-loss, then scripts/run-migrations.ts
-pnpm db:migrate:app      # only the idempotent app migrations (recorded in AppMigration)
-pnpm db:seed | pnpm db:studio
-
-pnpm race:simulate --races 100000
-pnpm race:simulate-balance --mode <mode> --seeds N --players 8 --workers N   # worker-pool balance sims (scripts/lib/balance-sim-*)
-pnpm race:replay <raceId>
-pnpm race:profile | race:profile-cpu | race:simulate-pickups | race:validate-pickups
-pnpm cosmetics:generate | cosmetics:validate | gacha:simulate | economy:simulate
 ```
 
-There is no `prisma/migrations` workflow: schema changes go into `prisma/schema.prisma` (synced by `db push`), and data backfills go into the migration list in `scripts/run-migrations.ts` (each must be idempotent and gets a unique id). The Prisma client is generated to `prisma/generated/prisma` (used by the TS tooling and tests only). The Rust server refuses to boot when a required app migration id is missing (`crates/server/data/required-ts-migrations.json`). DB defaults to `prisma/dev.db` when `DATABASE_URL` is unset.
+`autoduck` subcommands (in the container, or `cargo run -p autoduck-server --bin autoduck -- <cmd>`): `serve`, `verify-db` and `check-schema` (read-only), `backup [--force]`, `healthcheck`, `seed` (empty DB only).
 
-## Architecture
+## Database
 
-The legacy v2 race (Playwright-driven browser game, AI commentary, video upload, and the shield/boss/chest/dragon meta) has been **removed**, along with its API routes and pages. Old URLs (`/rules`, `/race/:id`, `/race/new`, `/dragon`, `/members`, `/admin/dashboard`) are redirects in the SPA router (`src/router.tsx`). Its Prisma models are intentionally kept (data stays recoverable), and `GET /api/races/{id}` still returns the old legacy keys (`consumedChests`, `awardedChests`, `dragonAward`, `dragonScaleEvents`) as constant empty values. Historical app migrations that need v2 logic use the frozen copies in `scripts/migrations/legacy-helpers.ts`; don't reintroduce `lib/` imports for them.
+- One SQLite file: `DATABASE_URL` (`file:/app/data/autoduck.db` in production; `prisma/dev.db`, gitignored, in dev). The server runs in **compat mode** (`AUTODUCK_SCHEMA_MODE=compat`): no DDL, no `rs-*` migration rows. The schema baseline is `crates/server/migrations/0001_baseline.sql`. Schema changes wait for owned mode (plan Phase 9 step 2: the `rs-ponr` marker row plus `AUTODUCK_SCHEMA_MODE=owned`), after which the DB is owned by `crates/server/migrations` (`rs-NNNN-*` ids recorded in `AppMigration`).
+- `crates/server/data/required-ts-migrations.json` is a frozen list of TS-era migration ids the DB must hold.
+- **Boot guards, in order** (`crates/server/src/boot`): exclusive lock; refuse a missing DB file; refuse an empty DB unless `AUTODUCK_ALLOW_EMPTY_DB=1`; staging sentinel both ways; **backup** (`VACUUM INTO $AUTODUCK_BACKUP_DIR/boot-<ts>.db`, skipped when one is younger than 6 h or free space is under 3× the DB, keeps 10, never fails the boot); `integrity_check` (fatal); schema verifier (fatal only on missing tables/columns Rust queries); required migration ids; replay-track manifest check (read-only); crash recovery of interrupted races.
+- Never copy a live DB with `cp`: use `sqlite3 <db> ".backup <file>"` or `autoduck backup`.
+- New dev DB: `sqlite3 prisma/dev.db < crates/server/migrations/0001_baseline.sql`, then `env AUTODUCK_ENV=dev SQLX_OFFLINE=true cargo run -p autoduck-server --bin autoduck -- seed`.
 
-**Season 3 race** — fully deterministic and authoritative on the server. Production runs the Rust port (`crates/race-core`, `crates/server/src/{live,season3}`); the TS engine below is the frozen oracle and stays until Phase 9:
-  - `packages/race-core/src` — pure fixed-step simulation (`simulation.ts`, `track.ts`, seeded `rng.ts`), items (`items/`), wild pickups (`pickups/`), the AI item-use system (`auto-use/`: evaluate → arbiter → execute, with per-Chaos objectives in `objective.ts`), Chaos card plugins (`chaos/`), and ghost ducks. It must stay deterministic: no `Math.random`/`Date.now`, and all randomness comes from the seed.
-  - `packages/race-protocol/src` — Zod schemas shared by server and browser, plus version constants (`RACE_ENGINE_VERSION`, `RACE_BALANCE_VERSION`, track/pickup/hazard versions, `RACE_TICK_RATE`).
-  - These "packages" are **not** pnpm workspace packages. Import them by path (`@/packages/race-core/src`, or relative from tests/scripts).
-  - `lib/racing/*` — server-only adapters: seed commitment and result digest (`audit.ts`), `runtime.ts` (`runAuthoritativeRace` tick loop with live snapshot callbacks), lifecycle `state-machine.ts`, `persistence.ts`, `replay.ts`, telemetry, loadouts, and the in-memory live session for wild-item inputs (`live-race-session.ts`).
-  - `lib/season3*.ts` — season meta: `season3-race.ts` orchestrates an official or test race end to end; `season3.ts` applies Chaos results, Season Shields, King status, predictions and rewards.
-  - `components/racing/*` — Phaser canvas and spectator HUD. React never owns the frame loop.
-  - Pages: `/season-3?token=<personal-token>` (player, magic-link `accessToken`), `/admin/season-3` and `/dev/race-lab` (gated by `RACE_SECRET_KEY` via `?secret=`, the `x-race-secret` header, or `body.secret`).
+## Races, replays and versions
+
+- Official races persist the immutable config, seed commitment, engine/balance/track versions, event stream and result digest. A live race runs on a server driver thread and streams over SSE; the browser predicts it with the WASM engine only when `hello.engineBuildId` equals its own `engineBuildId()`, otherwise it plays server snapshots.
+- **Replay model:** every race stores a DTRK/1 track (`RaceReplayTrack`, written by the Rust recorder at resolve). The viewer plays stored tracks and never re-simulates old races, so engine changes can't break old replays. TS-era races were backfilled from `artifacts/replay-tracks/`; keep it and the `public/race-tracks/` geometry files forever. Details: `docs/replay-tracks.md`.
+- **Golden-digest rule:** any change to engine output needs a bump of `RACE_BALANCE_VERSION` or `RACE_ENGINE_VERSION` (`crates/race-protocol/src/versions.rs`) and a new frozen entry via `race-cli golden freeze`; `golden check` fails otherwise, and also when `rust-toolchain.toml` changes until it is re-frozen with matching digests. `ENGINE_BUILD_ID` hashes the engine sources, the engine Cargo files, the engine's lockfile graph and the compiler, so any edit under `crates/race-core` or `crates/race-protocol/src` changes it (open live views then fall back to snapshots).
+- The engine's `ts-compat` / `s3-15-config` features, `js_math` and `collate_compat` remain only because deleting them would change `ENGINE_BUILD_ID`. Never enable them in shipped builds.
 
 Hard boundaries (`docs/racing-engine-plan.md`): race core returns raw standings only. Chaos takes raw standings and returns a variable-length loser list. Only Season meta applies Scar/Season Shield. Race items exist only inside one simulation. The Season 3 champion is computed from `championshipPoints` and race wins; prediction points never affect championship ranking.
 
-### Versioning and balance changes
+Pages: `/season-3?token=<personal-token>` (player, magic-link `accessToken`), `/admin/season-3` and `/dev/race-lab` (gated by `RACE_SECRET_KEY` via `?secret=`, the `x-race-secret` header, or `body.secret`). Old v2 URLs are redirects in `src/router.tsx`; the v2 tables stay in the DB.
 
-Official races persist the immutable config, seed commitment, engine/balance/track versions, event stream, result digest and telemetry. `lib/racing/replay.ts` refuses versions it doesn't support. Any change that alters simulation output needs a bump to `RACE_BALANCE_VERSION` (or the engine version), and the previous version pair stays in the replay allowlist only if it still replays identically. Balance work is documented in `docs/balance/<version>.md`, with raw outputs in `artifacts/balance-<version>/`. Compare treatments on identical seeds and lobbies (`scripts/balance-audit.ts`, `compare-balance-audit.ts`), not with `item-balance-comprehensive.ts`.
+## Cosmetics
 
-### Cosmetics
+The catalog is `lib/cosmetics/catalog.ts`; hand-drawn SVG art is in `scripts/cosmetics/art/<slot>.ts` (one function per ID). After editing either: `pnpm cosmetics:generate && pnpm cosmetics:validate`, then `pnpm cosmetics:export-catalog` (the server embeds `crates/server/data/cosmetic-{catalog,legacy}.json`; CI runs it with `--check`). Assets in `public/cosmetics/v2` are generated; never hand-edit them. **Retiring or renaming an owned ID:** add it to `lib/cosmetics/legacy.ts` → `pnpm cosmetics:export-catalog` → a server data migration (`rs-NNNN-*`, owned mode) that rewrites the owned rows. Details: `docs/COSMETICS.md`.
 
-The catalog is in `lib/cosmetics/catalog.ts` and the hand-drawn SVG art in `scripts/cosmetics/art/<slot>.ts` (one function per ID). After editing either, run `pnpm cosmetics:generate && pnpm cosmetics:validate`. The validator rejects recolor duplicates and missing rarities. Assets in `public/cosmetics/v2` are generated; never hand-edit them. Retiring or renaming an owned ID needs an entry in `lib/cosmetics/legacy.ts` and an app migration. Details: `docs/COSMETICS.md`.
+## Race visuals
 
-### Race visuals
+Race FX are hand-drawn SVG in `scripts/race-fx/art.ts`, listed in `lib/race-fx/manifest.ts` and baked to sprite sheets with `pnpm race:fx`. Preview at `/dev/race-fx`. Phaser glue: `components/racing/race-fx.ts`. Details: `docs/race-fx.md`.
 
-Race FX (pickups, hazards, rockets, status overlays, event effects, icons) are hand-drawn SVG in `scripts/race-fx/art.ts`, listed in `lib/race-fx/manifest.ts` and baked to sprite sheets with `pnpm race:fx`. Preview them at `/dev/race-fx`. Phaser glue is in `components/racing/race-fx.ts`. Details: `docs/race-fx.md`.
-
-Other docs: `docs/race-pickups.md`, `docs/COSMETICS.md`, `docs/COSMETIC_SIMULATION.md`, `docs/duck-avatar-art-system.md`.
+Other docs: `docs/balance/README.md`, `docs/race-pickups.md`, `docs/COSMETIC_SIMULATION.md`, `docs/duck-avatar-art-system.md`.

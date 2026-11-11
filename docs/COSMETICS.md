@@ -40,7 +40,7 @@ Mystery Egg costs 3 QP. Published odds are 40/30/18/9/3%. Persistent guarantees 
 
 ## Operations
 
-- `pnpm db:bootstrap`: schema sync plus idempotent data migration and starter grants.
+- `pnpm cosmetics:export-catalog`: after editing `lib/cosmetics/{catalog,legacy,legacy-v1}.ts`, re-export the JSON the Rust server embeds (`crates/server/data/`); CI checks it with `--check`. Retiring or renaming an owned ID also needs a server data migration (`rs-NNNN-*`, owned mode).
 - `pnpm gacha:simulate --pulls 1000000`: odds/pity simulation.
 - `pnpm economy:simulate --weeks 12 --players 8`: season earning simulation.
 - `/admin/cosmetics`: QP adjustment, grant/revoke, and audit inspection.
