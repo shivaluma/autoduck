@@ -52,12 +52,31 @@ jobs:
           key: pnpm-store-${{ runner.os }}-${{ env.PNPM_VERSION }}-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: pnpm-store-${{ runner.os }}-${{ env.PNPM_VERSION }}-
 
+      # Phase 5: `pnpm build` first builds the browser engine (race-core as WASM, scripts/build-wasm.sh),
+      # so this job needs the pinned toolchain, the wasm target and the wasm-bindgen CLI of Cargo.lock (D27).
+      - name: Read pinned toolchain and wasm-bindgen version
+        id: pins
+        run: |
+          echo "channel=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)" >> "$GITHUB_OUTPUT"
+          version="$(awk '/^\[\[package\]\]/{name=""} /^name = "wasm-bindgen"$/{name=$3} name!="" && /^version = /{gsub(/"/,"",$3); print $3; exit}' Cargo.lock)"
+          test -n "$version"
+          echo "wasm_bindgen=$version" >> "$GITHUB_OUTPUT"
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ steps.pins.outputs.channel }}
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-bindgen@${{ steps.pins.outputs.wasm_bindgen }}
+
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec prisma generate
       - run: pnpm lint
-      - run: pnpm test
-      # tsc + vite build (the SPA), then the Next build that still serves app/api (plan Phase 4).
+      # wasm + tsc + vite build (the SPA), then the Next build that still serves app/api (plan Phase 4).
       - run: pnpm build
+      # After the build: tests/wasm-engine.test.ts loads the WASM package it produced.
+      - run: pnpm test
       - name: Client bundle (no node:crypto; home and rules load no engine, Phaser or WASM)
         run: pnpm check:bundle
       - run: pnpm build:api:next
@@ -134,7 +153,7 @@ jobs:
           pattern="packages/race-|lib/season3(-race)?(\.ts)?['\"]|lib/racing/"
           if hits="$(grep -rnE "$pattern" src components | grep -v '^src/engine/')"; then
             echo "$hits"
-            echo "::error::Browser code must import the engine through src/engine/{catalog,protocol,sim}.ts, not packages/race-*, lib/season3* or lib/racing/."
+            echo "::error::Browser code must import the engine through src/engine/* (catalog, protocol, the WASM engine), not packages/race-*, lib/season3* or lib/racing/."
             exit 1
           fi
           echo "client-boundary: clean"

@@ -8,9 +8,11 @@ const SPEC = process.env.ADMIN_S3_SPEC!
 async function main() {
   const { buildPlan, resolver, SECRET } = await import(SPEC)
   process.env.RACE_SECRET_KEY = SECRET
+  // The ESM Prisma client breaks under tsx here too (same reason as lib/db.ts).
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const generated = require('../prisma/generated/prisma/client')
   const prisma = new generated.PrismaClient({ adapter: new PrismaBetterSqlite3({ url: process.env.DATABASE_URL! }) })
-  ;(globalThis as any).prisma = prisma
+  ;(globalThis as { prisma?: unknown }).prisma = prisma
   const db = process.env.DATABASE_URL!.replace(/^file:/, '')
   const route = await import('../app/api/admin/season3/route')
   const resolve = resolver()

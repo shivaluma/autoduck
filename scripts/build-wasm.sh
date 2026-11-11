@@ -73,7 +73,9 @@ if [ "$CLI_VERSION" != "$PINNED" ]; then
 fi
 
 rm -rf "$OUT_DIR"
-wasm-bindgen --target "$BINDGEN_TARGET" --out-dir "$OUT_DIR" "$WASM"
+# --remove-name-section: the function-name section is ~470 KB of the shipped file and only
+# helps symbolicate traps, which abort the worker anyway (Phase 5 size budget, warn-only 350 KB gzip).
+wasm-bindgen --target "$BINDGEN_TARGET" --remove-name-section --out-dir "$OUT_DIR" "$WASM"
 # Build output: keep it out of git without touching the shared .gitignore.
 printf '*\n' >"$OUT_DIR/.gitignore"
 # Mark the generated JS as ESM so Node loads it without re-parsing (web/bundler targets).

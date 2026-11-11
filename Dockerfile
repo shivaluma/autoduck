@@ -42,10 +42,28 @@ RUN B=node_modules/.pnpm/better-sqlite3@12.9.0/node_modules/better-sqlite3 && \
     mkdir -p "$B/build/Release" && mv /tmp/better_sqlite3.node "$B/build/Release/" && \
     node -e "require('better-sqlite3')(':memory:').close(); console.log('better-sqlite3 OK after prune')"
 
+# --- Stage 1b: Browser engine (crates/race-wasm/pkg) ---
+# `pnpm build` needs cargo, the wasm32 target and wasm-bindgen-cli; build the package here so the
+# Node builder stays Rust-free. The toolchain comes from rust-toolchain.toml (D27), and the CLI
+# version must equal the wasm-bindgen crate pinned in Cargo.lock.
+FROM rust:1.99.1-slim-bookworm AS wasm
+ARG WASM_BINDGEN_VERSION=0.2.129
+WORKDIR /src
+COPY rust-toolchain.toml ./
+RUN rustup show active-toolchain || rustup toolchain install
+RUN --mount=type=cache,id=cargo-registry,target=/usr/local/cargo/registry \
+    cargo install wasm-bindgen-cli --version ${WASM_BINDGEN_VERSION} --locked
+COPY Cargo.toml Cargo.lock ./
+COPY crates ./crates
+COPY scripts/build-wasm.sh ./scripts/build-wasm.sh
+RUN --mount=type=cache,id=cargo-registry,target=/usr/local/cargo/registry \
+    bash scripts/build-wasm.sh --require-bindgen --out-dir /out/pkg
+
 # --- Stage 2: Build Next.js ---
 FROM deps AS builder
 
 COPY . .
+COPY --from=wasm /out/pkg ./crates/race-wasm/pkg
 
 # Generate Prisma client
 RUN pnpm exec prisma generate
@@ -54,7 +72,7 @@ RUN pnpm exec prisma generate
 # server takes over, Next also serves the SPA: dist/ goes into public/ and next.config.ts falls back to
 # public/index.html for every non-API path (plan Phase 4). dist/.vite holds the build manifests (CI's bundle
 # check reads them); they are not served.
-RUN pnpm build && pnpm build:api:next && rm -rf dist/.vite && cp -R dist/. public/
+RUN pnpm build:web && pnpm build:api:next && rm -rf dist/.vite && cp -R dist/. public/
 
 # --- Stage 3: Runner ---
 FROM ${NODE_IMAGE} AS runner
