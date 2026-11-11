@@ -1,26 +1,11 @@
-'use client'
-
-import Link from 'next/link'
+import { Link } from 'react-router'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PhaserRaceCanvas, type ReplayInspection } from '@/components/racing/phaser-race-canvas'
 import { Switch } from '@/components/ui/switch'
 import { RACE_THEMES, RACE_THEME_IDS, type RaceThemeId } from '@/lib/race-fx/themes'
 import { WILD_ITEM_CATALOG } from '@/src/engine/catalog'
-import {
-  DEFAULT_TRACK_VERSION,
-  HAZARD_BALANCE_VERSION,
-  PICKUP_SPAWN_VERSION,
-  RACE_BALANCE_VERSION,
-  RACE_ENGINE_VERSION,
-  RACE_PROTOCOL_VERSION,
-  RACE_TICK_RATE,
-  WILD_ITEM_BALANCE_VERSION,
-  raceConfigSchema,
-  type RaceConfig,
-  type RaceEvent,
-  type RaceItemId,
-  type WildItemId,
-} from '@/src/engine/protocol'
+import { RACE_TICK_RATE, type RaceConfig, type RaceEvent, type RaceItemId, type WildItemId } from '@/src/engine/protocol'
+import { SIM_VERSIONS, simRaceConfigSchema } from '@/src/engine/sim'
 
 const CHAOS_TYPES = ['NORMAL', 'REVERSE', 'DUO', 'TRIPLE_ELIMINATION', 'CUT_LINE', 'CONSTRUCTORS', 'BOUNTY_HUNT'] as const
 const MAJORS: Array<{ id: RaceItemId; label: string }> = [
@@ -124,17 +109,12 @@ export default function RaceLabPage() {
   const start = useCallback(() => {
     try {
       const playerIds = players.map((player) => player.playerId)
-      const config = raceConfigSchema.parse({
+      // The lab runs the browser engine, so the config carries that engine's versions (src/engine/sim.ts).
+      const config = simRaceConfigSchema.parse({
         raceId: `race-lab-${runKey + 1}`,
         seed,
-        protocolVersion: RACE_PROTOCOL_VERSION,
-        engineVersion: RACE_ENGINE_VERSION,
-        balanceVersion: `${RACE_BALANCE_VERSION}-LAB`,
-        trackVersion: DEFAULT_TRACK_VERSION,
-        pickupSpawnVersion: PICKUP_SPAWN_VERSION,
-        wildItemBalanceVersion: WILD_ITEM_BALANCE_VERSION,
-        hazardBalanceVersion: HAZARD_BALANCE_VERSION,
-        tickRate: RACE_TICK_RATE,
+        ...SIM_VERSIONS,
+        balanceVersion: `${SIM_VERSIONS.balanceVersion}-LAB`,
         players,
         loadouts: players.map((player) => {
           const choice = selectedChoices.get(player.playerId)!
@@ -187,7 +167,7 @@ export default function RaceLabPage() {
   </main>
 
   return <main className="mx-auto min-h-screen max-w-7xl space-y-5 p-5 text-white">
-    <header className="flex flex-wrap items-center justify-between gap-3"><div><div className="text-xs font-black tracking-[0.25em] text-[var(--color-ggd-gold)]">ADMIN · DETERMINISTIC</div><h1 className="font-display text-4xl">🧪 Race Lab</h1></div><Link href="/admin/season-3" className="rounded-xl border-2 border-white/20 px-4 py-2 font-black">RACE DESK</Link></header>
+    <header className="flex flex-wrap items-center justify-between gap-3"><div><div className="text-xs font-black tracking-[0.25em] text-[var(--color-ggd-gold)]">ADMIN · DETERMINISTIC</div><h1 className="font-display text-4xl">🧪 Race Lab</h1></div><Link to="/admin/season-3" className="rounded-xl border-2 border-white/20 px-4 py-2 font-black">RACE DESK</Link></header>
 
     <section className="grid gap-4 rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-5 lg:grid-cols-4">
       <label className="text-sm font-black">DUCKS<input type="number" min={2} max={16} value={playerCount} onChange={(event) => setPlayerCount(Math.max(2, Math.min(16, Number(event.target.value))))} className="mt-2 w-full rounded-xl bg-black/30 px-3 py-2" /></label>

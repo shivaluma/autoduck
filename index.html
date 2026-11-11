@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="vi" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦆</text></svg>" />
+    <!--
+      Defaults for link unfurlers (Slack, Zalo) that don't run JS. src/main.tsx removes them on boot; each route
+      then renders its own <title> and description (src/pages/root-layout.tsx, hoisted by React 19).
+    -->
+    <title data-static-meta>ĐUA DZỊT — SEASON 3 🦆</title>
+    <meta data-static-meta name="description" content="Vanilla Duck Duck Race, Chaos cards, King of the Pond và secret predictions." />
+  </head>
+  <body class="antialiased">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useEffectEvent, useRef, useState } from 'react'
 
 declare global {
@@ -49,7 +47,7 @@ export function GoogleAuthButton({
   onError,
   className = '',
 }: GoogleAuthButtonProps) {
-  const [clientId, setClientId] = useState<string>(() => process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '')
+  const [clientId, setClientId] = useState('')
   const [loading, setLoading] = useState(false)
   const [unbinding, setUnbinding] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
@@ -106,16 +104,16 @@ export function GoogleAuthButton({
   })
 
   useEffect(() => {
-    // 1. Fetch client ID if not in public env
-    if (!clientId) {
-      void fetch('/api/auth/google')
-        .then((res) => res.json())
-        .then((data: { clientId?: string }) => {
-          if (data.clientId) setClientId(data.clientId)
-        })
-        .catch(() => {})
-    }
-  }, [clientId])
+    // 1. The client ID is server config, so always ask the API for it (no build-time env in the SPA).
+    const controller = new AbortController()
+    void fetch('/api/auth/google', { signal: controller.signal })
+      .then((res) => res.json())
+      .then((data: { clientId?: string }) => {
+        if (data.clientId) setClientId(data.clientId)
+      })
+      .catch(() => {})
+    return () => controller.abort()
+  }, [])
 
   useEffect(() => {
     if (!clientId) return
@@ -154,7 +152,8 @@ export function GoogleAuthButton({
           size: 'large',
           text: mode === 'bind' ? 'continue_with' : 'signin_with',
           shape: 'pill',
-          width: '100%',
+          // GIS takes a width in px (max 400), not a percentage.
+          width: Math.min(400, Math.round(buttonRef.current.getBoundingClientRect().width) || 400),
         })
         setGsiRendered(true)
       } catch (err) {

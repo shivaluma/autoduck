@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import { CosmeticDuck } from '@/components/cosmetics/cosmetic-duck'
 import type { DuckAppearance } from '@/lib/cosmetics/types'
 
@@ -41,12 +40,13 @@ export function Season3Avatar({ name, avatarUrl, appearance, size = 40, ring }: 
     )
   }
   return avatarUrl ? (
-    <Image
+    <img
+      loading="lazy"
+      decoding="async"
       src={avatarUrl}
       alt={name}
       width={size}
       height={size}
-      unoptimized
       className="shrink-0 rounded-full border-[3px] object-cover shadow-[0_3px_0_var(--gx-ink,#1b132b)]"
       style={frameStyle}
     />

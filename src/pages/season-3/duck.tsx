@@ -1,9 +1,5 @@
-'use client'
-
-/* eslint-disable @next/next/no-img-element -- exact SVG collection assets are intentionally unoptimized */
-
-import Link from 'next/link'
-import { use, useEffect, useState } from 'react'
+import { Link, useParams } from 'react-router'
+import { useEffect, useState } from 'react'
 import { CosmeticDuck } from '@/components/cosmetics/cosmetic-duck'
 import { COSMETIC_BY_ID } from '@/lib/cosmetics/catalog'
 import type { DuckAppearance } from '@/lib/cosmetics/types'
@@ -44,8 +40,8 @@ const RARITY_COLORS: Record<string, { label: string; badge: string; border: stri
   legendary: { label: 'Huyền thoại', badge: 'bg-amber-800/60 text-amber-300', border: 'border-amber-400/50' },
 }
 
-export default function DuckProfilePage({ params }: { params: Promise<{ userId: string }> }) {
-  const { userId } = use(params)
+export default function DuckProfilePage() {
+  const { userId = '' } = useParams<{ userId: string }>()
   const [profile, setProfile] = useState<ProfileData | null>(null)
   const [token, setToken] = useState('')
   const [copied, setCopied] = useState(false)
@@ -130,7 +126,7 @@ export default function DuckProfilePage({ params }: { params: Promise<{ userId: 
           <div className="text-5xl">⚠️</div>
           <h1 className="mt-3 gx-title text-3xl">{profile?.error || 'Không tìm thấy chú dzịt này'}</h1>
           <Link
-            href={`/season-3${token ? `?token=${encodeURIComponent(token)}` : ''}`}
+            to={`/season-3${token ? `?token=${encodeURIComponent(token)}` : ''}`}
             className="mt-5 inline-block rounded-xl bg-[var(--color-ggd-gold)] px-6 py-3 font-black text-[var(--color-ggd-outline)]"
           >
             ← Về Sảnh Đua
@@ -147,7 +143,7 @@ export default function DuckProfilePage({ params }: { params: Promise<{ userId: 
     <main className="mx-auto min-h-screen max-w-4xl space-y-6 p-4 pb-20 text-white sm:p-6 lg:p-8">
       {/* Top Navigation */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link href={homeUrl} className="gx-btn" data-variant="ghost" data-size="sm">← Về ao</Link>
+        <Link to={homeUrl} className="gx-btn" data-variant="ghost" data-size="sm">← Về ao</Link>
 
         {!profile.isOwner && (
           <div className="flex flex-wrap items-center gap-2">
@@ -222,7 +218,7 @@ export default function DuckProfilePage({ params }: { params: Promise<{ userId: 
               >
                 {copied ? '✓ ĐÃ SAO CHÉP LINK!' : '🔗 SAO CHÉP SECRET LINK'}
               </button>
-              <Link href={`${homeUrl}#closet`} className="gx-btn" data-variant="violet" data-size="sm">
+              <Link to={`${homeUrl}#closet`} className="gx-btn" data-variant="violet" data-size="sm">
                 🎒 ĐỔI ĐỒ (TỦ ĐỒ)
               </Link>
             </div>
@@ -365,10 +361,10 @@ export default function DuckProfilePage({ params }: { params: Promise<{ userId: 
 
         {profile.isOwner && (
           <div className="mt-6 flex flex-wrap justify-center gap-3 border-t border-white/10 pt-4">
-            <Link href={`${homeUrl}#shop`} className="gx-btn" data-size="md">
+            <Link to={`${homeUrl}#shop`} className="gx-btn" data-size="md">
               🪙 VÀO TIỆM THỜI TRANG (SHOP)
             </Link>
-            <Link href={`${homeUrl}#closet`} className="gx-btn" data-variant="violet" data-size="md">
+            <Link to={`${homeUrl}#closet`} className="gx-btn" data-variant="violet" data-size="md">
               🎒 MỞ TỦ ĐỒ (CLOSET)
             </Link>
           </div>

@@ -1,7 +1,5 @@
-'use client'
-
 import { useState } from 'react'
-import Link from 'next/link'
+import { Link } from 'react-router'
 import { CosmeticDuck } from '@/components/cosmetics/cosmetic-duck'
 import type { DuckAppearance } from '@/lib/cosmetics/types'
 
@@ -161,7 +159,7 @@ export default function AvatarShowcasePage() {
           </div>
           <div className="flex gap-2">
             <Link
-              href="/dev/avatar-compatibility"
+              to="/dev/avatar-compatibility"
               className="rounded-xl border-2 border-[var(--color-ggd-gold)] bg-[var(--color-ggd-gold)]/20 px-4 py-2 text-xs font-black text-[var(--color-ggd-gold)] transition hover:bg-[var(--color-ggd-gold)] hover:text-black"
             >
               Go to Compatibility Matrix →

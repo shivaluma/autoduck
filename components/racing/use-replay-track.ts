@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useState } from 'react'
 import { decodeReplayTrack, type DecodedReplayTrack } from '@/src/race/replay-track/decode'
 import { polylineTrack } from '@/src/race/polyline-track'

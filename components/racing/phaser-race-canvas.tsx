@@ -1,17 +1,12 @@
-'use client'
-
 import { useEffect, useId, useRef } from 'react'
 import { intentCopy } from '@/src/race/ai-intent-copy'
 import type PhaserType from 'phaser'
 import { itemActivationForEvent } from '@/src/engine/catalog'
-import { createRiverTrack } from '@/src/engine/sim'
 import type { DuckSnapshot, RaceEvent, RaceItemId, WildItemId } from '@/src/engine/protocol'
 import { polylineTrack } from '@/src/race/polyline-track'
 import type { RaceWorld, RenderTrack } from '@/src/race/types'
 import { createPlayback, type Playback, type PlaybackFrame } from './drivers/playback'
 import { createRecordingDriver } from './drivers/recording-driver'
-import { createSimDriver } from './drivers/sim-driver'
-import { connectLiveDriver, createLiveDriver } from './drivers/live-driver'
 import { connectSnapshotDriver } from './drivers/snapshot-driver'
 import { raceSourceKey, type RaceSource, type TimelineDriver } from './drivers/types'
 import { RaceAudioSystem } from './race-audio'
@@ -145,11 +140,20 @@ export interface ReplayInspection {
 
 export type { RaceSource } from './drivers/types'
 
-function trackForSource(source: RaceSource): RenderTrack {
-  if (source.kind === 'recording') return source.geometry ? polylineTrack(source.geometry) : createRiverTrack(source.track.header.trackVersion)
-  if (source.kind === 'sim') return source.geometry ? polylineTrack(source.geometry) : createRiverTrack(source.config.trackVersion)
-  if (source.kind === 'live') return createRiverTrack(source.config.trackVersion)
-  return createRiverTrack(source.trackVersion ?? undefined)
+type EngineDrivers = typeof import('./drivers/engine-drivers')
+
+/** A recording with its track geometry is the only source that plays without the browser engine. */
+function needsEngine(source: RaceSource) {
+  return !(source.kind === 'recording' && source.geometry)
+}
+
+function trackForSource(source: RaceSource, engine: EngineDrivers | null): RenderTrack {
+  if (source.kind === 'recording' && source.geometry) return polylineTrack(source.geometry)
+  if (source.kind === 'sim' && source.geometry) return polylineTrack(source.geometry)
+  if (!engine) throw new Error('trackForSource: the engine module is not loaded')
+  if (source.kind === 'recording') return engine.createRiverTrack(source.track.header.trackVersion)
+  if (source.kind === 'sim' || source.kind === 'live') return engine.createRiverTrack(source.config.trackVersion)
+  return engine.createRiverTrack(source.trackVersion ?? undefined)
 }
 
 export function PhaserRaceCanvas({
@@ -219,13 +223,14 @@ export function PhaserRaceCanvas({
     const audio = new RaceAudioSystem()
     const raceSource = sourceRef.current
 
-    void import('phaser').then((module) => {
+    // Phaser and (when the source needs it) the browser engine load together, in their own chunks.
+    void Promise.all([import('phaser'), needsEngine(raceSource) ? import('./drivers/engine-drivers') : null]).then(([module, engine]) => {
       if (!active) return
       const Phaser = module.default ?? module
       const isReplay = raceSource.kind === 'recording' || raceSource.kind === 'sim'
       const clientDriven = raceSource.kind !== 'snapshot'
       const sourceChaos = raceSource.kind === 'sim' || raceSource.kind === 'live' ? raceSource.config.chaosConfig?.type : raceSource.kind === 'recording' ? raceSource.chaosType : undefined
-      const track = trackForSource(raceSource)
+      const track = trackForSource(raceSource, engine)
       const scenePlayers = JSON.parse(serializedPlayers) as PlayerLabel[]
       const reducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
       const mobileViewport = typeof window !== 'undefined' && window.innerWidth < 640
@@ -1410,10 +1415,10 @@ export function PhaserRaceCanvas({
       if (raceSource.kind === 'recording') {
         runTimeline(createRecordingDriver(raceSource.track, raceSource.events), true)
       } else if (raceSource.kind === 'sim') {
-        runTimeline(createSimDriver(raceSource.config, { manualInputs: raceSource.manualInputs, endTick: raceSource.endTick, allowVersion: raceSource.allowVersion }), true)
+        runTimeline(engine!.createSimDriver(raceSource.config, { manualInputs: raceSource.manualInputs, endTick: raceSource.endTick, allowVersion: raceSource.allowVersion }), true)
       } else if (raceSource.kind === 'live') {
-        const live = createLiveDriver(raceSource.config, { syncTick: raceSource.syncTick, manualInputs: raceSource.manualInputs })
-        closeStream = connectLiveDriver(raceId, live, raceSource.config, () => onLiveFinishedRef.current?.())
+        const live = engine!.createLiveDriver(raceSource.config, { syncTick: raceSource.syncTick, manualInputs: raceSource.manualInputs })
+        closeStream = engine!.connectLiveDriver(raceId, live, raceSource.config, () => onLiveFinishedRef.current?.())
         runTimeline(live, false)
       } else {
         closeStream = connectSnapshotDriver(raceId, {

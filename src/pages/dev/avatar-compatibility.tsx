@@ -1,7 +1,5 @@
-'use client'
-
 import { useState } from 'react'
-import Link from 'next/link'
+import { Link } from 'react-router'
 import { CosmeticDuck } from '@/components/cosmetics/cosmetic-duck'
 import { COSMETIC_CATALOG, DEFAULT_APPEARANCE } from '@/lib/cosmetics/catalog'
 import type { DuckAppearance } from '@/lib/cosmetics/types'
@@ -33,7 +31,7 @@ export default function AvatarCompatibilityPage() {
           </div>
           <div className="flex gap-2">
             <Link
-              href="/dev/avatar-showcase"
+              to="/dev/avatar-showcase"
               className="rounded-xl border-2 border-[var(--color-ggd-neon-green)] bg-[var(--color-ggd-neon-green)]/20 px-4 py-2 text-xs font-black text-[var(--color-ggd-neon-green)] transition hover:bg-[var(--color-ggd-neon-green)] hover:text-black"
             >
               ← Back to Fantasy Showcase

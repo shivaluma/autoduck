@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import { CosmeticDuck } from '@/components/cosmetics/cosmetic-duck'
 import { COSMETIC_CATALOG, DEFAULT_APPEARANCE } from '@/lib/cosmetics/catalog'

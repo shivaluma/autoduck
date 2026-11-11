@@ -1,5 +1,3 @@
-'use client'
-
 import { useMemo, useState } from 'react'
 import type { RaceEvent } from '@/src/engine/protocol'
 import { Season3Avatar } from '@/components/season3-avatar'

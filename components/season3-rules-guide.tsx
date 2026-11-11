@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { Link } from 'react-router'
 import type { ReactNode } from 'react'
 import {
   CHAOS_CARDS,
@@ -72,7 +72,7 @@ export function Season3RulesGuide() {
           </div>
           <div className="flex flex-col gap-2">
             <Link
-              href="/season-3"
+              to="/season-3"
               className="rounded-xl border-2 border-white/20 bg-black/30 px-4 py-2.5 text-center text-sm font-black text-white/90 transition hover:border-[var(--color-ggd-neon-green)] hover:text-[var(--color-ggd-neon-green)]"
             >
               ← Về Season 3
@@ -409,7 +409,7 @@ export function Season3RulesGuide() {
           Vào ngay sảnh Season 3 để khóa Loadout, kích hoạt Khiên và gửi Dự đoán cho tuần thi đấu này!
         </p>
         <Link
-          href="/season-3"
+          to="/season-3"
           className="mt-5 inline-block rounded-xl bg-[var(--color-ggd-gold)] px-8 py-3.5 font-display text-lg font-black text-[var(--color-ggd-outline)] shadow-[0_4px_0_#997300] transition hover:brightness-110 active:translate-y-0.5"
         >
           Vào Sảnh Thi Đấu Season 3

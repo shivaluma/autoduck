@@ -1,10 +1,7 @@
-'use client'
-
 import { useMemo, useState } from 'react'
 import { CosmeticDuck } from './cosmetic-duck'
 import { GameButton, ResourcePill } from '@/components/game-ui'
 
-/* eslint-disable @next/next/no-img-element -- decorative lily pad SVG */
 import { COSMETIC_RARITIES, SLOT_FRAMES, type CosmeticDefinition, type CosmeticRarity, type CosmeticSlot, type DuckAppearance } from '@/lib/cosmetics/types'
 
 export const RARITY_STYLE: Record<CosmeticRarity, { label: string; color: string; glow: string }> = {

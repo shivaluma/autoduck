@@ -1,8 +1,6 @@
 import { COSMETIC_BY_ID, DEFAULT_APPEARANCE } from '@/lib/cosmetics/catalog'
 import { AVATAR_FRAME, COSMETIC_LAYER_ORDER, type DuckAppearance } from '@/lib/cosmetics/types'
 
-/* eslint-disable @next/next/no-img-element -- modular SVG layers share one canonical coordinate frame */
-
 export function CosmeticDuck({
   appearance = DEFAULT_APPEARANCE,
   size = 256,

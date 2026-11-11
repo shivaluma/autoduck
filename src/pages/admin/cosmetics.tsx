@@ -1,10 +1,6 @@
-'use client'
-
 import { useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
+import { Link } from 'react-router'
 import type { CosmeticDefinition, CosmeticRarity, CosmeticSlot } from '@/lib/cosmetics/types'
-
-/* eslint-disable @next/next/no-img-element -- SVG preview assets are intentionally unoptimized for instant rendering */
 
 type AdminPlayer = {
   id: number
@@ -77,8 +73,11 @@ export default function CosmeticsAdminPage() {
     try {
       const response = await fetch('/api/admin/cosmetics', { headers: { 'x-race-secret': value } })
       const next = await response.json()
-      setData(next)
-      if (!response.ok) {
+      if (response.ok) {
+        setData(next)
+      } else {
+        // Keep the page (and its secret input) instead of rendering the error body as data.
+        setData(null)
         setMessage(next.error || 'Lỗi tải dữ liệu')
         setMessageType('error')
       }
@@ -182,10 +181,10 @@ export default function CosmeticsAdminPage() {
             <p className="mt-1 text-sm text-white/70">Cấp phát & thu hồi vật phẩm toàn diện, mở khóa trọn bộ theo type hoặc full tủ đồ, điều chỉnh QP và cấu hình Shop.</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link href="/admin/season-3" className="rounded-xl border-2 border-white/20 bg-white/5 px-4 py-2.5 text-xs font-black text-white hover:bg-white/10 transition">
+            <Link to="/admin/season-3" className="rounded-xl border-2 border-white/20 bg-white/5 px-4 py-2.5 text-xs font-black text-white hover:bg-white/10 transition">
               🦆 QUẢN LÝ SEASON 3
             </Link>
-            <Link href="/season-3" className="rounded-xl border-2 border-white/20 bg-white/5 px-4 py-2.5 text-xs font-black text-white hover:bg-white/10 transition">
+            <Link to="/season-3" className="rounded-xl border-2 border-white/20 bg-white/5 px-4 py-2.5 text-xs font-black text-white hover:bg-white/10 transition">
               🏠 TRANG CHỦ S3
             </Link>
           </div>

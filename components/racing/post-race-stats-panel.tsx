@@ -1,16 +1,14 @@
-'use client'
-
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { RaceConfig, RaceEvent } from '@/src/engine/protocol'
 import { Season3Avatar } from '@/components/season3-avatar'
 import {
   aggregatePostRaceStats,
+  motionFromTrack,
   type PostRaceMotion,
   type PostRacePlayerInput,
   type PostRacePlayerStats,
   type PostRaceStats,
 } from '@/src/race/post-race-stats'
-import { collectPostRaceBaselineRank, collectPostRaceMotion, motionFromTrack } from '@/src/race/post-race-engine'
 import { manualInputsFromEvents } from '@/src/race/event-vocab'
 import { canResimulate } from '@/src/race/replay-plan'
 import type { DecodedReplayTrack } from '@/src/race/replay-track/decode'
@@ -201,21 +199,45 @@ export function PostRaceStatsPanel({
   track?: DecodedReplayTrack | null
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const simulatable = !frozenStats && canResimulate(config)
+  // The engine-backed inputs (re-simulated motion without a track, baseline ranks) load the engine chunk on
+  // demand, so a race page that doesn't need it never downloads it. Tagged with their inputs so a stale
+  // result is ignored.
+  const [simInputs, setSimInputs] = useState<{ config: RaceConfig; events: RaceEvent[]; track: DecodedReplayTrack | null; motion: PostRaceMotion | null; baselineRank: Map<string, number> | null } | null>(null)
+  useEffect(() => {
+    if (!simulatable || !config) return
+    let active = true
+    void import('@/src/race/post-race-engine').then(({ collectPostRaceBaselineRank, collectPostRaceMotion }) => {
+      if (!active) return
+      let motion: PostRaceMotion | null = null
+      if (!track) {
+        try {
+          motion = collectPostRaceMotion(config, manualInputsFromEvents(events))
+        } catch {
+          motion = null
+        }
+      }
+      setSimInputs({ config, events, track, motion, baselineRank: collectPostRaceBaselineRank(config) })
+    })
+    return () => {
+      active = false
+    }
+  }, [config, events, simulatable, track])
   const { stats, showSpeed } = useMemo(() => {
     if (frozenStats) return { stats: frozenStats, showSpeed: true }
-    const simulatable = canResimulate(config)
+    const fromSim = simInputs && simInputs.config === config && simInputs.events === events && simInputs.track === track ? simInputs : null
     let motion: PostRaceMotion | null = null
     try {
-      motion = track ? motionFromTrack(track) : simulatable && config ? collectPostRaceMotion(config, manualInputsFromEvents(events)) : null
+      motion = track ? motionFromTrack(track) : fromSim?.motion ?? null
     } catch {
       motion = null
     }
-    const baselineRank = simulatable && config ? collectPostRaceBaselineRank(config) : null
+    const baselineRank = fromSim?.baselineRank ?? null
     return {
       stats: aggregatePostRaceStats({ tickRate: Number(config?.tickRate) || 60 }, events, players, { motion, baselineRank }),
       showSpeed: motion !== null,
     }
-  }, [config, events, frozenStats, players, track])
+  }, [config, events, frozenStats, players, simInputs, track])
   const combat = useMemo(() => extractCombatEncounters(events, players), [events, players])
 
   const combatByPlayer = useMemo(() => {

@@ -1,7 +1,5 @@
-'use client'
-
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
+import { Link } from 'react-router'
 import { Season3ChaosCard } from '@/components/season3-chaos-card'
 import { Season3Avatar } from '@/components/season3-avatar'
 import type { RaceItemId } from '@/src/engine/protocol'
@@ -16,8 +14,6 @@ import { CosmeticDuck } from '@/components/cosmetics/cosmetic-duck'
 import { GameButton, GameLink, GamePanel, Progress, QuestRow, ResourcePill, UiIcon } from '@/components/game-ui'
 import type { UiIconName } from '@/lib/race-fx/manifest'
 import { filterOfficialRacers } from '@/lib/ghost-duck'
-
-/* eslint-disable @next/next/no-img-element -- decorative lily pad SVG */
 
 type SeasonData = {
   season: { name: string; year: number; weeks: number } | null
@@ -154,8 +150,8 @@ export default function Season3Page() {
   useEffect(() => {
     // Keep the open tab in sync with the URL (links to #closet, browser back/forward).
     const onHashChange = () => {
-      const next = tabFromHash(window.location.hash)
-      if (next) setTab(next)
+      // No (or an unknown) hash is the default tab: back to the entry before `#closet` shows the race tab.
+      setTab(tabFromHash(window.location.hash) ?? 'race')
     }
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
@@ -303,7 +299,7 @@ export default function Season3Page() {
     <main className="mx-auto max-w-6xl px-3 pb-32 pt-3 text-white sm:px-6 sm:pb-16">
       {/* HUD */}
       <header className="sticky top-2 z-30 flex items-center gap-3 rounded-[22px] border-[3px] border-[var(--gx-ink)] bg-[linear-gradient(180deg,rgba(43,31,92,.96),rgba(27,19,58,.96))] px-3 py-2 shadow-[0_6px_0_var(--gx-ink)] backdrop-blur sm:px-4">
-        <Link href={`/season-3${tokenQuery}`} className="flex items-center gap-2">
+        <Link to={`/season-3${tokenQuery}`} className="flex items-center gap-2">
           <UiIcon name="duck" size={38} className="gx-float drop-shadow-[0_3px_0_var(--gx-ink)]" />
           <span className="gx-title text-2xl leading-none sm:text-3xl">ĐUA DZỊT <span className="text-[var(--gx-gold)]">S3</span></span>
         </Link>
@@ -317,7 +313,7 @@ export default function Season3Page() {
               <ResourcePill icon="scar" value={viewer.scars} label="Sẹo" className="hidden md:inline-flex" />
             </>
           )}
-          <Link href={`/season-3/rules${tokenQuery}`} className="hidden rounded-xl px-2 py-1 text-sm font-black text-white/70 hover:text-white lg:block">📖 Luật</Link>
+          <Link to={`/season-3/rules${tokenQuery}`} className="hidden rounded-xl px-2 py-1 text-sm font-black text-white/70 hover:text-white lg:block">📖 Luật</Link>
           {viewer && (
             <div className="relative">
               <button type="button" onClick={() => setMenuOpen(!menuOpen)} aria-expanded={menuOpen} aria-label="Tài khoản" className="rounded-full transition hover:scale-105">
@@ -326,12 +322,12 @@ export default function Season3Page() {
               {menuOpen && (
                 <div className="gx-panel gx-pop-in absolute right-0 top-14 z-40 w-64 p-2" data-tone="dark" onMouseLeave={() => setMenuOpen(false)}>
                   <div className="px-3 py-2"><div className="gx-kicker text-white/50">ĐANG CHƠI</div><div className="gx-title truncate text-2xl">{viewer.isKing ? '👑 ' : ''}{viewer.name}</div></div>
-                  <Link href={`/season-3/duck/${viewer.userId}${tokenQuery}`} className="block rounded-xl px-3 py-2 font-black hover:bg-white/10">🦆 Trang cá nhân</Link>
+                  <Link to={`/season-3/duck/${viewer.userId}${tokenQuery}`} className="block rounded-xl px-3 py-2 font-black hover:bg-white/10">🦆 Trang cá nhân</Link>
                   <button type="button" onClick={copyPersonalLink} className="block w-full rounded-xl px-3 py-2 text-left font-black hover:bg-white/10">{copiedLink ? '✓ Đã copy Secret Link' : '🔗 Sao chép Secret Link'}</button>
                   {viewer.isGoogleLinked
                     ? <div className="truncate px-3 py-2 text-xs font-bold text-emerald-300">✓ Google: {viewer.email || 'Đã liên kết'}</div>
                     : <button type="button" onClick={() => { setShowGoogleBindModal(true); setMenuOpen(false) }} className="block w-full rounded-xl px-3 py-2 text-left font-black text-sky-300 hover:bg-white/10">🔗 Liên kết Google</button>}
-                  <Link href={`/season-3/rules${tokenQuery}`} className="block rounded-xl px-3 py-2 font-black hover:bg-white/10 lg:hidden">📖 Luật chơi</Link>
+                  <Link to={`/season-3/rules${tokenQuery}`} className="block rounded-xl px-3 py-2 font-black hover:bg-white/10 lg:hidden">📖 Luật chơi</Link>
                   <button type="button" onClick={handleLogout} className="block w-full rounded-xl px-3 py-2 text-left text-sm font-bold text-rose-300 hover:bg-white/10">Đăng xuất / Đổi token</button>
                 </div>
               )}
@@ -526,7 +522,7 @@ export default function Season3Page() {
                   const heights = ['h-28', 'h-20', 'h-14']
                   const medal = ['bg-[linear-gradient(180deg,#fff3a6,#f2b627)]', 'bg-[linear-gradient(180deg,#f1f5f9,#94a3b8)]', 'bg-[linear-gradient(180deg,#fed7aa,#ea580c)]'][place]
                   return (
-                    <Link key={player.id} href={`/season-3/duck/${player.id}${tokenQuery}`} className="group flex flex-col items-center">
+                    <Link key={player.id} to={`/season-3/duck/${player.id}${tokenQuery}`} className="group flex flex-col items-center">
                       <div className="transition group-hover:-translate-y-1"><Season3Avatar name={player.name} avatarUrl={player.avatarUrl} appearance={player.appearance} size={place === 0 ? 96 : 76} ring={place === 0 ? 'var(--gx-gold)' : undefined} /></div>
                       <div className="mt-1 w-full truncate text-center font-black">{player.isKing ? '👑 ' : ''}{player.name}</div>
                       <div className={`mt-2 grid w-full place-items-center rounded-t-2xl border-[3px] border-b-0 border-[var(--gx-ink)] ${medal} ${heights[place]} shadow-[inset_0_3px_0_rgba(255,255,255,.5)]`}>
@@ -540,7 +536,7 @@ export default function Season3Page() {
                 {rankedPlayers.map((player, index) => {
                   const isMe = viewer && player.id === viewer.userId
                   return (
-                    <Link key={player.id} href={`/season-3/duck/${player.id}${tokenQuery}`}
+                    <Link key={player.id} to={`/season-3/duck/${player.id}${tokenQuery}`}
                       className={`gx-well flex items-center gap-3 p-2.5 transition hover:-translate-y-0.5 ${isMe ? 'border-[var(--gx-mint)]/70' : player.isKing ? 'border-[var(--gx-gold)]/70' : ''}`}>
                       <span className="gx-title w-8 text-center text-2xl text-white/50">{index + 1}</span>
                       <Season3Avatar name={player.name} avatarUrl={player.avatarUrl} appearance={player.appearance} size={44} />

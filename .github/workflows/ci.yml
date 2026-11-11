@@ -56,7 +56,11 @@ jobs:
       - run: pnpm exec prisma generate
       - run: pnpm lint
       - run: pnpm test
+      # tsc + vite build (the SPA), then the Next build that still serves app/api (plan Phase 4).
       - run: pnpm build
+      - name: Client bundle (no node:crypto; home and rules load no engine, Phaser or WASM)
+        run: pnpm check:bundle
+      - run: pnpm build:api:next
       - run: pnpm cosmetics:validate
 
   migrations:
@@ -121,16 +125,6 @@ jobs:
             exit 1
           fi
           echo "client-boundary: clean"
-
-      - name: Client pages use the seams too
-        run: |
-          files="$(grep -rlE "^['\"]use client['\"]" app || true)"
-          if [ -n "$files" ] && hits="$(grep -nE "packages/race-|@/lib/season3|@/lib/racing/" $files)"; then
-            echo "$hits"
-            echo "::error::'use client' pages must import the engine through src/engine/* seams."
-            exit 1
-          fi
-          echo "client pages: clean"
 
   docker:
     name: docker (build, size, push on main)

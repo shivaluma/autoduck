@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useId } from 'react'
 import type PhaserType from 'phaser'
 import { RACE_FX_DECOR, RACE_FX_ICONS, RACE_FX_SHEETS, type RaceFxSheetKey } from '@/lib/race-fx/manifest'

@@ -1,7 +1,5 @@
-'use client'
-
 import { useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
+import { Link } from 'react-router'
 import { Season3ChaosCard } from '@/components/season3-chaos-card'
 import { Season3Avatar } from '@/components/season3-avatar'
 import { Season3PointTooltip } from '@/components/season3-point-tooltip'
@@ -124,6 +122,8 @@ export default function AdminSeason3Page() {
       setMessage(result.data.error ?? 'Không tải được admin data')
       return
     }
+    // A secret that works is remembered, as the actions below do.
+    window.localStorage.setItem('autoduck-season3-secret', secret)
     setData(result.data)
   }
 
@@ -170,10 +170,10 @@ export default function AdminSeason3Page() {
       <div className="mt-5 flex flex-wrap gap-2">
         <input value={secret} onChange={(event) => setSecret(event.target.value)} placeholder="Nhập RACE_SECRET_KEY..." type="password" className="rounded-xl border-2 border-white/20 bg-black/30 px-4 py-3 text-sm focus:border-[var(--color-ggd-gold)] focus:outline-none" />
         <button onClick={() => void refresh()} className="rounded-xl bg-[var(--color-ggd-neon-green)] px-5 py-3 font-black text-[var(--color-ggd-outline)] transition-transform hover:scale-105">TẢI DỮ LIỆU</button>
-        <Link href="/season-3" className="rounded-xl border-2 border-white/20 bg-white/5 px-4 py-3 font-black text-white hover:bg-white/10">🏠 TRANG CHỦ S3</Link>
-        <Link href="/season-3/rules" className="rounded-xl border-2 border-white/20 bg-white/5 px-4 py-3 font-black text-white hover:bg-white/10">📖 CẨM NANG LUẬT</Link>
-        <Link href="/dev/race-lab" className="rounded-xl border-2 border-white/20 px-4 py-3 font-black hover:bg-white/10">🧪 RACE LAB</Link>
-        <Link href="/admin/cosmetics" className="rounded-xl border-2 border-white/20 px-4 py-3 font-black hover:bg-white/10">🪙 QUẢN LÝ SHOP</Link>
+        <Link to="/season-3" className="rounded-xl border-2 border-white/20 bg-white/5 px-4 py-3 font-black text-white hover:bg-white/10">🏠 TRANG CHỦ S3</Link>
+        <Link to="/season-3/rules" className="rounded-xl border-2 border-white/20 bg-white/5 px-4 py-3 font-black text-white hover:bg-white/10">📖 CẨM NANG LUẬT</Link>
+        <Link to="/dev/race-lab" className="rounded-xl border-2 border-white/20 px-4 py-3 font-black hover:bg-white/10">🧪 RACE LAB</Link>
+        <Link to="/admin/cosmetics" className="rounded-xl border-2 border-white/20 px-4 py-3 font-black hover:bg-white/10">🪙 QUẢN LÝ SHOP</Link>
       </div>
       {message && <p className="mt-3 text-sm font-bold text-[var(--color-ggd-gold)]">{message}</p>}
     </header>
@@ -357,7 +357,7 @@ export default function AdminSeason3Page() {
         </div>
         <div className="flex flex-wrap gap-2">
           <button onClick={() => void startTestRace()} className="rounded-xl bg-[var(--color-ggd-gold)] px-5 py-3 font-black text-[var(--color-ggd-outline)] transition-transform hover:scale-105">🏁 BẮT ĐẦU ĐUA THỬ</button>
-          {testRaceId && <Link href={`/season-3/race/${testRaceId}`} className="rounded-xl border-2 border-white/20 px-5 py-3 font-black hover:bg-white/10">▶ XEM DIỄN BIẾN ĐUA THỬ</Link>}
+          {testRaceId && <Link to={`/season-3/race/${testRaceId}`} className="rounded-xl border-2 border-white/20 px-5 py-3 font-black hover:bg-white/10">▶ XEM DIỄN BIẾN ĐUA THỬ</Link>}
         </div>
       </section>}
 
@@ -429,7 +429,7 @@ export default function AdminSeason3Page() {
         </div>}
         {currentWeek.status === 'racing' && currentWeek.raceId && <div className="mt-5 flex flex-wrap items-center gap-3">
           <span className="font-black text-[var(--color-ggd-neon-green)]">🏃 CUỘC ĐUA CHÍNH THỨC ĐANG DIỄN RA</span>
-          <Link href={`/season-3/race/${currentWeek.raceId}`} className="rounded-xl bg-[var(--color-ggd-gold)] px-5 py-3 font-black text-[var(--color-ggd-outline)] transition-transform hover:scale-105">▶ XEM TRỰC TIẾP CUỘC ĐUA</Link>
+          <Link to={`/season-3/race/${currentWeek.raceId}`} className="rounded-xl bg-[var(--color-ggd-gold)] px-5 py-3 font-black text-[var(--color-ggd-outline)] transition-transform hover:scale-105">▶ XEM TRỰC TIẾP CUỘC ĐUA</Link>
         </div>}
       </section>}
 
@@ -569,7 +569,7 @@ export default function AdminSeason3Page() {
           {data.weeks.filter((week) => week.status === 'resolved').map((week) => <div key={week.id} className="whitespace-pre-wrap rounded-xl bg-black/20 p-4">
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <div className="font-black text-[var(--color-ggd-gold)]">TUẦN {week.weekNumber} · LÁ BÀI {week.chaosType}</div>
-              {week.raceId && <Link href={`/season-3/race/${week.raceId}`} className="rounded-lg border border-white/20 px-3 py-1 text-xs font-black hover:bg-white/10">▶ XEM LẠI REPLAY</Link>}
+              {week.raceId && <Link to={`/season-3/race/${week.raceId}`} className="rounded-lg border border-white/20 px-3 py-1 text-xs font-black hover:bg-white/10">▶ XEM LẠI REPLAY</Link>}
             </div>
             {week.recap}
           </div>)}
@@ -582,7 +582,7 @@ export default function AdminSeason3Page() {
             <div className="text-xs font-black tracking-[0.2em] text-[var(--color-ggd-gold)]">OFFICIAL RACES ONLY</div>
             <h2 className="font-display text-2xl">📊 Thống Kê Hiệu Năng Trang Bị (Loadout Items)</h2>
           </div>
-          <Link href="/dev/race-lab" className="rounded-xl border-2 border-white/20 px-4 py-2 font-black hover:bg-white/10">MỞ RACE LAB</Link>
+          <Link to="/dev/race-lab" className="rounded-xl border-2 border-white/20 px-4 py-2 font-black hover:bg-white/10">MỞ RACE LAB</Link>
         </div>
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[720px] text-left text-sm">

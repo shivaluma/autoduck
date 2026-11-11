@@ -1,13 +1,11 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
-import Link from 'next/link'
+import { Link } from 'react-router'
 import { cn } from '@/lib/utils'
 import { uiIconPath, type UiIconName } from '@/lib/race-fx/manifest'
 
-/* eslint-disable @next/next/no-img-element -- tiny static SVG icons */
-
 /**
  * Pond UI — the game-lobby kit. Same ink outline (#1B132B), hard drop shadows and top-right light
- * as the race canvas and cosmetics art. Styles live in app/globals.css (`gx-*`).
+ * as the race canvas and cosmetics art. Styles live in src/globals.css (`gx-*`).
  */
 
 export type Tone = 'pond' | 'gold' | 'mint' | 'sky' | 'rose' | 'violet' | 'dark'
@@ -77,7 +75,7 @@ export function GameLink({ variant = 'gold', size = 'md', icon, className, child
   href: string
 }) {
   return (
-    <Link href={href} data-variant={variant === 'gold' ? undefined : variant} data-size={size} className={cn('gx-btn', className)}>
+    <Link to={href} data-variant={variant === 'gold' ? undefined : variant} data-size={size} className={cn('gx-btn', className)}>
       {icon && <UiIcon name={icon} size={size === 'lg' ? 30 : size === 'sm' ? 20 : 24} />}
       {children}
     </Link>
