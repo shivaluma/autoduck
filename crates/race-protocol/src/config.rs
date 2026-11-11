@@ -279,13 +279,26 @@ impl Default for RaceChaosConfig {
 }
 
 /// Resolved item tuning; every multiplier is concrete.
+///
+/// **F9 (S3.16):** `rocketSlowMultiplier`, `bananaKnockbackMultiplier` and
+/// `bananaSlowMultiplier` never changed a race (S3.15 dropped the banana
+/// knobs and stored the rocket one on a projectile field nothing read: a
+/// rocket hit staggers with its own constants), so the default
+/// build no longer carries them: the input still accepts and range-checks
+/// them for wire compatibility, and the `s3-15-config` feature (enabled by
+/// race-core's `ts-compat`) keeps them in the resolved config (and so in its
+/// `engineConfigJson`). `tests/dead_knob.rs` proves
+/// every knob left here changes a race.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts-export", derive(ts_rs::TS), ts(export))]
 pub struct RaceItemTuning {
     pub nitro_speed_multiplier: f64,
+    #[cfg(feature = "s3-15-config")]
     pub rocket_slow_multiplier: f64,
+    #[cfg(feature = "s3-15-config")]
     pub banana_knockback_multiplier: f64,
+    #[cfg(feature = "s3-15-config")]
     pub banana_slow_multiplier: f64,
 }
 
@@ -293,14 +306,23 @@ impl Default for RaceItemTuning {
     fn default() -> Self {
         Self {
             nitro_speed_multiplier: DEFAULT_NITRO_SPEED_MULTIPLIER,
+            #[cfg(feature = "s3-15-config")]
             rocket_slow_multiplier: DEFAULT_ROCKET_SLOW_MULTIPLIER,
+            #[cfg(feature = "s3-15-config")]
             banana_knockback_multiplier: DEFAULT_BANANA_KNOCKBACK_MULTIPLIER,
+            #[cfg(feature = "s3-15-config")]
             banana_slow_multiplier: DEFAULT_BANANA_SLOW_MULTIPLIER,
         }
     }
 }
 
 /// Resolved pickup config; every field is concrete except `forceItem`.
+///
+/// **F9 (S3.16):** `manualItemsEnabled`, `chaosBoxEnabled` and
+/// `idealManualPlayerIds` are never read by the engine (manual wild-item
+/// use is a server concern, and the Rust server refuses it), so only
+/// `s3-15-config` (race-core `ts-compat`) carries them; the input still
+/// accepts them.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts-export", derive(ts_rs::TS), ts(export))]
@@ -312,13 +334,16 @@ pub struct PickupConfig {
     pub position_aware_loot: bool,
     pub spawn_multiplier: f64,
     pub regular_pickup_cap: u32,
+    #[cfg(feature = "s3-15-config")]
     pub manual_items_enabled: bool,
     pub auto_items_enabled: bool,
+    #[cfg(feature = "s3-15-config")]
     pub chaos_box_enabled: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts-export", ts(optional))]
     pub force_item: Option<WildItemId>,
     pub disabled_items: Vec<WildItemId>,
+    #[cfg(feature = "s3-15-config")]
     pub ideal_manual_player_ids: Vec<PlayerId>,
     pub force_golden_box: bool,
 }
@@ -335,11 +360,14 @@ impl PickupConfig {
             position_aware_loot: true,
             spawn_multiplier: 0.0,
             regular_pickup_cap: DEFAULT_REGULAR_PICKUP_CAP,
+            #[cfg(feature = "s3-15-config")]
             manual_items_enabled: false,
             auto_items_enabled: false,
+            #[cfg(feature = "s3-15-config")]
             chaos_box_enabled: false,
             force_item: None,
             disabled_items: Vec::new(),
+            #[cfg(feature = "s3-15-config")]
             ideal_manual_player_ids: Vec::new(),
             force_golden_box: false,
         }
@@ -421,6 +449,12 @@ pub enum ConfigError {
     /// constants and the balance label must be in
     /// [`versions::SUPPORTED_BALANCE_VERSIONS`].
     UnsupportedVersion { field: &'static str, value: String },
+    /// F11 (S3.16): a `chaosConfig.groups` entry is empty.
+    ChaosGroupEmpty { index: usize }, // usize-ok: error detail, never serialized
+    /// F11 (S3.16): a Chaos group names a player who is not in `players`.
+    ChaosGroupForeignPlayer { player_id: PlayerId },
+    /// F11 (S3.16): a player appears in two Chaos groups (or twice in one).
+    ChaosGroupOverlap { player_id: PlayerId },
 }
 
 impl fmt::Display for ConfigError {
@@ -469,6 +503,18 @@ impl fmt::Display for ConfigError {
             ),
             Self::UnsupportedVersion { field, value } => {
                 write!(f, "{field}: {value} is not supported by this engine")
+            }
+            Self::ChaosGroupEmpty { index } => {
+                write!(f, "chaosConfig.groups[{index}]: empty group")
+            }
+            Self::ChaosGroupForeignPlayer { player_id } => {
+                write!(f, "chaosConfig.groups: {player_id} is not in players")
+            }
+            Self::ChaosGroupOverlap { player_id } => {
+                write!(
+                    f,
+                    "chaosConfig.groups: {player_id} is in more than one group"
+                )
             }
         }
     }
@@ -705,7 +751,40 @@ impl RaceConfigInput {
             },
         };
 
+        if mode == ResolveMode::Engine {
+            validate_chaos_groups(&chaos_config.groups, &players)?;
+        }
+
         let tuning = self.item_tuning.clone().unwrap_or_default();
+        // F9: still range-checked (the Zod schema), carried only by
+        // `s3-15-config`.
+        let rocket_slow_multiplier = optional_range(
+            "itemTuning.rocketSlowMultiplier",
+            tuning.rocket_slow_multiplier,
+            0.1,
+            1.0,
+            DEFAULT_ROCKET_SLOW_MULTIPLIER,
+        )?;
+        let banana_knockback_multiplier = optional_range(
+            "itemTuning.bananaKnockbackMultiplier",
+            tuning.banana_knockback_multiplier,
+            0.5,
+            2.0,
+            DEFAULT_BANANA_KNOCKBACK_MULTIPLIER,
+        )?;
+        let banana_slow_multiplier = optional_range(
+            "itemTuning.bananaSlowMultiplier",
+            tuning.banana_slow_multiplier,
+            0.75,
+            1.0,
+            DEFAULT_BANANA_SLOW_MULTIPLIER,
+        )?;
+        #[cfg(not(feature = "s3-15-config"))]
+        let _ = (
+            rocket_slow_multiplier,
+            banana_knockback_multiplier,
+            banana_slow_multiplier,
+        );
         let item_tuning = RaceItemTuning {
             nitro_speed_multiplier: optional_range(
                 "itemTuning.nitroSpeedMultiplier",
@@ -714,27 +793,12 @@ impl RaceConfigInput {
                 1.35,
                 DEFAULT_NITRO_SPEED_MULTIPLIER,
             )?,
-            rocket_slow_multiplier: optional_range(
-                "itemTuning.rocketSlowMultiplier",
-                tuning.rocket_slow_multiplier,
-                0.1,
-                1.0,
-                DEFAULT_ROCKET_SLOW_MULTIPLIER,
-            )?,
-            banana_knockback_multiplier: optional_range(
-                "itemTuning.bananaKnockbackMultiplier",
-                tuning.banana_knockback_multiplier,
-                0.5,
-                2.0,
-                DEFAULT_BANANA_KNOCKBACK_MULTIPLIER,
-            )?,
-            banana_slow_multiplier: optional_range(
-                "itemTuning.bananaSlowMultiplier",
-                tuning.banana_slow_multiplier,
-                0.75,
-                1.0,
-                DEFAULT_BANANA_SLOW_MULTIPLIER,
-            )?,
+            #[cfg(feature = "s3-15-config")]
+            rocket_slow_multiplier,
+            #[cfg(feature = "s3-15-config")]
+            banana_knockback_multiplier,
+            #[cfg(feature = "s3-15-config")]
+            banana_slow_multiplier,
         };
 
         let pickup_config = match &self.pickup_config {
@@ -794,6 +858,36 @@ impl RaceConfigInput {
     }
 }
 
+/// F11 (S3.16): Chaos groups must be non-empty, name only lobby players and
+/// not overlap. S3.15 (`resolve_ts_compat`) accepted any groups, so an empty
+/// DUO group averaged `0/0 = NaN` and a player in two groups was counted
+/// twice by the Chaos rules and the team AI.
+fn validate_chaos_groups(
+    groups: &[Vec<PlayerId>],
+    players: &[RacePlayerConfig],
+) -> Result<(), ConfigError> {
+    let mut seen: Vec<&PlayerId> = Vec::new();
+    for (index, group) in groups.iter().enumerate() {
+        if group.is_empty() {
+            return Err(ConfigError::ChaosGroupEmpty { index });
+        }
+        for player_id in group {
+            if !players.iter().any(|player| &player.player_id == player_id) {
+                return Err(ConfigError::ChaosGroupForeignPlayer {
+                    player_id: player_id.clone(),
+                });
+            }
+            if seen.contains(&player_id) {
+                return Err(ConfigError::ChaosGroupOverlap {
+                    player_id: player_id.clone(),
+                });
+            }
+            seen.push(player_id);
+        }
+    }
+    Ok(())
+}
+
 fn resolve_pickup_config(
     input: &PickupConfigInput,
     default_golden_box_probability: f64,
@@ -836,11 +930,14 @@ fn resolve_pickup_config(
             1.0,
         )?,
         regular_pickup_cap,
+        #[cfg(feature = "s3-15-config")]
         manual_items_enabled: input.manual_items_enabled.unwrap_or(true),
         auto_items_enabled: input.auto_items_enabled.unwrap_or(true),
+        #[cfg(feature = "s3-15-config")]
         chaos_box_enabled: input.chaos_box_enabled.unwrap_or(false),
         force_item: input.force_item,
         disabled_items: input.disabled_items.clone().unwrap_or_default(),
+        #[cfg(feature = "s3-15-config")]
         ideal_manual_player_ids: input.ideal_manual_player_ids.clone().unwrap_or_default(),
         force_golden_box: input.force_golden_box.unwrap_or(false),
     })

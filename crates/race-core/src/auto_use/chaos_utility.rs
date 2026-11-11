@@ -13,11 +13,19 @@
 //!   hits. The fingerprint ignores `currentRank`, so a hit can return an
 //!   order built from older ranks (ranks are recomputed after the auto-use
 //!   decide phase, so the reuse lags by one phase); that staleness is TS
-//!   behaviour.
+//!   behaviour, kept under `ts-compat`. **F4 (S3.16):** the snapshot is keyed
+//!   by its exact inputs (each duck's `currentRank`, progress bits and
+//!   finished flag, in `ducks` order), so a new rank always rebuilds it and
+//!   the outcome cache; within a tick that makes it a per-tick cache.
 //! - `outcomeCache` is keyed by `order.join('|')` (two orders can share a key
 //!   when an id contains `|`; the first one's outcome is then reused, as in
 //!   TS). It is cleared on every snapshot rebuild and, when it already holds
 //!   more than 512 entries, right before an insert.
+//!
+//! **F5 (S3.16):** ghost ducks are left out of the ranking (they never
+//! appear in the standings the real Chaos rule sees), so a ghost can no
+//! longer push a real duck into or out of the projected loser set. Under
+//! `ts-compat` they are ranked like any duck, as in S3.15.
 //!
 //! `Math.exp` (`:107,131`) goes through [`EngineMath::exp`].
 
@@ -114,8 +122,13 @@ pub struct ChaosUtility {
     pub target_player_id: Option<PlayerId>,
     /// `prepared.groups`.
     pub groups: Vec<Vec<PlayerId>>,
+    /// F5: ghost ids, left out of the ranking (always empty under
+    /// `ts-compat`).
+    ghosts: Vec<PlayerId>,
     /// The ranking memo (`private snapshot`).
     snapshot: Option<RankingSnapshot>,
+    /// F4: the exact inputs of `snapshot` (rank, progress bits, finished).
+    snapshot_key: Vec<(u32, u64, bool)>,
     /// `private outcomeCache` (a `Map`; only lookups and `size` are used).
     outcome_cache: BTreeMap<String, Outcome>,
 }
@@ -160,9 +173,20 @@ impl ChaosUtility {
             mode: chaos.chaos_type,
             target_player_id: chaos.target_player_id.clone(),
             groups: chaos.groups.clone(),
+            ghosts: Vec::new(),
             snapshot: None,
+            snapshot_key: Vec::new(),
             outcome_cache: BTreeMap::new(),
         }
+    }
+
+    /// F5: leaves `ghosts` out of every ranking. A no-op under `ts-compat`.
+    #[must_use]
+    pub fn without_ghosts(mut self, ghosts: &[PlayerId]) -> Self {
+        if !crate::TS_COMPAT {
+            self.ghosts = ghosts.to_vec();
+        }
+        self
     }
 
     /// `get chaosMode`.
@@ -189,12 +213,36 @@ impl ChaosUtility {
             fingerprint += duck.progress * (index_f64(index) + FINGERPRINT_STEP)
                 + if duck.finished { 7.0 } else { 0.0 };
         }
-        if let Some(snapshot) = &self.snapshot
-            && snapshot.fingerprint == fingerprint
-        {
-            return snapshot.clone();
+        if let Some(snapshot) = &self.snapshot {
+            let hit =
+                if crate::TS_COMPAT {
+                    snapshot.fingerprint == fingerprint
+                } else {
+                    self.snapshot_key.len() == ducks.len()
+                        && self.snapshot_key.iter().zip(ducks).all(
+                            |(&(rank, bits, finished), duck)| {
+                                rank == duck.current_rank
+                                    && bits == duck.progress.to_bits()
+                                    && finished == duck.finished
+                            },
+                        )
+                };
+            if hit {
+                return snapshot.clone();
+            }
         }
-        let mut sorted: Vec<&DuckPhysicsState> = ducks.iter().collect();
+        if !crate::TS_COMPAT {
+            self.snapshot_key.clear();
+            self.snapshot_key.extend(
+                ducks
+                    .iter()
+                    .map(|duck| (duck.current_rank, duck.progress.to_bits(), duck.finished)),
+            );
+        }
+        let mut sorted: Vec<&DuckPhysicsState> = ducks
+            .iter()
+            .filter(|duck| !self.ghosts.contains(&duck.player_id))
+            .collect();
         v8_sort_by(&mut sorted, |left, right| {
             // `left.currentRank - right.currentRank || right.progress -
             // left.progress || left.playerId.localeCompare(right.playerId)`

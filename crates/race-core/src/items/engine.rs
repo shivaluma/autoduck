@@ -653,14 +653,8 @@ pub fn try_apply_prep_speed_boost(
     runtime.continuous_boost_started_at_tick = Some(tick_i);
     if item_id == RaceItemId::Nitro {
         set_nitro_phases(runtime, tick_rate);
-        // `Number(metadata.startProgress)` of a number is the number.
-        if let Some(progress) = extras.start_progress {
-            runtime.nitro_start_progress = Some(progress);
-        }
-        if let Some(rank) = extras.start_rank {
-            runtime.nitro_start_rank = Some(rank);
-        }
     }
+    record_boost_start(runtime, item_id, &extras);
     apply_item_boost(runtime, multiplier, duration_seconds, tick, tick_rate);
     runtime.active_speed_item_id = Some(item_id);
     let meta = SpeedBoostStartedMeta {
@@ -738,8 +732,6 @@ pub fn fire_prep_rocket(
         kind: ProjectileSource::Prep,
         speed_per_second: item_balance::rocket::PROJECTILE_SPEED,
         hit_radius: item_balance::rocket::HIT_RADIUS,
-        slow_multiplier: item_state.tuning.rocket_slow_multiplier,
-        slow_duration_seconds: item_balance::rocket::SLOW_DURATION_SECONDS,
         retargeted: false,
     });
     item_state
@@ -855,6 +847,8 @@ pub fn finish_speed_boost(
     if queued.item_id == RaceItemId::Nitro {
         set_nitro_phases(runtime, tick_rate);
     }
+    // F10: a queued boost starts without start metadata.
+    record_boost_start(runtime, queued.item_id, &SpeedStartExtras::default());
 
     apply_item_boost(
         runtime,
@@ -877,6 +871,40 @@ pub fn finish_speed_boost(
     };
     if let Some(kind) = speed_start_event(queued.item_id, meta) {
         emit.emit(kind, Some(duck_id), None);
+    }
+}
+
+/// Records the start of the speed boost `item_id` that is being applied: the
+/// `startProgress`/`startRank` its natural `*_ENDED` event reports.
+///
+/// S3.15 (`ts-compat`) read them back from the start event's untyped
+/// metadata with `Number(...)`, only for NITRO and only when present, so a
+/// later boost (Draft Fin, Paddle Burst, a queued Nitro) ended with the
+/// *previous* Nitro's start. **F10 (S3.16):** the typed
+/// [`SpeedStartExtras`] of this boost replace them every time (absent for
+/// any boost but a direct Nitro), so an `*_ENDED` event only ever carries
+/// its own boost's start.
+fn record_boost_start(
+    runtime: &mut DuckItemRuntime,
+    item_id: RaceItemId,
+    extras: &SpeedStartExtras,
+) {
+    if crate::TS_COMPAT {
+        if item_id == RaceItemId::Nitro {
+            // `Number(metadata.startProgress)` of a number is the number.
+            if let Some(progress) = extras.start_progress {
+                runtime.nitro_start_progress = Some(progress);
+            }
+            if let Some(rank) = extras.start_rank {
+                runtime.nitro_start_rank = Some(rank);
+            }
+        }
+    } else if item_id == RaceItemId::Nitro {
+        runtime.nitro_start_progress = extras.start_progress;
+        runtime.nitro_start_rank = extras.start_rank;
+    } else {
+        runtime.nitro_start_progress = None;
+        runtime.nitro_start_rank = None;
     }
 }
 

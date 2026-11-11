@@ -2,8 +2,15 @@
 //!
 //! TS memoises the read in a module `WeakMap` keyed by the `ducks` array.
 //! The engine always passes `state.ducks`, so that is one memo per
-//! simulation: [`DirectorCache`], a plain field on `Simulation`. Hit/miss is
-//! exactly the TS fingerprint test (`===`, so a NaN fingerprint never hits).
+//! simulation: [`DirectorCache`], a plain field on `Simulation`.
+//!
+//! - `ts-compat` (S3.15): hit/miss is exactly the TS fingerprint test
+//!   (`===`, so a NaN fingerprint never hits); two different races can share
+//!   a fingerprint and reuse a stale read.
+//! - **F4 (S3.16):** the memo is keyed by the exact inputs of the read (each
+//!   duck's progress bits and finished flag, in `ducks` order), so a hit is
+//!   only ever the read the same ducks would compute. Within a tick the
+//!   inputs do not change, so it is a per-tick cache.
 
 use alloc::vec::Vec;
 
@@ -41,6 +48,8 @@ pub struct DirectorRead {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct DirectorCache {
     entry: Option<(f64, DirectorRead)>,
+    /// F4: the exact inputs of `entry` (progress bits, finished).
+    key: Vec<(u64, bool)>,
 }
 
 /// `readRace(ducks)` (`director.ts:27-45`).
@@ -53,8 +62,28 @@ pub fn read_race<'c>(cache: &'c mut DirectorCache, ducks: &[DuckPhysicsState]) -
         fingerprint += duck.progress * (position + DIRECTOR_FINGERPRINT_STEP)
             + if duck.finished { 11.0 } else { 0.0 };
     }
-    let hit = matches!(&cache.entry, Some((cached, _)) if *cached == fingerprint);
+    let hit = if crate::TS_COMPAT {
+        matches!(&cache.entry, Some((cached, _)) if *cached == fingerprint)
+    } else {
+        cache.entry.is_some()
+            && cache.key.len() == ducks.len()
+            && cache
+                .key
+                .iter()
+                .zip(ducks)
+                .all(|(&(bits, finished), duck)| {
+                    bits == duck.progress.to_bits() && finished == duck.finished
+                })
+    };
     if !hit {
+        if !crate::TS_COMPAT {
+            cache.key.clear();
+            cache.key.extend(
+                ducks
+                    .iter()
+                    .map(|duck| (duck.progress.to_bits(), duck.finished)),
+            );
+        }
         let mut racing: Vec<&DuckPhysicsState> =
             ducks.iter().filter(|duck| !duck.finished).collect();
         v8_sort_by(&mut racing, |left, right| {

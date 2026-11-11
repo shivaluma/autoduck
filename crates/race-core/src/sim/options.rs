@@ -98,18 +98,14 @@ impl EngineMath {
         }
     }
 
-    /// `Math.hypot(a, b)`.
+    /// `Math.hypot(a, b)`, V8-exact. Only the S3.15 pickup collector uses
+    /// it; S3.16 compares squared distances instead (F6), so the default
+    /// build has no `hypot` in the sim.
+    #[cfg(feature = "ts-compat")]
     #[inline]
     #[must_use]
     pub fn hypot2(self, a: f64, b: f64) -> f64 {
-        #[cfg(feature = "ts-compat")]
-        {
-            self.host.hypot2(a, b)
-        }
-        #[cfg(not(feature = "ts-compat"))]
-        {
-            crate::math::hypot(a, b)
-        }
+        self.host.hypot2(a, b)
     }
 }
 

@@ -289,8 +289,6 @@ fn nitro_ai_utility_scoring_overtakes_loser_zone_safety_finish_conversion_and_ro
         kind: ProjectileSource::Prep,
         speed_per_second: item_balance::rocket::PROJECTILE_SPEED,
         hit_radius: item_balance::rocket::HIT_RADIUS,
-        slow_multiplier: 0.30,
-        slow_duration_seconds: 1.20,
         retargeted: false,
     });
 

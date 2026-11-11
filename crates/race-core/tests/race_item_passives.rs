@@ -288,8 +288,6 @@ fn silenced_ducks_cannot_evaluate_or_execute_prep_items_or_reactive_defense() {
         kind: ProjectileSource::Prep,
         speed_per_second: 0.16,
         hit_radius: 0.014,
-        slow_multiplier: 0.68,
-        slow_duration_seconds: 1.15,
         retargeted: false,
     });
     let reactive_candidates = env

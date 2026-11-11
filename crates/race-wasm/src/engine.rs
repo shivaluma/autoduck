@@ -342,11 +342,12 @@ impl SimHandle {
     }
 
     /// `queueWildItemInput`: `inputJson` is a `WildItemUseCommand`; the
-    /// input applies at `max(authoritativeTick, tick + 1)`. Returns the
+    /// input applies at `authoritativeTick` (default `tick + 1`). Returns the
     /// recorded input JSON.
     ///
     /// # Errors
-    /// Invalid input JSON.
+    /// Invalid input JSON, or (S3.16, F8) an `authoritativeTick` the race has
+    /// already run: the input is rejected and nothing is queued.
     #[wasm_bindgen(js_name = queueInput)]
     pub fn queue_input(
         &mut self,
@@ -355,7 +356,11 @@ impl SimHandle {
     ) -> Result<String, String> {
         let input: QueueInput =
             serde_json::from_str(input_json).map_err(|error| format!("input: {error}"))?;
-        json(&self.run.queue_input(input.command, authoritative_tick))
+        let recorded = self
+            .run
+            .queue_input(input.command, authoritative_tick)
+            .map_err(|error| error.to_string())?;
+        json(&recorded)
     }
 
     /// The `sh1` state hash of the current tick, lowercase hex (D16).

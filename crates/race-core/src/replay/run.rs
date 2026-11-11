@@ -24,8 +24,8 @@ use crate::digest::{Sha256Bytes, sha256_hex, to_hex};
 use crate::hash::{HashFold, state_hash};
 use crate::serde_jcs::to_jcs_string;
 use crate::sim::{
-    EventsDigest, SimError, SimOptions, Simulation, create_simulation, queue_wild_item_input,
-    result_from_simulation, step_simulation,
+    EventsDigest, LateWildItemInput, SimError, SimOptions, Simulation, create_simulation,
+    queue_wild_item_input, result_from_simulation, step_simulation,
 };
 
 /// `engineConfigJson = JCS(resolved config)` (D9).
@@ -176,11 +176,15 @@ impl RaceRun {
     }
 
     /// `queueWildItemInput`: the input applies no earlier than the next tick.
+    ///
+    /// # Errors
+    /// [`LateWildItemInput`] when `authoritative_tick` is a tick the race has
+    /// already run (F8, S3.16); nothing is queued.
     pub fn queue_input(
         &mut self,
         input: WildItemUseCommand,
         authoritative_tick: Option<u32>,
-    ) -> RecordedWildItemInput {
+    ) -> Result<RecordedWildItemInput, LateWildItemInput> {
         queue_wild_item_input(&mut self.sim, input, authoritative_tick)
     }
 

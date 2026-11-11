@@ -431,8 +431,6 @@ fn in_flight_wild_rocket_retargeting_skips_teammates_when_original_target_finish
         kind: ProjectileSource::Wild,
         speed_per_second: 0.25,
         hit_radius: 0.02,
-        slow_multiplier: 0.35,
-        slow_duration_seconds: 2.0,
         retargeted: false,
     });
     let mut ducks = vec![

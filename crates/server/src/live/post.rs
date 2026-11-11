@@ -266,9 +266,7 @@ fn pickup_telemetry(
         golden_box_enabled: false,
         hazards_enabled: false,
         spawn_multiplier: 0.0,
-        chaos_box_enabled: false,
         force_golden_box: false,
-        ideal_manual_player_ids: Vec::new(),
         ..current.clone()
     };
     let options = SimOptions {

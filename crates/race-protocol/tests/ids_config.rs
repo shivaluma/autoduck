@@ -178,8 +178,10 @@ fn present_pickup_config_uses_the_single_golden_box_default() {
     );
     assert_eq!(pickup.golden_box_probability, 0.15);
     assert!(pickup.enabled && pickup.golden_box_enabled && pickup.hazards_enabled);
-    assert!(pickup.manual_items_enabled && pickup.auto_items_enabled && pickup.position_aware_loot);
-    assert!(!pickup.chaos_box_enabled && !pickup.force_golden_box);
+    assert!(pickup.auto_items_enabled && pickup.position_aware_loot);
+    assert!(!pickup.force_golden_box);
+    #[cfg(feature = "s3-15-config")]
+    assert!(pickup.manual_items_enabled && !pickup.chaos_box_enabled);
     assert_eq!(pickup.spawn_multiplier, 1.0);
     assert_eq!(pickup.regular_pickup_cap, 3);
     assert_eq!(pickup.force_item, None);
@@ -407,5 +409,36 @@ fn ts_compat_resolver_uses_zod_defaults() {
     assert!(matches!(
         input.resolve(),
         Err(ConfigError::LegacyEngineVersion { .. })
+    ));
+}
+
+/// F11: Chaos groups must be non-empty, lobby-only and disjoint in S3.16.
+#[test]
+fn chaos_groups_are_validated() {
+    let groups = |groups: Value| {
+        let mut value = base();
+        let players: Vec<Value> = (1..=4)
+            .map(|n| json!({ "playerId": format!("p{n}"), "name": format!("Duck {n}") }))
+            .collect();
+        value["players"] = Value::Array(players);
+        value["chaosConfig"] = json!({ "type": "DUO", "targetPlayerId": null, "groups": groups });
+        resolve(value)
+    };
+    assert!(groups(json!([["p1", "p2"], ["p3", "p4"]])).is_ok());
+    assert!(matches!(
+        groups(json!([["p1", "p2"], []])),
+        Err(ConfigError::ChaosGroupEmpty { index: 1 })
+    ));
+    assert!(matches!(
+        groups(json!([["p1", "p9"], ["p3", "p4"]])),
+        Err(ConfigError::ChaosGroupForeignPlayer { .. })
+    ));
+    assert!(matches!(
+        groups(json!([["p1", "p2"], ["p2", "p3"]])),
+        Err(ConfigError::ChaosGroupOverlap { .. })
+    ));
+    assert!(matches!(
+        groups(json!([["p1", "p1"]])),
+        Err(ConfigError::ChaosGroupOverlap { .. })
     ));
 }

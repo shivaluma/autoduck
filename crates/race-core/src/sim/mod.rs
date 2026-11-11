@@ -48,8 +48,8 @@ pub use case_digest::{
     CaseDigest, CorpusCase, DigestStanding, digest_case, digest_corpus_line, parse_corpus_line,
 };
 pub use create::{
-    create_simulation, evaluate_pacing_multiplier, generate_duck_pacing_segments,
-    queue_wild_item_input,
+    LateWildItemInput, create_simulation, evaluate_pacing_multiplier,
+    generate_duck_pacing_segments, queue_wild_item_input,
 };
 pub use events::{Emitter, EventLog, EventSink, EventsDigest, event_jcs};
 pub use options::{EngineMath, LootPick, SimError, SimOptions, WildLootOverride};

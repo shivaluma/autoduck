@@ -192,7 +192,7 @@ export const LOADOUT_CONFIG = {
       cost: 1,
       category: 'minor' as const,
       itemClass: 'DEFENSE' as const,
-      description: 'Lông vũ hộ thân (Nội tại): nhảy né 1 lần Vỏ Chuối, Còi Quack Horn hoặc chướng ngại vật (không chặn Tên Lửa), né xong nhận Guard Surge +15% trong 1.8s. Chưa dùng tới 88% quãng đường sẽ hóa luồng lướt +4% trong 1s.',
+      description: 'Lông vũ hộ thân (Nội tại): nhảy né 1 lần Vỏ Chuối hoặc Còi Quack Horn (không chặn Tên Lửa hay chướng ngại vật), né xong nhận Guard Surge +15% trong 1.8s. Chưa dùng tới 88% quãng đường sẽ hóa luồng lướt +4% trong 1s.',
     },
     {
       id: 'SHOCK_ABSORBER',

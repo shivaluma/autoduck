@@ -13,6 +13,10 @@ std = ["serde/std", "serde_json/std"]
 # TS-oracle compatibility (`RaceConfigInput::resolve_ts_compat`); enabled by
 # race-core's `ts-compat`.
 ts-compat = []
+# The S3.15 resolved-config shape: keeps the six knobs F9 removed
+# (`docs/balance/S3.16.md`). Enabled only through race-core's `ts-compat`,
+# so the config shape always matches the engine it is fed to.
+s3-15-config = []
 # ts-rs export of the wire types (Phase 4 consumes the generated .ts files).
 ts-export = ["std", "dep:ts-rs"]
 

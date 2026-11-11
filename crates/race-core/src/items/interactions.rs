@@ -87,6 +87,10 @@ pub struct InteractionRow {
 
 /// `ITEM_INTERACTION_MATRIX[incoming]` (`interactions.ts:6-16`). Display
 /// data only; [`resolve_incoming_race_effect`] does not read it.
+///
+/// The `feather` column is the loadout Feather. S3.15 (`ts-compat`) marked
+/// it `Dodge` for `MINOR_HAZARD`, but only the wild Feather Hop dodges
+/// hazards; **F13 (S3.16)** marks it `No`, as the code behaves.
 #[must_use]
 pub const fn item_interaction_matrix(incoming: IncomingRaceEffect) -> InteractionRow {
     use InteractionRule::{Block, Dodge, Mitigate, No};
@@ -95,7 +99,7 @@ pub const fn item_interaction_matrix(incoming: IncomingRaceEffect) -> Interactio
         IncomingRaceEffect::Banana | IncomingRaceEffect::WildBanana => (Block, Dodge, No),
         IncomingRaceEffect::QuackHorn => (Block, Dodge, Mitigate),
         IncomingRaceEffect::NaturalObstacle | IncomingRaceEffect::DuckCollision => (No, No, No),
-        IncomingRaceEffect::MinorHazard => (No, Dodge, No),
+        IncomingRaceEffect::MinorHazard => (No, if crate::TS_COMPAT { Dodge } else { No }, No),
     };
     InteractionRow {
         bubble_shield,

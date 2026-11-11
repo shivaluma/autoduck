@@ -8,9 +8,10 @@ pub mod pickup_balance {
     pub const PROGRESS_RADIUS: f64 = 0.010;
     pub const LATERAL_RADIUS: f64 = 0.20;
     pub const REGULAR_PICKUP_CAP: u32 = 3;
-    /// The engine default; `resolve_ts_compat` applies Zod's 0.12 before the
-    /// engine ever sees a config (see `race_protocol::config`).
-    pub const GOLDEN_BOX_PROBABILITY: f64 = 0.18;
+    // `goldenBoxProbability` has no engine default (F3): the resolver's
+    // `DEFAULT_GOLDEN_BOX_PROBABILITY` (0.15) is the only one, and
+    // `resolve_ts_compat` applies Zod's 0.12 (`race_protocol::config`). The
+    // TS engine's unreachable 0.18 fallback (`pickups/config.ts:5`) is gone.
     pub const GOLDEN_PROGRESS_MINIMUM: f64 = 0.35;
     pub const GOLDEN_PROGRESS_MAXIMUM: f64 = 0.75;
     pub const ITEM_HIT_IMMUNITY_SECONDS: f64 = 0.8;

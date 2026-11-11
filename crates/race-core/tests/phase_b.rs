@@ -132,3 +132,203 @@ fn f2_renaming_a_race_changes_its_outcome_only_in_ts_compat() {
         && first.standings == renamed.standings;
     assert_eq!(same, !race_core::TS_COMPAT);
 }
+
+// ---------------------------------------------------------------------------
+// F3: one goldenBoxProbability default
+// ---------------------------------------------------------------------------
+
+#[test]
+fn f3_golden_box_probability_has_one_default() {
+    let omitted = lobby("41", NORMAL);
+    let explicit = omitted.replace(
+        r#""forceGoldenBox":false"#,
+        r#""forceGoldenBox":false,"goldenBoxProbability":0.15"#,
+    );
+    assert_ne!(omitted, explicit);
+    assert_eq!(
+        resolve(&omitted).pickup_config.golden_box_probability,
+        race_protocol::config::DEFAULT_GOLDEN_BOX_PROBABILITY
+    );
+    assert_eq!(race_protocol::config::DEFAULT_GOLDEN_BOX_PROBABILITY, 0.15);
+    // The engine has no fallback of its own: leaving the key out is exactly
+    // 0.15.
+    assert_eq!(digest(&omitted), digest(&explicit));
+}
+
+#[cfg(feature = "ts-compat")]
+#[test]
+fn f3_ts_compat_resolver_keeps_the_zod_default() {
+    let input: race_protocol::config::RaceConfigInput =
+        serde_json::from_str(&lobby("41", NORMAL)).expect("config parses");
+    let resolved = input.resolve_ts_compat().expect("config resolves");
+    assert_eq!(resolved.pickup_config.golden_box_probability, 0.12);
+}
+
+// ---------------------------------------------------------------------------
+// F4: per-tick caches keyed by their exact inputs
+// ---------------------------------------------------------------------------
+
+fn duck(id: &str, progress: f64, rank: u32) -> race_core::sim::DuckPhysicsState {
+    race_core::sim::DuckPhysicsState {
+        player_id: race_protocol::ids::PlayerId::new(id).expect("valid id"),
+        name: id.into(),
+        progress,
+        previous_progress: progress,
+        lateral_offset: 0.0,
+        speed: 0.0,
+        acceleration: 0.0,
+        lateral_velocity: 0.0,
+        desired_speed: 0.0,
+        desired_lateral_offset: 0.0,
+        current_rank: rank,
+        active_effects: Vec::new(),
+        next_impulse_tick: 0,
+        finished: false,
+        finish_time_ms: None,
+        pacing_segments: Vec::new(),
+    }
+}
+
+#[test]
+fn f4_chaos_utility_rebuilds_its_ranking_when_only_ranks_change() {
+    let mut utility =
+        race_core::auto_use::ChaosUtility::new(&race_protocol::config::RaceChaosConfig::default());
+    let before = [duck("a", 0.5, 1), duck("b", 0.5, 2), duck("c", 0.5, 3)];
+    assert!(!utility.is_losing_now("a", &before));
+    // Same progress, new ranks: the S3.15 fingerprint ignores ranks and
+    // reuses the stale order; S3.16 re-ranks.
+    let after = [duck("a", 0.5, 3), duck("b", 0.5, 2), duck("c", 0.5, 1)];
+    assert_eq!(utility.is_losing_now("a", &after), !race_core::TS_COMPAT);
+}
+
+#[test]
+fn f4_director_read_follows_the_ducks() {
+    let mut cache = race_core::auto_use::DirectorCache::default();
+    let first = [duck("a", 0.6, 1), duck("b", 0.5, 2)];
+    let leader = |cache: &mut race_core::auto_use::DirectorCache,
+                  ducks: &[race_core::sim::DuckPhysicsState]| {
+        race_core::auto_use::read_race(cache, ducks)
+            .leader_id
+            .as_ref()
+            .map(|id| id.as_str().to_owned())
+    };
+    assert_eq!(leader(&mut cache, &first).as_deref(), Some("a"));
+    let second = [duck("a", 0.5, 2), duck("b", 0.6, 1)];
+    assert_eq!(leader(&mut cache, &second).as_deref(), Some("b"));
+}
+
+// ---------------------------------------------------------------------------
+// F5: ghosts stay out of the in-sim ChaosUtility ranking
+// ---------------------------------------------------------------------------
+
+#[test]
+fn f5_a_ghost_cannot_shield_a_real_duck_from_the_loser_set() {
+    let ghost = race_protocol::ids::PlayerId::new("g").expect("valid id");
+    let mut utility =
+        race_core::auto_use::ChaosUtility::new(&race_protocol::config::RaceChaosConfig::default())
+            .without_ghosts(&[ghost]);
+    let ducks = [
+        duck("a", 0.7, 1),
+        duck("b", 0.6, 2),
+        duck("g", 0.5, 3),
+        duck("c", 0.4, 4),
+    ];
+    // NORMAL: the last two of the standings lose. The standings never hold
+    // the ghost, so `b` is really second to last.
+    assert_eq!(utility.is_losing_now("b", &ducks), !race_core::TS_COMPAT);
+    assert!(utility.is_losing_now("c", &ducks));
+}
+
+// ---------------------------------------------------------------------------
+// F8: late wild-item inputs are rejected
+// ---------------------------------------------------------------------------
+
+#[test]
+fn f8_late_inputs_are_rejected_not_clamped() {
+    let mut sim = race_core::sim::create_simulation(
+        resolve(&lobby("41", NORMAL)),
+        race_core::sim::SimOptions::default(),
+        None,
+    );
+    for _ in 0..10 {
+        race_core::sim::step_simulation(&mut sim, None);
+    }
+    let command = |n: u32| race_protocol::events::WildItemUseCommand {
+        race_id: race_protocol::ids::RaceId::new("41").expect("valid id"),
+        player_id: race_protocol::ids::PlayerId::new("1").expect("valid id"),
+        wild_item_instance_id: "wild:41:x:1".to_owned(),
+        action: race_protocol::events::WildItemAction::Use,
+        client_action_id: race_protocol::ids::ClientActionId::new(format!("client-action-{n}"))
+            .expect("valid id"),
+    };
+    let tick = sim.tick;
+    let late = race_core::sim::queue_wild_item_input(&mut sim, command(1), Some(tick));
+    if race_core::TS_COMPAT {
+        assert_eq!(late.expect("clamped").authoritative_tick, tick + 1);
+    } else {
+        assert!(late.is_err());
+        assert!(sim.manual_inputs.is_empty());
+    }
+    let on_time = race_core::sim::queue_wild_item_input(&mut sim, command(2), Some(tick + 1))
+        .expect("on time");
+    assert_eq!(on_time.authoritative_tick, tick + 1);
+    let next = race_core::sim::queue_wild_item_input(&mut sim, command(3), None).expect("next");
+    assert_eq!(next.authoritative_tick, tick + 1);
+}
+
+// ---------------------------------------------------------------------------
+// F13: Feather copy and matrix data match the code
+// ---------------------------------------------------------------------------
+
+#[test]
+fn f13_loadout_feather_never_claims_a_hazard_dodge() {
+    use race_core::items::IncomingRaceEffect;
+    use race_core::items::interactions::{InteractionRule, item_interaction_matrix};
+
+    let hazard = item_interaction_matrix(IncomingRaceEffect::MinorHazard).feather;
+    let feather = race_core::catalog::get_race_item(race_protocol::ids::RaceItemId::Feather);
+    if race_core::TS_COMPAT {
+        assert_eq!(hazard, InteractionRule::Dodge);
+        assert!(
+            feather
+                .description
+                .contains("hoặc chướng ngại vật (không chặn Tên Lửa)")
+        );
+    } else {
+        // The loadout Feather dodges bananas and the horn only
+        // (`resolve_incoming_race_effect`, `execute.rs`); hazards are the
+        // wild Feather Hop's.
+        assert_eq!(hazard, InteractionRule::No);
+        assert!(feather.description.contains("Vỏ Chuối hoặc Còi Quack Horn"));
+        assert!(
+            feather
+                .description
+                .contains("không chặn Tên Lửa hay chướng ngại vật")
+        );
+    }
+    for incoming in [
+        IncomingRaceEffect::Banana,
+        IncomingRaceEffect::WildBanana,
+        IncomingRaceEffect::QuackHorn,
+    ] {
+        assert_eq!(
+            item_interaction_matrix(incoming).feather,
+            InteractionRule::Dodge
+        );
+    }
+}
+
+#[test]
+fn f13_loadout_feather_does_not_dodge_hazards() {
+    use race_core::items::{DefenseOutcome, IncomingRaceEffect, resolve_incoming_race_effect};
+
+    let config = resolve(&lobby("41", NORMAL));
+    let state = race_core::items::create_item_race_state(&config);
+    // Duck 2 holds HOMING_ROCKET + FEATHER.
+    let mut runtime = state.by_player.get("2").expect("duck 2").clone();
+    assert!(runtime.feather_available);
+    let outcome =
+        resolve_incoming_race_effect(&mut runtime, IncomingRaceEffect::MinorHazard, 600, 60);
+    assert_eq!(outcome, DefenseOutcome::Hit);
+    assert!(runtime.feather_available);
+}
