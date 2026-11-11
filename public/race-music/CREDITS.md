@@ -1,23 +1,11 @@
 # Race background music
 
-Chill / lo-fi tracks from NoCopyrightSounds (NCS), trimmed to 96 s loops, loudness-normalised and
-re-encoded at 64 kbps MP3 for the race canvas. Music provided by NoCopyrightSounds — https://ncs.io
+`fluffing-a-duck.mp3`: "Fluffing a Duck" by Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+http://creativecommons.org/licenses/by/4.0/
 
-| File | Track | Artist | NCS genre |
-|---|---|---|---|
-| `cruising.mp3` | Cruising | Aisake, Dosi | Lofi Hip-Hop |
-| `miffy-cafe.mp3` | miffy cafe | sakuracloud | Lofi Hip-Hop |
-| `apart.mp3` | apart | sumu | Lofi Hip-Hop |
-| `up-in-flumes.mp3` | Up In Flumes | T-Mass | Chill |
-| `long-road-home.mp3` | The Long Road Home | Inukshuk | Chill |
-| `lune.mp3` | Lune | Y&V | Chill |
+Source: https://incompetech.com/music/royalty-free/mp3-royaltyfree/Fluffing%20a%20Duck.mp3
+(full 67 s track, loudness-normalised and re-encoded at 96 kbps MP3; it loops during the race).
 
-The track list and picker live in `components/racing/race-music.ts`. To add a track: download it from
-ncs.io, then
-
-```fish
-ffmpeg -i in.mp3 -vn -t 96 -af "loudnorm=I=-20:TP=-2:LRA=11,afade=t=in:d=1,afade=t=out:st=92:d=4" \
-  -ac 2 -ar 44100 -c:a libmp3lame -b:a 64k -map_metadata -1 public/race-music/<id>.mp3
-```
-
-and add it to `RACE_MUSIC` and this table.
+The track is set in `components/racing/race-music.ts`. The race canvas shows the credit in its
+now-playing label, which CC BY requires to stay.

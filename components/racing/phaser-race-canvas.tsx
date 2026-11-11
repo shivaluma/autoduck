@@ -11,7 +11,7 @@ import { createRecordingDriver } from './drivers/recording-driver'
 import { connectSnapshotDriver } from './drivers/snapshot-driver'
 import { raceSourceKey, type RaceSource, type TimelineDriver } from './drivers/types'
 import { RaceAudioSystem } from './race-audio'
-import { pickRaceMusic } from './race-music'
+import { RACE_MUSIC } from './race-music'
 import { createCrowd, planCrowd, preloadCrowdAvatars } from './race-crowd'
 import { COSMETIC_BY_ID, STARTER_COSMETIC_IDS } from '@/lib/cosmetics/catalog'
 import { AVATAR_FRAME, COSMETIC_LAYER_ORDER, MOTION_SPRITE, type DuckAppearance } from '@/lib/cosmetics/types'
@@ -216,7 +216,7 @@ export function PhaserRaceCanvas({
     let game: PhaserType.Game | null = null
     let closeStream: (() => void) | null = null
     let replayFrame = 0
-    const music = pickRaceMusic(raceId)
+    const music = RACE_MUSIC
     const audio = new RaceAudioSystem(music.url)
     const raceSource = sourceRef.current
 
@@ -383,7 +383,7 @@ export function PhaserRaceCanvas({
             void audio.unlock()
             soundHint.destroy()
             // After the first tap the hint becomes the now-playing label; tapping it mutes or unmutes the music.
-            const musicLabel = () => `${audio.musicMuted ? '🔇 MUSIC OFF' : '♪'} ${music.title} — ${music.artist} · NCS`
+            const musicLabel = () => `${audio.musicMuted ? '🔇 MUSIC OFF' : '♪'} ${music.title} — ${music.artist} · ${music.credit}`
             const nowPlaying = this.add.text(this.scale.width / 2, 18, musicLabel(), { color: '#ffffff', fontFamily: 'sans-serif', fontSize: '12px', fontStyle: 'bold', backgroundColor: '#100b20aa', padding: { x: 10, y: 6 } })
               .setOrigin(0.5, 0).setScrollFactor(0).setDepth(1000).setInteractive({ useHandCursor: true })
             nowPlaying.on('pointerdown', () => { audio.toggleMusic(); nowPlaying.setText(musicLabel()) })

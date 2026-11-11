@@ -1,28 +1,20 @@
 /**
- * Background music for the race canvas: chill lo-fi tracks from NoCopyrightSounds (NCS), trimmed to
- * 96 s loops at 64 kbps (`public/race-music/`, credits in `public/race-music/CREDITS.md`).
+ * Background music for the race canvas: one looping track for every race
+ * (`public/race-music/`, credits in `public/race-music/CREDITS.md`).
  *
- * Like the map theme, each race gets one track picked from its id, so every viewer of a race hears
- * the same song. The hash uses a different salt from `pickRaceTheme`, so a map doesn't always come
- * with the same song.
+ * "Fluffing a Duck" by Kevin MacLeod (incompetech.com), licensed under Creative Commons:
+ * By Attribution 4.0 (https://creativecommons.org/licenses/by/4.0/). The in-race label credits it.
  */
 export interface RaceMusicTrack {
-  id: string
   title: string
   artist: string
+  credit: string
   url: string
 }
 
-export const RACE_MUSIC: readonly RaceMusicTrack[] = [
-  { id: 'cruising', title: 'Cruising', artist: 'Aisake, Dosi', url: '/race-music/cruising.mp3' },
-  { id: 'miffy-cafe', title: 'miffy cafe', artist: 'sakuracloud', url: '/race-music/miffy-cafe.mp3' },
-  { id: 'apart', title: 'apart', artist: 'sumu', url: '/race-music/apart.mp3' },
-  { id: 'up-in-flumes', title: 'Up In Flumes', artist: 'T-Mass', url: '/race-music/up-in-flumes.mp3' },
-  { id: 'long-road-home', title: 'The Long Road Home', artist: 'Inukshuk', url: '/race-music/long-road-home.mp3' },
-  { id: 'lune', title: 'Lune', artist: 'Y&V', url: '/race-music/lune.mp3' },
-]
-
-export function pickRaceMusic(raceId: number): RaceMusicTrack {
-  const hash = Math.imul((raceId | 0) ^ 0x2c1b3c6d, 0xc2b2ae35) >>> 0
-  return RACE_MUSIC[((hash ^ (hash >>> 15)) >>> 0) % RACE_MUSIC.length]!
+export const RACE_MUSIC: RaceMusicTrack = {
+  title: 'Fluffing a Duck',
+  artist: 'Kevin MacLeod',
+  credit: 'incompetech.com · CC BY 4.0',
+  url: '/race-music/fluffing-a-duck.mp3',
 }
