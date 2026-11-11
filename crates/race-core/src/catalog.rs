@@ -105,7 +105,7 @@ pub const RACE_ITEM_CATALOG: [RaceItemDefinition; 9] = [
         cost: 1,
         category: ItemCategory::Minor,
         item_class: ItemClass::Defense,
-        description: "Lông vũ hộ thân (Nội tại): nhảy né 1 lần Vỏ Chuối, Còi Quack Horn hoặc chướng ngại vật (không chặn Tên Lửa), né xong nhận Guard Surge +15% trong 1.8s. Chưa dùng tới 88% quãng đường sẽ hóa luồng lướt +4% trong 1s.",
+        description: FEATHER_DESCRIPTION,
     },
     RaceItemDefinition {
         id: RaceItemId::ShockAbsorber,
@@ -144,6 +144,18 @@ pub const RACE_ITEM_CATALOG: [RaceItemDefinition; 9] = [
         description: "Thổi còi định hướng về một bên (tầm 0.55 làn): húc dạt mọi đối thủ phía đó về cùng hướng — có thể đẩy họ vào vỏ chuối hay chướng ngại vật — phá mọi boost (kể cả Nitro) và Câm Lặng 0.5s; sau đó mục tiêu miễn câm lặng 2s. Cướp đà 1.5s từ 1 vịt Tốc độ trúng còi. Bong bóng đang bật và Lông vũ chặn được còi.",
     },
 ];
+
+/// The Feather row's copy.
+///
+/// S3.15 (`ts-compat`, the TS catalog) promised a dodge of "Vỏ Chuối, Còi
+/// Quack Horn hoặc chướng ngại vật", but the loadout Feather never dodges a
+/// hazard: only the wild Feather Hop does (`items::interactions`). **F13
+/// (S3.16):** the copy says what the code does.
+const FEATHER_DESCRIPTION: &str = if crate::TS_COMPAT {
+    "Lông vũ hộ thân (Nội tại): nhảy né 1 lần Vỏ Chuối, Còi Quack Horn hoặc chướng ngại vật (không chặn Tên Lửa), né xong nhận Guard Surge +15% trong 1.8s. Chưa dùng tới 88% quãng đường sẽ hóa luồng lướt +4% trong 1s."
+} else {
+    "Lông vũ hộ thân (Nội tại): nhảy né 1 lần Vỏ Chuối hoặc Còi Quack Horn (không chặn Tên Lửa hay chướng ngại vật), né xong nhận Guard Surge +15% trong 1.8s. Chưa dùng tới 88% quãng đường sẽ hóa luồng lướt +4% trong 1s."
+};
 
 /// `AUTO_LOADOUT_PRESETS` (`items/catalog.ts:26-30`).
 pub const AUTO_LOADOUT_PRESETS: [[RaceItemId; 2]; 3] = [

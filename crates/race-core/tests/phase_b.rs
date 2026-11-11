@@ -275,3 +275,60 @@ fn f8_late_inputs_are_rejected_not_clamped() {
     let next = race_core::sim::queue_wild_item_input(&mut sim, command(3), None).expect("next");
     assert_eq!(next.authoritative_tick, tick + 1);
 }
+
+// ---------------------------------------------------------------------------
+// F13: Feather copy and matrix data match the code
+// ---------------------------------------------------------------------------
+
+#[test]
+fn f13_loadout_feather_never_claims_a_hazard_dodge() {
+    use race_core::items::IncomingRaceEffect;
+    use race_core::items::interactions::{InteractionRule, item_interaction_matrix};
+
+    let hazard = item_interaction_matrix(IncomingRaceEffect::MinorHazard).feather;
+    let feather = race_core::catalog::get_race_item(race_protocol::ids::RaceItemId::Feather);
+    if race_core::TS_COMPAT {
+        assert_eq!(hazard, InteractionRule::Dodge);
+        assert!(
+            feather
+                .description
+                .contains("hoặc chướng ngại vật (không chặn Tên Lửa)")
+        );
+    } else {
+        // The loadout Feather dodges bananas and the horn only
+        // (`resolve_incoming_race_effect`, `execute.rs`); hazards are the
+        // wild Feather Hop's.
+        assert_eq!(hazard, InteractionRule::No);
+        assert!(feather.description.contains("Vỏ Chuối hoặc Còi Quack Horn"));
+        assert!(
+            feather
+                .description
+                .contains("không chặn Tên Lửa hay chướng ngại vật")
+        );
+    }
+    for incoming in [
+        IncomingRaceEffect::Banana,
+        IncomingRaceEffect::WildBanana,
+        IncomingRaceEffect::QuackHorn,
+    ] {
+        assert_eq!(
+            item_interaction_matrix(incoming).feather,
+            InteractionRule::Dodge
+        );
+    }
+}
+
+#[test]
+fn f13_loadout_feather_does_not_dodge_hazards() {
+    use race_core::items::{DefenseOutcome, IncomingRaceEffect, resolve_incoming_race_effect};
+
+    let config = resolve(&lobby("41", NORMAL));
+    let state = race_core::items::create_item_race_state(&config);
+    // Duck 2 holds HOMING_ROCKET + FEATHER.
+    let mut runtime = state.by_player.get("2").expect("duck 2").clone();
+    assert!(runtime.feather_available);
+    let outcome =
+        resolve_incoming_race_effect(&mut runtime, IncomingRaceEffect::MinorHazard, 600, 60);
+    assert_eq!(outcome, DefenseOutcome::Hit);
+    assert!(runtime.feather_available);
+}
