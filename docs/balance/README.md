@@ -29,3 +29,16 @@ Balance tuning waits for the Rust engine.
 ## Balance write-ups
 
 Each balance version is documented in `docs/balance/<version>.md` (`S3.12.md` … `S3.15.md`), with raw outputs in `artifacts/balance-<version>/` (for example `artifacts/balance-s3-14/`). Compare treatments on identical seeds and lobbies (`scripts/balance-audit.ts`, `scripts/compare-balance-audit.ts`).
+
+## Rust engine (`rewrite` branch)
+
+From S3.16 on, balance work runs on the Rust engine with `race-cli` (build once with `cargo build -p race-cli --release --locked`). The modes replace the TS worker pool (`scripts/balance-*.ts`); each runs races in parallel and folds results in seed order, so output does not depend on the thread count:
+
+- `race-cli balance mixed --races N [--chaos X]`: loadout cells, temperaments (win %, Chaos loser %, mean rank), drama (lead changes, durations) and wild-item grants. `--corpus file --out run.json` runs a fixed config file.
+- `race-cli balance matrix --seeds N [--lobbies MIXED,SPEED,DEFENSE,ATTACK]`: the paired loadout matrix.
+- `race-cli balance wild --seeds N`: the paired wild-item value audit.
+- `race-cli balance run` / `balance compare`: the paired Rust-vs-Rust report of one engine change (`docs/balance/S3.16.md`).
+- `race-cli compare ts.json rs.json`: gate G3 against TS S3.15 (`docs/balance/S3.16.md`).
+
+**Golden digests.** Any change to Rust engine output needs a version bump (`RACE_BALANCE_VERSION` or `RACE_ENGINE_VERSION` in `crates/race-protocol/src/versions.rs`) and a new frozen entry: `race-cli golden freeze`. The `golden-version` CI job (`race-cli golden check`) fails otherwise, and also when `rust-toolchain.toml` changes until the bump is re-frozen with matching digests. The `fuzz` CI job (`race-cli fuzz --cases 2000`) must report 0 panics, 0 unfinished races and 0 non-finite values.
+
