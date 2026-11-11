@@ -73,3 +73,6 @@ tmp/
 
 # rust
 /target
+
+# historical engine extractions (scripts/replay-tracks/resolve-historical.ts)
+/.cache/

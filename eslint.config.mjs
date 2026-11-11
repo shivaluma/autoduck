@@ -28,6 +28,8 @@ export default defineConfig([
     "public/**",
     // Scratch output (videos, local experiments).
     "tmp/**",
+    // Historical engine extractions (scripts/replay-tracks/resolve-historical.ts).
+    ".cache/**",
   ]),
   {
     files: ["**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}"],

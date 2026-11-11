@@ -18,5 +18,5 @@
     }
   },
   "include": ["**/*.ts", "**/*.tsx", "**/*.mts"],
-  "exclude": ["node_modules", "dist", "target", ".next", "scripts/ops/admin-season3-diff/run-ts.ts"]
+  "exclude": ["node_modules", "dist", "target", ".next", "scripts/ops/admin-season3-diff/run-ts.ts", ".cache"]
 }

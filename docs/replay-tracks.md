@@ -270,8 +270,38 @@ SELECT "isTest", status, "engineVersion", "balanceVersion", "trackVersion", COUN
 FROM "Race" WHERE "engineConfigJson" IS NOT NULL GROUP BY 1,2,3,4,5 ORDER BY MIN("createdAt");
 ```
 
-Until the historical resolver (§4.4) has run, races finished before 0.4 was deployed show up in the gate.
-That is expected.
+Races finished before 0.4 was deployed are covered by the historical tracks below.
+
+## Historical tracks (plan step 0.6, §4.4)
+
+Races that ran before live recording are backfilled offline and imported at boot.
+
+- **Resolver:** `pnpm replay:resolve --db <sanitised copy> [--race N ...] [--workers 4] [--budget-min 25]`
+  (`scripts/replay-tracks/resolve-historical.ts`). It opens the DB read-only. For each finished race with a
+  config and no track row it tries the TS engine commits (first-parent history of `packages/race-core`,
+  `packages/race-protocol`, `lib/racing/{audit,persistence,runtime}.ts`, deduplicated by tree). The order is the
+  newest commit at or before `Race.createdAt` and the 3 before it, the next newer one, the rest of the balance
+  label, HEAD, then the others by distance in time. Each commit is extracted with `git archive` into
+  `.cache/engines/<key>` (gitignored) and run by `resolve-worker.mts` in a child process; `guard-hook.mjs`
+  fails any import that resolves outside that tree. The worker simulates with the commit's engine and records
+  with HEAD's DTRK/1 encoder (`head-dtrk.ts`, bundled by esbuild). S3.15 races must verify at HEAD first
+  (calibration). Official races search every commit; test races at most `--test-candidates` (8).
+- **Grades:** `VERIFIED_DIGEST` (stored `resultDigest` reproduced), `VERIFIED_EVENTS` (whole event stream
+  reproduced but not the digest; never for the `0b67096` era), else `UNAVAILABLE` (no bytes).
+- **Output:** `artifacts/replay-tracks/{<raceId>.dtrk.gz,manifest.json,REPORT.md}` (ids, versions and grades
+  only) and `public/race-tracks/<trackVersion>@<sha8>.json` for each geometry the reproducing commits used.
+  Test races are dropped to `UNAVAILABLE` if the bundle exceeds `--max-bundle-mb` (20).
+- **Import:** `scripts/start.sh` runs `scripts/replay-tracks/ensure-imported.ts` after the app migrations
+  (`pnpm replay:import` locally). It inserts a `BACKFILL` row for each manifest race that has none, after
+  checking that the race is finished, that `sha256(engineConfigJson)` and `resultDigest` equal the manifest,
+  and that the gunzipped bytes hash to `byteSha256`. `statsJson` is built at import (names come from the DB,
+  motion from the track, baseline ranks from the manifest). It never fails the boot and logs
+  `[replay-tracks] imported N, skipped M, rejected K` plus one line per rejection.
+- **Gaps:** a race that finished on an image without live recording after the DB copy was taken shows up in
+  the gate. Re-run the resolver with `--race N` against a fresh copy (it merges into the manifest) and deploy.
+
+First run (2026-11-11, sanitised copy, Node 24.17 / ICU 78.3): all 130 finished races with a config
+(13 official, 117 test) are `VERIFIED_DIGEST`, 17 MB of tracks, 4 geometries, about 90 s with 4 workers.
 
 ## Operations
 

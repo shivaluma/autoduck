@@ -17,5 +17,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "dist", "target"]
+  "exclude": ["node_modules", "dist", "target", "scripts/ops/admin-season3-diff/run-ts.ts", ".cache"]
 }

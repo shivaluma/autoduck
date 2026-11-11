@@ -17,8 +17,18 @@ const variants = JSON.parse(
   readFileSync(new URL('../crates/race-protocol/tests/fixtures/ts-oracle/event-variants.json', import.meta.url), 'utf8'),
 ) as RaceEvent[]
 
-test('item and wild-item catalogs match the TS engine', () => {
-  assert.deepEqual(seam.RACE_ITEM_CATALOG, RACE_ITEM_CATALOG)
+/**
+ * S3.16 F13 (docs/balance/S3.16.md): the Rust catalog's loadout Feather copy no longer promises a hazard
+ * dodge. The frozen TS engine keeps the S3.15 text, so that one description is expected to differ.
+ */
+const S3_16_DESCRIPTIONS: Partial<Record<string, string>> = {
+  FEATHER:
+    'Lông vũ hộ thân (Nội tại): nhảy né 1 lần Vỏ Chuối hoặc Còi Quack Horn (không chặn Tên Lửa hay chướng ngại vật), né xong nhận Guard Surge +15% trong 1.8s. Chưa dùng tới 88% quãng đường sẽ hóa luồng lướt +4% trong 1s.',
+}
+const EXPECTED_ITEMS = RACE_ITEM_CATALOG.map((item) => ({ ...item, description: S3_16_DESCRIPTIONS[item.id] ?? item.description }))
+
+test('item and wild-item catalogs match the TS engine (plus the S3.16 copy fixes)', () => {
+  assert.deepEqual(seam.RACE_ITEM_CATALOG, EXPECTED_ITEMS)
   assert.deepEqual(seam.WILD_ITEM_CATALOG.map((item) => ({ ...item })), WILD_ITEM_CATALOG.map((item) => ({
     id: item.id,
     displayName: item.displayName,
@@ -29,7 +39,7 @@ test('item and wild-item catalogs match the TS engine', () => {
   })))
   assert.deepEqual(seam.AUTO_LOADOUT_PRESETS, AUTO_LOADOUT_PRESETS)
   assert.deepEqual(seam.ITEM_CLASS_BY_ID, ITEM_CLASS_BY_ID)
-  for (const item of RACE_ITEM_CATALOG) assert.deepEqual(seam.getRaceItem(item.id), item)
+  for (const item of EXPECTED_ITEMS) assert.deepEqual(seam.getRaceItem(item.id), item)
   for (const item of WILD_ITEM_CATALOG) assert.equal(seam.getWildItem(item.id).id, item.id)
 })
 
