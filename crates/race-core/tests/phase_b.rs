@@ -238,3 +238,40 @@ fn f5_a_ghost_cannot_shield_a_real_duck_from_the_loser_set() {
     assert_eq!(utility.is_losing_now("b", &ducks), !race_core::TS_COMPAT);
     assert!(utility.is_losing_now("c", &ducks));
 }
+
+// ---------------------------------------------------------------------------
+// F8: late wild-item inputs are rejected
+// ---------------------------------------------------------------------------
+
+#[test]
+fn f8_late_inputs_are_rejected_not_clamped() {
+    let mut sim = race_core::sim::create_simulation(
+        resolve(&lobby("41", NORMAL)),
+        race_core::sim::SimOptions::default(),
+        None,
+    );
+    for _ in 0..10 {
+        race_core::sim::step_simulation(&mut sim, None);
+    }
+    let command = |n: u32| race_protocol::events::WildItemUseCommand {
+        race_id: race_protocol::ids::RaceId::new("41").expect("valid id"),
+        player_id: race_protocol::ids::PlayerId::new("1").expect("valid id"),
+        wild_item_instance_id: "wild:41:x:1".to_owned(),
+        action: race_protocol::events::WildItemAction::Use,
+        client_action_id: race_protocol::ids::ClientActionId::new(format!("client-action-{n}"))
+            .expect("valid id"),
+    };
+    let tick = sim.tick;
+    let late = race_core::sim::queue_wild_item_input(&mut sim, command(1), Some(tick));
+    if race_core::TS_COMPAT {
+        assert_eq!(late.expect("clamped").authoritative_tick, tick + 1);
+    } else {
+        assert!(late.is_err());
+        assert!(sim.manual_inputs.is_empty());
+    }
+    let on_time = race_core::sim::queue_wild_item_input(&mut sim, command(2), Some(tick + 1))
+        .expect("on time");
+    assert_eq!(on_time.authoritative_tick, tick + 1);
+    let next = race_core::sim::queue_wild_item_input(&mut sim, command(3), None).expect("next");
+    assert_eq!(next.authoritative_tick, tick + 1);
+}

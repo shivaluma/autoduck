@@ -250,12 +250,30 @@ pub fn create_simulation(
 /// `queueWildItemInput(state, input, authoritativeTick = state.tick + 1)`
 /// (`simulation.ts:223-227`): the input applies no earlier than the next
 /// tick.
+///
+/// S3.15 (`ts-compat`) clamps a late `authoritative_tick` (`<= sim.tick`)
+/// up to the next tick, so the input lands on a tick the client never asked
+/// for. **F8 (S3.16):** a late input is rejected
+/// ([`LateWildItemInput`]) and nothing is queued; an absent tick still means
+/// the next one.
+///
+/// # Errors
+/// [`LateWildItemInput`] when `authoritative_tick <= sim.tick` (S3.16 only).
 pub fn queue_wild_item_input(
     sim: &mut Simulation,
     input: WildItemUseCommand,
     authoritative_tick: Option<u32>,
-) -> RecordedWildItemInput {
+) -> Result<RecordedWildItemInput, LateWildItemInput> {
     let next = sim.tick.checked_add(1).expect("tick fits in u32");
+    if !crate::TS_COMPAT
+        && let Some(at_tick) = authoritative_tick
+        && at_tick <= sim.tick
+    {
+        return Err(LateWildItemInput {
+            at_tick,
+            tick: sim.tick,
+        });
+    }
     let recorded = RecordedWildItemInput {
         race_id: input.race_id,
         player_id: input.player_id,
@@ -265,5 +283,24 @@ pub fn queue_wild_item_input(
         authoritative_tick: authoritative_tick.unwrap_or(next).max(next),
     };
     sim.manual_inputs.push(recorded.clone());
-    recorded
+    Ok(recorded)
+}
+
+/// A wild-item input for a tick the simulation has already run (F8).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct LateWildItemInput {
+    /// The requested `authoritativeTick`.
+    pub at_tick: u32,
+    /// The last tick the simulation ran.
+    pub tick: u32,
+}
+
+impl core::fmt::Display for LateWildItemInput {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(
+            f,
+            "wild item input for tick {} arrived after tick {}",
+            self.at_tick, self.tick
+        )
+    }
 }
