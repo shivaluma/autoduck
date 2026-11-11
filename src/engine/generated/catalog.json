@@ -1,0 +1,300 @@
+{
+  "autoLoadoutPresets": [
+    [
+      "NITRO",
+      "DRAFT_FIN"
+    ],
+    [
+      "BUBBLE_SHIELD",
+      "FEATHER"
+    ],
+    [
+      "HOMING_ROCKET",
+      "BANANA"
+    ]
+  ],
+  "classes": {
+    "BANANA": "ATTACK",
+    "BUBBLE_SHIELD": "DEFENSE",
+    "DRAFT_FIN": "SPEED",
+    "FEATHER": "DEFENSE",
+    "HOMING_ROCKET": "ATTACK",
+    "NITRO": "SPEED",
+    "PADDLE_BURST": "SPEED",
+    "QUACK_HORN": "ATTACK",
+    "SHOCK_ABSORBER": "DEFENSE"
+  },
+  "comboRules": {
+    "mixed": {
+      "badge": "🧪 HYBRID",
+      "label": "MAD DUCK"
+    },
+    "sameClass": {
+      "ATTACK": {
+        "badge": "💥 ATTACK COMBO",
+        "label": "MENACE"
+      },
+      "DEFENSE": {
+        "badge": "🛡️ DEFENSE COMBO",
+        "label": "FORTRESS"
+      },
+      "SPEED": {
+        "badge": "⚡ SPEED COMBO",
+        "label": "SPEED DEMON"
+      }
+    }
+  },
+  "eventItemActivation": {
+    "BANANA_DROPPED": {
+      "itemId": "BANANA",
+      "player": "source",
+      "requires": "source"
+    },
+    "BUBBLE_POPPED": {
+      "itemId": "BUBBLE_SHIELD",
+      "player": "source",
+      "requires": "source"
+    },
+    "BUBBLE_SHIELD_ACTIVATED": {
+      "itemId": "BUBBLE_SHIELD",
+      "player": "source",
+      "requires": "source"
+    },
+    "DRAFT_FIN_STARTED": {
+      "itemId": "DRAFT_FIN",
+      "player": "source",
+      "requires": "source"
+    },
+    "FEATHER_DODGED": {
+      "itemId": "FEATHER",
+      "player": "source",
+      "requires": "source"
+    },
+    "HORN_USED": {
+      "itemId": "QUACK_HORN",
+      "player": "source",
+      "requires": "source"
+    },
+    "NITRO_STARTED": {
+      "itemId": "NITRO",
+      "player": "source",
+      "requires": "source"
+    },
+    "PADDLE_BURST_STARTED": {
+      "itemId": "PADDLE_BURST",
+      "player": "source",
+      "requires": "source"
+    },
+    "ROCKET_FIRED": {
+      "itemId": "HOMING_ROCKET",
+      "player": "source",
+      "requires": "source"
+    },
+    "SHOCK_ABSORBER_PROC": {
+      "itemId": "SHOCK_ABSORBER",
+      "player": "targetOrSource",
+      "requires": "source"
+    }
+  },
+  "eventItemSuccess": {
+    "BANANA_HIT": {
+      "itemId": "BANANA",
+      "player": "source",
+      "requires": "source"
+    },
+    "BOOST_BROKEN": {
+      "itemId": "HOMING_ROCKET",
+      "player": "sourceOrTarget",
+      "requires": "target"
+    },
+    "BUBBLE_POPPED": {
+      "itemId": "BUBBLE_SHIELD",
+      "player": "source",
+      "requires": "source"
+    },
+    "DRAFT_FIN_STARTED": {
+      "itemId": "DRAFT_FIN",
+      "player": "source",
+      "requires": "source"
+    },
+    "FEATHER_DODGED": {
+      "itemId": "FEATHER",
+      "player": "source",
+      "requires": "source"
+    },
+    "HORN_USED": {
+      "itemId": "QUACK_HORN",
+      "player": "source",
+      "requires": "source"
+    },
+    "NITRO_STARTED": {
+      "itemId": "NITRO",
+      "player": "source",
+      "requires": "source"
+    },
+    "PADDLE_BURST_STARTED": {
+      "itemId": "PADDLE_BURST",
+      "player": "source",
+      "requires": "source"
+    },
+    "ROCKET_HIT": {
+      "itemId": "HOMING_ROCKET",
+      "player": "source",
+      "requires": "source"
+    },
+    "SHOCK_ABSORBER_PROC": {
+      "itemId": "SHOCK_ABSORBER",
+      "player": "target",
+      "requires": "target"
+    }
+  },
+  "items": [
+    {
+      "category": "major",
+      "cost": 2,
+      "description": "Bình tăng tốc 3 giai đoạn (Đề pa → Đỉnh điểm +25% → Hạ nhiệt) trong 1.8s giúp xé gió vượt lên (1 lần/trận). Khắc chế Phòng thủ; bị Tấn công phá đà và cướp tốc.",
+      "icon": "⚡",
+      "id": "NITRO",
+      "itemClass": "SPEED",
+      "name": "Nitro"
+    },
+    {
+      "category": "minor",
+      "cost": 1,
+      "description": "Bám sát đuôi đối thủ phía trước trong 0.75s để đón luồng lướt gió tăng tốc +21% trong 1.6s (1 lần/trận).",
+      "icon": "🦈",
+      "id": "DRAFT_FIN",
+      "itemClass": "SPEED",
+      "name": "Draft Fin"
+    },
+    {
+      "category": "minor",
+      "cost": 1,
+      "description": "Quạt nước bứt tốc +15% trong 1.8s ở chặng cuối (từ 65% quãng đường) để lội ngược dòng (1 lần/trận).",
+      "icon": "🛶",
+      "id": "PADDLE_BURST",
+      "itemClass": "SPEED",
+      "name": "Paddle Burst"
+    },
+    {
+      "category": "major",
+      "cost": 2,
+      "description": "Bong bóng phản xạ: tự bung khi Tên Lửa/Chuối trang bị đầu tiên sắp trúng (trừ khi đang bị Câm Lặng) và chặn hoàn toàn; khi đang bật cũng vô hiệu Còi và đồ nhặt. Chặn thành công nhận Guard Surge +8% trong 1s. Cồng kềnh: chậm 0.5% khi chưa dùng.",
+      "icon": "🫧",
+      "id": "BUBBLE_SHIELD",
+      "itemClass": "DEFENSE",
+      "name": "Bubble Shield"
+    },
+    {
+      "category": "minor",
+      "cost": 1,
+      "description": "Lông vũ hộ thân (Nội tại): nhảy né 1 lần Vỏ Chuối, Còi Quack Horn hoặc chướng ngại vật (không chặn Tên Lửa), né xong nhận Guard Surge +15% trong 1.8s. Chưa dùng tới 88% quãng đường sẽ hóa luồng lướt +4% trong 1s.",
+      "icon": "🪶",
+      "id": "FEATHER",
+      "itemClass": "DEFENSE",
+      "name": "Feather"
+    },
+    {
+      "category": "minor",
+      "cost": 1,
+      "description": "Áo giáp chống sốc (Nội tại): đỡ 1 đòn Tên Lửa (còn 40% tốc độ 0.3s rồi 80% 0.3s, vẫn mất boost) hoặc Còi (giảm 60% lực đẩy, không bị Câm Lặng); hồi xong nhận Guard Surge +6% trong 0.8s. Không giữ được Nitro khỏi bị cướp đà.",
+      "icon": "🦺",
+      "id": "SHOCK_ABSORBER",
+      "itemClass": "DEFENSE",
+      "name": "Shock Absorber"
+    },
+    {
+      "category": "major",
+      "cost": 2,
+      "description": "Bắn tên lửa tầm nhiệt nhắm đối thủ phía trước, triệt tiêu tăng tốc và hãm tốc còn 12% trong 0.95s rồi 50% trong 0.65s (1 lần/trận). Trúng vịt Tốc độ (đang boost hoặc còn Nitro) sẽ cướp đà +20% trong 2.3s.",
+      "icon": "🚀",
+      "id": "HOMING_ROCKET",
+      "itemClass": "ATTACK",
+      "name": "Homing Rocket"
+    },
+    {
+      "category": "minor",
+      "cost": 1,
+      "description": "Ném vỏ chuối ra sau (lệch tối đa 0.22 làn sang bên để đón đúng đường bơi của kẻ bám đuôi, tồn tại 14s); đối thủ dẫm phải bị trượt văng làn, mất boost và hãm còn 15% trong 0.85s rồi 60% trong 0.7s. Trúng vịt Tốc độ sẽ cướp đà.",
+      "icon": "🍌",
+      "id": "BANANA",
+      "itemClass": "ATTACK",
+      "name": "Banana"
+    },
+    {
+      "category": "minor",
+      "cost": 1,
+      "description": "Thổi còi định hướng về một bên (tầm 0.55 làn): húc dạt mọi đối thủ phía đó về cùng hướng — có thể đẩy họ vào vỏ chuối hay chướng ngại vật — phá mọi boost (kể cả Nitro) và Câm Lặng 0.5s; sau đó mục tiêu miễn câm lặng 2s. Cướp đà 1.5s từ 1 vịt Tốc độ trúng còi. Bong bóng đang bật và Lông vũ chặn được còi.",
+      "icon": "🔊",
+      "id": "QUACK_HORN",
+      "itemClass": "ATTACK",
+      "name": "Quack Horn"
+    }
+  ],
+  "wildItems": [
+    {
+      "behavior": "INSTANT",
+      "category": "MOBILITY",
+      "description": "Bứt tốc tức thì +9% tốc độ trong 1.15 giây.",
+      "displayName": "Mini Nitro",
+      "icon": "⚡",
+      "id": "MINI_NITRO"
+    },
+    {
+      "behavior": "INSTANT",
+      "category": "UTILITY",
+      "description": "Thuận gió đẩy thuyền: +7% tốc độ và bơi ổn định giữ làn trong 1.9 giây.",
+      "displayName": "Tailwind",
+      "icon": "🌊",
+      "id": "TAILWIND"
+    },
+    {
+      "behavior": "HELD",
+      "category": "DEFENSE",
+      "description": "Bong bóng phòng hộ cầm tay (6s): chặn 1 đòn tấn công hoặc bẫy rồi nhận +12% trong 1.2s; hết hạn mà chưa dùng sẽ hóa luồng đẩy +13% trong 1.8s.",
+      "displayName": "Mini Bubble",
+      "icon": "🫧",
+      "id": "MINI_BUBBLE"
+    },
+    {
+      "behavior": "HELD",
+      "category": "ATTACK",
+      "description": "Tên lửa mini cắt 50% thời gian boost còn lại, hãm tốc còn 25% trong 0.55s rồi 65% trong 0.45s. Trúng vịt Tốc độ sẽ cướp đà +20% trong 1.2s.",
+      "displayName": "Mini Rocket",
+      "icon": "🚀",
+      "id": "MINI_ROCKET"
+    },
+    {
+      "behavior": "HELD",
+      "category": "ATTACK",
+      "description": "Ném bẫy chuối (lệch tối đa 0.18 làn, 8s): đối thủ đạp phải trượt lệch làn, hãm còn 22% trong 0.6s rồi 60% trong 0.5s. Trúng vịt Tốc độ sẽ cướp đà.",
+      "displayName": "Banana",
+      "icon": "🍌",
+      "id": "BANANA"
+    },
+    {
+      "behavior": "HELD",
+      "category": "UTILITY",
+      "description": "Thổi còi về một bên, húc dạt các vịt phía đó, phá boost (trừ Nitro) và Câm Lặng 0.7s; cướp đà từ 1 vịt Tốc độ. Bong bóng đang bật chặn được còi.",
+      "displayName": "Quack Horn",
+      "icon": "🔊",
+      "id": "QUACK_HORN"
+    },
+    {
+      "behavior": "HELD",
+      "category": "DEFENSE",
+      "description": "Lông Vũ nhảy né (5.0s): né bẫy Chuối hoặc chướng ngại vật kế tiếp rồi nhận +12% trong 1.2s; hết hạn mà chưa dùng sẽ hóa luồng lướt +8% trong 1.2s.",
+      "displayName": "Feather Hop",
+      "icon": "🪽",
+      "id": "FEATHER"
+    },
+    {
+      "behavior": "INSTANT",
+      "category": "MOBILITY",
+      "description": "Nam châm bám luồng hút đối thủ gần nhất phía trước, tăng +12% tốc độ trong 1.6 giây.",
+      "displayName": "Slipstream Magnet",
+      "icon": "🧲",
+      "id": "SLIPSTREAM_MAGNET"
+    }
+  ]
+}

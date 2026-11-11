@@ -1,0 +1,15 @@
+{
+  "DIGEST_VERSION": "jcs-sha256-v2",
+  "HAZARD_BALANCE_VERSION": "hazards-v2",
+  "PICKUP_SPAWN_VERSION": "pickups-v2",
+  "RACE_BALANCE_VERSION": "S3.16",
+  "RACE_ENGINE_VERSION": "2.0.0",
+  "RACE_PROTOCOL_VERSION": "2.0.0",
+  "RACE_TICK_RATE": 60,
+  "RNG_VERSION": "xs32-v1",
+  "SUPPORTED_BALANCE_VERSIONS": [
+    "S3.16"
+  ],
+  "TRACK_FORMAT": "dtrk/1",
+  "TRACK_VERSION": "river-01-v2"
+}

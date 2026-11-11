@@ -57,6 +57,10 @@ jobs:
         run: scripts/ci/check-wire-usize.sh
       - name: cargo test
         run: cargo test --workspace --all-features --locked
+      - name: Browser catalog/versions export is up to date (D19)
+        run: |
+          cargo run -q --locked -p race-cli -- codegen --out src/engine/generated
+          git diff --exit-code -- src/engine/generated
       - name: ENGINE_BUILD_ID self-check without ts-compat
         # Recomputes the id from the tree and compares it with the compiled
         # constant (catches a stale id after an mtime-preserving restore).
