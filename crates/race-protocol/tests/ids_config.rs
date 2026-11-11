@@ -411,3 +411,34 @@ fn ts_compat_resolver_uses_zod_defaults() {
         Err(ConfigError::LegacyEngineVersion { .. })
     ));
 }
+
+/// F11: Chaos groups must be non-empty, lobby-only and disjoint in S3.16.
+#[test]
+fn chaos_groups_are_validated() {
+    let groups = |groups: Value| {
+        let mut value = base();
+        let players: Vec<Value> = (1..=4)
+            .map(|n| json!({ "playerId": format!("p{n}"), "name": format!("Duck {n}") }))
+            .collect();
+        value["players"] = Value::Array(players);
+        value["chaosConfig"] = json!({ "type": "DUO", "targetPlayerId": null, "groups": groups });
+        resolve(value)
+    };
+    assert!(groups(json!([["p1", "p2"], ["p3", "p4"]])).is_ok());
+    assert!(matches!(
+        groups(json!([["p1", "p2"], []])),
+        Err(ConfigError::ChaosGroupEmpty { index: 1 })
+    ));
+    assert!(matches!(
+        groups(json!([["p1", "p9"], ["p3", "p4"]])),
+        Err(ConfigError::ChaosGroupForeignPlayer { .. })
+    ));
+    assert!(matches!(
+        groups(json!([["p1", "p2"], ["p2", "p3"]])),
+        Err(ConfigError::ChaosGroupOverlap { .. })
+    ));
+    assert!(matches!(
+        groups(json!([["p1", "p1"]])),
+        Err(ConfigError::ChaosGroupOverlap { .. })
+    ));
+}

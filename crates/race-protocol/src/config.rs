@@ -449,6 +449,12 @@ pub enum ConfigError {
     /// constants and the balance label must be in
     /// [`versions::SUPPORTED_BALANCE_VERSIONS`].
     UnsupportedVersion { field: &'static str, value: String },
+    /// F11 (S3.16): a `chaosConfig.groups` entry is empty.
+    ChaosGroupEmpty { index: usize }, // usize-ok: error detail, never serialized
+    /// F11 (S3.16): a Chaos group names a player who is not in `players`.
+    ChaosGroupForeignPlayer { player_id: PlayerId },
+    /// F11 (S3.16): a player appears in two Chaos groups (or twice in one).
+    ChaosGroupOverlap { player_id: PlayerId },
 }
 
 impl fmt::Display for ConfigError {
@@ -497,6 +503,18 @@ impl fmt::Display for ConfigError {
             ),
             Self::UnsupportedVersion { field, value } => {
                 write!(f, "{field}: {value} is not supported by this engine")
+            }
+            Self::ChaosGroupEmpty { index } => {
+                write!(f, "chaosConfig.groups[{index}]: empty group")
+            }
+            Self::ChaosGroupForeignPlayer { player_id } => {
+                write!(f, "chaosConfig.groups: {player_id} is not in players")
+            }
+            Self::ChaosGroupOverlap { player_id } => {
+                write!(
+                    f,
+                    "chaosConfig.groups: {player_id} is in more than one group"
+                )
             }
         }
     }
@@ -733,6 +751,10 @@ impl RaceConfigInput {
             },
         };
 
+        if mode == ResolveMode::Engine {
+            validate_chaos_groups(&chaos_config.groups, &players)?;
+        }
+
         let tuning = self.item_tuning.clone().unwrap_or_default();
         // F9: still range-checked (the Zod schema), carried only by
         // `s3-15-config`.
@@ -834,6 +856,36 @@ impl RaceConfigInput {
             pickup_config,
         })
     }
+}
+
+/// F11 (S3.16): Chaos groups must be non-empty, name only lobby players and
+/// not overlap. S3.15 (`resolve_ts_compat`) accepted any groups, so an empty
+/// DUO group averaged `0/0 = NaN` and a player in two groups was counted
+/// twice by the Chaos rules and the team AI.
+fn validate_chaos_groups(
+    groups: &[Vec<PlayerId>],
+    players: &[RacePlayerConfig],
+) -> Result<(), ConfigError> {
+    let mut seen: Vec<&PlayerId> = Vec::new();
+    for (index, group) in groups.iter().enumerate() {
+        if group.is_empty() {
+            return Err(ConfigError::ChaosGroupEmpty { index });
+        }
+        for player_id in group {
+            if !players.iter().any(|player| &player.player_id == player_id) {
+                return Err(ConfigError::ChaosGroupForeignPlayer {
+                    player_id: player_id.clone(),
+                });
+            }
+            if seen.contains(&player_id) {
+                return Err(ConfigError::ChaosGroupOverlap {
+                    player_id: player_id.clone(),
+                });
+            }
+            seen.push(player_id);
+        }
+    }
+    Ok(())
 }
 
 fn resolve_pickup_config(
