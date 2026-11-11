@@ -28,9 +28,11 @@ pub mod loadout;
 pub mod math;
 pub mod meta;
 pub mod pickups;
+pub mod replay;
 pub mod rng;
 pub mod serde_jcs;
 pub mod sim;
+pub mod stats;
 pub mod track;
 
 /// D6 id order/validation; the ICU comparator inside is gated on `ts-compat`.

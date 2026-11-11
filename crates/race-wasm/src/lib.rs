@@ -4,12 +4,20 @@
 //! Phase 1 exports `engineBuildId()`, `versions()` and the perf-harness stub
 //! `benchStubResim()` (see `crates/race-wasm/bench/README.md`). Phase 2 adds
 //! `runCaseDigest(line)`, the D26 determinism probe CI runs on the shipped
-//! package in Node (`scripts/ci/wasm-determinism.mjs`). Phase 5 adds the live
-//! driver and `normalizeConfig(json: &str)` (D8).
+//! package in Node (`scripts/ci/wasm-determinism.mjs`). Phase 5 adds the
+//! browser engine (module [`engine`]): `engineInfo`, `normalizeConfig`,
+//! `simulate`, `verifyIntegrity`, `verifyResim`, `postRaceStats` and the
+//! class `SimHandle`. Everything crosses the boundary as JSON text (parsed by
+//! Rust, never by V8, D8) or bytes; `src/engine/index.ts` wraps it.
 //!
 //! After any trap (`panic=abort` lowers a panic to `unreachable`) the instance
 //! must be discarded: it stays callable, but a kept `Simulation` would carry
-//! on from a half-stepped state (Phase 2 review 2 INFO 7).
+//! on from a half-stepped state (Phase 2 review 2 INFO 7). The browser runs
+//! the module in a Web Worker and recreates the worker after a trap.
+
+mod engine;
+
+pub use engine::*;
 
 use race_protocol::versions;
 use serde::Serialize;

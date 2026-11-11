@@ -34,9 +34,10 @@ pickupTypes: Array<string>, q: DtrkQuantisation, raceId: RaceId,
 resultDigest: string | null, source: TrackSource, stride: number, tickRate: number, 
 /**
  * `"<trackVersion>@<sha8>"`, resolving to
- * `public/race-tracks/<trackGeometry>.json`.
+ * `public/race-tracks/<trackGeometry>.json`; `null` in tracks recorded
+ * before the geometry files existed (TS 0.4, `fixtures/replay-track`).
  */
-trackGeometry: string, trackVersion: string, 
+trackGeometry: string | null, trackVersion: string, 
 /**
  * Wild-item table for section 2 `WILD_ITEM_SET`.
  */

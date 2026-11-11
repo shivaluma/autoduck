@@ -106,7 +106,7 @@ fn header() -> DtrkHeader {
         source: TrackSource::LiveRust,
         stride: 1,
         tick_rate: 60,
-        track_geometry: track_geometry_key("river-01-v2", "0123456789abcdef"),
+        track_geometry: Some(track_geometry_key("river-01-v2", "0123456789abcdef")),
         track_version: "river-01-v2".into(),
         wild_items: vec!["MINI_ROCKET".into()],
     }

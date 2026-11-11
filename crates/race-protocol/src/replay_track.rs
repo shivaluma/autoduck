@@ -201,8 +201,9 @@ pub struct DtrkHeader {
     pub stride: u32,
     pub tick_rate: u32,
     /// `"<trackVersion>@<sha8>"`, resolving to
-    /// `public/race-tracks/<trackGeometry>.json`.
-    pub track_geometry: String,
+    /// `public/race-tracks/<trackGeometry>.json`; `null` in tracks recorded
+    /// before the geometry files existed (TS 0.4, `fixtures/replay-track`).
+    pub track_geometry: Option<String>,
     pub track_version: String,
     /// Wild-item table for section 2 `WILD_ITEM_SET`.
     pub wild_items: Vec<String>,
