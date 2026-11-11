@@ -20,8 +20,11 @@
 //! - `engine.seed`/`engine.config` follow `publicRaceEngineVisibility` (`lib/racing/public-engine.ts`):
 //!   revealed only while the race is `pending`, `running` or `finished`; `engine.players` always
 //!   comes from the stored config.
-//! - `engine.liveTick`/`engine.liveManualInputs`: this server has no in-memory live race session
-//!   yet (stage A), so they are what TS returns when `getLiveRaceSession` finds none: `null`/`[]`.
+//! - `engine.liveTick`: the live driver's tick while the race is `running` and live in this
+//!   process ([`crate::live::LiveHub::live_tick`]), else `null`; `engine.liveManualInputs` is
+//!   always `[]` (manual wild items are off, D16).
+//! - Engine ≥ 2 rows follow D17 instead of `publicRaceEngineVisibility`: `seed`/`config` only
+//!   once `engineState` is RACING or later.
 //! - The legacy v2 keys (`consumedChests`, `awardedChests`, `dragonAward`, `dragonScaleEvents`)
 //!   are constants, as on `main`.
 //! - Errors: a non-canonical id → 400 `Invalid race ID`; no row, or an id above 2^31 − 1 → 404
@@ -291,7 +294,22 @@ async fn load(
 
     let engine = match race.engine_version.as_deref() {
         Some(version) if !version.is_empty() => {
-            let reveal = matches!(race.status.as_str(), "pending" | "running" | "finished");
+            // TS-era rows keep `publicRaceEngineVisibility`; engine ≥ 2 rows follow D17: seed
+            // and config only once the race is RACING or later (the outcome is fixed at lock).
+            let reveal = if engine_major(version).is_some_and(|major| major >= 2) {
+                matches!(
+                    race.engine_state.as_str(),
+                    "RACING" | "FINISHED" | "RESOLVED" | "ARCHIVED"
+                )
+            } else {
+                matches!(race.status.as_str(), "pending" | "running" | "finished")
+            };
+            // The live driver's tick while the race runs (`getLiveRaceSession(id).latestSnapshot.tick`).
+            let live_tick = if race.status == "running" {
+                state.live().live_tick(race.id)
+            } else {
+                None
+            };
             let mut event_values = Vec::with_capacity(events.len());
             for event in &events {
                 let metadata = parse_json_or(Some(&event.metadata_json), json!({}));
@@ -317,9 +335,8 @@ async fn load(
                 "players": config_field(&engine_config, "players").unwrap_or_else(|| json!([])),
                 "chaosConfig": config_field(&engine_config, "chaosConfig").unwrap_or(Value::Null),
                 "loadouts": config_field(&engine_config, "loadouts").unwrap_or_else(|| json!([])),
-                // No live session in this server yet: `liveTick` is null and
-                // `liveManualInputs` empty, as TS returns when no session exists.
-                "liveTick": Value::Null,
+                // Manual wild items are off (D16), so there are never live manual inputs.
+                "liveTick": live_tick,
                 "liveManualInputs": [],
                 "resultDigest": race.result_digest,
                 "replay": replay_info(race.id, &race.status, replay_track.as_ref()),
@@ -544,4 +561,9 @@ async fn users_by_id(
         );
     }
     Ok(users)
+}
+
+/// The major component of an `engineVersion` label (`"2.0.0"` → 2).
+fn engine_major(version: &str) -> Option<u32> {
+    version.split('.').next()?.parse().ok()
 }

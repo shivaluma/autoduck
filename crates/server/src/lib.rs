@@ -14,6 +14,7 @@
 //! - [`routes`]: API route modules (stage A: stubs naming the TS source to port).
 //! - [`season3`]: the Season 3 meta layer (Chaos resolution, Shields/Scars/King, predictions,
 //!   QP rewards, schedule gate, loadouts, payload parsing, balance telemetry), pure over data.
+//! - [`live`]: live races (Phase 5): registry, driver threads, T1/T2, SSE v2, start-race.
 //! - [`error`]: the JSON API error type.
 
 // The workspace clippy.toml bans HashMap/HashSet and serde_json::Value for the engine (D4(b)).
@@ -29,6 +30,7 @@ pub mod cosmetics;
 pub mod db;
 pub mod error;
 pub mod http;
+pub mod live;
 pub mod routes;
 pub mod season3;
 pub mod seed;

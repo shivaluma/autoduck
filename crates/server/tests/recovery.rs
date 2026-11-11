@@ -77,7 +77,9 @@ async fn only_engine_two_races_are_recovered() {
     // Engine 2 races.
     insert_race(&mut conn, 50, "running", "RACING", Some("2.0.0"), false).await; // official, week racing
     insert_race(&mut conn, 51, "pending", "COUNTDOWN", Some("2.1.3"), true).await; // test race
-    insert_race(&mut conn, 52, "running", "FINISHED", Some("2.0.0"), false).await; // T1 done
+    // T1 done but no stored config: T2 can never resolve it, so it fails like the live path.
+    // (A real T2 resume is tested in tests/live.rs.)
+    insert_race(&mut conn, 52, "running", "FINISHED", Some("2.0.0"), false).await;
     insert_race(&mut conn, 53, "finished", "RESOLVED", Some("2.0.0"), false).await; // done
     insert_race(&mut conn, 54, "pending", "LOCKED", Some("12.0.0"), false).await; // week moved on
     insert_race(&mut conn, 55, "pending", "PREPARING", Some("2.0.0"), false).await; // unexpected
@@ -94,6 +96,7 @@ async fn only_engine_two_races_are_recovered() {
         RecoveryReport {
             failed: vec![50, 51, 54],
             weeks_unlocked: vec![50],
+            resolved: vec![],
             awaiting_t2: vec![52],
             unexpected: vec![(55, "PREPARING".to_owned())],
             ts_era_stuck: vec![41, 42, 43],
@@ -120,7 +123,7 @@ async fn only_engine_two_races_are_recovered() {
     assert_eq!(status(42), ("pending", "LOCKED"));
     assert_eq!(status(50), ("failed", "RACING"));
     assert_eq!(status(51), ("failed", "COUNTDOWN"));
-    assert_eq!(status(52), ("running", "FINISHED"));
+    assert_eq!(status(52), ("failed", "FINISHED"));
     assert_eq!(status(53), ("finished", "RESOLVED"));
 
     let weeks: Vec<(i64, String, Option<i64>, String)> = sqlx::query_as(
@@ -135,9 +138,9 @@ async fn only_engine_two_races_are_recovered() {
         "updatedAt {}",
         weeks[0].3
     );
-    assert_eq!((weeks[1].1.as_str(), weeks[1].2), ("racing", Some(52)));
+    assert_eq!((weeks[1].1.as_str(), weeks[1].2), ("locked", None));
     assert_eq!((weeks[2].1.as_str(), weeks[2].2), ("racing", Some(41)));
-    assert_eq!(weeks[1].3, "2026-11-02T01:00:00.000+00:00");
+    assert_eq!(weeks[2].3, "2026-11-02T01:00:00.000+00:00");
 
     // A second boot changes nothing.
     let again = recovery::recover(&db).await.unwrap();

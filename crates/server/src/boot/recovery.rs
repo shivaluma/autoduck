@@ -8,10 +8,11 @@
 //!
 //! - `LOCKED`/`COUNTDOWN`/`RACING`: `status='failed'`. The week goes back to `locked/raceId NULL`
 //!   only if it is still `racing` on this race. Test races never touch weeks.
-//! - `FINISHED` (T1 committed): T2 must run from the DB only, guarded by
-//!   `UPDATE … SET "engineState"='RESOLVED' WHERE … AND "engineState"='FINISHED'`. T2 lands with
-//!   the race orchestration (Phase 5); until then such rows are reported and left unchanged.
-//!   No engine-2 race exists before then, so this branch cannot trigger yet.
+//! - `FINISHED` (T1 committed): T2 runs from the DB only ([`crate::live::resolve_finished_race`]),
+//!   guarded by `UPDATE … SET "engineState"='RESOLVED' WHERE … AND "engineState"='FINISHED'` in
+//!   the same transaction as the meta writes, so meta is never applied twice. A race the meta
+//!   refuses is marked failed (its week back to `locked`), as the live path does; a DB error
+//!   leaves it in `FINISHED` for the next boot.
 //! - Any other state: reported, left unchanged.
 
 use crate::db::{Db, DbTime};
@@ -22,7 +23,10 @@ pub struct RecoveryReport {
     pub failed: Vec<i64>,
     /// Weeks returned to `locked`.
     pub weeks_unlocked: Vec<i64>,
-    /// Engine ≥ 2 races in FINISHED waiting for T2 (left unchanged in this build).
+    /// Engine ≥ 2 races in FINISHED whose T2 ran now.
+    pub resolved: Vec<i64>,
+    /// Engine ≥ 2 races in FINISHED whose T2 failed (refused: marked failed; DB error: left
+    /// unchanged for the next boot).
     pub awaiting_t2: Vec<i64>,
     /// Engine ≥ 2 races in a state recovery doesn't handle (left unchanged).
     pub unexpected: Vec<(i64, String)>,
@@ -144,11 +148,23 @@ pub async fn recover(db: &Db) -> Result<RecoveryReport, sqlx::Error> {
                 }
             }
             "FINISHED" => {
-                tracing::error!(
-                    race = race.id,
-                    "race committed T1 but not T2; T2 resume is not available in this build, row left unchanged"
-                );
-                report.awaiting_t2.push(race.id);
+                match crate::live::race::recover_finished(db, race.id, race.is_test).await {
+                    Ok(crate::live::T2Outcome::Resolved { .. }) => {
+                        tracing::warn!(
+                            race = race.id,
+                            "race committed T1 before a restart; T2 resumed from the DB (D22)"
+                        );
+                        report.rows_changed += 1;
+                        report.resolved.push(race.id);
+                    }
+                    Ok(crate::live::T2Outcome::NotFinished { engine_state }) => {
+                        report.unexpected.push((race.id, engine_state));
+                    }
+                    Err(error) => {
+                        tracing::error!(race = race.id, %error, "T2 resume failed");
+                        report.awaiting_t2.push(race.id);
+                    }
+                }
             }
             other => {
                 tracing::warn!(
@@ -163,6 +179,7 @@ pub async fn recover(db: &Db) -> Result<RecoveryReport, sqlx::Error> {
 
     tracing::info!(
         failed = report.failed.len(),
+        resolved = report.resolved.len(),
         awaiting_t2 = report.awaiting_t2.len(),
         ts_era_stuck = report.ts_era_stuck.len(),
         rows_changed = report.rows_changed,

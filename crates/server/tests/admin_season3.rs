@@ -333,9 +333,14 @@ async fn season_lifecycle() {
         post(&f, json!({ "action": "start-race" })).await,
         (StatusCode::BAD_REQUEST, error("weekId là bắt buộc"))
     );
+    // start-race itself is tested in tests/live.rs; an unknown week is refused before any write.
     assert_eq!(
-        post(&f, json!({ "action": "start-race", "weekId": week_id })).await,
-        (StatusCode::NOT_IMPLEMENTED, error("not in stage B"))
+        post(
+            &f,
+            json!({ "action": "start-race", "weekId": week_id + 99, "allowOffSchedule": true })
+        )
+        .await,
+        (StatusCode::CONFLICT, error("Season không active"))
     );
     let (status, unlocked) = post(&f, json!({ "action": "unlock" })).await;
     assert_eq!(status, StatusCode::OK);

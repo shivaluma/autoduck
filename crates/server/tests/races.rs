@@ -138,6 +138,12 @@ async fn detail_matches_the_ts_route_byte_for_byte() {
             case.path
         );
         let body = reply.text();
+        // D17 (Phase 5, deliberate): an engine ≥ 2 race hides its seed until RACING. Race 7
+        // is `pending`/`LOCKED` on engine 2.0.0, which TS's `publicRaceEngineVisibility` reveals.
+        let case = GoldenCase {
+            body: case.body.replace(r#""seed":"seed-7""#, r#""seed":null"#),
+            ..case
+        };
         if body != case.body {
             let at = body
                 .bytes()

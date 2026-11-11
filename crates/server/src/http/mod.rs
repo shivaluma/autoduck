@@ -35,16 +35,30 @@ struct Inner {
     config: Config,
     db: Db,
     static_files: static_files::StaticFiles,
+    live: crate::live::LiveHub,
 }
 
 impl AppState {
+    /// Production state: a live hub with the default options (real-time pacing).
     pub fn new(config: Config, db: Db) -> Self {
+        let live = crate::live::LiveHub::new(db.clone(), crate::live::LiveOptions::default());
+        Self::with_live(config, db, live)
+    }
+
+    /// State with a given live hub (tests: unpaced driver, short countdown).
+    pub fn with_live(config: Config, db: Db, live: crate::live::LiveHub) -> Self {
         let static_files = static_files::StaticFiles::new(&config.dist_dir);
         AppState(Arc::new(Inner {
             config,
             db,
             static_files,
+            live,
         }))
+    }
+
+    /// The live race registry (Phase 5).
+    pub fn live(&self) -> &crate::live::LiveHub {
+        &self.0.live
     }
 
     pub fn config(&self) -> &Config {
@@ -145,6 +159,8 @@ pub async fn serve(state: AppState) -> std::io::Result<()> {
         }
     }
     drop(listener);
+    // D21: refuse start-race, let running races finish (≤ 120 s) while their SSE streams stay up.
+    state.live().shutdown().await;
     if tokio::time::timeout(DRAIN_TIMEOUT, graceful.shutdown())
         .await
         .is_err()

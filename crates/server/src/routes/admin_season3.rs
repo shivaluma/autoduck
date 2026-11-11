@@ -9,8 +9,8 @@
 //! - `GET` → the dashboard of the active season (`{"season":null}` without one);
 //!   `GET ?report=ops` → the ops report with the replay-track gate.
 //! - `POST` → `{ action, … }`. The body is parsed before the auth check, as in TS: a body that
-//!   isn't JSON is `400 {"error":"Invalid JSON"}` even without a secret. `start-race` answers
-//!   `501 {"error":"not in stage B"}` (Phase 5); `reseed-week` is new (see
+//!   isn't JSON is `400 {"error":"Invalid JSON"}` even without a secret. `start-race` runs on the
+//!   live hub ([`crate::live::start`], Phase 5); `reseed-week` is new (see
 //!   [`crate::season3::admin::actions`]).
 //!
 //! The TS GET has no try/catch, so its failures are Next's empty-body 500; Rust answers the API
@@ -69,6 +69,12 @@ async fn post_action(
     let body_secret = js::property(&body, "secret").and_then(Value::as_str);
     if !candidates.authorized(body_secret) {
         return Err(ApiError::unauthorized());
+    }
+    // Phase 5: start-race runs on the live hub (`crate::live::start`).
+    if !body.is_null()
+        && js::property(&body, "action").and_then(Value::as_str) == Some("start-race")
+    {
+        return crate::live::start::start_race(state.live(), state.db(), &body).await;
     }
     actions::run(state.db(), &body)
         .await
