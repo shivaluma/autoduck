@@ -268,3 +268,8 @@ jobs:
         # picks the start), so CI covers new configs over time; a failure
         # prints the case indexes to reproduce with `--start`.
         run: cargo run -p race-cli --release --locked -- fuzz --cases 2000 --start $(( (GITHUB_RUN_NUMBER % 500) * 2000 ))
+      - name: race-cli fuzz --adversarial
+        # Mutated configs (bad ids, bad Chaos groups, extreme numbers, late or
+        # unknown manual inputs): resolve() must reject with an Err, never
+        # panic, and every accepted one must finish cleanly.
+        run: cargo run -p race-cli --release --locked -- fuzz --adversarial --cases 2000 --start $(( (GITHUB_RUN_NUMBER % 500) * 2000 ))

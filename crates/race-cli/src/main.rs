@@ -68,6 +68,10 @@ enum Command {
         /// Root seed (decimal or 0x-hex).
         #[arg(long, value_parser = corpus::parse_seed, default_value_t = fuzz::FUZZ_ROOT_SEED)]
         seed: u64,
+        /// Mutate every config adversarially first (extreme numbers, bad
+        /// ids, bad Chaos groups, late or unknown manual inputs, ...).
+        #[arg(long)]
+        adversarial: bool,
     },
     /// Frozen golden digests per engine/balance version (`golden-version`).
     Golden {
@@ -446,7 +450,12 @@ fn main() -> ExitCode {
                 ExitCode::from(2)
             }
         },
-        Command::Fuzz { cases, start, seed } => status("fuzz", fuzz::run(cases, start, seed)),
+        Command::Fuzz {
+            cases,
+            start,
+            seed,
+            adversarial,
+        } => status("fuzz", fuzz::run(cases, start, seed, adversarial)),
         Command::Golden {
             command,
             fixture,

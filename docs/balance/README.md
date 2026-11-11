@@ -40,5 +40,5 @@ From S3.16 on, balance work runs on the Rust engine with `race-cli` (build once 
 - `race-cli balance run` / `balance compare`: the paired Rust-vs-Rust report of one engine change (`docs/balance/S3.16.md`).
 - `race-cli compare ts.json rs.json`: gate G3 against TS S3.15 (`docs/balance/S3.16.md`).
 
-**Golden digests.** Any change to Rust engine output needs a version bump (`RACE_BALANCE_VERSION` or `RACE_ENGINE_VERSION` in `crates/race-protocol/src/versions.rs`) and a new frozen entry: `race-cli golden freeze`. The `golden-version` CI job (`race-cli golden check`) fails otherwise, and also when `rust-toolchain.toml` changes until the bump is re-frozen with matching digests. The `fuzz` CI job (`race-cli fuzz --cases 2000`) must report 0 panics, 0 unfinished races and 0 non-finite values.
+**Golden digests.** Any change to Rust engine output needs a version bump (`RACE_BALANCE_VERSION` or `RACE_ENGINE_VERSION` in `crates/race-protocol/src/versions.rs`) and a new frozen entry: `race-cli golden freeze`. The `golden-version` CI job (`race-cli golden check`) fails otherwise, and also when `rust-toolchain.toml` changes until the bump is re-frozen with matching digests. The `fuzz` CI job (`race-cli fuzz --cases 2000`, then the same with `--adversarial`) must report 0 panics, 0 unfinished races and 0 non-finite values.
 
