@@ -13,6 +13,7 @@
 mod balance;
 mod codegen;
 mod corpus;
+mod drama;
 mod fuzz;
 mod golden;
 mod modes;
@@ -141,6 +142,14 @@ enum GoldenCommand {
 
 #[derive(Subcommand)]
 enum BalanceCommand {
+    /// How predictable a race is while it runs: who leads / trails at each
+    /// checkpoint against who wins / finishes last, lead and last-place
+    /// changes, photo finishes (8-duck production lobbies).
+    Drama {
+        /// Number of races.
+        #[arg(long, default_value_t = 2000)]
+        races: u64,
+    },
     /// Mixed-loadout lobbies: loadout cells, temperaments, drama and wild
     /// items (replaces balance-temperaments.ts and the drama reports).
     Mixed {
@@ -297,6 +306,18 @@ fn main() -> ExitCode {
             }
             Err(err) => {
                 eprintln!("race-cli balance compare: {err:#}");
+                ExitCode::FAILURE
+            }
+        },
+        Command::Balance {
+            command: BalanceCommand::Drama { races },
+        } => match drama::run(races) {
+            Ok(text) => {
+                print!("{text}");
+                ExitCode::SUCCESS
+            }
+            Err(err) => {
+                eprintln!("race-cli balance drama: {err:#}");
                 ExitCode::FAILURE
             }
         },

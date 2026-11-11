@@ -280,6 +280,25 @@ const WIRE_KEYS: &[Row] = &[
     ),
     row("DUCK_TEMPERAMENT", &["temperament"], &[], &[]),
     row("AI_INTENT", &["intent", "itemId", "temperament"], &[], &[]),
+    row(
+        "RIVER_EVENT_WARNING",
+        &[
+            "kind",
+            "slot",
+            "startTick",
+            "warningSeconds",
+            "durationSeconds",
+        ],
+        &[],
+        &[],
+    ),
+    row(
+        "RIVER_EVENT_STARTED",
+        &["kind", "slot", "endTick", "durationSeconds", "effects"],
+        &[],
+        &[],
+    ),
+    row("RIVER_EVENT_ENDED", &["kind", "slot"], &[], &[]),
 ];
 
 /// A valid sample value for `key` in an event of type `ty`.
@@ -293,6 +312,9 @@ fn sample(ty: &str, key: &str) -> Value {
             json!("NITRO")
         }
         ("AI_INTENT", "itemId") => json!("MINI_ROCKET"),
+        (_, "kind") => json!("FLASH_FLOOD"),
+        (_, "effects") => json!([{"playerId": "2", "multiplier": 1.08}]),
+        (_, "slot" | "startTick" | "endTick") => json!(1),
         (_, "itemId") => json!("MINI_BUBBLE"),
         ("QP_TRACK_REWARD_GRANTED", "reason") => json!("TRACK_GOLDEN_BOX"),
         (_, "reason") => json!("NO_ITEM"),
@@ -351,6 +373,7 @@ fn sample(ty: &str, key: &str) -> Value {
         (
             _,
             "durationSeconds"
+            | "warningSeconds"
             | "multiplier"
             | "consumedSeconds"
             | "startProgress"

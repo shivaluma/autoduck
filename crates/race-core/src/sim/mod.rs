@@ -36,6 +36,7 @@ pub mod lane_ai;
 pub mod options;
 pub mod ranks;
 pub mod result;
+pub mod river;
 pub mod state;
 pub mod step;
 

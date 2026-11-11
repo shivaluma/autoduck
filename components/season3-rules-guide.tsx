@@ -7,6 +7,7 @@ import {
   LOADOUT_CONFIG,
   QUICK_START_STEPS,
   RACE_ACTION_TIPS,
+  RIVER_EVENTS_LIST,
   RULES_NAV,
   SCAR_SHIELD_RULES,
   SCORING_SYSTEM,
@@ -360,6 +361,27 @@ export function Season3RulesGuide() {
                   <span className="font-black text-sm text-white">{hazard.name}</span>
                 </div>
                 <p className="mt-1.5 text-xs text-white/65">{hazard.effect}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* River events */}
+        <div>
+          <h3 className="font-display text-xl text-white">4 Sự kiện dòng sông</h3>
+          <p className="mt-1 text-xs text-white/60">
+            Mỗi race có đúng 2 sự kiện khác nhau, rút ngẫu nhiên từ seed của race: một ở giữa chặng (khi vịt dẫn đầu đi được 36–54%) và một ở
+            chặng cuối (74–84%). Sự kiện luôn được báo trước 2.5s trên màn hình, áp dụng như nhau cho mọi vịt, không phụ thuộc đồ mang theo, và
+            không bao giờ làm vịt dừng hẳn hay lùi lại. Dẫn đầu sớm chưa chắc thắng, bét bảng chưa chắc thua!
+          </p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {RIVER_EVENTS_LIST.map((riverEvent) => (
+              <div key={riverEvent.id} className="gx-well p-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">{riverEvent.icon}</span>
+                  <span className="font-black text-sm text-white">{riverEvent.name}</span>
+                </div>
+                <p className="mt-1.5 text-xs text-white/65">{riverEvent.effect}</p>
               </div>
             ))}
           </div>

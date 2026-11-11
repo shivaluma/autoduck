@@ -7,7 +7,7 @@
 /// Engine version (D2): a new major, no TS parity.
 pub const RACE_ENGINE_VERSION: &str = "2.0.0";
 /// Balance label (D2). Becomes the cutover season's label if that lands in a new season (Q1).
-pub const RACE_BALANCE_VERSION: &str = "S3.16";
+pub const RACE_BALANCE_VERSION: &str = "S3.17";
 /// Wire protocol version (D2, D16 `hello` frame).
 pub const RACE_PROTOCOL_VERSION: &str = "2.0.0";
 /// RNG algorithm version (D2, D5): FNV-1a over UTF-16, splitmix32 seeding, xorshift32.

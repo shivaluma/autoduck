@@ -162,6 +162,16 @@ crate::wire_enum! {
 }
 
 crate::wire_enum! {
+    /// A race-wide river event (S3.17, `race-core` `sim::river`).
+    pub enum RiverEventKind {
+        FlashFlood => "FLASH_FLOOD",
+        Whirlpool => "WHIRLPOOL",
+        Gust => "GUST",
+        BreadRain => "BREAD_RAIN",
+    }
+}
+
+crate::wire_enum! {
     /// Why a wild-item use failed (`pickups/engine.ts:71`).
     pub enum WildUseFailure {
         NoItem => "NO_ITEM",
@@ -274,6 +284,56 @@ pub struct BoostGatePassedMeta {
     pub color_hex: u32,
     pub color_name: String,
     pub label: String,
+}
+
+/// `RIVER_EVENT_WARNING`: a river event was announced (S3.17).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[cfg_attr(feature = "ts-export", derive(ts_rs::TS), ts(export))]
+pub struct RiverEventWarningMeta {
+    pub kind: RiverEventKind,
+    /// 0 for the mid-race event, 1 for the final-stretch event.
+    pub slot: u32,
+    pub start_tick: u32,
+    pub warning_seconds: f64,
+    pub duration_seconds: f64,
+}
+
+/// One duck's share of a river event.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[cfg_attr(feature = "ts-export", derive(ts_rs::TS), ts(export))]
+pub struct RiverEventEffect {
+    pub player_id: PlayerId,
+    /// Speed multiplier while the event runs. The flash flood recomputes it
+    /// every tick from the gap to the leader; this is its value at the start.
+    pub multiplier: f64,
+}
+
+/// `RIVER_EVENT_STARTED`: the event is now running (S3.17).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[cfg_attr(feature = "ts-export", derive(ts_rs::TS), ts(export))]
+pub struct RiverEventStartedMeta {
+    pub kind: RiverEventKind,
+    pub slot: u32,
+    pub end_tick: u32,
+    pub duration_seconds: f64,
+    /// The ducks it speeds up or slows down, in `ducks` order.
+    pub effects: Vec<RiverEventEffect>,
+}
+
+/// `RIVER_EVENT_ENDED` (S3.17).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[cfg_attr(feature = "ts-export", derive(ts_rs::TS), ts(export))]
+pub struct RiverEventEndedMeta {
+    pub kind: RiverEventKind,
+    pub slot: u32,
 }
 
 /// `DUCK_FINISHED` (`simulation.ts:604-608`).
@@ -934,6 +994,9 @@ event_kinds! {
     GuardSurge(GuardSurgeMeta) => "GUARD_SURGE",
     DuckTemperament(DuckTemperamentMeta) => "DUCK_TEMPERAMENT",
     AiIntent(AiIntentMeta) => "AI_INTENT",
+    RiverEventWarning(RiverEventWarningMeta) => "RIVER_EVENT_WARNING",
+    RiverEventStarted(RiverEventStartedMeta) => "RIVER_EVENT_STARTED",
+    RiverEventEnded(RiverEventEndedMeta) => "RIVER_EVENT_ENDED",
 }
 
 impl EventKind {

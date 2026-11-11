@@ -77,6 +77,8 @@ pub struct Simulation {
     /// `readRace` memo (`auto-use/director.ts:25`).
     pub director: DirectorCache,
     pub math: EngineMath,
+    /// The race's river events (S3.17; empty in `ts-compat`).
+    pub river: super::river::RiverState,
 }
 
 impl Simulation {

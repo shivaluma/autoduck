@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { RaceEvent, RaceItemId, WildItemId } from '@/src/engine/protocol'
 import { Season3Avatar } from '@/components/season3-avatar'
 import { intentCopy, temperamentLabel, TEMPERAMENT_COPY } from '@/src/race/ai-intent-copy'
+import { isRiverEventKind, RIVER_EVENT_COPY } from './river-event-copy'
 
 export type TimelinePlayer = {
   playerId: string
@@ -443,6 +444,36 @@ export function formatEventDetails(
       }
     }
 
+    case 'RIVER_EVENT_WARNING':
+    case 'RIVER_EVENT_STARTED': {
+      const kind = event.metadata.kind
+      if (!isRiverEventKind(kind)) {
+        return { icon: '🌊', title: 'Sự kiện dòng sông', description: String(kind ?? ''), category: 'speed', tone: 'text-sky-200 border-sky-400/30 bg-sky-500/10' }
+      }
+      const copy = RIVER_EVENT_COPY[kind]
+      if (event.type === 'RIVER_EVENT_WARNING') {
+        return {
+          icon: '⚠️',
+          title: `${copy.icon} ${copy.name} sắp đến!`,
+          description: `${copy.warning} Bắt đầu sau ${Number(event.metadata.warningSeconds ?? 0).toFixed(1)}s.`,
+          category: 'speed',
+          tone: 'text-sky-200 border-sky-400/30 bg-sky-500/10',
+        }
+      }
+      const effects = Array.isArray(event.metadata.effects) ? event.metadata.effects as Array<{ playerId: string; multiplier: number }> : []
+      const affected = effects.map((effect) => {
+        const percent = Math.round((effect.multiplier - 1) * 100)
+        return `${nameById.get(effect.playerId) ?? effect.playerId} ${percent > 0 ? '+' : ''}${percent}%`
+      })
+      return {
+        icon: copy.icon,
+        title: `${copy.name}! ${copy.active}`,
+        description: `Kéo dài ${Number(event.metadata.durationSeconds ?? 0).toFixed(1)}s.${affected.length ? ` ${affected.join(' · ')}` : ''}`,
+        category: 'speed',
+        tone: 'text-sky-200 border-sky-400/40 bg-sky-500/15 font-black',
+      }
+    }
+
     case 'CHAOS_RESOLVED':
       return {
         icon: '🃏',
@@ -507,6 +538,7 @@ export function RaceEventTimeline({
           event.type === 'MINI_ROCKET_EXPIRED' ||
           event.type === 'BANANA_EXPIRED' ||
           event.type === 'WILD_BANANA_EXPIRED' ||
+          event.type === 'RIVER_EVENT_ENDED' ||
           event.type === 'QP_TRACK_REWARD_GRANTED'
         ) {
           return false

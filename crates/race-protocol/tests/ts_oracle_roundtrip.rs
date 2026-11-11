@@ -121,11 +121,21 @@ fn every_ts_event_type_has_a_variant_in_schema_order() {
         .iter()
         .map(|name| name.to_string())
         .collect();
+    // The TS S3.15 schema, then the event types added by the Rust engine.
     assert_eq!(
-        rust, ts,
-        "EventKind::TYPE_NAMES must equal raceEventTypeSchema.options"
+        rust[..ts.len()],
+        ts[..],
+        "EventKind::TYPE_NAMES must start with raceEventTypeSchema.options"
     );
-    assert_eq!(rust.len(), 69);
+    assert_eq!(
+        rust[ts.len()..],
+        [
+            "RIVER_EVENT_WARNING",
+            "RIVER_EVENT_STARTED",
+            "RIVER_EVENT_ENDED"
+        ]
+    );
+    assert_eq!(ts.len(), 69);
 }
 
 #[test]
@@ -182,6 +192,10 @@ const HANDWRITTEN: &[&str] = &[
     r#"{"raceId":"7","type":"PREDATOR_RUSH_ENDED","tick":1,"timestampWithinRaceMs":16.666666666666668,"sourcePlayerId":"1","metadata":{}}"#,
     // auto-use/execute.ts:50 with a null draft target (possible by type).
     r#"{"raceId":"7","type":"DRAFT_FIN_STARTED","tick":300,"timestampWithinRaceMs":5000,"sourcePlayerId":"1","metadata":{"untilTick":396,"durationSeconds":1.6,"multiplier":1.21,"draftTarget":null,"autoReason":"OPPORTUNITY"}}"#,
+    // S3.17 river events (race-core sim::river; no TS counterpart).
+    r#"{"raceId":"7","type":"RIVER_EVENT_WARNING","tick":1300,"timestampWithinRaceMs":21666.666666666668,"metadata":{"kind":"WHIRLPOOL","slot":0,"startTick":1450,"warningSeconds":2.5,"durationSeconds":2.2}}"#,
+    r#"{"raceId":"7","type":"RIVER_EVENT_STARTED","tick":1450,"timestampWithinRaceMs":24166.666666666668,"metadata":{"kind":"WHIRLPOOL","slot":0,"endTick":1582,"durationSeconds":2.2,"effects":[{"playerId":"1","multiplier":0.78},{"playerId":"4","multiplier":0.9}]}}"#,
+    r#"{"raceId":"7","type":"RIVER_EVENT_ENDED","tick":1582,"timestampWithinRaceMs":26366.666666666668,"metadata":{"kind":"WHIRLPOOL","slot":0}}"#,
     // items/engine.ts:420 (replacement) and auto-use/execute.ts:155 (intact bubble)
     r#"{"raceId":"7","type":"SPEED_BOOST_QUEUED","tick":300,"timestampWithinRaceMs":5000,"sourcePlayerId":"1","metadata":{"itemId":"NITRO","durationSeconds":1.8,"multiplier":1.25,"replacedPrevious":true,"replacedItemId":"PADDLE_BURST"}}"#,
     r#"{"raceId":"7","type":"BUBBLE_POPPED","tick":300,"timestampWithinRaceMs":5000,"sourcePlayerId":"2","targetPlayerId":"1","metadata":{"blocked":"QUACK_HORN","intact":true}}"#,

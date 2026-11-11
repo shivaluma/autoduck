@@ -12,6 +12,8 @@ import { connectSnapshotDriver } from './drivers/snapshot-driver'
 import { raceSourceKey, type RaceSource, type TimelineDriver } from './drivers/types'
 import { RaceAudioSystem } from './race-audio'
 import { RACE_MUSIC } from './race-music'
+import { riverEventFeedLine } from './river-event-copy'
+import { createRiverEventFx, type RiverEventFx } from './river-event-fx'
 import { createCrowd, planCrowd, preloadCrowdAvatars } from './race-crowd'
 import { COSMETIC_BY_ID, STARTER_COSMETIC_IDS } from '@/lib/cosmetics/catalog'
 import { AVATAR_FRAME, COSMETIC_LAYER_ORDER, MOTION_SPRITE, type DuckAppearance } from '@/lib/cosmetics/types'
@@ -388,6 +390,8 @@ export function PhaserRaceCanvas({
               .setOrigin(0.5, 0).setScrollFactor(0).setDepth(1000).setInteractive({ useHandCursor: true })
             nowPlaying.on('pointerdown', () => { audio.toggleMusic(); nowPlaying.setText(musicLabel()) })
           })
+          this.riverFx = createRiverEventFx(this, { reducedMotion, duckView: (playerId) => this.duckView(playerId) })
+          this.events.once('shutdown', () => this.riverFx?.destroy())
           if (!clientDriven) this.showCountdown()
           markSceneReady()
         }
@@ -774,6 +778,7 @@ export function PhaserRaceCanvas({
         }
 
         private finishCelebrationCount = 0
+        private riverFx: RiverEventFx | null = null
 
         /** SSE v2: the countdown ends (QUACK!) in `endsInMs`, from hello.countdownEndsInMs. */
         showLiveCountdown(endsInMs: number) {
@@ -1315,8 +1320,9 @@ export function PhaserRaceCanvas({
             GUARD_SURGE: `🛡️ ${source} hóa giải đòn → Guard Surge!`,
             AI_INTENT: `${intentCopy(raceEvent.metadata.intent, source ?? '', target ?? '', '').icon} ${intentCopy(raceEvent.metadata.intent, source ?? '', target ?? '', String(raceEvent.metadata.itemId ?? '').replaceAll('_', ' ')).title}`,
           }
-          const message = messages[raceEvent.type]
+          const message = messages[raceEvent.type] ?? riverEventFeedLine(raceEvent)
           if (!silent) audio.raceEvent(raceEvent.type)
+          if (!silent) this.riverFx?.handle(raceEvent)
           if (message) {
             this.recentEvents = [message, ...this.recentEvents].slice(0, 3)
             this.eventFeed.setText(this.recentEvents.join('\n'))
@@ -1355,6 +1361,7 @@ export function PhaserRaceCanvas({
             this.applyWorld(this.pendingWorld)
             this.pendingWorld = null
           }
+          this.riverFx?.update()
           const smoothing = 1 - Math.exp(-delta / 85)
           const positions: Array<{ x: number; y: number }> = []
           for (const view of this.duckViews.values()) {

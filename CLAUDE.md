@@ -23,7 +23,7 @@ AutoDuck / "ĐUA DZỊT" is a weekly office duck race with Season 3 meta-game sy
 
 ```
 crates/race-protocol   wire types, configs, version constants (src/versions.rs), ts-rs bindings
-crates/race-core       deterministic engine: sim, track, items, pickups, auto-use AI, Chaos, DTRK recorder, post-race stats
+crates/race-core       deterministic engine: sim (incl. river events, sim/river.rs), track, items, pickups, auto-use AI, Chaos, DTRK recorder, post-race stats
 crates/race-wasm       browser engine (scripts/build-wasm.sh -> crates/race-wasm/pkg, run in a Web Worker)
 crates/race-cli        native tooling (commands below)
 crates/server          `autoduck`: HTTP API, live races (SSE), Season 3 meta, cosmetics, boot guards
@@ -56,7 +56,7 @@ cargo run -p race-cli --release -- golden check      # frozen digests per versio
 cargo run -p race-cli --release -- golden freeze     # after a version bump only; never rewrites a frozen digest
 cargo run -p race-cli --release -- corpus pin --check
 cargo run -p race-cli --release -- fuzz --cases 2000 [--adversarial]
-cargo run -p race-cli --release -- balance mixed|matrix|wild|run|compare ...   # see docs/balance/README.md
+cargo run -p race-cli --release -- balance mixed|matrix|wild|drama|run|compare ...   # see docs/balance/README.md
 
 docker build -t autoduck .   # production image
 ```

@@ -10,6 +10,7 @@ use super::events::{Emitter, EventSink, reborrow_sink};
 use super::id_cmp;
 use super::lane_ai::{LaneContext, update_intent};
 use super::ranks::update_ranks;
+use super::river::{emit_river_transition, river_speed_multiplier, tick_river};
 use super::state::Simulation;
 use crate::auto_use::{
     AutoUseTickInput, build_race_objective_context, tick_auto_use_decide, tick_auto_use_execute,
@@ -53,6 +54,7 @@ pub fn step_simulation(sim: &mut Simulation, mut sink: Option<&mut dyn EventSink
         last_collision_event_tick,
         director,
         math,
+        river,
     } = sim;
     let tick = *tick;
     let tick_rate = config.tick_rate;
@@ -93,6 +95,10 @@ pub fn step_simulation(sim: &mut Simulation, mut sink: Option<&mut dyn EventSink
     );
 
     tick_item_system(item_state, ducks, tick, tick_rate, &mut emit);
+
+    for transition in tick_river(river, ducks, tick, tick_rate) {
+        emit_river_transition(river, ducks, &transition, tick_rate, &mut emit);
+    }
 
     for index in 0..ducks.len() {
         if ducks[index].finished {
@@ -183,7 +189,11 @@ pub fn step_simulation(sim: &mut Simulation, mut sink: Option<&mut dyn EventSink
         );
         duck.progress += js_max(
             0.0,
-            duck.speed * current_multiplier * item_speed_multiplier(runtime, tick) * delta_seconds,
+            duck.speed
+                * current_multiplier
+                * item_speed_multiplier(runtime, tick)
+                * river_speed_multiplier(river, duck, index)
+                * delta_seconds,
         );
 
         for gate in &track.boost_gates {

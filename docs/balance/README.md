@@ -10,6 +10,8 @@ output does not depend on the thread count:
   (lead changes, durations) and wild-item grants. `--corpus file --out run.json` runs a fixed config file.
 - `race-cli balance matrix --seeds N [--lobbies MIXED,SPEED,DEFENSE,ATTACK]`: the paired loadout matrix.
 - `race-cli balance wild --seeds N`: the paired wild-item value audit.
+- `race-cli balance drama --races N`: how predictable a race is while it runs (leader / last place at each
+  checkpoint against the result, late lead and last-place changes, photo finishes); see `docs/balance/S3.17.md`.
 - `race-cli balance run` / `balance compare`: the paired before/after report of one engine change
   (`docs/balance/S3.16.md`). Compare treatments on identical seeds and lobbies.
 - `race-cli compare ts.json rs.json`: gate G3 against the TS S3.15 baseline (history; the TS side is retired).
@@ -27,7 +29,7 @@ Old races are not affected by a bump: they replay from their stored DTRK/1 track
 
 ## Write-ups
 
-Each balance version is documented in `docs/balance/<version>.md` (`S3.12.md` … `S3.16.md`), with raw outputs in
+Each balance version is documented in `docs/balance/<version>.md` (`S3.12.md` … `S3.17.md`), with raw outputs in
 `artifacts/balance-<version>/` (for example `artifacts/balance-s3-16/`).
 
 ## The TS engine (retired)

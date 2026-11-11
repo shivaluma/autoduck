@@ -157,6 +157,7 @@ export type RaceEventType =
   | 'BOOST_GATE_PASSED'
   | 'MOMENTUM_STOLEN' | 'GUARD_SURGE'
   | 'DUCK_TEMPERAMENT' | 'AI_INTENT'
+  | 'RIVER_EVENT_WARNING' | 'RIVER_EVENT_STARTED' | 'RIVER_EVENT_ENDED'
 
 export interface RaceEvent {
   raceId: string

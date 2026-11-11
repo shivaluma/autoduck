@@ -68,7 +68,7 @@ type Frame =
 
 function hello(overrides: Partial<LiveHelloFrame> = {}): LiveHelloFrame {
   return {
-    protocolVersion: '2.0.0', engineVersion: '2.0.0', balanceVersion: 'S3.16', engineBuildId: BUILD,
+    protocolVersion: '2.0.0', engineVersion: '2.0.0', balanceVersion: 'S3.17', engineBuildId: BUILD,
     raceId: 1, state: 'RACING', serverTick: 0, configJcs: '{"cfg":1}', inputs: [], seqHighWater: 0,
     ...overrides,
   }

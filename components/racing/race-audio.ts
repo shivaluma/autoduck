@@ -1,6 +1,6 @@
 import type { RaceEventType } from '@/src/engine/protocol'
 
-type SoundCue = 'COUNTDOWN' | 'START' | 'BOX_POP' | 'ITEM_REVEAL' | 'ROCKET_LAUNCH' | 'ROCKET_IMPACT' | 'SHIELD_POP' | 'BANANA_SLIP' | 'NITRO' | 'TAILWIND' | 'HORN' | 'FEATHER' | 'HAZARD' | 'GOLD_AMBIENT' | 'GOLD_REWARD' | 'FINISH'
+type SoundCue = 'RIVER_WARNING' | 'RIVER_START' | 'COUNTDOWN' | 'START' | 'BOX_POP' | 'ITEM_REVEAL' | 'ROCKET_LAUNCH' | 'ROCKET_IMPACT' | 'SHIELD_POP' | 'BANANA_SLIP' | 'NITRO' | 'TAILWIND' | 'HORN' | 'FEATHER' | 'HAZARD' | 'GOLD_AMBIENT' | 'GOLD_REWARD' | 'FINISH'
 
 const EVENT_CUES: Partial<Record<RaceEventType, SoundCue>> = {
   ROCKET_FIRED: 'ROCKET_LAUNCH',
@@ -29,6 +29,8 @@ const EVENT_CUES: Partial<Record<RaceEventType, SoundCue>> = {
   GOLDEN_BOX_SPAWNED: 'GOLD_AMBIENT',
   GOLDEN_BOX_COLLECTED: 'GOLD_REWARD',
   RACE_FINISHED: 'FINISH',
+  RIVER_EVENT_WARNING: 'RIVER_WARNING',
+  RIVER_EVENT_STARTED: 'RIVER_START',
 }
 
 const CUE_TUNING: Record<SoundCue, { frequency: number; endFrequency: number; duration: number; type: OscillatorType; volume: number }> = {
@@ -47,6 +49,8 @@ const CUE_TUNING: Record<SoundCue, { frequency: number; endFrequency: number; du
   HAZARD: { frequency: 180, endFrequency: 90, duration: 0.2, type: 'sawtooth', volume: 0.032 },
   GOLD_AMBIENT: { frequency: 880, endFrequency: 1040, duration: 0.3, type: 'sine', volume: 0.022 },
   GOLD_REWARD: { frequency: 520, endFrequency: 1320, duration: 0.42, type: 'triangle', volume: 0.05 },
+  RIVER_WARNING: { frequency: 330, endFrequency: 660, duration: 0.5, type: 'sawtooth', volume: 0.04 },
+  RIVER_START: { frequency: 110, endFrequency: 440, duration: 0.6, type: 'sawtooth', volume: 0.055 },
   FINISH: { frequency: 640, endFrequency: 960, duration: 0.36, type: 'triangle', volume: 0.05 },
 }
 

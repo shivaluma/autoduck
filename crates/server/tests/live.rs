@@ -272,7 +272,7 @@ async fn official_race_end_to_end() {
     );
     assert_eq!(
         (engine_version.as_str(), balance_version.as_str()),
-        ("2.0.0", "S3.16")
+        ("2.0.0", "S3.17")
     );
     assert_eq!(
         seed_commit,

@@ -228,7 +228,9 @@ pub fn create_simulation(
         announce_pickup_world(&pickup_state, &mut emit);
     }
 
+    let river = super::river::create_river_state(config.seed.as_str(), ducks.len());
     Simulation {
+        river,
         config,
         auto_objective: None,
         track,

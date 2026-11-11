@@ -13,4 +13,4 @@
  * `engineConfigJson`). `tests/dead_knob.rs` proves
  * every knob left here changes a race.
  */
-export type RaceItemTuning = { nitroSpeedMultiplier: number, };
+export type RaceItemTuning = { nitroSpeedMultiplier: number, rocketSlowMultiplier: number, bananaKnockbackMultiplier: number, bananaSlowMultiplier: number, };
