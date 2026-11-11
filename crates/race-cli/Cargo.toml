@@ -1,6 +1,6 @@
 [package]
 name = "race-cli"
-description = "Native tooling: corpus generation, TS-oracle diff, meta parity and gates (Phase 1)."
+description = "Native tooling: corpus generation, determinism pins, balance modes, fuzz, golden digests and codegen."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -13,14 +13,16 @@ path = "src/main.rs"
 
 [features]
 default = []
-# `oracle meta` (and the Phase 2 oracle diff) need race-core's TS-compat
-# models. Opt-in so `cargo build --workspace` never unifies it into
-# ENGINE_BUILD_ID (review 1 MINOR 12).
+# `corpus pin` of the `tsCompat` digests needs race-core's TS-compat models.
+# Opt-in so `cargo build --workspace` never unifies it into ENGINE_BUILD_ID
+# (review 1 MINOR 12). The TS oracle is gone (Phase 9), but the engine-side
+# feature stays: removing it would change the hashed engine sources and so
+# ENGINE_BUILD_ID.
 ts-compat = ["race-core/ts-compat"]
 
 [dependencies]
 race-core = { workspace = true, features = ["std"] }
-# `ts-compat` only adds `resolve_ts_compat` (oracle diff); it does not touch
+# `ts-compat` only adds `resolve_ts_compat` (tests/config_ts_compat.rs); it does not touch
 # race-core's `ts-compat` or ENGINE_BUILD_ID (review 1 MINOR 12).
 race-protocol = { workspace = true, features = ["std", "ts-compat"] }
 serde = { workspace = true, features = ["std"] }

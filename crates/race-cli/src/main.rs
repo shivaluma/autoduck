@@ -1,11 +1,11 @@
 //! `race-cli`: native tooling for the Rust engine.
 //!
-//! `corpus gen` writes oracle corpora; `corpus pin` maintains the determinism
-//! fixture. `oracle diff` runs the Rust engine against a TS oracle trace and
-//! `oracle meta` checks Season meta parity (both need `--features
-//! ts-compat`). `balance` holds the balance modes (Phase 6), `compare` gate
-//! G3, `fuzz` the random-config gate and `golden` the frozen digests of the
-//! `golden-version` CI job. `gate` is a stub that exits with status 2.
+//! `corpus gen` writes config corpora; `corpus pin` maintains the determinism
+//! fixture. `balance` holds the balance modes (Phase 6), `compare` gate G3,
+//! `fuzz` the random-config gate and `golden` the frozen digests of the
+//! `golden-version` CI job. `gate` is a stub that exits with status 2. The TS
+//! oracle commands (`oracle diff`, `oracle meta`) were removed with the TS
+//! engine in Phase 9.
 
 // Native-only tool: the D4(b) determinism bans don't apply here.
 #![allow(clippy::disallowed_methods, clippy::disallowed_types)]
@@ -15,9 +15,7 @@ mod codegen;
 mod corpus;
 mod fuzz;
 mod golden;
-mod meta;
 mod modes;
-mod oracle;
 mod pin;
 
 use std::process::ExitCode;
@@ -37,11 +35,6 @@ enum Command {
     Corpus {
         #[command(subcommand)]
         command: CorpusCommand,
-    },
-    /// Diff the Rust engine against the TS oracle.
-    Oracle {
-        #[command(subcommand)]
-        command: OracleCommand,
     },
     /// Paired Rust-vs-Rust balance reports (Phase 6, `docs/balance/S3.16.md`).
     Balance {
@@ -225,58 +218,6 @@ enum BalanceCommand {
     },
 }
 
-#[derive(Subcommand)]
-enum OracleCommand {
-    /// Run the Rust engine on a corpus and compare it tick by tick with a TS
-    /// oracle trace from `scripts/oracle/dump-trace.ts` (gate G1). Build with
-    /// `--features ts-compat`. On macOS run the oracle with
-    /// `node --no-use-std-math-pow` (the header is checked).
-    Diff {
-        /// Corpus from `corpus gen` (case = 0-based line).
-        #[arg(long)]
-        corpus: Option<String>,
-        /// Trace from dump-trace.ts (`.jsonl` or `.jsonl.gz`). With
-        /// `--ts-cmd`, the trace is written here first.
-        #[arg(long)]
-        trace: Option<String>,
-        /// Command that runs the TS oracle; `--corpus <corpus> --out
-        /// <trace>` is appended (e.g. `node --no-use-std-math-pow --import
-        /// tsx scripts/oracle/dump-trace.ts`).
-        #[arg(long)]
-        ts_cmd: Option<String>,
-        /// The linux-x64 oracle host has no FMA (Node can't report it).
-        #[arg(long)]
-        linux_x64_no_fma: bool,
-        /// How many failing cases to print.
-        #[arg(long, default_value_t = 20)]
-        show: usize,
-        /// Write a JSON report of every failing case here.
-        #[arg(long)]
-        report: Option<String>,
-        /// Instead of diffing, write the Rust `--full-at` dump of this case.
-        #[arg(long)]
-        dump_case: Option<u64>,
-        /// Output of `--dump-case` (default `case-<i>.rust.full.jsonl`).
-        #[arg(long)]
-        dump_out: Option<String>,
-        /// With `--dump-case`: the TS `--full-at` dump of the same case;
-        /// prints the first differing tick, fields and events.
-        #[arg(long)]
-        ts_full: Option<String>,
-    },
-    /// Check Season meta parity (Chaos rules and card draws, toggle-skip,
-    /// auto-loadouts, validateLoadout, catalog) against the TS fixture from
-    /// `scripts/oracle/dump-meta-fixtures.ts`. Build with `--features ts-compat`.
-    Meta {
-        /// Fixture path (`.json.gz` or `.json`).
-        #[arg(long, default_value = meta::DEFAULT_FIXTURE)]
-        fixture: String,
-        /// How many mismatching cases to print.
-        #[arg(long, default_value_t = 20)]
-        show: usize,
-    },
-}
-
 fn not_implemented(name: &str) -> ExitCode {
     eprintln!("race-cli {name}: not implemented");
     ExitCode::from(2)
@@ -319,46 +260,6 @@ fn main() -> ExitCode {
             Ok(()) => ExitCode::SUCCESS,
             Err(err) => {
                 eprintln!("race-cli corpus pin: {err:#}");
-                ExitCode::FAILURE
-            }
-        },
-        Command::Oracle {
-            command:
-                OracleCommand::Diff {
-                    corpus,
-                    trace,
-                    ts_cmd,
-                    linux_x64_no_fma,
-                    show,
-                    report,
-                    dump_case,
-                    dump_out,
-                    ts_full,
-                },
-        } => match oracle::run_diff(&oracle::DiffOptions {
-            corpus,
-            trace,
-            ts_cmd,
-            linux_x64_no_fma,
-            show,
-            report,
-            dump_case,
-            dump_out,
-            ts_full,
-        }) {
-            Ok(true) => ExitCode::SUCCESS,
-            Ok(false) => ExitCode::FAILURE,
-            Err(err) => {
-                eprintln!("race-cli oracle diff: {err:#}");
-                ExitCode::from(2)
-            }
-        },
-        Command::Oracle {
-            command: OracleCommand::Meta { fixture, show },
-        } => match meta::run_meta(&fixture, show) {
-            Ok(()) => ExitCode::SUCCESS,
-            Err(err) => {
-                eprintln!("race-cli oracle meta: {err:#}");
                 ExitCode::FAILURE
             }
         },
