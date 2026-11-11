@@ -65,11 +65,19 @@ export class RaceAudioSystem {
   /** `musicUrl`: the race's looping background track (see `race-music.ts`); omitted means no music. */
   constructor(private readonly musicUrl?: string) {}
 
-  async unlock() {
+  /**
+   * Starts the music and the sound effects. Resolves true when sound is on. Called once when the race
+   * opens (browsers allow it when the viewer already clicked something on the site) and again on the
+   * viewer's first tap or key press, which always works.
+   */
+  async unlock(): Promise<boolean> {
     // Start the music before any await so it still counts as part of the user's tap (Safari).
-    this.startMusic()
+    const playing = this.startMusic()
     this.context ??= new AudioContext()
-    if (this.context.state === 'suspended') await this.context.resume()
+    // Without a user gesture this promise stays pending, so it is not awaited.
+    if (this.context.state === 'suspended') void this.context.resume().catch(() => undefined)
+    const musicOn = await playing
+    return musicOn || this.context?.state === 'running'
   }
 
   /** The viewer's music mute, remembered across races in this browser. */
@@ -90,7 +98,7 @@ export class RaceAudioSystem {
       // Storage blocked: the toggle still applies to this race.
     }
     if (muted) this.music?.pause()
-    else this.startMusic(true)
+    else void this.startMusic(true)
     return muted
   }
 
@@ -114,16 +122,16 @@ export class RaceAudioSystem {
     }
   }
 
-  private startMusic(force = false) {
-    if (!this.musicUrl || typeof Audio === 'undefined' || (!force && this.musicMuted)) return
+  /** Resolves true when the music is playing. */
+  private startMusic(force = false): Promise<boolean> {
+    if (!this.musicUrl || typeof Audio === 'undefined' || (!force && this.musicMuted)) return Promise.resolve(false)
     if (!this.music) {
       this.music = new Audio(this.musicUrl)
       this.music.loop = true
       this.music.volume = MUSIC_VOLUME
     }
-    void this.music.play().catch(() => {
-      // Autoplay refused or the file failed to load: the race just stays silent.
-    })
+    // Rejected when autoplay is refused or the file failed to load: the race stays silent until a tap.
+    return this.music.play().then(() => true, () => false)
   }
 
   private play(cue: SoundCue) {

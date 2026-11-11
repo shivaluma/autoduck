@@ -381,15 +381,33 @@ export function PhaserRaceCanvas({
             backgroundColor: '#100b20d9', padding: { x: 14, y: 11 }, stroke: '#100b20', strokeThickness: 3,
           }).setOrigin(0, 1).setScrollFactor(0).setDepth(1000)
           const soundHint = this.add.text(this.scale.width / 2, 18, '🔈 TAP FOR SOUND', { color: '#ffffff', fontFamily: 'sans-serif', fontSize: '13px', fontStyle: 'bold', backgroundColor: '#100b20cc', padding: { x: 10, y: 7 } }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(1000)
-          this.input.once('pointerdown', () => {
-            void audio.unlock()
+          // Music is on by default: it starts right away when the browser allows it (the viewer already
+          // clicked something on the site), otherwise on the first tap or key press anywhere on the page.
+          // The hint then becomes the now-playing label; tapping it mutes or unmutes the music.
+          let soundOn = false
+          const showNowPlaying = () => {
+            if (soundOn || !soundHint.active) return
+            soundOn = true
             soundHint.destroy()
-            // After the first tap the hint becomes the now-playing label; tapping it mutes or unmutes the music.
             const musicLabel = () => `${audio.musicMuted ? '🔇 MUSIC OFF' : '♪'} ${music.title} — ${music.artist} · ${music.credit}`
             const nowPlaying = this.add.text(this.scale.width / 2, 18, musicLabel(), { color: '#ffffff', fontFamily: 'sans-serif', fontSize: '12px', fontStyle: 'bold', backgroundColor: '#100b20aa', padding: { x: 10, y: 6 } })
               .setOrigin(0.5, 0).setScrollFactor(0).setDepth(1000).setInteractive({ useHandCursor: true })
-            nowPlaying.on('pointerdown', () => { audio.toggleMusic(); nowPlaying.setText(musicLabel()) })
-          })
+            nowPlaying.on('pointerdown', () => { audio.toggleMusic(); if (nowPlaying.active) nowPlaying.setText(musicLabel()) })
+          }
+          const startSound = () => { void audio.unlock().then((on) => { if (on) showNowPlaying() }) }
+          const onGesture = () => {
+            startSound()
+            if (soundOn) stopListening()
+          }
+          const stopListening = () => {
+            window.removeEventListener('pointerdown', onGesture)
+            window.removeEventListener('keydown', onGesture)
+          }
+          window.addEventListener('pointerdown', onGesture)
+          window.addEventListener('keydown', onGesture)
+          this.events.once('shutdown', stopListening)
+          this.events.once('destroy', stopListening)
+          startSound()
           this.riverFx = createRiverEventFx(this, { reducedMotion, duckView: (playerId) => this.duckView(playerId) })
           this.events.once('shutdown', () => this.riverFx?.destroy())
           if (!clientDriven) this.showCountdown()
