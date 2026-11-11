@@ -6,7 +6,9 @@
 # Node), determinism (native vs wasm32-wasip1 under wasmtime on x86_64 and
 # aarch64, default features and ts-compat; includes the pinned libm outputs,
 # the fixed state_hash and 42 pinned full races),
-# serde-features (D4(e) serde_json feature diff).
+# serde-features (D4(e) serde_json feature diff), golden-version (frozen
+# digests per engine/balance version and the rust-toolchain.toml hash) and
+# fuzz (2k random configs: 0 panics, 0 unfinished, 0 non-finite).
 #
 # The toolchain comes from rust-toolchain.toml: the channel is read from the
 # file and installed with dtolnay/rust-toolchain, and rustup then selects it
@@ -225,3 +227,44 @@ jobs:
             echo "::error::serde_json arbitrary_precision changes number parsing (D4(d))"
             exit 1
           fi
+
+  golden-version:
+    name: golden-version
+    # Fails when engine output changes without a RACE_BALANCE_VERSION /
+    # RACE_ENGINE_VERSION bump, when a version has no frozen entry, or when
+    # rust-toolchain.toml changes (D4). Fix with `race-cli golden freeze`
+    # after a bump; it never rewrites a frozen digest.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read pinned toolchain
+        id: toolchain
+        run: echo "channel=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)" >> "$GITHUB_OUTPUT"
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ steps.toolchain.outputs.channel }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: race-cli-release
+      - name: race-cli golden check
+        run: cargo run -p race-cli --release --locked -- golden check
+
+  fuzz:
+    name: fuzz (2k configs)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read pinned toolchain
+        id: toolchain
+        run: echo "channel=$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)" >> "$GITHUB_OUTPUT"
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ steps.toolchain.outputs.channel }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: race-cli-release
+      - name: race-cli fuzz
+        # A different window of the fuzz stream on every run (the run number
+        # picks the start), so CI covers new configs over time; a failure
+        # prints the case indexes to reproduce with `--start`.
+        run: cargo run -p race-cli --release --locked -- fuzz --cases 2000 --start $(( (GITHUB_RUN_NUMBER % 500) * 2000 ))
