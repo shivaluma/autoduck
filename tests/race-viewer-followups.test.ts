@@ -5,9 +5,9 @@ import path from 'node:path'
 import { after, test } from 'node:test'
 import { createSimulation, simulateRace } from '../packages/race-core/src'
 import { RACE_BALANCE_VERSION, RACE_ENGINE_VERSION, raceConfigSchema, type RaceConfig } from '../packages/race-protocol/src'
-import { createLiveDriver } from '../components/racing/drivers/live-driver'
 import { parseRaceIdParam } from '../lib/racing/race-id'
 import { postRaceStatsForView } from '../src/race/post-race-engine'
+import { collectPostRaceBaselineRank, collectPostRaceMotion } from '../lib/racing/post-race-stats'
 import { aggregatePostRaceStats, type PostRaceStats } from '../src/race/post-race-stats'
 import { planLiveView } from '../src/race/replay-plan'
 
@@ -30,9 +30,12 @@ function makeConfig(): RaceConfig {
 const config = makeConfig()
 const result = simulateRace(config)
 const players = config.players.map((player) => ({ playerId: player.playerId, name: player.name }))
-// Stored configs from other versions are passed to the viewer unparsed.
+// Stored configs from other versions are passed to the viewer unparsed. Since Phase 5 the browser engine is
+// race-core as WASM: the Rust pair (2.0.0/S3.16) is the one it re-simulates; the TS pair is "another version".
 const oldConfig = { ...config, engineVersion: '1.1.0', balanceVersion: 'S3.2' } as RaceConfig
 const rustConfig = { ...config, engineVersion: '2.0.0', balanceVersion: 'S3.16', rngVersion: 'xs32-v1' } as unknown as RaceConfig
+// Engine inputs as the WASM engine would hand them over (here computed with the TS engine on the TS race).
+const engineInputs = { motion: collectPostRaceMotion(config, []), baselineRank: collectPostRaceBaselineRank(config) }
 
 function assertNoBaseline(view: { stats: PostRaceStats; showBaseline: boolean }) {
   assert.equal(view.showBaseline, false)
@@ -45,7 +48,7 @@ function assertNoBaseline(view: { stats: PostRaceStats; showBaseline: boolean })
 }
 
 test('post-race stats: a current-version race without frozen stats has a real no-items baseline', () => {
-  const view = postRaceStatsForView({ config, events: result.events, players })
+  const view = postRaceStatsForView({ config: rustConfig, events: result.events, players, engine: engineInputs })
   assert.equal(view.showBaseline, true)
   assert.equal(view.stats.hasBaseline, true)
   assert.equal(view.showSpeed, true)
@@ -55,9 +58,9 @@ test('post-race stats: a current-version race without frozen stats has a real no
   }
 })
 
-test('post-race stats: an old-version race or a 2.0.0 race without statsJson shows no baseline columns', () => {
-  for (const stored of [oldConfig, rustConfig, null]) {
-    const view = postRaceStatsForView({ config: stored, events: result.events, players })
+test('post-race stats: an old-version race, or a current one before the engine answered, shows no baseline columns', () => {
+  for (const [stored, engine] of [[oldConfig, engineInputs], [config, engineInputs], [null, engineInputs], [rustConfig, null]] as const) {
+    const view = postRaceStatsForView({ config: stored, events: result.events, players, engine })
     assertNoBaseline(view)
     assert.equal(view.showSpeed, false)
     // The event-derived columns are still there.
@@ -81,17 +84,16 @@ test('post-race stats: frozen stats keep their baseline unless they say they hav
   assert.equal(postRaceStatsForView({ config: rustConfig, events: result.events, players, frozenStats: { ...frozen, hasBaseline: false } }).showBaseline, false)
 })
 
-test('live view: the live canvas simulates only the current pair and follows snapshots otherwise', () => {
-  assert.equal(planLiveView({ engineVersion: RACE_ENGINE_VERSION, balanceVersion: RACE_BALANCE_VERSION }), 'live')
-  assert.equal(planLiveView(config), 'live')
-  assert.equal(planLiveView(rustConfig), 'snapshot')
+test('live view: the v1 live canvas simulates only the browser engine pair and follows snapshots otherwise', () => {
+  assert.equal(planLiveView(rustConfig), 'live')
+  // TS-era races (the TS server's v1 stream) are no longer simulated in the browser.
+  assert.equal(planLiveView({ engineVersion: RACE_ENGINE_VERSION, balanceVersion: RACE_BALANCE_VERSION }), 'snapshot')
+  assert.equal(planLiveView(config), 'snapshot')
   assert.equal(planLiveView(oldConfig), 'snapshot')
   assert.equal(planLiveView(null), 'snapshot')
   assert.equal(planLiveView({}), 'snapshot')
-  // What the snapshot fallback avoids: the live driver would hit the version guard.
+  // The TS engine's own version guard still refuses Rust configs.
   assert.throws(() => createSimulation(rustConfig))
-  assert.throws(() => createLiveDriver(rustConfig, { syncTick: 10 }))
-  assert.equal(createLiveDriver(config, { syncTick: 10 }).tick(), 10)
 })
 
 test('race id: race ids must be canonical decimal', () => {

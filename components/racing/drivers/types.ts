@@ -45,6 +45,8 @@ export interface SnapshotSink {
  * - sim: re-simulate the config locally (current engine/balance pair only)
  * - live: re-simulate a running race, catching up to `syncTick`, with manual inputs from SSE
  * - snapshot: draw the server's SSE snapshots (no config)
+ * - live-v2: a Rust-server race over SSE v2 (D16): predicted locally by the WASM engine under LiveSync when
+ *   hello.engineBuildId matches, otherwise (or after a desync) the server's snapshots
  */
 export type RaceSource =
   | { kind: 'recording'; track: DecodedReplayTrack; events: readonly RaceEvent[]; geometry?: TrackGeometryFile | null; chaosType?: string }
@@ -52,13 +54,13 @@ export type RaceSource =
     kind: 'sim'
     config: RaceConfig
     manualInputs?: readonly RecordedWildItemInput[]
+    /** Unused since the WASM sim records the whole race first (the end tick is then known). */
     endTick?: number | null
     geometry?: TrackGeometryFile | null
-    /** /dev/race-lab only: its configs carry a "-LAB" balance label on the current engine. */
-    allowVersion?: boolean
   }
   | { kind: 'live'; config: RaceConfig; syncTick?: number; manualInputs?: readonly RecordedWildItemInput[] }
   | { kind: 'snapshot'; trackVersion?: string | null }
+  | { kind: 'live-v2'; trackVersion?: string | null }
 
 /** Identity for a source: the canvas rebuilds when it changes (live sync state is deliberately excluded). */
 export function raceSourceKey(source: RaceSource): string {
@@ -66,7 +68,8 @@ export function raceSourceKey(source: RaceSource): string {
     const header = source.track.header
     return `recording:${header.raceId}:${header.lastTick}:${header.resultDigest ?? ''}:${source.events.length}:${source.geometry ? 'g' : ''}`
   }
-  if (source.kind === 'sim') return `sim:${JSON.stringify(source.config)}:${JSON.stringify(source.manualInputs ?? [])}:${source.geometry ? 'g' : ''}:${source.allowVersion ? 'v' : ''}`
+  if (source.kind === 'sim') return `sim:${JSON.stringify(source.config)}:${JSON.stringify(source.manualInputs ?? [])}:${source.geometry ? 'g' : ''}`
   if (source.kind === 'live') return `live:${JSON.stringify(source.config)}`
+  if (source.kind === 'live-v2') return `live-v2:${source.trackVersion ?? ''}`
   return `snapshot:${source.trackVersion ?? ''}`
 }

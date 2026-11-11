@@ -7,7 +7,7 @@
 //   2. No chunk bundles a server module: Prisma, better-sqlite3, lib/db.ts or any lib/racing/ server adapter.
 //   3. The home, rules and race routes load no engine up front: walking the static imports of their route
 //      chunks (plus the entry and the Season 3 layout they render in) finds no module from Phaser,
-//      packages/race-*, src/engine/sim.ts, Zod or any .wasm file. Lazy imports are not followed: they load
+//      packages/race-*, the WASM engine client (src/engine/index.ts, its worker), Zod or any .wasm file. Lazy imports are not followed: they load
 //      only when a page asks for them (the race canvas loads Phaser, and the engine only for a race without
 //      a recorded track).
 //
@@ -49,6 +49,11 @@ for (const [file, ids] of Object.entries(chunkModules)) {
   for (const id of ids) if (SERVER_MODULES.some((pattern) => pattern.test(id))) fail(`${file} bundles server module ${id}`)
 }
 
+// 2b. Phase 5: the browser engine is race-core as WASM; no chunk may bundle the TS engine.
+for (const [file, ids] of Object.entries(chunkModules)) {
+  for (const id of ids) if (/^packages\/race-core\//.test(id)) fail(`${file} bundles the TS engine (${id}); use src/engine (WASM)`)
+}
+
 // 3. Static import closure of the routes that must not load the engine up front.
 const LIGHT_ROUTES = {
   home: ['index.html', 'src/pages/home.tsx'],
@@ -59,7 +64,7 @@ const HEAVY = [
   /(^|\/)node_modules\/(\.pnpm\/[^/]+\/node_modules\/)?phaser\//,
   /(^|\/)node_modules\/(\.pnpm\/[^/]+\/node_modules\/)?zod\//,
   /^packages\/race-/,
-  /^src\/engine\/sim\.ts$/,
+  /^src\/engine\/(index|sim-worker)\.ts$/,
   /\.wasm(\?|$)/,
 ]
 

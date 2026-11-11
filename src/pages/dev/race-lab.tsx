@@ -5,7 +5,6 @@ import { Switch } from '@/components/ui/switch'
 import { RACE_THEMES, RACE_THEME_IDS, type RaceThemeId } from '@/lib/race-fx/themes'
 import { WILD_ITEM_CATALOG } from '@/src/engine/catalog'
 import { RACE_TICK_RATE, type RaceConfig, type RaceEvent, type RaceItemId, type WildItemId } from '@/src/engine/protocol'
-import { SIM_VERSIONS, simRaceConfigSchema } from '@/src/engine/sim'
 
 const CHAOS_TYPES = ['NORMAL', 'REVERSE', 'DUO', 'TRIPLE_ELIMINATION', 'CUT_LINE', 'CONSTRUCTORS', 'BOUNTY_HUNT'] as const
 const MAJORS: Array<{ id: RaceItemId; label: string }> = [
@@ -106,16 +105,16 @@ export default function RaceLabPage() {
     return () => controller.abort()
   }, [])
 
-  const start = useCallback(() => {
+  const start = useCallback(async () => {
     try {
       const playerIds = players.map((player) => player.playerId)
-      // The lab runs the browser engine, so the config carries that engine's versions (src/engine/sim.ts).
-      const config = simRaceConfigSchema.parse({
+      // The lab runs the browser engine (race-core as WASM, src/engine): it normalizes the config with the
+      // engine's own rules, and the missing version labels become the engine's current ones.
+      const { normalizeConfig } = await import('@/src/engine')
+      const config = await normalizeConfig({
         raceId: `race-lab-${runKey + 1}`,
         seed,
-        ...SIM_VERSIONS,
-        balanceVersion: `${SIM_VERSIONS.balanceVersion}-LAB`,
-        players,
+        players: players.map(({ playerId, name }) => ({ playerId, name })),
         loadouts: players.map((player) => {
           const choice = selectedChoices.get(player.playerId)!
           return { playerId: player.playerId, itemIds: [choice.major, choice.minor], source: 'PLAYER' }
@@ -177,7 +176,7 @@ export default function RaceLabPage() {
       <label className="text-sm font-black">⚡ NITRO {nitro.toFixed(2)}×<input type="range" min="1" max="1.2" step="0.01" value={nitro} onChange={(event) => setNitro(Number(event.target.value))} className="mt-3 w-full" /></label>
       <label className="text-sm font-black">🚀 ROCKET {rocketSlow.toFixed(2)}×<input type="range" min="0.75" max="1" step="0.01" value={rocketSlow} onChange={(event) => setRocketSlow(Number(event.target.value))} className="mt-3 w-full" /></label>
       <label className="text-sm font-black">🍌 BANANA {bananaKnockback.toFixed(2)}×<input type="range" min="0.5" max="2" step="0.05" value={bananaKnockback} onChange={(event) => setBananaKnockback(Number(event.target.value))} className="mt-3 w-full" /></label>
-      <button onClick={start} className="rounded-xl bg-[var(--color-ggd-neon-green)] px-5 py-3 font-black text-[var(--color-ggd-outline)]">RUN RACE</button>
+      <button onClick={() => void start()} className="rounded-xl bg-[var(--color-ggd-neon-green)] px-5 py-3 font-black text-[var(--color-ggd-outline)]">RUN RACE</button>
     </section>
 
     <section className="grid gap-4 rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-surface-2)] p-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -192,8 +191,8 @@ export default function RaceLabPage() {
     })}</div></section>
 
     {activeConfig && <>
-      <div className="flex flex-wrap items-center gap-2"><button onClick={() => setPaused((value) => !value)} className="rounded-xl border-2 border-white/20 px-4 py-2 font-black">{paused ? '▶ RESUME' : '⏸ PAUSE'}</button>{([1, 2, 4] as const).map((value) => <button key={value} onClick={() => setSpeed(value)} className={`rounded-xl px-4 py-2 font-black ${speed === value ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' : 'border-2 border-white/20'}`}>{value}×</button>)}<button onClick={start} className="rounded-xl border-2 border-[var(--color-ggd-neon-green)] px-4 py-2 font-black text-[var(--color-ggd-neon-green)]">↻ REPLAY</button><span className="ml-auto text-sm text-white/60">Tick {snapshot?.tick ?? 0} · {snapshot?.finished ? 'FINISHED' : paused ? 'PAUSED' : 'RUNNING'}</span></div>
-      <PhaserRaceCanvas key={runKey} raceId={-runKey} players={canvasPlayers} source={{ kind: 'sim', config: activeConfig, allowVersion: true }} replaySpeed={speed} replayPaused={paused} onReplayInspect={inspect} debugPickups theme={canvasTheme || undefined} />
+      <div className="flex flex-wrap items-center gap-2"><button onClick={() => setPaused((value) => !value)} className="rounded-xl border-2 border-white/20 px-4 py-2 font-black">{paused ? '▶ RESUME' : '⏸ PAUSE'}</button>{([1, 2, 4] as const).map((value) => <button key={value} onClick={() => setSpeed(value)} className={`rounded-xl px-4 py-2 font-black ${speed === value ? 'bg-[var(--color-ggd-gold)] text-[var(--color-ggd-outline)]' : 'border-2 border-white/20'}`}>{value}×</button>)}<button onClick={() => void start()} className="rounded-xl border-2 border-[var(--color-ggd-neon-green)] px-4 py-2 font-black text-[var(--color-ggd-neon-green)]">↻ REPLAY</button><span className="ml-auto text-sm text-white/60">Tick {snapshot?.tick ?? 0} · {snapshot?.finished ? 'FINISHED' : paused ? 'PAUSED' : 'RUNNING'}</span></div>
+      <PhaserRaceCanvas key={runKey} raceId={-runKey} players={canvasPlayers} source={{ kind: 'sim', config: activeConfig }} replaySpeed={speed} replayPaused={paused} onReplayInspect={inspect} debugPickups theme={canvasTheme || undefined} />
       <section className="grid gap-4 lg:grid-cols-2"><div className="rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-4"><h2 className="font-display text-2xl">State inspector</h2><div className="mt-3 space-y-2">{snapshot?.ducks.map((duck) => <div key={duck.playerId} className="flex items-center gap-3 rounded-xl bg-black/20 px-3 py-2 text-sm"><b className="w-6">#{duck.rank}</b><span className="flex-1">{players.find((player) => player.playerId === duck.playerId)?.name}</span><span>{(duck.progress * 100).toFixed(1)}%</span><span className="text-white/50">{duck.wildItem ? `🎒 ${WILD_ITEM_CATALOG.find((item) => item.id === duck.wildItem?.itemId)?.icon}` : duck.activeEffects.join(', ') || '—'} · 📦 {duck.regularPickupCount}</span></div>)}</div></div><div className="max-h-[420px] overflow-auto rounded-3xl border-4 border-[var(--color-ggd-outline)] bg-[var(--color-ggd-panel)] p-4"><h2 className="font-display text-2xl">Event log · {events.length}</h2><div className="mt-3 space-y-1 font-mono text-xs">{[...events].reverse().map((event, index) => <div key={`${event.tick}-${event.type}-${index}`} className="rounded-lg bg-black/20 px-3 py-2"><span className="text-white/45">{event.tick}</span> · {event.type} · {event.sourcePlayerId ?? '—'}{event.targetPlayerId ? ` → ${event.targetPlayerId}` : ''}</div>)}</div></div></section>
     </>}
   </main>

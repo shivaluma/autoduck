@@ -1,28 +1,26 @@
 /**
  * How the race page shows a finished race (plan §4.6):
  * - a recorded track whenever one exists (any engine version; nothing is simulated),
- * - otherwise a local re-simulation, only for the engine/balance pair the browser engine implements
- *   (src/engine/sim-versions.ts `SIM_VERSIONS`; never engine major ≥ 2 until Phase 5),
+ * - otherwise a local re-simulation, only for a version pair the browser engine (race-core as WASM,
+ *   src/engine) implements: the current engine version and a supported balance version,
  * - otherwise no canvas: "Replay không khả dụng cho race này".
  */
-import { SIM_VERSIONS } from '@/src/engine/sim-versions'
-import { engineMajor } from './event-vocab'
+import { RACE_ENGINE_VERSION, SUPPORTED_BALANCE_VERSIONS } from '@/src/engine/protocol'
 import type { RaceReplayInfo } from './types'
 
 export type ReplayPlan = 'track' | 'sim' | 'unavailable'
 
 export function canResimulate(config: { engineVersion?: unknown; balanceVersion?: unknown } | null | undefined) {
   if (!config) return false
-  const major = engineMajor(config.engineVersion)
-  return major !== null && major < 2
-    && config.engineVersion === SIM_VERSIONS.engineVersion
-    && config.balanceVersion === SIM_VERSIONS.balanceVersion
+  return config.engineVersion === RACE_ENGINE_VERSION
+    && typeof config.balanceVersion === 'string'
+    && SUPPORTED_BALANCE_VERSIONS.includes(config.balanceVersion)
 }
 
 /**
- * How the live canvas follows a running race: re-simulate locally only when the browser engine can run
- * the config (the current pair; createSimulation's version guard throws for anything else, e.g. an
- * engine 2.x race started by the Rust server), otherwise draw the server's SSE snapshots.
+ * How the v1 live canvas (`kind: 'live'`) follows a running race: re-simulate locally only when the browser
+ * engine runs the config, otherwise draw the server's SSE snapshots. TS-era races (1.x) therefore always use
+ * snapshots; Rust-server races use the SSE v2 view (`kind: 'live-v2'`).
  */
 export function planLiveView(config: { engineVersion?: unknown; balanceVersion?: unknown } | null | undefined): 'live' | 'snapshot' {
   return canResimulate(config) ? 'live' : 'snapshot'

@@ -85,6 +85,8 @@ export default defineConfig({
       },
     },
   },
+  // The engine worker (src/engine/sim-worker.ts) is an ES module: the WASM glue it imports uses import.meta.
+  worker: { format: 'es' },
   build: {
     outDir: 'dist',
     emptyOutDir: true,

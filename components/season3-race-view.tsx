@@ -1,5 +1,5 @@
 import { Link } from 'react-router'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { RaceCelebration } from '@/components/race-celebration'
 import { Season3Avatar } from '@/components/season3-avatar'
 import { PhaserRaceCanvas, type ReplayInspection } from '@/components/racing/phaser-race-canvas'
@@ -11,6 +11,8 @@ import { CombatEncountersPanel } from '@/components/racing/combat-encounters-pan
 import { useReplayTrack } from '@/components/racing/use-replay-track'
 import { readStoredEvents } from '@/src/race/event-vocab'
 import { planLiveView } from '@/src/race/replay-plan'
+import { liveProtocolFor } from '@/src/race/live-sync'
+import type { RaceSource } from '@/components/racing/drivers/types'
 import type { RaceStatus } from '@/lib/types'
 import type { DuckAppearance } from '@/lib/cosmetics/types'
 import type { DuckSnapshot, RaceEvent } from '@/src/engine/protocol'
@@ -46,11 +48,12 @@ export function Season3RaceView({ raceId }: { raceId: number }) {
   const [resultTab, setResultTab] = useState<typeof RESULT_TABS[number]['id']>('result')
 
   const fetchRace = useCallback(async () => {
-    const response = await fetch(raceUrl(raceId))
-    if (!response.ok) return
+    const response = await fetch(raceUrl(raceId)).catch(() => null)
+    if (!response?.ok) return null
     const nextRace = await response.json() as RaceStatus
     setRace(nextRace)
     setLoading(false)
+    return nextRace.status
   }, [raceId])
 
   // Reset when navigating to another race (state adjusted during render, not in the effect).
@@ -101,7 +104,7 @@ export function Season3RaceView({ raceId }: { raceId: number }) {
   const officialRanking = useMemo(() => ranking.filter((player) => !player.isGhost && !player.isClone), [ranking])
   const ghostDucks = useMemo(() => ranking.filter((player) => player.isGhost && !player.isClone), [ranking])
   const racePlayers = useMemo(() => {
-    const configPlayers = new Map((race?.engine?.config?.players ?? []).map((player) => [player.playerId, player]))
+    const configPlayers = new Map((race?.engine?.config?.players ?? race?.engine?.players ?? []).map((player) => [player.playerId, player]))
     const loadouts = new Map((race?.engine?.loadouts ?? race?.engine?.config?.loadouts ?? []).map((loadout) => [loadout.playerId, loadout.itemIds]))
     return (race?.participants ?? []).filter((player) => !player.isClone).map((player) => {
       const playerId = String(player.userId)
@@ -125,9 +128,31 @@ export function Season3RaceView({ raceId }: { raceId: number }) {
     }
   }, [])
 
+  // A finished/resolved frame (or the local sim reaching the end): T2 usually commits right after T1, so
+  // poll quickly until the race reads `finished` and the page switches to the recorded track.
+  const finishPollRef = useRef(0)
+  useEffect(() => () => window.clearTimeout(finishPollRef.current), [raceId])
   const handleLiveFinished = useCallback(() => {
-    void fetchRace()
+    window.clearTimeout(finishPollRef.current)
+    let attempts = 0
+    const poll = () => {
+      attempts += 1
+      void fetchRace().then((status) => {
+        if (status === 'finished' || status === 'failed' || attempts >= 8) return
+        finishPollRef.current = window.setTimeout(poll, 400)
+      })
+    }
+    poll()
   }, [fetchRace])
+
+  const liveSource = useMemo((): RaceSource | null => {
+    const engine = race?.engine
+    if (!engine) return null
+    const protocol = liveProtocolFor(engine, planLiveView(engine.config) === 'live')
+    if (protocol === 'v2') return { kind: 'live-v2', trackVersion: engine.trackVersion ?? engine.config?.trackVersion }
+    if (protocol === 'v1-sim' && engine.config) return { kind: 'live', config: engine.config, syncTick: engine.liveTick ?? undefined, manualInputs: engine.liveManualInputs }
+    return { kind: 'snapshot', trackVersion: engine.trackVersion }
+  }, [race?.engine])
 
   if (loading) return <main className="flex min-h-screen items-center justify-center text-white"><div className="flex flex-col items-center gap-3"><UiIcon name="duck" size={96} className="gx-float drop-shadow-[0_6px_0_var(--gx-ink)]" /><p className="gx-title text-3xl">Đang chuẩn bị race…</p></div></main>
   if (!race) return <main className="flex min-h-screen items-center justify-center p-6 text-white"><GamePanel tone="dark" icon="flag" title="Không tìm thấy race"><GameLink href="/season-3" variant="ghost" icon="duck">Về ao</GameLink></GamePanel></main>
@@ -187,14 +212,12 @@ export function Season3RaceView({ raceId }: { raceId: number }) {
         <div><div className="gx-title text-3xl">Cuộc đua đang diễn ra!</div><p className="text-sm text-white/75">Bảng xếp hạng và diễn biến cập nhật trực tiếp.</p></div>
       </div>
 
-      {race.engine ? (
+      {race.engine && liveSource ? (
         <PhaserRaceCanvas
           raceId={raceId}
           players={racePlayers}
           chaosType={race.engine.chaosConfig?.type}
-          source={race.engine.config && planLiveView(race.engine.config) === 'live'
-            ? { kind: 'live', config: race.engine.config, syncTick: race.engine.liveTick ?? undefined, manualInputs: race.engine.liveManualInputs }
-            : { kind: 'snapshot', trackVersion: race.engine.trackVersion }}
+          source={liveSource}
           onReplayInspect={handleLiveInspect}
           onLiveFinished={handleLiveFinished}
         />

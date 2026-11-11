@@ -3,9 +3,9 @@ import { intentCopy } from '@/src/race/ai-intent-copy'
 import type PhaserType from 'phaser'
 import { itemActivationForEvent } from '@/src/engine/catalog'
 import type { DuckSnapshot, RaceEvent, RaceItemId, WildItemId } from '@/src/engine/protocol'
-import { polylineTrack } from '@/src/race/polyline-track'
+import { renderTrack } from '@/src/engine/track-geometry'
 import { planLiveView } from '@/src/race/replay-plan'
-import type { RaceWorld, RenderTrack } from '@/src/race/types'
+import type { RaceWorld } from '@/src/race/types'
 import { createPlayback, type Playback, type PlaybackFrame } from './drivers/playback'
 import { createRecordingDriver } from './drivers/recording-driver'
 import { connectSnapshotDriver } from './drivers/snapshot-driver'
@@ -141,20 +141,14 @@ export interface ReplayInspection {
 
 export type { RaceSource } from './drivers/types'
 
-type EngineDrivers = typeof import('./drivers/engine-drivers')
-
-/** A recording with its track geometry is the only source that plays without the browser engine. */
+/** Recordings and v1 snapshots play without the browser engine (the WASM worker); sims and live races load it. */
 function needsEngine(source: RaceSource) {
-  return !(source.kind === 'recording' && source.geometry)
+  return source.kind === 'sim' || source.kind === 'live' || source.kind === 'live-v2'
 }
 
-function trackForSource(source: RaceSource, engine: EngineDrivers | null): RenderTrack {
-  if (source.kind === 'recording' && source.geometry) return polylineTrack(source.geometry)
-  if (source.kind === 'sim' && source.geometry) return polylineTrack(source.geometry)
-  if (!engine) throw new Error('trackForSource: the engine module is not loaded')
-  if (source.kind === 'recording') return engine.createRiverTrack(source.track.header.trackVersion)
-  if (source.kind === 'sim' || source.kind === 'live') return engine.createRiverTrack(source.config.trackVersion)
-  return engine.createRiverTrack(source.trackVersion ?? undefined)
+/** The geometry a source names; otherwise the current track's file (src/engine/track-geometry.ts). */
+function geometryForSource(source: RaceSource) {
+  return source.kind === 'recording' || source.kind === 'sim' ? source.geometry ?? null : null
 }
 
 export function PhaserRaceCanvas({
@@ -225,13 +219,12 @@ export function PhaserRaceCanvas({
     const raceSource = sourceRef.current
 
     // Phaser and (when the source needs it) the browser engine load together, in their own chunks.
-    void Promise.all([import('phaser'), needsEngine(raceSource) ? import('./drivers/engine-drivers') : null]).then(([module, engine]) => {
+    void Promise.all([import('phaser'), needsEngine(raceSource) ? import('./drivers/engine-drivers') : null, renderTrack(geometryForSource(raceSource))]).then(([module, engine, track]) => {
       if (!active) return
       const Phaser = module.default ?? module
       const isReplay = raceSource.kind === 'recording' || raceSource.kind === 'sim'
       const clientDriven = raceSource.kind !== 'snapshot'
       const sourceChaos = raceSource.kind === 'sim' || raceSource.kind === 'live' ? raceSource.config.chaosConfig?.type : raceSource.kind === 'recording' ? raceSource.chaosType : undefined
-      const track = trackForSource(raceSource, engine)
       const scenePlayers = JSON.parse(serializedPlayers) as PlayerLabel[]
       const reducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
       const mobileViewport = typeof window !== 'undefined' && window.innerWidth < 640
@@ -300,6 +293,8 @@ export function PhaserRaceCanvas({
           this.pendingWorld = null
           this.lastAppliedSnapshotTick = -1
           this.crowd = null
+          this.liveCountdownShown = false
+          this.catchUpLabel = null
           this.finishCelebrationCount = 0
           this.snapCamera = false
         }
@@ -770,7 +765,36 @@ export function PhaserRaceCanvas({
 
         private finishCelebrationCount = 0
 
-        private showCountdown() {
+        /** SSE v2: the countdown ends (QUACK!) in `endsInMs`, from hello.countdownEndsInMs. */
+        showLiveCountdown(endsInMs: number) {
+          if (endsInMs <= 0 || this.liveCountdownShown) return
+          this.liveCountdownShown = true
+          const stepMs = Math.min(1000, Math.max(250, endsInMs / 3))
+          const lead = endsInMs - 3 * stepMs
+          if (lead > 0) this.time.delayedCall(lead, () => this.showCountdown(stepMs))
+          else this.showCountdown(stepMs)
+        }
+
+        private liveCountdownShown = false
+        private catchUpLabel: PhaserType.GameObjects.Text | null = null
+
+        /** SSE v2 catch-up (late join or a background gap): progress in [0, 1], or null to hide. */
+        setCatchUp(progress: number | null) {
+          if (progress === null) {
+            this.catchUpLabel?.destroy()
+            this.catchUpLabel = null
+            return
+          }
+          if (!this.catchUpLabel) {
+            this.catchUpLabel = this.add.text(this.scale.width / 2, this.scale.height / 2, '', {
+              color: '#ffffff', fontFamily: 'sans-serif', fontSize: '20px', fontStyle: 'bold',
+              backgroundColor: '#100b20dd', padding: { x: 16, y: 10 },
+            }).setOrigin(0.5).setScrollFactor(0).setDepth(1500)
+          }
+          this.catchUpLabel.setText(`ĐANG BẮT KỊP CUỘC ĐUA… ${Math.round(progress * 100)}%`)
+        }
+
+        private showCountdown(stepMs = 750) {
           const centerX = this.scale.width / 2
           const centerY = this.scale.height / 2
           const overlay = this.add.rectangle(centerX, centerY, this.scale.width, this.scale.height, 0x100b20, reducedMotion ? 0.2 : 0.38).setScrollFactor(0).setDepth(1490)
@@ -806,7 +830,7 @@ export function PhaserRaceCanvas({
           showPlayer()
           this.time.addEvent({ delay: Math.max(250, 2800 / scenePlayers.length), repeat: scenePlayers.length - 2, callback: showPlayer })
           let value = 3
-          this.time.addEvent({ delay: 750, repeat: 3, callback: () => {
+          this.time.addEvent({ delay: stepMs, repeat: 3, callback: () => {
             value -= 1
             const color = tickColors[Math.max(0, value)] ?? '#ffffff'
             countdown.setText(value > 0 ? String(value) : 'QUACK!')
@@ -1416,11 +1440,34 @@ export function PhaserRaceCanvas({
       if (raceSource.kind === 'recording') {
         runTimeline(createRecordingDriver(raceSource.track, raceSource.events), true)
       } else if (raceSource.kind === 'sim') {
-        runTimeline(engine!.createSimDriver(raceSource.config, { manualInputs: raceSource.manualInputs, endTick: raceSource.endTick, allowVersion: raceSource.allowVersion }), true)
+        void engine!.createSimDriver(raceSource.config, { manualInputs: raceSource.manualInputs }).then((driver) => {
+          if (active) runTimeline(driver, true)
+        }, (error: unknown) => console.error('[race-canvas] simulation failed', error))
+      } else if (raceSource.kind === 'live-v2') {
+        // Rust server, SSE v2: LiveSync + the WASM engine when the build ids match, snapshots otherwise.
+        void sceneReady.then(() => {
+          if (!active) return
+          closeStream = engine!.connectLiveV2({
+            raceId,
+            scene,
+            onFrame: (frame) => inspectRef.current?.({ tick: frame.tick, finished: false, ducks: frame.ducks, newEvents: frame.events, seeked: false, endTick: null }),
+            onEnded: () => onLiveFinishedRef.current?.(),
+          })
+        })
       } else if (raceSource.kind === 'live' && planLiveView(raceSource.config) === 'live') {
-        const live = engine!.createLiveDriver(raceSource.config, { syncTick: raceSource.syncTick, manualInputs: raceSource.manualInputs })
-        closeStream = engine!.connectLiveDriver(raceId, live, raceSource.config, () => onLiveFinishedRef.current?.())
-        runTimeline(live, false)
+        const config = raceSource.config
+        void engine!.createLiveDriver(config, { syncTick: raceSource.syncTick, manualInputs: raceSource.manualInputs }).then((live) => {
+          if (!active) {
+            live.dispose()
+            return
+          }
+          const closeLive = engine!.connectLiveDriver(raceId, live, config, () => onLiveFinishedRef.current?.())
+          closeStream = () => {
+            closeLive()
+            live.dispose()
+          }
+          runTimeline(live, false)
+        }, (error: unknown) => console.error('[race-canvas] live simulation failed', error))
       } else {
         // Snapshots, or a live race the browser engine can't simulate (another engine/balance pair, e.g.
         // engine 2.x): createSimulation's version guard would throw, so follow the server's snapshots.

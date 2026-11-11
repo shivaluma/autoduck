@@ -20,7 +20,7 @@ import {
 import { RACE_BALANCE_VERSION, RACE_ENGINE_VERSION, raceConfigSchema, type RaceConfig, type RaceEvent } from '../packages/race-protocol/src'
 import { createPlayback, type PlaybackScene } from '../components/racing/drivers/playback'
 import { createRecordingDriver } from '../components/racing/drivers/recording-driver'
-import { createSimDriver } from '../components/racing/drivers/sim-driver'
+import { createTsSimDriver as createSimDriver } from './support/ts-sim-driver'
 import type { DriverFrame, TimelineDriver } from '../components/racing/drivers/types'
 import { EventOrderError, eventFingerprint, isSceneEvent, manualInputsFromEvents, normalizeRaceEvent, splitStoredEvents } from '../src/race/event-vocab'
 import { polylineTrack } from '../src/race/polyline-track'
@@ -325,10 +325,14 @@ test('a synthetic engine 2.0.0 race renders from its track and is never simulate
     mode: 'track', fidelity: 'RECORDED', trackUrl: `/api/races/9100/track?h=${packed.byteSha256}`, geometryUrl: null,
     engineVersion: '2.0.0', balanceVersion: 'S3.16', byteSha256: packed.byteSha256, verify: 'none',
   }
-  assert.equal(canResimulate(rustConfig), false)
+  // Phase 5: the browser engine is race-core as WASM, so the current Rust pair re-simulates without a track,
+  // and the TS-era pair (no longer implemented in the browser) does not.
+  assert.equal(canResimulate(rustConfig), true)
+  assert.equal(canResimulate({ engineVersion: RACE_ENGINE_VERSION, balanceVersion: RACE_BALANCE_VERSION }), false)
   assert.equal(planReplay({ replay, config: rustConfig, eventsUsable: true }), 'track')
-  assert.equal(planReplay({ replay: { ...replay, mode: 'none', trackUrl: null }, config: rustConfig, eventsUsable: true }), 'unavailable')
-  assert.equal(planReplay({ replay, config: rustConfig, eventsUsable: true, trackFailed: true }), 'unavailable')
+  assert.equal(planReplay({ replay: { ...replay, mode: 'none', trackUrl: null }, config: rustConfig, eventsUsable: true }), 'sim')
+  assert.equal(planReplay({ replay: { ...replay, mode: 'none', trackUrl: null }, config: { ...rustConfig, balanceVersion: 'S3.15' }, eventsUsable: true }), 'unavailable')
+  assert.equal(planReplay({ replay, config: { ...rustConfig, engineVersion: '2.9.0' }, eventsUsable: true, trackFailed: true }), 'unavailable')
   assert.equal(fidelityBadge(replay), '✓ Ghi hình khớp kết quả gốc · engine 2.0.0/S3.16')
 
   const driver = createRecordingDriver(decoded, result.events)
@@ -341,7 +345,8 @@ test('a synthetic engine 2.0.0 race renders from its track and is never simulate
 })
 
 test('replay plan: track first, re-simulate only the current pair without a track, else unavailable', () => {
-  const current = { engineVersion: RACE_ENGINE_VERSION, balanceVersion: RACE_BALANCE_VERSION }
+  // The browser engine's pair (race-core as WASM; src/engine/generated/versions.json).
+  const current = { engineVersion: '2.0.0', balanceVersion: 'S3.16' }
   const none: RaceReplayInfo = { mode: 'none', fidelity: null, trackUrl: null, geometryUrl: null, engineVersion: null, balanceVersion: null, byteSha256: null, verify: 'none' }
   const track: RaceReplayInfo = { ...none, mode: 'track', fidelity: 'VERIFIED_EVENTS', trackUrl: '/api/races/1/track?h=x', engineVersion: '1.1.0', balanceVersion: 'S3.2' }
   assert.equal(planReplay({ replay: none, config: current, eventsUsable: true }), 'sim')

@@ -57,17 +57,9 @@ test('event → item activation and success credits match for every event type a
   }
 })
 
-test('SIM_VERSIONS (src/engine/sim-versions.ts) matches the TS engine the browser runs', async () => {
-  const { SIM_VERSIONS } = await import('../src/engine/sim-versions')
+test('the browser engine draws the current track from the geometry file HEAD exports', async () => {
+  const { CURRENT_TRACK_GEOMETRY_ID } = await import('../src/engine/track-geometry')
+  const { resolveHeadTrackGeometryId } = await import('../lib/racing/track-geometry')
   const protocol = await import('../packages/race-protocol/src')
-  assert.deepEqual(SIM_VERSIONS, {
-    protocolVersion: protocol.RACE_PROTOCOL_VERSION,
-    engineVersion: protocol.RACE_ENGINE_VERSION,
-    balanceVersion: protocol.RACE_BALANCE_VERSION,
-    trackVersion: protocol.DEFAULT_TRACK_VERSION,
-    pickupSpawnVersion: protocol.PICKUP_SPAWN_VERSION,
-    wildItemBalanceVersion: protocol.WILD_ITEM_BALANCE_VERSION,
-    hazardBalanceVersion: protocol.HAZARD_BALANCE_VERSION,
-    tickRate: protocol.RACE_TICK_RATE,
-  })
+  assert.equal(CURRENT_TRACK_GEOMETRY_ID, resolveHeadTrackGeometryId(protocol.DEFAULT_TRACK_VERSION))
 })

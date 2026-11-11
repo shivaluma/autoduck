@@ -57,10 +57,16 @@ export default defineConfig([
             { regex: "^node:", message: "Node builtin in browser code (src/, components/)." },
             { regex: "^(fs|path|crypto|os|child_process|url|stream|zlib|util)$", message: "Node builtin in browser code (src/, components/)." },
             { regex: "^@/lib/(db|racing/)|^@prisma/|^better-sqlite3$", message: "Server-only module in browser code (src/, components/)." },
+            { regex: "packages/race-", message: "The TS engine is not browser code (Phase 5): use src/engine (WASM, catalog, protocol)." },
           ],
         },
       ],
     },
+  },
+  {
+    // The one seam that may name the TS protocol: type-only re-exports (`export type *`), no runtime code.
+    files: ["src/engine/protocol.ts"],
+    rules: { "no-restricted-imports": "off" },
   },
   {
     files: ["**/*.{jsx,tsx}"],

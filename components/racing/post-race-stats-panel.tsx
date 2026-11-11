@@ -9,7 +9,6 @@ import {
   type PostRacePlayerStats,
   type PostRaceStats,
 } from '@/src/race/post-race-stats'
-import { manualInputsFromEvents } from '@/src/race/event-vocab'
 import { canResimulate } from '@/src/race/replay-plan'
 import type { DecodedReplayTrack } from '@/src/race/replay-track/decode'
 import {
@@ -212,22 +211,16 @@ export function PostRaceStatsPanel({
   useEffect(() => {
     if (!simulatable || !config) return
     let active = true
-    void import('@/src/race/post-race-engine').then(({ collectPostRaceBaselineRank, collectPostRaceMotion }) => {
-      if (!active) return
-      let motion: PostRaceMotion | null = null
-      if (!track) {
-        try {
-          motion = collectPostRaceMotion(config, manualInputsFromEvents(events))
-        } catch {
-          motion = null
-        }
-      }
-      setSimInputs({ config, events, track, motion, baselineRank: collectPostRaceBaselineRank(config) })
-    })
+    void import('@/src/race/post-race-engine')
+      .then(({ loadPostRaceEngineInputs }) => loadPostRaceEngineInputs(config, events, players))
+      .then(({ motion, baselineRank }) => {
+        if (active) setSimInputs({ config, events, track, motion: track ? null : motion, baselineRank })
+      })
+      .catch((error: unknown) => console.warn('[post-race-stats] engine stats unavailable', error))
     return () => {
       active = false
     }
-  }, [config, events, simulatable, track])
+  }, [config, events, players, simulatable, track])
   const { stats, showSpeed, showBaseline } = useMemo(() => {
     // Blobs frozen before `hasBaseline` existed were built with the engine (baseline included).
     if (frozenStats) return { stats: frozenStats, showSpeed: true, showBaseline: frozenStats.hasBaseline !== false }

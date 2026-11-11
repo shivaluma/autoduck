@@ -1,4 +1,5 @@
 import type { RaceEvent, StateSnapshotMessage } from '@/src/engine/protocol'
+import type { RaceWorld } from '@/src/race/types'
 import type { SnapshotSink } from './types'
 
 /** Engine events the snapshot view plays as FX (the server streams everything). */
@@ -36,5 +37,65 @@ export function connectSnapshotDriver(raceId: number, sink: SnapshotSink) {
       // Ignore malformed engine events.
     }
   })
+  return () => source.close()
+}
+
+/** The part of EventSource the drivers use (tests pass a fake). */
+export interface EventSourceLike {
+  addEventListener(type: string, listener: (event: MessageEvent<string>) => void): void
+  close(): void
+}
+
+/** SnapshotSink plus the SSE v2 countdown (hello.countdownEndsInMs). */
+export interface SnapshotSinkV2 extends SnapshotSink {
+  countdown?(endsInMs: number): void
+}
+
+/**
+ * The SSE v2 snapshot fallback (plan D16): `/api/races/:id/live?snapshots=1` adds `snapshot` frames to the
+ * hello/clock stream, plus `engine-event` frames for FX. A snapshot is a STATE_SNAPSHOT message with the world
+ * flat or under `world`. `finished`, `resolved` or `failed`, or a hello after the race ended, ends the live
+ * view. Returns a closer.
+ */
+export function connectSnapshotDriverV2(
+  raceId: number,
+  sink: SnapshotSinkV2,
+  options: { openStream?: (url: string) => EventSourceLike } = {},
+) {
+  const open = options.openStream ?? ((url: string) => new EventSource(url) as unknown as EventSourceLike)
+  const source = open(`/api/races/${raceId}/live?snapshots=1`)
+  let done = false
+  const finish = () => {
+    if (done) return
+    done = true
+    sink.finished()
+  }
+  const read = (event: MessageEvent<string>) => {
+    try {
+      return JSON.parse(event.data) as Record<string, unknown>
+    } catch {
+      return null
+    }
+  }
+  source.addEventListener('hello', (event) => {
+    const hello = read(event)
+    if (!hello) return
+    if (hello.state === 'FINISHED' || hello.state === 'RESOLVED' || hello.state === 'ARCHIVED') finish()
+    else if (hello.state === 'COUNTDOWN' && typeof hello.countdownEndsInMs === 'number') sink.countdown?.(hello.countdownEndsInMs)
+  })
+  source.addEventListener('snapshot', (event) => {
+    const payload = read(event)
+    if (!payload) return
+    const world = (payload.world && typeof payload.world === 'object' ? payload.world : payload) as Partial<RaceWorld>
+    if (!Array.isArray(world.ducks) || typeof payload.tick !== 'number') return
+    sink.world({ ducks: world.ducks, pickups: world.pickups ?? [], hazards: world.hazards ?? [], rockets: world.rockets ?? [], bananas: world.bananas ?? [] }, payload.tick)
+  })
+  source.addEventListener('engine-event', (event) => {
+    const payload = read(event) as RaceEvent | null
+    if (payload?.type && SNAPSHOT_VISUAL_EVENT_TYPES.has(payload.type)) sink.event(payload)
+  })
+  source.addEventListener('finished', finish)
+  source.addEventListener('resolved', finish)
+  source.addEventListener('failed', finish)
   return () => source.close()
 }
