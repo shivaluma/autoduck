@@ -4,15 +4,13 @@
  * Version constants come from the Rust `race-protocol` crate through ./generated/versions.json
  * (`pnpm codegen:engine`). They describe the engine the Rust server stamps on new races.
  *
- * Wire types are type-only re-exports of the TS protocol: the Next API and the browser's TS engine
- * (src/engine/sim.ts) still produce that shape until Phase 5 switches the browser to WASM and the types
- * to the ts-rs output. A type-only re-export adds nothing to the bundle, so importing this module never
- * pulls Zod or an engine into a page. Browser code imports protocol types from here (CI job
- * `client-boundary`); the engine's own versions and config normalizer live in src/engine/sim.ts.
+ * Wire types are plain TypeScript in ./protocol-types.ts (the shapes the retired TS protocol defined; the
+ * Rust server and the WASM engine send the same JSON). A type-only re-export adds nothing to the bundle.
+ * Browser code imports protocol types from here.
  */
 import versions from './generated/versions.json'
 
-export type * from '@/packages/race-protocol/src'
+export type * from './protocol-types'
 
 export const RACE_PROTOCOL_VERSION: string = versions.RACE_PROTOCOL_VERSION
 export const RACE_ENGINE_VERSION: string = versions.RACE_ENGINE_VERSION

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test, { describe } from 'node:test'
 import { extractCombatEncounters } from '../src/race/combat-encounters'
-import type { RaceEvent } from '../packages/race-protocol/src'
+import type { RaceEvent } from '../src/engine/protocol'
 
 describe('extractCombatEncounters', () => {
   const players = [

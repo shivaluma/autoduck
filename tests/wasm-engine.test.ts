@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import test from 'node:test'
 import { pathToFileURL } from 'node:url'
-import type { RaceEvent, RaceItemId } from '../packages/race-protocol/src'
+import type { RaceEvent, RaceItemId } from '../src/engine/protocol'
 import { aggregatePostRaceStats, type PostRacePlayerInput } from '../src/race/post-race-stats'
 import { decodeReplayTrack } from '../src/race/replay-track/decode'
 

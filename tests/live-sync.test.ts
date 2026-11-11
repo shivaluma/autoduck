@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict'
-import { createHash } from 'node:crypto'
+import { existsSync, readFileSync } from 'node:fs'
+import path from 'node:path'
 import test from 'node:test'
-import { createSimulation, simulateRace, snapshotRaceWorld, stepSimulation, type RaceSimulationState } from '../packages/race-core/src'
-import { raceConfigSchema, type RaceEvent } from '../packages/race-protocol/src'
-import { connectLiveV2, type LiveEngine, type LiveScene } from '../components/racing/drivers/live-driver'
+import { pathToFileURL } from 'node:url'
+import type { RaceEvent } from '../src/engine/protocol'
+import { connectLiveV2, liveHandleFromSimHandle, type LiveEngine, type LiveScene } from '../components/racing/drivers/live-driver'
 import type { EventSourceLike } from '../components/racing/drivers/snapshot-driver'
 import {
   CATCH_UP_CHUNK_TICKS,
@@ -300,9 +301,23 @@ test('liveProtocolFor: engine 2.x uses SSE v2, older races keep the v1 stream', 
   assert.equal(liveProtocolFor(null, false), 'v1-snapshot')
 })
 
-// --- The real (TS) engine behind LiveSync: the predicted race equals a straight run. ---
+// --- The real engine (the shipped WASM package) behind LiveSync: the predicted race equals a straight run. ---
+// Skipped when the package has not been built (`pnpm build:wasm`).
 
-const config = raceConfigSchema.parse({
+const pkg = path.join(__dirname, '..', 'crates/race-wasm/pkg')
+const wasmBuilt = existsSync(path.join(pkg, 'race_wasm.js')) && existsSync(path.join(pkg, 'race_wasm_bg.wasm'))
+type Wasm = typeof import('../crates/race-wasm/pkg/race_wasm.js')
+let wasmPromise: Promise<Wasm> | null = null
+function wasm(): Promise<Wasm> {
+  wasmPromise ??= (async () => {
+    const engine = (await import(pathToFileURL(path.join(pkg, 'race_wasm.js')).href)) as Wasm
+    await engine.default({ module_or_path: readFileSync(path.join(pkg, 'race_wasm_bg.wasm')) })
+    return engine
+  })()
+  return wasmPromise
+}
+
+const configInput = {
   raceId: 'live-sync',
   seed: '5e'.repeat(32),
   players: Array.from({ length: 6 }, (_, index) => ({ playerId: String(401 + index), name: `Duck ${index + 1}` })),
@@ -311,26 +326,17 @@ const config = raceConfigSchema.parse({
     itemIds: [['NITRO', 'HOMING_ROCKET'], ['BANANA', 'BUBBLE_SHIELD'], ['FEATHER', 'QUACK_HORN']][index % 3],
     source: 'AUTO',
   })),
-})
-const configJcs = JSON.stringify(config)
-const stateHash = (state: RaceSimulationState) => createHash('sha256').update(JSON.stringify(snapshotRaceWorld(state))).digest('hex')
+}
 
-function tsEngine(): LiveEngine {
+async function wasmEngine(): Promise<{ engine: LiveEngine; configJcs: string; server: () => InstanceType<Wasm['SimHandle']> }> {
+  const w = await wasm()
+  const configJcs = w.normalizeConfig(JSON.stringify(configInput))
   return {
-    engineBuildId: BUILD,
-    createHandle(jcs) {
-      const state = createSimulation(JSON.parse(jcs))
-      let drained = state.events.length
-      return {
-        advance(tick, options) {
-          while (state.tick < tick && !state.finished) stepSimulation(state)
-          const events = state.events.slice(drained) as RaceEvent[]
-          drained = state.events.length
-          return { tick: state.tick, finished: state.finished, world: snapshotRaceWorld(state), events, hash: options.hash ? stateHash(state) : null }
-        },
-        queueInput() { throw new Error('no inputs in this test') },
-        dispose() {},
-      }
+    configJcs,
+    server: () => new w.SimHandle(configJcs, '[]', false),
+    engine: {
+      engineBuildId: BUILD,
+      createHandle: (jcs) => liveHandleFromSimHandle(new w.SimHandle(jcs, '[]', false)),
     },
   }
 }
@@ -366,9 +372,13 @@ async function flush() {
   for (let index = 0; index < 5; index += 1) await new Promise((resolve) => setImmediate(resolve))
 }
 
-test('connectLiveV2: a late joiner predicts the whole race with the engine and ends; events equal a straight run', async () => {
-  const expected = simulateRace(config)
-  const server = createSimulation(config)
+test('connectLiveV2: a late joiner predicts the whole race with the engine and ends; events equal a straight run', { skip: !wasmBuilt && 'crates/race-wasm/pkg not built' }, async () => {
+  const { engine, configJcs, server: newServer } = await wasmEngine()
+  const straight = newServer()
+  straight.stepTo(0xffffffff)
+  const expectedEvents = JSON.parse(straight.drainEvents()) as RaceEvent[]
+  straight.free()
+  const server = newServer()
   let now = 0
   const streams: FakeStream[] = []
   const frameCallbacks: Array<() => void> = []
@@ -376,7 +386,7 @@ test('connectLiveV2: a late joiner predicts the whole race with the engine and e
   let ended = 0
   const desyncs: unknown[] = []
   const close = connectLiveV2({
-    raceId: 1, scene: api, engine: Promise.resolve(tsEngine()), now: () => now,
+    raceId: 1, scene: api, engine: Promise.resolve(engine), now: () => now,
     openStream: (url) => { const stream = new FakeStream(url); streams.push(stream); return stream },
     requestFrame: (callback) => { frameCallbacks.push(callback); return frameCallbacks.length },
     cancelFrame: () => {},
@@ -387,35 +397,37 @@ test('connectLiveV2: a late joiner predicts the whole race with the engine and e
   const live = streams[0]!
   assert.equal(live.url, '/api/races/1/live')
   // Join at server tick 600.
-  while (server.tick < 600) stepSimulation(server)
+  server.stepTo(600)
   now = 600 * TICK_MS
   live.emit('hello', hello({ serverTick: 600, configJcs, engineBuildId: BUILD }))
   await flush()
   const runFrame = async () => { const callbacks = frameCallbacks.splice(0); for (const callback of callbacks) callback(); await flush() }
-  while (!server.finished) {
-    stepSimulation(server)
-    now = server.tick * TICK_MS + 25
-    if (server.tick % 3 === 0 || server.finished) live.emit('clock', { tick: server.tick, ...(server.tick % HASH_INTERVAL === 0 ? { hash: stateHash(server) } : {}) })
-    if (server.tick % 2 === 0) await runFrame()
+  while (!server.finished()) {
+    const tick = server.stepTo(server.tick() + 1)
+    now = tick * TICK_MS + 25
+    if (tick % 3 === 0 || server.finished()) live.emit('clock', { tick, ...(tick % HASH_INTERVAL === 0 ? { hash: server.stateHash() } : {}) })
+    if (tick % 2 === 0) await runFrame()
   }
-  live.emit('finished', { finalTick: server.tick, digest: 'x', standings: [] })
+  live.emit('finished', { finalTick: server.tick(), digest: 'x', standings: [] })
+  server.free()
   for (let index = 0; index < 120 && ended === 0; index += 1) { now += TICK_MS; await runFrame() }
   assert.equal(ended, 1)
   assert.deepEqual(desyncs, [])
   assert.ok(live.closed)
-  const engineEvents = expected.events.filter((event) => event.tick > 0)
+  const engineEvents = expectedEvents.filter((event) => event.tick > 0)
   assert.deepEqual(scene.events.map((event) => `${event.tick}:${event.type}`), engineEvents.map((event) => `${event.tick}:${event.type}`))
   assert.ok(scene.silent > 0 && scene.events.filter((event) => event.tick <= 600).length <= scene.silent, 'FX suppressed before the join tick')
   assert.equal(scene.catchUp.at(-1), null)
   close()
 })
 
-test('connectLiveV2: an engine build mismatch reconnects with snapshots; a desync is posted once', async () => {
+test('connectLiveV2: an engine build mismatch reconnects with snapshots; a desync is posted once', { skip: !wasmBuilt && 'crates/race-wasm/pkg not built' }, async () => {
+  const { engine, configJcs } = await wasmEngine()
   const streams: FakeStream[] = []
   const { scene, api } = fakeScene()
   let ended = 0
   connectLiveV2({
-    raceId: 7, scene: api, engine: Promise.resolve(tsEngine()), now: () => 0,
+    raceId: 7, scene: api, engine: Promise.resolve(engine), now: () => 0,
     openStream: (url) => { const stream = new FakeStream(url); streams.push(stream); return stream },
     requestFrame: () => 1, cancelFrame: () => {}, postDesync: () => {}, onEnded: () => { ended += 1 },
   })
@@ -433,7 +445,7 @@ test('connectLiveV2: an engine build mismatch reconnects with snapshots; a desyn
   let now = 0
   const frames: Array<() => void> = []
   connectLiveV2({
-    raceId: 8, scene: fakeScene().api, engine: Promise.resolve(tsEngine()), now: () => now,
+    raceId: 8, scene: fakeScene().api, engine: Promise.resolve(engine), now: () => now,
     openStream: (url) => { const stream = new FakeStream(url); second.push(stream); return stream },
     requestFrame: (callback) => { frames.push(callback); return frames.length }, cancelFrame: () => {},
     postDesync: (_raceId, report) => { desyncs.push(report) }, frameBudgetMs: Number.POSITIVE_INFINITY,
