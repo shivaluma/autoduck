@@ -82,8 +82,9 @@ COPY artifacts/replay-tracks/manifest.json ./artifacts/replay-tracks/manifest.js
 RUN mkdir -p /app/data/backups /app/tmp/videos
 
 # Dokploy sets only DATABASE_URL, RACE_SECRET_KEY and the Google ids, so everything else defaults
-# here for production. Google audiences: GOOGLE_CLIENT_ID and/or NEXT_PUBLIC_GOOGLE_CLIENT_ID; the
-# SPA reads the client id at runtime from GET /api/auth/google.
+# here for production (NO_COLOR: plain log lines in Dokploy). Google audiences: GOOGLE_CLIENT_ID
+# and/or NEXT_PUBLIC_GOOGLE_CLIENT_ID; the SPA reads the client id at runtime from
+# GET /api/auth/google.
 ENV AUTODUCK_ENV=production \
     AUTODUCK_SCHEMA_MODE=compat \
     HOST=0.0.0.0 \
@@ -93,7 +94,8 @@ ENV AUTODUCK_ENV=production \
     AUTODUCK_BACKUP_DIR=/app/data/backups \
     AUTODUCK_REPLAY_MANIFEST=/app/artifacts/replay-tracks/manifest.json \
     LANG=C.UTF-8 \
-    LC_ALL=C.UTF-8
+    LC_ALL=C.UTF-8 \
+    NO_COLOR=1
 
 # Stored as RaceReplayTrack.engineCommit when the builder passes it (as SOURCE_COMMIT).
 ARG SOURCE_COMMIT=""
