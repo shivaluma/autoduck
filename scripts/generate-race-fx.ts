@@ -2,8 +2,12 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { RACE_FX_COLUMNS, RACE_FX_DECOR, RACE_FX_ICONS, RACE_FX_SHEETS, UI_ICONS, raceFxDecorPath, raceFxIconPath, raceFxSheetPath, uiIconPath } from '../lib/race-fx/manifest'
 import { renderSpriteJobs } from './cosmetics/sprites'
-import { RACE_DECOR_ART, RACE_FX_ART, RACE_ICON_ART } from './race-fx/art'
+import { RACE_DECOR_ART, RACE_FX_ART as BASE_FX_ART, RACE_ICON_ART as BASE_ICON_ART } from './race-fx/art'
+import { RIVER_FX_ART, RIVER_ICON_ART } from './race-fx/river-art'
 import { UI_ICON_ART } from './race-fx/ui-icons'
+
+const RACE_FX_ART = { ...BASE_FX_ART, ...RIVER_FX_ART }
+const RACE_ICON_ART = { ...BASE_ICON_ART, ...RIVER_ICON_ART }
 
 // Generates the race FX asset set: animated sprite sheets (baked from SVG/SMIL), item icons and bank
 // decor. Run with `pnpm race:fx`; output lives in public/race-fx.

@@ -408,7 +408,7 @@ export function PhaserRaceCanvas({
           this.events.once('shutdown', stopListening)
           this.events.once('destroy', stopListening)
           startSound()
-          this.riverFx = createRiverEventFx(this, { reducedMotion, duckView: (playerId) => this.duckView(playerId) })
+          this.riverFx = createRiverEventFx(this, { reducedMotion, mobile: mobileViewport, duckView: (playerId) => this.duckView(playerId) })
           this.events.once('shutdown', () => this.riverFx?.destroy())
           if (!clientDriven) this.showCountdown()
           markSceneReady()
@@ -1379,7 +1379,6 @@ export function PhaserRaceCanvas({
             this.applyWorld(this.pendingWorld)
             this.pendingWorld = null
           }
-          this.riverFx?.update()
           const smoothing = 1 - Math.exp(-delta / 85)
           const positions: Array<{ x: number; y: number }> = []
           for (const view of this.duckViews.values()) {

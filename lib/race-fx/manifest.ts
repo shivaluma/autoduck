@@ -34,6 +34,11 @@ export const RACE_FX_SHEETS = [
   sheet('silenced', 12, 10, 96, true),
   sheet('feather-orbit', 16, 12, 160, true),
   sheet('target-lock', 16, 16, 128, true),
+  // River events (engine S3.17): attached to the ducks an event speeds up or slows down
+  sheet('river-surf', 16, 16, 192, true),
+  sheet('river-vortex', 16, 16, 208, true),
+  sheet('river-gust', 12, 16, 176, true),
+  sheet('river-bread', 16, 12, 128, true),
   // One-shot effects
   sheet('explosion', 16, 24, 208, false),
   sheet('splash', 14, 24, 176, false),
@@ -53,6 +58,8 @@ export type RaceFxSheetKey = typeof RACE_FX_SHEETS[number]['key']
 export const RACE_FX_ICONS = [
   'nitro', 'draft-fin', 'paddle-burst', 'bubble-shield', 'feather', 'shock-absorber',
   'homing-rocket', 'banana', 'quack-horn', 'tailwind', 'magnet',
+  // River event banners
+  'river-flood', 'river-whirlpool', 'river-gust', 'river-bread',
 ] as const
 
 export type RaceFxIconKey = typeof RACE_FX_ICONS[number]

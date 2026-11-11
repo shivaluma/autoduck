@@ -18,6 +18,7 @@ import {
 import { loadoutComboBadge, loadoutComboLabel } from '@/src/engine/catalog'
 import { AUTO_LOADOUT_PRESETS } from '@/src/engine/catalog'
 import { RaceItemIcon } from '@/components/racing/race-item-icon'
+import { raceFxIconPath } from '@/lib/race-fx/manifest'
 
 function Section({
   id,
@@ -378,7 +379,7 @@ export function Season3RulesGuide() {
             {RIVER_EVENTS_LIST.map((riverEvent) => (
               <div key={riverEvent.id} className="gx-well p-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl">{riverEvent.icon}</span>
+                  <img src={raceFxIconPath(riverEvent.iconKey)} alt="" width={36} height={36} className="h-9 w-9" />
                   <span className="font-black text-sm text-white">{riverEvent.name}</span>
                 </div>
                 <p className="mt-1.5 text-xs text-white/65">{riverEvent.effect}</p>

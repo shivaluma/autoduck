@@ -40,6 +40,14 @@ Visual layer of the Phaser race canvas (`components/racing/phaser-race-canvas.ts
     | Targeted by a rocket | Target lock |
 - **Objects:** animated Quack, Golden and Chaos boxes; hazards; rockets oriented along their flight path with a smoke trail; floating banana peels.
 - **Events:** one-shot effect, spark particles, comic callout ("BOOM!", "NITRO!", "SLIP!", "+1 QP"), and camera shake/flash on big hits. Effects are scaled by `FX_SCALE` for the pack-framing camera.
+- **River events** (engine S3.17, `components/racing/river-event-fx.ts`; art in `scripts/race-fx/river-art.ts`): a banner plate drops in with the event's icon (`river-flood`, `river-whirlpool`, `river-gust`, `river-bread`), hazard tape and a 3-2-1 count while the event is announced, then a timer bar while it runs. The screen gets a tint and weather (rain, wind streaks and leaves, spray pulled to the centre, falling loaves). Every duck the event speeds up or slows down gets a sprite parented to its container and a "▲ +13%" / "▼ -22%" pill:
+
+  | Event | On the duck |
+  |---|---|
+  | Flash flood | `river-surf` wave pushing from behind, sized by the push; splashes |
+  | Whirlpool | `river-vortex` under the duck; the duck wobbles |
+  | Gust | `river-gust` curls behind (tailwind, green) or in front (headwind, red, flipped) |
+  | Bread rain | `river-bread` loaf to chase; "NOM!" callouts and splashes |
 - **Reduced motion:** with `prefers-reduced-motion`, particles, bobbing, shakes and flashes are skipped; callouts fade in place.
 
 Item icons are also used in the UI through `components/racing/race-item-icon.tsx`: the loadout picker, the rules guide and the wild-item panel.

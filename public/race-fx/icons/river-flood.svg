@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-8 -8 144 144" width="100%" height="100%" fill="none">
+<g id="i-flood"><defs><linearGradient id="i-flood-body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7DD3FC"/><stop offset="1" stop-color="#0369A1"/></linearGradient></defs>
+<path d="M10 100 C16 62 48 30 86 34 C106 36 118 50 118 66 C108 58 96 58 88 66 C82 76 88 88 100 92 C80 108 36 110 10 100 Z" fill="url(#i-flood-body)" stroke="#1B132B" stroke-width="12" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M18 84 C28 56 52 36 86 34 C106 36 118 50 118 66 C110 54 98 50 90 52 C84 44 72 42 64 48 C54 44 44 50 42 58 C32 60 22 70 18 84 Z" fill="#F8FAFC" stroke="#1B132B" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="104" cy="26" r="6" fill="#E0F2FE" stroke="#1B132B" stroke-width="3"/>
+<circle cx="118" cy="40" r="4" fill="#E0F2FE" stroke="#1B132B" stroke-width="3"/>
+<path d="M6 116 q14 -10 28 0 t28 0 t28 0 t28 0" fill="none" stroke="#1B132B" stroke-width="11" stroke-linecap="round"/><path d="M6 116 q14 -10 28 0 t28 0 t28 0 t28 0" fill="none" stroke="#38BDF8" stroke-width="5" stroke-linecap="round"/></g>
+</svg>

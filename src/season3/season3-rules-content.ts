@@ -331,24 +331,28 @@ export const HAZARDS_LIST = [
 export const RIVER_EVENTS_LIST = [
   {
     id: 'FLASH_FLOOD',
+    iconKey: 'river-flood',
     icon: '🌊',
     name: 'Lũ quét',
     effect: 'Trong 4s, vịt càng tụt xa vịt dẫn đầu càng được dòng lũ cuốn nhanh (tối đa +18%). Cả đoàn dồn lại sát nhau.',
   },
   {
     id: 'WHIRLPOOL',
+    iconKey: 'river-whirlpool',
     icon: '🌀',
     name: 'Vực xoáy',
     effect: 'Ba vịt đang dẫn đầu lúc vực xoáy mở ra bị giữ chân 2.2s: hạng 1 còn 78% tốc độ, hạng 2 còn 84%, hạng 3 còn 90%.',
   },
   {
     id: 'GUST',
+    iconKey: 'river-gust',
     icon: '🌬️',
     name: 'Gió lốc',
     effect: 'Trong 3s mỗi vịt nhận một luồng gió riêng, ngẫu nhiên từ -14% đến +13% tốc độ. Hên xui hoàn toàn.',
   },
   {
     id: 'BREAD_RAIN',
+    iconKey: 'river-bread',
     icon: '🍞',
     name: 'Mưa bánh mì',
     effect: 'Nửa sau đoàn đua lao vào ăn và bứt tốc 3s: vịt chót +13%, giảm dần về 0 ở giữa đoàn.',
