@@ -15,7 +15,9 @@
 //!   slot-full feedback in `state.ducks` order; the collector is the first of
 //!   `Math.hypot(Δprogress, Δlateral) || crossingFraction ||
 //!   playerId.localeCompare` (`EngineMath::hypot2`, V8-exact under
-//!   `ts-compat`);
+//!   `ts-compat`). **F6 (S3.16):** the distance key is the squared distance
+//!   `Δprogress² + Δlateral²` (same order, no `hypot` in the sim, nothing
+//!   host-dependent);
 //! - hazards are visited in spawn order, ducks by `playerId.localeCompare`.
 
 use alloc::format;
@@ -44,7 +46,7 @@ use crate::items::{
 use crate::js_sort::v8_sort_by;
 use crate::math::{abs, cmp_f64_js, js_clamp, js_max, js_min, js_sign};
 use crate::rng::{DeterministicRng, create_race_rng, engine_stream};
-use crate::sim::{DuckPhysicsState, Emitter, LootPick, id_cmp, id_set_has};
+use crate::sim::{DuckPhysicsState, Emitter, EngineMath, LootPick, id_cmp, id_set_has};
 
 /// `'front' | 'middle' | 'back'`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -52,6 +54,24 @@ pub enum RankBucket {
     Front,
     Middle,
     Back,
+}
+
+/// The collector's distance key to `pickup`: `Math.hypot(Δprogress,
+/// Δlateral)` under `ts-compat`, the squared distance in S3.16 (F6). Both
+/// order ducks the same way up to rounding; the squared form needs no
+/// `hypot`.
+fn collector_distance(math: EngineMath, duck: &DuckPhysicsState, pickup: &PickupSpawn) -> f64 {
+    let progress = duck.progress - pickup.progress;
+    let lateral = duck.lateral_offset - pickup.lateral_offset;
+    #[cfg(feature = "ts-compat")]
+    {
+        math.hypot2(progress, lateral)
+    }
+    #[cfg(not(feature = "ts-compat"))]
+    {
+        let _ = math;
+        progress * progress + lateral * lateral
+    }
 }
 
 /// `rankBucket(duck, playerCount)` (`pickups/engine.ts:222-227`).
@@ -435,14 +455,8 @@ pub fn collect_pickups(
         v8_sort_by(&mut eligible, |&left, &right| {
             let left_duck = &ducks[left];
             let right_duck = &ducks[right];
-            let left_distance = math.hypot2(
-                left_duck.progress - pickup.progress,
-                left_duck.lateral_offset - pickup.lateral_offset,
-            );
-            let right_distance = math.hypot2(
-                right_duck.progress - pickup.progress,
-                right_duck.lateral_offset - pickup.lateral_offset,
-            );
+            let left_distance = collector_distance(math, left_duck, &pickup);
+            let right_distance = collector_distance(math, right_duck, &pickup);
             cmp_f64_js(left_distance, right_distance)
                 .then_with(|| {
                     cmp_f64_js(
@@ -592,6 +606,34 @@ pub fn resolve_hazards(
             };
             duck.lateral_velocity += direction * tuning.wobble;
             emit.emit(EventKind::HazardHit(meta), Some(&player_id), None);
+        }
+    }
+}
+
+#[cfg(all(test, not(feature = "ts-compat")))]
+mod tests {
+    use crate::math::{cmp_f64_js, hypot};
+
+    /// F6: the squared distance orders contacts exactly like `hypot` on the
+    /// contact scale (Δprogress ≤ 0.01, Δlateral ≤ 0.2).
+    #[test]
+    fn f6_squared_distance_orders_like_hypot() {
+        let mut points: alloc::vec::Vec<(f64, f64)> = alloc::vec::Vec::new();
+        for i in 0..40_i32 {
+            for j in 0..40_i32 {
+                points.push((
+                    f64::from(i - 20) * 0.000_5,
+                    f64::from(j - 20) * 0.01 + f64::from(i) * 1e-7,
+                ));
+            }
+        }
+        for (a, b) in points.iter().zip(points.iter().skip(7)) {
+            let squared = cmp_f64_js(a.0 * a.0 + a.1 * a.1, b.0 * b.0 + b.1 * b.1);
+            let hyp = cmp_f64_js(hypot(a.0, a.1), hypot(b.0, b.1));
+            assert!(
+                squared == hyp || hyp == core::cmp::Ordering::Equal,
+                "{a:?} vs {b:?}"
+            );
         }
     }
 }
