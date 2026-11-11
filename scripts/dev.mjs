@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-// `pnpm dev` during the Vite transition (plan Phase 4): the API on :3000 and the SPA on :5173, side by side.
+// `pnpm dev`: the API on :3000 and the SPA on :5173, side by side.
 //
-//   API  `pnpm dev:api:next`  Next route handlers in app/api (runs db:bootstrap first). To use the Rust server
-//                             instead, start it on :3000 yourself and run `pnpm dev:web` alone.
-//   SPA  `pnpm dev:web`       Vite; proxies /api to API_URL (default http://127.0.0.1:3000).
+//   API  `pnpm dev:api`  the Rust server (`autoduck serve`, AUTODUCK_ENV=dev, prisma/dev.db; runs db:bootstrap
+//                        first)
+//   SPA  `pnpm dev:web`  Vite; proxies /api to API_URL (default http://127.0.0.1:3000).
 //
 // Open http://localhost:5173. Ctrl-C stops both.
 import { spawn } from 'node:child_process'
@@ -15,7 +15,7 @@ const pnpm = process.env.npm_execpath
   : ['pnpm', []]
 
 const children = [
-  ['api', ['dev:api:next']],
+  ['api', ['dev:api']],
   ['web', ['dev:web']],
 ].map(([name, args]) => {
   const child = spawn(pnpm[0], [...pnpm[1], ...args], { stdio: ['ignore', 'pipe', 'pipe'], env: process.env })

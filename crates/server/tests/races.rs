@@ -1,8 +1,9 @@
 //! `GET /api/races/{id}` parity with the TS route on main, and `GET /api/races/{id}/track`.
 //!
 //! The detail goldens (`fixtures/races/detail-golden.jsonl`) are the TS handler's output for
-//! `fixtures/races/fixture.sql` on top of [`common::populated_db`]; regenerate them with
-//! `scripts/oracle/dump-race-detail-goldens.ts` (usage in its header). Every case must match
+//! `fixtures/races/fixture.sql` on top of [`common::populated_db`], dumped by
+//! `scripts/oracle/dump-race-detail-goldens.ts` (removed with the TS routes at the cutover; it
+//! is on `release/ts-final`). Every case must match
 //! byte for byte: status, and body (key order, number formatting, row order).
 
 mod common;

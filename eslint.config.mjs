@@ -19,11 +19,9 @@ import tseslint from "typescript-eslint";
 export default defineConfig([
   globalIgnores([
     "dist/**",
-    ".next/**",
     "out/**",
     "build/**",
     "target/**",
-    "next-env.d.ts",
     "prisma/generated/**",
     "public/**",
     // Scratch output (videos, local experiments).

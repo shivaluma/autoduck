@@ -7,8 +7,6 @@ allowBuilds:
   esbuild: true
   msw: false
   prisma: true
-  sharp: false
-  unrs-resolver: false
 
 # Transitive versions held back to releases at least two weeks old (vite 8.3.5 accepts rolldown ~1.2.14;
 # eslint-plugin-react's resolve accepts is-core-module ^2.16).

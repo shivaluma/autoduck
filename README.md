@@ -25,31 +25,27 @@ pnpm race:profile
 
 Official races store the immutable config, seed commitment, engine/balance/track versions, raw event stream, result digest, live fallback snapshots, and same-seed item telemetry. Replay refuses unsupported engine or balance versions instead of silently using current tuning.
 
-## Getting Started (Vite SPA + API, plan Phase 4)
+## Getting Started (Rust server + Vite SPA)
 
-The pages are a Vite + React 19 SPA (`index.html`, `src/main.tsx`, `src/router.tsx`, `src/pages/*`). During
-the transition the API is still the Next.js route handlers in `app/api` (or the Rust server, `crates/server`).
+The pages are a Vite + React 19 SPA (`index.html`, `src/main.tsx`, `src/router.tsx`, `src/pages/*`). The API
+is the Rust server in `crates/server` (binary `autoduck`, axum + sqlx over the SQLite file), which also serves
+the built SPA in production.
 
 ```fish
-pnpm dev            # both: Next API on :3000 (runs db:bootstrap first) + Vite on :5173. Open http://localhost:5173
-pnpm dev:api:next   # only the Next API on :3000
+pnpm dev            # both: Rust API on :3000 (runs db:bootstrap first) + Vite on :5173. Open http://localhost:5173
+pnpm dev:api        # only the Rust API on :3000 (AUTODUCK_ENV=dev, prisma/dev.db)
 pnpm dev:web        # only Vite on :5173; proxies /api to $API_URL (default http://127.0.0.1:3000)
-env API_URL=http://127.0.0.1:4000 pnpm dev:web   # proxy to an API on another port (e.g. the Rust server)
 
-pnpm build          # tsc + vite build -> dist/ (SPA only)
+pnpm build          # wasm engine + tsc + vite build -> dist/
 pnpm check:bundle   # dist/ has no server code; home, rules and race load no engine, Phaser, Zod or WASM up front
-pnpm build:api:next # next build (API route handlers, standalone output)
-pnpm start          # after both builds: one Next standalone server on :3000 serving the API and the SPA (as Docker does)
 pnpm codegen:engine # race-cli codegen -> src/engine/generated/{catalog,versions}.json (from the Rust catalog)
+env SQLX_OFFLINE=true cargo test --workspace
+docker build -t autoduck .   # the production image (Rust server + SPA), see Dockerfile
 ```
-
-The Docker image builds both and copies `dist/` into `public/`; `next.config.ts` falls back to
-`public/index.html` for every non-API path, so one Next process serves the SPA and the API. The empty
-`pages/` directory only keeps Next from treating `src/pages` as Pages Router pages (see `pages/README.md`).
 
 Vite listens on `localhost` only (IPv6 `[::1]` on macOS), so open http://localhost:5173, not 127.0.0.1
 (or run `pnpm dev:web --host 127.0.0.1`). For Google sign-in in development, the OAuth client's Authorized
 JavaScript origins must include `http://localhost:5173`; the button reads its client id from
 `GET /api/auth/google` (`GOOGLE_CLIENT_ID` on the server).
 
-More detail (route table, how Next and Vite run side by side, expected differences): `docs/rewrite/phase4-notes.md`.
+More detail: `docs/rewrite-plan.md` (Phase 8), `docs/rewrite/phase3-notes.md` (server) and `docs/rewrite/phase4-notes.md` (SPA).

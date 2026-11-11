@@ -770,8 +770,6 @@ async function build(count: number) {
     'lib/cosmetics/economy.ts',
     'lib/racing/golden-reward.ts',
     'packages/race-core/src/chaos/index.ts',
-    'app/api/admin/season3/route.ts',
-    'app/api/season3/route.ts',
   ]
   return {
     format: FORMAT,

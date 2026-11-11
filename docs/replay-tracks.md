@@ -291,8 +291,10 @@ Races that ran before live recording are backfilled offline and imported at boot
 - **Output:** `artifacts/replay-tracks/{<raceId>.dtrk.gz,manifest.json,REPORT.md}` (ids, versions and grades
   only) and `public/race-tracks/<trackVersion>@<sha8>.json` for each geometry the reproducing commits used.
   Test races are dropped to `UNAVAILABLE` if the bundle exceeds `--max-bundle-mb` (20).
-- **Import:** `scripts/start.sh` runs `scripts/replay-tracks/ensure-imported.ts` after the app migrations
-  (`pnpm replay:import` locally). It inserts a `BACKFILL` row for each manifest race that has none, after
+- **Import:** until the Phase 8 cutover the TS image's `scripts/start.sh` ran
+  `scripts/replay-tracks/ensure-imported.ts` after the app migrations (`pnpm replay:import` locally; run it
+  against the DB file with the server stopped to import a gap now). The Rust boot only checks the manifest
+  against `RaceReplayTrack` and logs missing races (read-only). It inserts a `BACKFILL` row for each manifest race that has none, after
   checking that the race is finished, that `sha256(engineConfigJson)` and `resultDigest` equal the manifest,
   and that the gunzipped bytes hash to `byteSha256`. `statsJson` is built at import (names come from the DB,
   motion from the track, baseline ranks from the manifest). It never fails the boot and logs

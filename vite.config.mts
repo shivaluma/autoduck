@@ -6,8 +6,8 @@ import { defineConfig, type Plugin } from 'vite'
 const repoRoot = fileURLToPath(new URL('.', import.meta.url))
 
 /**
- * The API the dev server proxies to: `pnpm dev:api:next` (Next route handlers) or the Rust server, both on
- * :3000 by default. Override with `env API_URL=http://127.0.0.1:4000 pnpm dev:web`.
+ * The API the dev server proxies to: the Rust server (`pnpm dev:api`) on :3000 by default. Override with
+ * `env API_URL=http://127.0.0.1:4000 pnpm dev:web`.
  */
 const apiTarget = process.env.API_URL ?? 'http://127.0.0.1:3000'
 
@@ -70,8 +70,8 @@ export default defineConfig({
     // origin the Google OAuth client must allow. `pnpm dev:web --host 127.0.0.1` binds IPv4 instead.
     port: 5173,
     strictPort: true,
-    // Build output of Next, Cargo and Vite itself would otherwise trigger reloads (and cost watchers).
-    watch: { ignored: ['**/.next/**', '**/target/**', '**/dist/**', '**/artifacts/**'] },
+    // Build output of Cargo and Vite itself would otherwise trigger reloads (and cost watchers).
+    watch: { ignored: ['**/target/**', '**/dist/**', '**/artifacts/**'] },
     proxy: {
       '/api': {
         target: apiTarget,

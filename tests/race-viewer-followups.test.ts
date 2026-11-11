@@ -1,8 +1,5 @@
 import assert from 'node:assert/strict'
-import { mkdtempSync, rmSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import path from 'node:path'
-import { after, test } from 'node:test'
+import { test } from 'node:test'
 import { createSimulation, simulateRace } from '../packages/race-core/src'
 import { RACE_BALANCE_VERSION, RACE_ENGINE_VERSION, raceConfigSchema, type RaceConfig } from '../packages/race-protocol/src'
 import { parseRaceIdParam } from '../lib/racing/race-id'
@@ -12,7 +9,8 @@ import { aggregatePostRaceStats, type PostRaceStats } from '../src/race/post-rac
 import { planLiveView } from '../src/race/replay-plan'
 
 // Step 0.5 follow-ups: no invented baseline columns without an engine baseline, the live canvas
-// never simulates a config the browser engine can't run, and strict race ids in the race routes.
+// never simulates a config the browser engine can't run, and strict race ids (the routes' own
+// checks are in crates/server/tests/races.rs since the cutover).
 
 function makeConfig(): RaceConfig {
   return raceConfigSchema.parse({
@@ -104,24 +102,4 @@ test('race id: race ids must be canonical decimal', () => {
   assert.deepEqual(parseRaceIdParam('2147483647'), { ok: true, raceId: 2_147_483_647 })
   assert.deepEqual(parseRaceIdParam('2147483648'), { ok: false, status: 404 })
   assert.deepEqual(parseRaceIdParam('99999999999999999999999'), { ok: false, status: 404 })
-})
-
-const dir = mkdtempSync(path.join(tmpdir(), 'autoduck-race-id-'))
-after(() => rmSync(dir, { recursive: true, force: true }))
-
-test('race id: both race routes reject non-canonical ids before touching the database', async () => {
-  // Never opened: every request below is answered before a query.
-  process.env.DATABASE_URL = `file:${path.join(dir, 'unused.db')}`
-  const detail = await import('../app/api/races/[id]/route')
-  const track = await import('../app/api/races/[id]/track/route')
-  const call = async (handler: (request: Request, context: { params: Promise<{ id: string }> }) => Promise<Response>, id: string) => {
-    const response = await handler(new Request(`http://localhost/api/races/${encodeURIComponent(id)}`), { params: Promise.resolve({ id }) })
-    return { status: response.status, body: await response.json() }
-  }
-  for (const id of ['41abc', '041', '4.1', '-3']) {
-    assert.deepEqual(await call(detail.GET, id), { status: 400, body: { error: 'Invalid race ID' } }, `detail ${id}`)
-    assert.deepEqual(await call(track.GET, id), { status: 400, body: { error: 'Invalid race ID' } }, `track ${id}`)
-  }
-  assert.deepEqual(await call(detail.GET, '9999999999'), { status: 404, body: { error: 'Race not found' } })
-  assert.deepEqual(await call(track.GET, '9999999999'), { status: 404, body: { error: 'No replay track for this race' } })
 })

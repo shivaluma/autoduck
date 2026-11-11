@@ -453,7 +453,6 @@ function main() {
     'lib/season3.ts',
     'lib/ghost-duck.ts',
     'lib/racing/loadout.ts',
-    'app/api/admin/season3/route.ts',
   ]
   const fixture = {
     format: FORMAT,
