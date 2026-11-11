@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 // `pnpm dev`: the API on :3000 and the SPA on :5173, side by side.
 //
-//   API  `pnpm dev:api`  the Rust server (`autoduck serve`, AUTODUCK_ENV=dev, prisma/dev.db; runs db:bootstrap
-//                        first)
+//   API  `pnpm dev:api`  the Rust server (`autoduck serve`, AUTODUCK_ENV=dev, prisma/dev.db; the DB must exist)
 //   SPA  `pnpm dev:web`  Vite; proxies /api to API_URL (default http://127.0.0.1:3000).
 //
 // Open http://localhost:5173. Ctrl-C stops both.

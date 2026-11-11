@@ -2,11 +2,11 @@ packages:
   - '.'
 
 allowBuilds:
-  '@prisma/engines': true
-  better-sqlite3: true
+  '@prisma/engines': set this to true or false
+  better-sqlite3: set this to true or false
   esbuild: true
   msw: false
-  prisma: true
+  prisma: set this to true or false
 
 # Transitive versions held back to releases at least two weeks old (vite 8.3.5 accepts rolldown ~1.2.14;
 # eslint-plugin-react's resolve accepts is-core-module ^2.16).

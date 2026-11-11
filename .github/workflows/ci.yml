@@ -19,9 +19,6 @@ env:
   PNPM_VERSION: '11.22.0'
   COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
 
-# TODO(plan step 0.4): add the `track-format` job (replay-track encode/decode fixtures).
-
-
 # bash -eo pipefail: a failing command piped into tee still fails the step.
 defaults:
   run:
@@ -70,7 +67,6 @@ jobs:
           tool: wasm-bindgen@${{ steps.pins.outputs.wasm_bindgen }}
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec prisma generate
       - run: pnpm lint
       # wasm + tsc + vite build (the SPA; the Rust server serves the API, rust.yml).
       - run: pnpm build
@@ -80,81 +76,11 @@ jobs:
         run: pnpm check:bundle
       - run: pnpm cosmetics:validate
 
-      # Plan 0.8 / D14 / D19: the Rust server embeds these generated files; TS stays the source of truth.
-      - name: Exports for the Rust server are in sync with TS (crates/server/data)
-        run: |
-          pnpm cosmetics:export-catalog --check
-          pnpm db:export-migration-ids --check
-
-      # The oracle dumpers only read TS modules (kept until Phase 9). This makes sure they still run
-      # (outputs go to the runner's temp dir, not the repo).
-      - name: Oracle fixture dumpers run against the TS oracle
-        run: |
-          node --import tsx scripts/oracle/dump-cosmetic-fixtures.ts "$RUNNER_TEMP/cosmetics.json.gz"
-          node --no-use-std-math-pow --import tsx scripts/oracle/dump-meta-fixtures.ts --out "$RUNNER_TEMP/meta-parity.json.gz"
-
-  migrations:
-    name: migrations (fresh DB, idempotent app migrations)
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    env:
-      DATABASE_URL: file:${{ github.workspace }}/ci-migrations.db
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Enable pnpm via corepack
-        run: |
-          corepack enable
-          corepack prepare "pnpm@${PNPM_VERSION}" --activate
-          echo "PNPM_STORE=$(pnpm store path --silent)" >> "$GITHUB_ENV"
-
-      - uses: actions/cache@v4
-        with:
-          path: ${{ env.PNPM_STORE }}
-          key: pnpm-store-${{ runner.os }}-${{ env.PNPM_VERSION }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: pnpm-store-${{ runner.os }}-${{ env.PNPM_VERSION }}-
-
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm exec prisma generate
-
-      - name: Create an empty SQLite DB from the schema
-        run: pnpm exec prisma db push </dev/null
-
-      - name: App migrations, first run
-        run: pnpm exec tsx scripts/run-migrations.ts
-
-      - name: App migrations, second run must apply nothing
-        run: |
-          pnpm exec tsx scripts/run-migrations.ts | tee second-run.log
-          if grep -q 'RUN ' second-run.log; then
-            echo "::error::The second run re-applied migrations; every app migration must be recorded once and be idempotent."
-            exit 1
-          fi
-
-  client-boundary:
-    name: client-boundary (browser code reaches the engine only through src/engine seams)
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-
-      # Plan D18/D26: src/ and components/ must not reference packages/race-*, lib/season3(-race), or
-      # lib/racing/ anywhere outside the src/engine/* seams (which re-export the TS engine on main and the
-      # Rust/WASM build on the rewrite branch). The browser-side DTRK decoder and format live in
-      # src/race/replay-track; lib/racing/replay-track imports them from there.
-      - name: No engine or server imports outside src/engine/*
-        run: |
-          pattern="packages/race-|lib/season3(-race)?(\.ts)?['\"]|lib/racing/"
-          if hits="$(grep -rnE "$pattern" src components | grep -v '^src/engine/')"; then
-            echo "$hits"
-            echo "::error::Browser code must import the engine through src/engine/* (catalog, protocol, the WASM engine), not packages/race-*, lib/season3* or lib/racing/."
-            exit 1
-          fi
-          echo "client-boundary: clean"
+      # Plan 0.8 / D19: the Rust server embeds the cosmetic catalog exported from lib/cosmetics (the TS
+      # catalog stays the source of truth). crates/server/data/required-ts-migrations.json is frozen
+      # (its generator, scripts/run-migrations.ts, was retired in Phase 9).
+      - name: Cosmetic exports for the Rust server are in sync (crates/server/data)
+        run: pnpm cosmetics:export-catalog --check
 
   docker:
     name: docker (Rust server + SPA image: build, boot, size, push on main)

@@ -1,6 +1,6 @@
 //! Boot backup (D29): `VACUUM INTO <backup dir>/boot-<UTC ts>.db`, best effort.
 //!
-//! Same rules as the TS `scripts/ops/backup.mjs`:
+//! Same rules as the retired TS `scripts/ops/backup.mjs` (tag `ts-engine-final`):
 //! - skip when any backup (`boot-*` or the TS `pre-migrate-*`) is younger than 6 h, so a crash
 //!   loop can't fill the disk;
 //! - skip, loudly, when free space is under 3× the DB size;

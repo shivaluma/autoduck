@@ -5,8 +5,9 @@
 //! (`scripts/replay-tracks/ensure-imported.ts`), and production already holds a row for every
 //! manifest race. The Rust step is a **read-only check**: it writes nothing, never fails the
 //! boot, and logs `manifest N, present P, missing M, not in this DB K`. A missing row (a gap
-//! appended to the manifest after the cutover) is listed with a warning; importing it is still
-//! the TS script's job, run against the database file while the server is stopped.
+//! appended to the manifest after the cutover) is listed with a warning; importing it needs the
+//! TS script from tag `ts-engine-final` (deleted in Phase 9), run against the database file
+//! while the server is stopped.
 
 use std::collections::BTreeSet;
 use std::path::Path;

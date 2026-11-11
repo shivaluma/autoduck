@@ -10,8 +10,7 @@ dist
 tmp
 .playwright-mcp
 crates/race-wasm/pkg
-prisma/generated
-prisma/backups
+prisma
 backups
 **/*.db
 **/*.db-journal

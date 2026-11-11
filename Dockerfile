@@ -54,8 +54,8 @@ ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 RUN corepack enable && corepack prepare pnpm@11.22.0 --activate
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-# --ignore-scripts: the SPA bundle needs no native addon (better-sqlite3 and Prisma serve the TS
-# tooling only); Vite's and Tailwind's native parts are per-platform optional dependencies.
+# --ignore-scripts: the SPA bundle needs no install script; Vite's and Tailwind's native parts are
+# per-platform optional dependencies.
 RUN --mount=type=cache,id=autoduck-pnpm-store,target=/pnpm/store,sharing=locked \
     pnpm config set store-dir /pnpm/store && \
     pnpm install --frozen-lockfile --ignore-scripts

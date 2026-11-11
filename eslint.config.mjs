@@ -13,8 +13,8 @@ import tseslint from "typescript-eslint";
  * same rules off as the preset (plus react/display-name, off in the old config), and the six jsx-a11y
  * rules the preset enabled, as warnings. Not kept: import/no-anonymous-default-export.
  *
- * Browser code (src/, components/) may not use Node globals (`process`, `Buffer`, `__dirname`, …), Node
- * builtins or server modules (lib/db, lib/racing, Prisma): they would pass tsc and then throw under Vite.
+ * Browser code (src/, components/) may not use Node globals (`process`, `Buffer`, `__dirname`, …) or Node
+ * builtins: they would pass tsc and then throw under Vite.
  */
 export default defineConfig([
   globalIgnores([
@@ -22,11 +22,9 @@ export default defineConfig([
     "out/**",
     "build/**",
     "target/**",
-    "prisma/generated/**",
     "public/**",
     // Scratch output (videos, local experiments).
     "tmp/**",
-    // Historical engine extractions (scripts/replay-tracks/resolve-historical.ts).
     ".cache/**",
   ]),
   {
@@ -56,17 +54,10 @@ export default defineConfig([
           patterns: [
             { regex: "^node:", message: "Node builtin in browser code (src/, components/)." },
             { regex: "^(fs|path|crypto|os|child_process|url|stream|zlib|util)$", message: "Node builtin in browser code (src/, components/)." },
-            { regex: "^@/lib/(db|racing/)|^@prisma/|^better-sqlite3$", message: "Server-only module in browser code (src/, components/)." },
-            { regex: "packages/race-", message: "The TS engine is not browser code (Phase 5): use src/engine (WASM, catalog, protocol)." },
           ],
         },
       ],
     },
-  },
-  {
-    // The one seam that may name the TS protocol: type-only re-exports (`export type *`), no runtime code.
-    files: ["src/engine/protocol.ts"],
-    rules: { "no-restricted-imports": "off" },
   },
   {
     files: ["**/*.{jsx,tsx}"],
