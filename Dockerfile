@@ -27,13 +27,13 @@ RUN rustc -vV
 FROM rust AS wasm
 # Must equal the wasm-bindgen crate pinned in Cargo.lock (D27; build-wasm.sh checks it).
 ARG WASM_BINDGEN_VERSION=0.2.129
-RUN --mount=type=cache,id=autoduck-cargo-registry,target=/usr/local/cargo/registry \
+RUN --mount=type=cache,id=autoduck-cargo-registry,target=/usr/local/cargo/registry,sharing=locked \
     cargo install wasm-bindgen-cli --version ${WASM_BINDGEN_VERSION} --locked
 COPY Cargo.toml Cargo.lock ./
 COPY crates ./crates
 COPY scripts/build-wasm.sh ./scripts/build-wasm.sh
-RUN --mount=type=cache,id=autoduck-cargo-registry,target=/usr/local/cargo/registry \
-    --mount=type=cache,id=autoduck-target-wasm,target=/src/target \
+RUN --mount=type=cache,id=autoduck-cargo-registry,target=/usr/local/cargo/registry,sharing=locked \
+    --mount=type=cache,id=autoduck-target-wasm,target=/src/target,sharing=locked \
     bash scripts/build-wasm.sh --require-bindgen --out-dir /out/pkg
 
 # --- Server binary ---
@@ -42,8 +42,8 @@ ENV SQLX_OFFLINE=true
 COPY Cargo.toml Cargo.lock ./
 COPY .sqlx ./.sqlx
 COPY crates ./crates
-RUN --mount=type=cache,id=autoduck-cargo-registry,target=/usr/local/cargo/registry \
-    --mount=type=cache,id=autoduck-target-server,target=/src/target \
+RUN --mount=type=cache,id=autoduck-cargo-registry,target=/usr/local/cargo/registry,sharing=locked \
+    --mount=type=cache,id=autoduck-target-server,target=/src/target,sharing=locked \
     cargo build --release --locked -p autoduck-server --bin autoduck && \
     install -D -m 0755 target/release/autoduck /out/autoduck && \
     /out/autoduck --version
@@ -56,7 +56,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 # --ignore-scripts: the SPA bundle needs no native addon (better-sqlite3 and Prisma serve the TS
 # tooling only); Vite's and Tailwind's native parts are per-platform optional dependencies.
-RUN --mount=type=cache,id=autoduck-pnpm-store,target=/pnpm/store \
+RUN --mount=type=cache,id=autoduck-pnpm-store,target=/pnpm/store,sharing=locked \
     pnpm config set store-dir /pnpm/store && \
     pnpm install --frozen-lockfile --ignore-scripts
 COPY . .
