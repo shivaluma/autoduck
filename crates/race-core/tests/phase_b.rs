@@ -163,3 +163,56 @@ fn f3_ts_compat_resolver_keeps_the_zod_default() {
     let resolved = input.resolve_ts_compat().expect("config resolves");
     assert_eq!(resolved.pickup_config.golden_box_probability, 0.12);
 }
+
+// ---------------------------------------------------------------------------
+// F4: per-tick caches keyed by their exact inputs
+// ---------------------------------------------------------------------------
+
+fn duck(id: &str, progress: f64, rank: u32) -> race_core::sim::DuckPhysicsState {
+    race_core::sim::DuckPhysicsState {
+        player_id: race_protocol::ids::PlayerId::new(id).expect("valid id"),
+        name: id.into(),
+        progress,
+        previous_progress: progress,
+        lateral_offset: 0.0,
+        speed: 0.0,
+        acceleration: 0.0,
+        lateral_velocity: 0.0,
+        desired_speed: 0.0,
+        desired_lateral_offset: 0.0,
+        current_rank: rank,
+        active_effects: Vec::new(),
+        next_impulse_tick: 0,
+        finished: false,
+        finish_time_ms: None,
+        pacing_segments: Vec::new(),
+    }
+}
+
+#[test]
+fn f4_chaos_utility_rebuilds_its_ranking_when_only_ranks_change() {
+    let mut utility =
+        race_core::auto_use::ChaosUtility::new(&race_protocol::config::RaceChaosConfig::default());
+    let before = [duck("a", 0.5, 1), duck("b", 0.5, 2), duck("c", 0.5, 3)];
+    assert!(!utility.is_losing_now("a", &before));
+    // Same progress, new ranks: the S3.15 fingerprint ignores ranks and
+    // reuses the stale order; S3.16 re-ranks.
+    let after = [duck("a", 0.5, 3), duck("b", 0.5, 2), duck("c", 0.5, 1)];
+    assert_eq!(utility.is_losing_now("a", &after), !race_core::TS_COMPAT);
+}
+
+#[test]
+fn f4_director_read_follows_the_ducks() {
+    let mut cache = race_core::auto_use::DirectorCache::default();
+    let first = [duck("a", 0.6, 1), duck("b", 0.5, 2)];
+    let leader = |cache: &mut race_core::auto_use::DirectorCache,
+                  ducks: &[race_core::sim::DuckPhysicsState]| {
+        race_core::auto_use::read_race(cache, ducks)
+            .leader_id
+            .as_ref()
+            .map(|id| id.as_str().to_owned())
+    };
+    assert_eq!(leader(&mut cache, &first).as_deref(), Some("a"));
+    let second = [duck("a", 0.5, 2), duck("b", 0.6, 1)];
+    assert_eq!(leader(&mut cache, &second).as_deref(), Some("b"));
+}
