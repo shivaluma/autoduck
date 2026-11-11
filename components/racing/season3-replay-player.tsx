@@ -1,5 +1,3 @@
-'use client'
-
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { DuckSnapshot, RaceConfig, RaceEvent, RaceItemId } from '@/src/engine/protocol'
 import { manualInputsFromEvents, raceFinishedTick, readStoredEvents } from '@/src/race/event-vocab'

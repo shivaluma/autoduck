@@ -50,8 +50,11 @@ COPY . .
 # Generate Prisma client
 RUN pnpm exec prisma generate
 
-# Build Next.js (standalone output)
-RUN pnpm build
+# Build the Vite SPA (dist/), then Next.js for the API route handlers (standalone output). Until the Rust
+# server takes over, Next also serves the SPA: dist/ goes into public/ and next.config.ts falls back to
+# public/index.html for every non-API path (plan Phase 4). dist/.vite holds the build manifests (CI's bundle
+# check reads them); they are not served.
+RUN pnpm build && pnpm build:api:next && rm -rf dist/.vite && cp -R dist/. public/
 
 # --- Stage 3: Runner ---
 FROM ${NODE_IMAGE} AS runner

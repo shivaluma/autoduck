@@ -1,7 +1,5 @@
 import { ITEM_ICON_BY_ID, raceFxIconPath } from '@/lib/race-fx/manifest'
 
-/* eslint-disable @next/next/no-img-element -- tiny static SVG icons, no optimisation needed */
-
 /** Race item icon from the race FX set (same art as the race canvas); falls back to the catalog emoji. */
 export function RaceItemIcon({ id, fallback, size = 36, className = '' }: { id: string; fallback?: string; size?: number; className?: string }) {
   const icon = ITEM_ICON_BY_ID[id]

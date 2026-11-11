@@ -9,6 +9,7 @@
 #![allow(clippy::disallowed_methods, clippy::disallowed_types)]
 
 mod balance;
+mod codegen;
 mod corpus;
 mod meta;
 mod oracle;
@@ -44,6 +45,13 @@ enum Command {
     },
     /// Run a named gate (G1, G3, ...).
     Gate,
+    /// Export the race-core catalogs and protocol versions for the browser
+    /// (`src/engine/generated/{catalog,versions}.json`, plan D19).
+    Codegen {
+        /// Output directory.
+        #[arg(long, default_value = "src/engine/generated")]
+        out: String,
+    },
     /// Print race-core's ENGINE_BUILD_ID (CI compares it with the shipped
     /// wasm package's `engineBuildId()`).
     BuildId,
@@ -271,6 +279,13 @@ fn main() -> ExitCode {
             }
         },
         Command::Gate => not_implemented("gate"),
+        Command::Codegen { out } => match codegen::run_codegen(&out) {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(err) => {
+                eprintln!("race-cli codegen: {err:#}");
+                ExitCode::FAILURE
+            }
+        },
         Command::BuildId => {
             println!("{}", race_core::ENGINE_BUILD_ID);
             if race_core::build_id::ENGINE_BUILD_TS_COMPAT {

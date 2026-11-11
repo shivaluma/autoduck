@@ -8,8 +8,8 @@ import { createSimulation, simulateRace, stepSimulation } from '@/src/engine/sim
 import type { DecodedReplayTrack } from '@/src/race/replay-track/decode'
 import { manualInputsFromEvents } from './event-vocab'
 import {
-  aggregateMotion,
   aggregatePostRaceStats,
+  motionFromTrack,
   type PostRaceMotion,
   type PostRacePlayerInput,
   type PostRaceStats,
@@ -52,16 +52,6 @@ export function collectPostRaceBaselineRank(config: RaceConfig): Map<string, num
   } catch {
     return null
   }
-}
-
-/** Motion from a recorded track's speed column (ticks 1…last), the same sampling as the re-simulation. */
-export function motionFromTrack(track: DecodedReplayTrack): PostRaceMotion {
-  const { sampleCount, firstTick, speedQ, progressQ, header } = track
-  const lastTick = Math.min(track.lastTick, firstTick + 180 * header.tickRate)
-  return aggregateMotion(header.ducks, (tick, duck) => {
-    const at = duck * sampleCount + (tick - firstTick)
-    return { speed: speedQ[at]! / header.q.speed, finished: progressQ[at]! >= header.q.progress }
-  }, firstTick + 1, lastTick)
 }
 
 /**

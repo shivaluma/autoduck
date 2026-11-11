@@ -1,7 +1,3 @@
-'use client'
-
-/* eslint-disable @next/next/no-img-element -- exact SVG cosmetic previews are intentionally unoptimized */
-
 import { useEffect, useRef, useState } from 'react'
 import { CosmeticDuck } from './cosmetic-duck'
 import { RARITY_STYLE } from './duck-closet'

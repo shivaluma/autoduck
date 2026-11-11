@@ -1,6 +1,4 @@
-'use client'
-
-import Link from 'next/link'
+import { Link } from 'react-router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { RaceCelebration } from '@/components/race-celebration'
 import { Season3Avatar } from '@/components/season3-avatar'
@@ -149,7 +147,7 @@ export function Season3RaceView({ raceId }: { raceId: number }) {
         <h1 className="gx-title truncate text-2xl sm:text-3xl">Race #{raceId}</h1>
       </div>
       {isLive && <span className="gx-chip ml-2 pl-2 text-[#86efac]"><span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[var(--gx-mint)]" />LIVE</span>}
-      <Link href="/season-3" className="gx-btn ml-auto" data-variant="ghost" data-size="sm"><UiIcon name="duck" size={20} />Về ao</Link>
+      <Link to="/season-3" className="gx-btn ml-auto" data-variant="ghost" data-size="sm"><UiIcon name="duck" size={20} />Về ao</Link>
     </header>
 
     {/* Personalized User Prediction Banner */}

@@ -1,7 +1,3 @@
-'use client'
-
-/* eslint-disable @next/next/no-img-element -- Duckdex shows exact SVG source assets */
-
 import { useMemo, useState } from 'react'
 import type { CosmeticDefinition } from '@/lib/cosmetics/types'
 import { RARITY_STYLE } from './duck-closet'

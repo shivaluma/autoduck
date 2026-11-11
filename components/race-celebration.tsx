@@ -1,6 +1,3 @@
-'use client'
-
-import Image from 'next/image'
 import { useEffect, useState } from 'react'
 
 interface PlayerInfo {
@@ -95,12 +92,13 @@ export function RaceCelebration({
               >
                 {/* Avatar */}
                 <div className={`relative ${isVictim ? 'ring-3 ring-[#ff3333] ring-offset-2 ring-offset-black' : ''} rounded-full`}>
-                  <Image
+                  <img
+                    loading="lazy"
+                    decoding="async"
                     src={p.avatarUrl || '/placeholder-avatar.svg'}
                     alt={p.name}
                     width={48}
                     height={48}
-                    unoptimized
                     className={`w-12 h-12 rounded-full object-cover border-2 ${isVictim ? 'border-[#ff3333]' : 'border-white/30'}`}
                   />
                   {isVictim && (
@@ -206,12 +204,13 @@ export function RaceCelebration({
               {/* Red glow behind */}
               <div className="absolute -inset-4 bg-[#ff3333] rounded-full blur-2xl opacity-25 animate-pulse" />
 
-              <Image
+              <img
+                loading="lazy"
+                decoding="async"
                 src={v.avatarUrl || '/placeholder-avatar.svg'}
                 alt={v.name}
                 width={144}
                 height={144}
-                unoptimized
                 className="w-28 h-28 md:w-36 md:h-36 rounded-full object-cover border-4 border-black relative z-10"
                 style={{
                   boxShadow: '0 0 30px rgba(255, 50, 20, 0.4), 0 8px 0 #000',

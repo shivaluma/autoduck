@@ -1,0 +1,48 @@
+#!/usr/bin/env node
+// `pnpm dev` during the Vite transition (plan Phase 4): the API on :3000 and the SPA on :5173, side by side.
+//
+//   API  `pnpm dev:api:next`  Next route handlers in app/api (runs db:bootstrap first). To use the Rust server
+//                             instead, start it on :3000 yourself and run `pnpm dev:web` alone.
+//   SPA  `pnpm dev:web`       Vite; proxies /api to API_URL (default http://127.0.0.1:3000).
+//
+// Open http://localhost:5173. Ctrl-C stops both.
+import { spawn } from 'node:child_process'
+
+// Re-use the pnpm that runs this script (`npm_execpath`), so a corepack-pinned pnpm isn't swapped for
+// whatever `pnpm` is first on PATH.
+const pnpm = process.env.npm_execpath
+  ? [process.execPath, [process.env.npm_execpath]]
+  : ['pnpm', []]
+
+const children = [
+  ['api', ['dev:api:next']],
+  ['web', ['dev:web']],
+].map(([name, args]) => {
+  const child = spawn(pnpm[0], [...pnpm[1], ...args], { stdio: ['ignore', 'pipe', 'pipe'], env: process.env })
+  const prefix = `[${name}] `
+  for (const stream of [child.stdout, child.stderr]) {
+    let pending = ''
+    stream.on('data', (chunk) => {
+      pending += chunk
+      const lines = pending.split('\n')
+      pending = lines.pop() ?? ''
+      for (const line of lines) process.stdout.write(prefix + line + '\n')
+    })
+  }
+  child.on('exit', (code, signal) => {
+    process.stdout.write(`${prefix}exited (${signal ?? code})\n`)
+    shutdown(code ?? 1)
+  })
+  return child
+})
+
+let stopping = false
+function shutdown(code) {
+  if (stopping) return
+  stopping = true
+  for (const child of children) if (child.exitCode === null) child.kill('SIGTERM')
+  process.exitCode = code
+}
+
+process.on('SIGINT', () => shutdown(0))
+process.on('SIGTERM', () => shutdown(0))
