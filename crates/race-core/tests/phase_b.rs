@@ -216,3 +216,25 @@ fn f4_director_read_follows_the_ducks() {
     let second = [duck("a", 0.5, 2), duck("b", 0.6, 1)];
     assert_eq!(leader(&mut cache, &second).as_deref(), Some("b"));
 }
+
+// ---------------------------------------------------------------------------
+// F5: ghosts stay out of the in-sim ChaosUtility ranking
+// ---------------------------------------------------------------------------
+
+#[test]
+fn f5_a_ghost_cannot_shield_a_real_duck_from_the_loser_set() {
+    let ghost = race_protocol::ids::PlayerId::new("g").expect("valid id");
+    let mut utility =
+        race_core::auto_use::ChaosUtility::new(&race_protocol::config::RaceChaosConfig::default())
+            .without_ghosts(&[ghost]);
+    let ducks = [
+        duck("a", 0.7, 1),
+        duck("b", 0.6, 2),
+        duck("g", 0.5, 3),
+        duck("c", 0.4, 4),
+    ];
+    // NORMAL: the last two of the standings lose. The standings never hold
+    // the ghost, so `b` is really second to last.
+    assert_eq!(utility.is_losing_now("b", &ducks), !race_core::TS_COMPAT);
+    assert!(utility.is_losing_now("c", &ducks));
+}

@@ -56,6 +56,9 @@ pub fn build_race_objective_context(config: &ResolvedRaceConfig) -> RaceObjectiv
         }
     }
     // `{ ...config, chaosConfig: undefined }` for team/bounty modes.
+    // F5: ghosts never reach the standings, so they stay out of the
+    // projected rankings (`ts-compat`: ranked like any duck).
+    let ghosts = crate::ghost::ghost_player_ids_from_config(config);
     let naive = if matches!(
         mode,
         ChaosType::BountyHunt | ChaosType::Duo | ChaosType::Constructors
@@ -63,13 +66,14 @@ pub fn build_race_objective_context(config: &ResolvedRaceConfig) -> RaceObjectiv
         ChaosUtility::new(&RaceChaosConfig::default())
     } else {
         ChaosUtility::new(&config.chaos_config)
-    };
+    }
+    .without_ghosts(&ghosts);
     RaceObjectiveContext {
         mode,
         player_count,
         loser_cutoff: loser_cutoff_for_mode(mode, player_count),
         teammates,
-        chaos: ChaosUtility::new(&config.chaos_config),
+        chaos: ChaosUtility::new(&config.chaos_config).without_ghosts(&ghosts),
         naive_chaos: naive,
     }
 }

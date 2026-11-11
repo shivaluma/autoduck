@@ -669,34 +669,34 @@
     {
       "about": "NORMAL, 6 ducks, ghosts, engine 1.2.0",
       "default": {
-        "eventCount": 175,
-        "eventsSha256": "666a54ebc285a54b8285b6cc11212483cefc4a54d6fdeb68b3612a010b9349d8",
-        "finalTick": 3402,
+        "eventCount": 207,
+        "eventsSha256": "02afee8c94f685b453946cb7a8bdb9e71ad8775fc8ec7d73f40b361c5bb3127d",
+        "finalTick": 3434,
         "finished": true,
-        "motionSha256": "3fd27c42edfd166b791db65acc23d2575985bf2f8fd1f8e464fa5a2f45bd6d9a",
+        "motionSha256": "334ae32743d852525c6bf2dba1449d3863915313824e9416fa8552336ba4857c",
         "standings": [
           {
-            "finishTimeBits": "40ea5ac31a9a3e3d",
+            "finishTimeBits": "40eab234fe1fbfce",
             "playerId": "py_Gb",
             "rank": 1
           },
           {
-            "finishTimeBits": "40eb3a16c499a541",
-            "playerId": "29kTA5AM",
+            "finishTimeBits": "40eac89534e2d58d",
+            "playerId": "O1",
             "rank": 2
           },
           {
-            "finishTimeBits": "40eb9abbc53fb5f3",
-            "playerId": "bXrH8",
+            "finishTimeBits": "40eb7e63ee14eb0b",
+            "playerId": "29kTA5AM",
             "rank": 3
           },
           {
-            "finishTimeBits": "40ebad7ae4c49cf6",
-            "playerId": "O1",
+            "finishTimeBits": "40ebf0dd312ce369",
+            "playerId": "bXrH8",
             "rank": 4
           }
         ],
-        "stateChainSha256": "e90c9428caa74ccd1210a8607927b1e9fcb52be3f8aa79d9e33ec4fb4fddb795"
+        "stateChainSha256": "a1dad9663e9bce2c02a19a8684e305431b19f8c94a186480070da97a7f81df35"
       },
       "id": "full-0033",
       "line": "{\"raceId\":\"4685\",\"seed\":\"a5306cdfa9f4a0a4817a1d452d1f0ebbdb82635fa390220729bded5b80350cd5\",\"protocolVersion\":\"1.0.0\",\"engineVersion\":\"1.2.0\",\"balanceVersion\":\"S3.15\",\"trackVersion\":\"river-01-v2\",\"pickupSpawnVersion\":\"pickups-v1\",\"wildItemBalanceVersion\":\"wild-items-v6\",\"hazardBalanceVersion\":\"hazards-v1\",\"players\":[{\"playerId\":\"jWN0PI13d-4\",\"name\":\"Vịt Ma 👻\",\"isGhost\":true},{\"playerId\":\"29kTA5AM\",\"name\":\"back\\\\slash 1\"},{\"playerId\":\"bXrH8\",\"name\":\"Đức Anh 2\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-30\\\",\\\"body\\\":\\\"body-18\\\"}\"},{\"playerId\":\"HBIfVKou4Tp\",\"name\":\"Vịt Ma 👻\",\"isGhost\":true},{\"playerId\":\"py_Gb\",\"name\":\"Trần Thị Bích Ngọc 4\"},{\"playerId\":\"O1\",\"name\":\"Quack 5\"}],\"loadouts\":[{\"playerId\":\"jWN0PI13d-4\",\"itemIds\":[\"FEATHER\",\"HOMING_ROCKET\"],\"source\":\"PLAYER\"},{\"playerId\":\"29kTA5AM\",\"itemIds\":[\"PADDLE_BURST\"],\"source\":\"PLAYER\"},{\"playerId\":\"bXrH8\",\"itemIds\":[\"QUACK_HORN\"],\"source\":\"PLAYER\"},{\"playerId\":\"py_Gb\",\"itemIds\":[\"SHOCK_ABSORBER\"],\"source\":\"PLAYER\"},{\"playerId\":\"O1\",\"itemIds\":[\"BANANA\"],\"source\":\"PLAYER\"}],\"chaosConfig\":{\"type\":\"NORMAL\",\"targetPlayerId\":null},\"pickupConfig\":{\"enabled\":true,\"goldenBoxProbability\":0.11313450026878025,\"positionAwareLoot\":true,\"chaosBoxEnabled\":true}}",
@@ -1434,89 +1434,89 @@
     {
       "about": "DUO, 16 ducks, ghosts, engine 1.2.0",
       "default": {
-        "eventCount": 1044,
-        "eventsSha256": "8addf9722fc76ac298c753a7c7c42883f4135627393ee712b79193adecc3436b",
-        "finalTick": 3563,
+        "eventCount": 1040,
+        "eventsSha256": "58ab898b1cce858ec01b918f14969f5897a0a12b31502b8dc6329410e8cbe452",
+        "finalTick": 3560,
         "finished": true,
-        "motionSha256": "214b1a2dd97cc959433fdd00ff8e7eab954b24ab8aa053f450b013141b3ee197",
+        "motionSha256": "5b6449b2b39690b41e8fad488430e355f48a6fffa074ab74e72270c551ea8fb9",
         "standings": [
           {
-            "finishTimeBits": "40eb43dccee05d08",
+            "finishTimeBits": "40eb56464410fff3",
             "playerId": "2-yDwjzw",
             "rank": 1
           },
           {
-            "finishTimeBits": "40eb91aede932457",
-            "playerId": "I",
+            "finishTimeBits": "40eb8bb7b76a0afc",
+            "playerId": "ensjh5",
             "rank": 2
           },
           {
-            "finishTimeBits": "40ebdf0cdc221b75",
-            "playerId": "ensjh5",
+            "finishTimeBits": "40ebb6583c76ee32",
+            "playerId": "Nx2YSE2mo4F",
             "rank": 3
           },
           {
-            "finishTimeBits": "40ebefe6503d337b",
-            "playerId": "hwNWtpGnJguH",
+            "finishTimeBits": "40ebc48140c8609b",
+            "playerId": "I",
             "rank": 4
           },
           {
-            "finishTimeBits": "40ec057d31b85872",
-            "playerId": "1e8XE6QIB",
+            "finishTimeBits": "40ebceffcbca0b24",
+            "playerId": "nkgnJJv9T",
             "rank": 5
           },
           {
-            "finishTimeBits": "40ec12725183aa70",
-            "playerId": "qsy2VO",
+            "finishTimeBits": "40ebe16d914b21a6",
+            "playerId": "Q0pRh",
             "rank": 6
           },
           {
-            "finishTimeBits": "40ec12782fb5824c",
-            "playerId": "Nx2YSE2mo4F",
+            "finishTimeBits": "40ebfc617e38f79f",
+            "playerId": "qsy2VO",
             "rank": 7
           },
           {
-            "finishTimeBits": "40ec3d74222a0f36",
-            "playerId": "WUJIi",
+            "finishTimeBits": "40ec3635064d2ea4",
+            "playerId": "hwNWtpGnJguH",
             "rank": 8
           },
           {
-            "finishTimeBits": "40ec3db371734c62",
-            "playerId": "nkgnJJv9T",
+            "finishTimeBits": "40ec84c86043d31a",
+            "playerId": "bjo",
             "rank": 9
           },
           {
-            "finishTimeBits": "40ec49dcaa5ae33f",
-            "playerId": "bjo",
+            "finishTimeBits": "40ec8d055f240ddc",
+            "playerId": "WUJIi",
             "rank": 10
           },
           {
-            "finishTimeBits": "40ec6ad45046c541",
-            "playerId": "Q0pRh",
+            "finishTimeBits": "40ec9980a38aaaef",
+            "playerId": "W-3EVph",
             "rank": 11
           },
           {
-            "finishTimeBits": "40ec8254a839121a",
-            "playerId": "W-3EVph",
+            "finishTimeBits": "40eca2518ece5d77",
+            "playerId": "1e8XE6QIB",
             "rank": 12
           },
           {
-            "finishTimeBits": "40ecae1956197c24",
+            "finishTimeBits": "40eca38ca994d54d",
             "playerId": "Q2HB",
             "rank": 13
           },
           {
-            "finishTimeBits": "40ece0f6fa2005ad",
+            "finishTimeBits": "40ecf1ef287bf41b",
             "playerId": "J53gqWx_gd",
             "rank": 14
           },
           {
-            "finishTimeBits": "40ecfcf47abdcdf4",
+            "finishTimeBits": "40ecf6f412022e33",
             "playerId": "IgSe8Z4n",
             "rank": 15
           }
         ],
-        "stateChainSha256": "b339a5a4062d699527f40a2a587343c42486b7d1536ff6b551c3c1eefe62370a"
+        "stateChainSha256": "8c5260d43a5035e668080faa118b127ddebf72c28937914b640770f48af137b0"
       },
       "id": "full-0115",
       "line": "{\"raceId\":\"ca3ef99ba336a5cc92a6b5805\",\"seed\":\"09417a6cf44a5a1961864f20a46ac0fdf3ba6606312b23518539471bcadb7edc\",\"protocolVersion\":\"1.0.0\",\"engineVersion\":\"1.2.0\",\"balanceVersion\":\"S3.15\",\"trackVersion\":\"river-01-v2\",\"pickupSpawnVersion\":\"pickups-v1\",\"wildItemBalanceVersion\":\"wild-items-v6\",\"hazardBalanceVersion\":\"hazards-v1\",\"players\":[{\"playerId\":\"nkgnJJv9T\",\"name\":\"Nguyễn Văn A 0\"},{\"playerId\":\"IgSe8Z4n\",\"name\":\"\\\"Quote\\\" Duck 1\"},{\"playerId\":\"qsy2VO\",\"name\":\"Minh 2\"},{\"playerId\":\"Q2HB\",\"name\":\"Nguyễn Văn A 3\",\"isGhost\":false},{\"playerId\":\"W-3EVph\",\"name\":\"Minh 4\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-31\\\",\\\"body\\\":\\\"body-38\\\"}\"},{\"playerId\":\"4C8f\",\"name\":\"Vịt Ma 👻\",\"isGhost\":true},{\"playerId\":\"1e8XE6QIB\",\"name\":\"Minh 6\"},{\"playerId\":\"WUJIi\",\"name\":\"Nguyễn Văn A 7\"},{\"playerId\":\"I\",\"name\":\"ZZ Top 8\"},{\"playerId\":\"ensjh5\",\"name\":\"tab\\there 9\"},{\"playerId\":\"2-yDwjzw\",\"name\":\"tab\\there 10\"},{\"playerId\":\"Nx2YSE2mo4F\",\"name\":\"tab\\there 11\"},{\"playerId\":\"J53gqWx_gd\",\"name\":\"ZZ Top 12\"},{\"playerId\":\"Q0pRh\",\"name\":\"Đức Anh 13\"},{\"playerId\":\"bjo\",\"name\":\"Phở Bò 14\"},{\"playerId\":\"hwNWtpGnJguH\",\"name\":\"Nguyễn Văn A 15\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-30\\\",\\\"body\\\":\\\"body-34\\\"}\"}],\"loadouts\":[{\"playerId\":\"IgSe8Z4n\",\"itemIds\":[],\"source\":\"PLAYER\"},{\"playerId\":\"Q2HB\",\"itemIds\":[],\"source\":\"AUTO\"},{\"playerId\":\"4C8f\",\"itemIds\":[\"NITRO\"],\"source\":\"PLAYER\"},{\"playerId\":\"1e8XE6QIB\",\"itemIds\":[],\"source\":\"PLAYER\"},{\"playerId\":\"WUJIi\",\"itemIds\":[],\"source\":\"AUTO\"},{\"playerId\":\"I\",\"itemIds\":[\"DRAFT_FIN\"],\"source\":\"PLAYER\"},{\"playerId\":\"2-yDwjzw\",\"itemIds\":[\"SHOCK_ABSORBER\",\"BANANA\"],\"source\":\"PLAYER\"},{\"playerId\":\"Nx2YSE2mo4F\",\"itemIds\":[\"QUACK_HORN\",\"DRAFT_FIN\"],\"source\":\"AUTO\"},{\"playerId\":\"bjo\",\"itemIds\":[\"DRAFT_FIN\"],\"source\":\"AUTO\"}],\"chaosConfig\":{\"type\":\"DUO\",\"groups\":[[\"IgSe8Z4n\",\"hwNWtpGnJguH\"],[\"bjo\",\"WUJIi\"],[\"2-yDwjzw\",\"Nx2YSE2mo4F\"],[\"Q2HB\",\"ensjh5\"],[\"J53gqWx_gd\",\"qsy2VO\"],[\"1e8XE6QIB\",\"nkgnJJv9T\"],[\"I\",\"W-3EVph\",\"Q0pRh\"]],\"targetPlayerId\":null}}",
@@ -2079,39 +2079,39 @@
     {
       "about": "TRIPLE_ELIMINATION, 6 ducks, ghosts",
       "default": {
-        "eventCount": 170,
-        "eventsSha256": "907afbb2e760a9b0d6e0c00e615d6adc633192284e5d373d2694f2820b848733",
-        "finalTick": 3398,
+        "eventCount": 144,
+        "eventsSha256": "9704e90ca5f3c99692f174ff894f0af1c67f243588fec51084df23b395905136",
+        "finalTick": 3399,
         "finished": true,
-        "motionSha256": "391232dfbedd98b67661a576b4b6e1ce4fe1d8535190fd3c25abb3da59599620",
+        "motionSha256": "25155412b2d3ecf7fe9743f66aa753a4c73f2bf1723367c9ae7b4887811a23aa",
         "standings": [
           {
-            "finishTimeBits": "40eae63d6a233930",
+            "finishTimeBits": "40eafa71dc8dca1d",
             "playerId": "smpN4D3",
             "rank": 1
           },
           {
-            "finishTimeBits": "40eb24d24be6378c",
+            "finishTimeBits": "40eb4379c06728f3",
             "playerId": "I7u0Lund",
             "rank": 2
           },
           {
-            "finishTimeBits": "40eb4a908e905039",
+            "finishTimeBits": "40eb6b6c204742ce",
             "playerId": "HSzdh",
             "rank": 3
           },
           {
-            "finishTimeBits": "40eb88715df7c973",
+            "finishTimeBits": "40eb6ff5bb108d5f",
             "playerId": "Vv:",
             "rank": 4
           },
           {
-            "finishTimeBits": "40eba0c9c0685751",
+            "finishTimeBits": "40eba91cf862e4c9",
             "playerId": "6jtN5k8",
             "rank": 5
           }
         ],
-        "stateChainSha256": "d6bdb27421b07e533e681395b986f10b357ccbe4b82114e1364a27e0f8a60036"
+        "stateChainSha256": "1f92daeecfd8a668821cb22d02883fe4f81a809b33a8cb005a10fc7396217956"
       },
       "id": "full-0036",
       "line": "{\"raceId\":\"4418\",\"seed\":\"4a9eba568d1785da1b1d0e6f39b5d634e5c54f7344a62a97f4c9b60b4fc8c62e\",\"tickRate\":60,\"players\":[{\"playerId\":\"Vv:\",\"name\":\"a 0\"},{\"playerId\":\"I7u0Lund\",\"name\":\"back\\\\slash 1\"},{\"playerId\":\"mg\",\"name\":\"Vịt Ma 👻\",\"isGhost\":true},{\"playerId\":\"HSzdh\",\"name\":\"ZZ Top 3\"},{\"playerId\":\"6jtN5k8\",\"name\":\"Vịt Bầu 4\"},{\"playerId\":\"smpN4D3\",\"name\":\"Ünïcödé 5\"}],\"loadouts\":[{\"playerId\":\"I7u0Lund\",\"itemIds\":[\"HOMING_ROCKET\",\"BUBBLE_SHIELD\"],\"source\":\"PLAYER\"},{\"playerId\":\"mg\",\"itemIds\":[],\"source\":\"PLAYER\"},{\"playerId\":\"HSzdh\",\"itemIds\":[\"SHOCK_ABSORBER\",\"BUBBLE_SHIELD\"],\"source\":\"AUTO\"},{\"playerId\":\"6jtN5k8\",\"itemIds\":[\"FEATHER\"],\"source\":\"PLAYER\"}],\"chaosConfig\":{\"type\":\"TRIPLE_ELIMINATION\"}}",
@@ -2154,59 +2154,59 @@
     {
       "about": "TRIPLE_ELIMINATION, 10 ducks, ghosts, engine 1.2.0",
       "default": {
-        "eventCount": 532,
-        "eventsSha256": "ddebd936c31f500d5d63cb9146f2d480b5ceeb57d30e39a4ca7a6b6943191394",
-        "finalTick": 3519,
+        "eventCount": 504,
+        "eventsSha256": "a8a9d431a63873e75497c75c50f012ef2423186a1273161ca778d279a78cab3a",
+        "finalTick": 3534,
         "finished": true,
-        "motionSha256": "f92cd1d7e89a0af19eb35b5ea6e3103b3c6ce51f4754707f490fd371f07b5a95",
+        "motionSha256": "cb9f96bf773c90a371a4dce2eb47f265c5c9fcb0b6b3283f675f3ce30c3d6f68",
         "standings": [
           {
-            "finishTimeBits": "40eb2076c27b6e87",
+            "finishTimeBits": "40eaf04486929a84",
             "playerId": "1273",
             "rank": 1
           },
           {
-            "finishTimeBits": "40eb65dae24db0e8",
-            "playerId": "804",
+            "finishTimeBits": "40eb2b3eff1f2fcf",
+            "playerId": "1084",
             "rank": 2
           },
           {
-            "finishTimeBits": "40eb6927aaca1d93",
-            "playerId": "1873",
+            "finishTimeBits": "40eb3e2686cdf45a",
+            "playerId": "804",
             "rank": 3
           },
           {
-            "finishTimeBits": "40eb81302cf6b1cd",
-            "playerId": "1084",
+            "finishTimeBits": "40eb61c1ad961df1",
+            "playerId": "1536",
             "rank": 4
           },
           {
-            "finishTimeBits": "40eb94d8dc62b513",
-            "playerId": "68",
+            "finishTimeBits": "40eb9cbe42a41963",
+            "playerId": "756",
             "rank": 5
           },
           {
-            "finishTimeBits": "40eb9ca2f3c7edf2",
-            "playerId": "1536",
+            "finishTimeBits": "40ebc1ae56fd6fe2",
+            "playerId": "1873",
             "rank": 6
           },
           {
-            "finishTimeBits": "40ebde8a2107b5d6",
-            "playerId": "756",
+            "finishTimeBits": "40ec033e6d9a456e",
+            "playerId": "1724",
             "rank": 7
           },
           {
-            "finishTimeBits": "40ebe933630fb6f7",
-            "playerId": "1724",
+            "finishTimeBits": "40ec38e99b4689ec",
+            "playerId": "68",
             "rank": 8
           },
           {
-            "finishTimeBits": "40eca2900fe14fb5",
+            "finishTimeBits": "40ecc0c5a5cc6aa0",
             "playerId": "1505",
             "rank": 9
           }
         ],
-        "stateChainSha256": "34104ef672bb99593626db83652b3a3f1df9c76c23b4d846e1900c4d0e822e69"
+        "stateChainSha256": "2cb43544053c313a5ad64edb9c42b54778b55ad4381232b6b836a123be5e5416"
       },
       "id": "full-0068",
       "line": "{\"raceId\":\"4725\",\"seed\":\"0d328128ba9231359249b60a6ffd73c9768d26a64f7a99e7ca2b0eecec8f9fe5\",\"protocolVersion\":\"1.0.0\",\"engineVersion\":\"1.2.0\",\"balanceVersion\":\"S3.15\",\"trackVersion\":\"river-01-v2\",\"pickupSpawnVersion\":\"pickups-v1\",\"wildItemBalanceVersion\":\"wild-items-v6\",\"hazardBalanceVersion\":\"hazards-v1\",\"players\":[{\"playerId\":\"1273\",\"name\":\"Lan 🦆 0\"},{\"playerId\":\"804\",\"name\":\"Nguyễn Văn A 1\"},{\"playerId\":\"838\",\"name\":\"Vịt Ma 👻\",\"isGhost\":true},{\"playerId\":\"68\",\"name\":\"back\\\\slash 3\"},{\"playerId\":\"1724\",\"name\":\"Phở Bò 4\"},{\"playerId\":\"1536\",\"name\":\"Nguyễn Văn A 5\"},{\"playerId\":\"1505\",\"name\":\"O'Brien 6\"},{\"playerId\":\"756\",\"name\":\"Đức Anh 7\"},{\"playerId\":\"1873\",\"name\":\"Minh 8\"},{\"playerId\":\"1084\",\"name\":\"tab\\there 9\"}],\"loadouts\":[{\"playerId\":\"1273\",\"itemIds\":[\"BANANA\",\"SHOCK_ABSORBER\"],\"source\":\"PLAYER\"},{\"playerId\":\"804\",\"itemIds\":[\"SHOCK_ABSORBER\"],\"source\":\"PLAYER\"},{\"playerId\":\"838\",\"itemIds\":[],\"source\":\"PLAYER\"},{\"playerId\":\"68\",\"itemIds\":[\"SHOCK_ABSORBER\",\"BUBBLE_SHIELD\"],\"source\":\"PLAYER\"},{\"playerId\":\"1724\",\"itemIds\":[],\"source\":\"PLAYER\"},{\"playerId\":\"1536\",\"itemIds\":[\"BUBBLE_SHIELD\",\"HOMING_ROCKET\"],\"source\":\"AUTO\"},{\"playerId\":\"1084\",\"itemIds\":[\"DRAFT_FIN\"],\"source\":\"AUTO\"}],\"chaosConfig\":{\"type\":\"TRIPLE_ELIMINATION\",\"targetPlayerId\":null},\"pickupConfig\":{\"enabled\":true,\"goldenBoxEnabled\":false,\"goldenBoxProbability\":1.0,\"regularPickupCap\":2,\"manualItemsEnabled\":true,\"autoItemsEnabled\":true,\"chaosBoxEnabled\":false}}",
@@ -2559,79 +2559,79 @@
     {
       "about": "CUT_LINE, 14 ducks, ghosts",
       "default": {
-        "eventCount": 986,
-        "eventsSha256": "2fa55e3219169e56b51dde37b9c69af218fd56e9d68405f136bca8f1a6171afa",
-        "finalTick": 3533,
+        "eventCount": 1039,
+        "eventsSha256": "c1821715b456294b977e4458bffa2935efb86e5264f3690f5a9c389853a0af70",
+        "finalTick": 3515,
         "finished": true,
-        "motionSha256": "b2a4213849d0acac38fbcf9ea0c1bf2e4675b97713dacfa2911fdd802f0c8ef1",
+        "motionSha256": "807d8541c2765eae22839beddb588f060959a46c96fdf34ab444abbf033e8197",
         "standings": [
           {
-            "finishTimeBits": "40eb23ac597e3bde",
+            "finishTimeBits": "40eb9b870b5cd907",
             "playerId": "ejYsQjI05",
             "rank": 1
           },
           {
-            "finishTimeBits": "40eb2e33b0c3ffc8",
+            "finishTimeBits": "40ebc9f8b757a1d3",
             "playerId": "i4x6L7NV",
             "rank": 2
           },
           {
-            "finishTimeBits": "40eb855fb6abe1b1",
-            "playerId": "5pVYq",
+            "finishTimeBits": "40ebdf7ed51dc14b",
+            "playerId": "6",
             "rank": 3
           },
           {
-            "finishTimeBits": "40ebeed7470801eb",
-            "playerId": "lfSg",
+            "finishTimeBits": "40ec4b0fdafb003b",
+            "playerId": "wF43i030N",
             "rank": 4
           },
           {
-            "finishTimeBits": "40ebf615d9f2497b",
-            "playerId": "ozd5opmzEt",
+            "finishTimeBits": "40ec4c7b1db99aad",
+            "playerId": "NS43KZ",
             "rank": 5
           },
           {
-            "finishTimeBits": "40ec007178787af6",
-            "playerId": "jo",
+            "finishTimeBits": "40ec530206f0cbcf",
+            "playerId": "ozd5opmzEt",
             "rank": 6
           },
           {
-            "finishTimeBits": "40ec2beda81d50b8",
-            "playerId": "ozAguzr8ee",
+            "finishTimeBits": "40ec55fff4536782",
+            "playerId": "4r",
             "rank": 7
           },
           {
-            "finishTimeBits": "40ec403be8fc0fcc",
-            "playerId": "6",
+            "finishTimeBits": "40ec56c4e06f0034",
+            "playerId": "lfSg",
             "rank": 8
           },
           {
-            "finishTimeBits": "40ec6e61c0e983ab",
-            "playerId": "Knq_-",
+            "finishTimeBits": "40ec7473fda0f4ea",
+            "playerId": "tmXA",
             "rank": 9
           },
           {
-            "finishTimeBits": "40ec7ec6e55ed49c",
-            "playerId": "wF43i030N",
+            "finishTimeBits": "40ec7f39a1257aaf",
+            "playerId": "ozAguzr8ee",
             "rank": 10
           },
           {
-            "finishTimeBits": "40ecb5f6d59f992d",
-            "playerId": "NS43KZ",
+            "finishTimeBits": "40ec8e221856a416",
+            "playerId": "jo",
             "rank": 11
           },
           {
-            "finishTimeBits": "40ecbb88af38ee6e",
-            "playerId": "tmXA",
+            "finishTimeBits": "40ec9159b1961b1d",
+            "playerId": "Knq_-",
             "rank": 12
           },
           {
-            "finishTimeBits": "40ecbe79d8fb7d9f",
-            "playerId": "4r",
+            "finishTimeBits": "40ec9910fb1b97f8",
+            "playerId": "5pVYq",
             "rank": 13
           }
         ],
-        "stateChainSha256": "9928ae783c3eb8e539f1d5002b711b4ffc92a043e99e1ebff8684babda8b1ffe"
+        "stateChainSha256": "aa5fd22fdd5c24b2e772c3b29df0880e6b2be9e5826ebedec3ab604fc669b0ed"
       },
       "id": "full-0101",
       "line": "{\"raceId\":\"cfc545a43fca0f63955ce84f6\",\"seed\":\"6d64591424a38baa23d540de9cb23e171a4199ed06ca6710b5bdbf47a8890bde\",\"tickRate\":60,\"players\":[{\"playerId\":\"lfSg\",\"name\":\"Ünïcödé 0\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-8\\\",\\\"body\\\":\\\"body-13\\\"}\"},{\"playerId\":\"jo\",\"name\":\"Trần Thị Bích Ngọc 1\"},{\"playerId\":\"Knq_-\",\"name\":\"ZZ Top 2\"},{\"playerId\":\"tPwl\",\"name\":\"Vịt Ma 👻\",\"isGhost\":true},{\"playerId\":\"4r\",\"name\":\"O'Brien 4\"},{\"playerId\":\"tmXA\",\"name\":\"ZZ Top 5\"},{\"playerId\":\"i4x6L7NV\",\"name\":\"Phở Bò 6\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-30\\\",\\\"body\\\":\\\"body-9\\\"}\"},{\"playerId\":\"5pVYq\",\"name\":\"Nguyễn Văn A 7\",\"isGhost\":false},{\"playerId\":\"6\",\"name\":\"Vịt Bầu 8\"},{\"playerId\":\"NS43KZ\",\"name\":\"ZZ Top 9\"},{\"playerId\":\"wF43i030N\",\"name\":\"ZZ Top 10\"},{\"playerId\":\"ozAguzr8ee\",\"name\":\"ZZ Top 11\"},{\"playerId\":\"ozd5opmzEt\",\"name\":\"Đức Anh 12\",\"isGhost\":false},{\"playerId\":\"ejYsQjI05\",\"name\":\"a 13\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-10\\\",\\\"body\\\":\\\"body-0\\\"}\"}],\"loadouts\":[{\"playerId\":\"Knq_-\",\"itemIds\":[],\"source\":\"AUTO\"},{\"playerId\":\"tPwl\",\"itemIds\":[\"DRAFT_FIN\"],\"source\":\"PLAYER\"},{\"playerId\":\"5pVYq\",\"itemIds\":[\"QUACK_HORN\"],\"source\":\"AUTO\"},{\"playerId\":\"6\",\"itemIds\":[\"BUBBLE_SHIELD\",\"DRAFT_FIN\"],\"source\":\"AUTO\"},{\"playerId\":\"NS43KZ\",\"itemIds\":[\"NITRO\"],\"source\":\"PLAYER\"},{\"playerId\":\"wF43i030N\",\"itemIds\":[\"QUACK_HORN\"],\"source\":\"PLAYER\"},{\"playerId\":\"ozAguzr8ee\",\"itemIds\":[],\"source\":\"PLAYER\"},{\"playerId\":\"ozd5opmzEt\",\"itemIds\":[],\"source\":\"AUTO\"},{\"playerId\":\"ejYsQjI05\",\"itemIds\":[\"NITRO\",\"DRAFT_FIN\"],\"source\":\"PLAYER\"}],\"chaosConfig\":{\"type\":\"CUT_LINE\",\"targetPlayerId\":null},\"pickupConfig\":{\"enabled\":true,\"goldenBoxEnabled\":true,\"goldenBoxProbability\":0.15,\"hazardsEnabled\":true,\"positionAwareLoot\":true,\"spawnMultiplier\":1.25,\"regularPickupCap\":3,\"manualItemsEnabled\":true,\"autoItemsEnabled\":true,\"chaosBoxEnabled\":false,\"forceGoldenBox\":false,\"disabledItems\":[],\"idealManualPlayerIds\":[]}}",
@@ -3609,11 +3609,11 @@
     {
       "about": "BOUNTY_HUNT, 7 ducks, ghosts",
       "default": {
-        "eventCount": 128,
-        "eventsSha256": "a11ed6ca42f3be3d4928570f40970b672caaebdeaccd2dae763e6e630c7f8e09",
+        "eventCount": 131,
+        "eventsSha256": "e98822d1753426057987183045197e0801eac41ed7d06d028ad1ca4551007d23",
         "finalTick": 3426,
         "finished": true,
-        "motionSha256": "d2d1211b22695fdfc934483874bc2aa487977ab77dc98565fc57a6060355a245",
+        "motionSha256": "930eec8be752f0cfd1aa037febbb76899af8f03b92e97ba45487b2910808dff4",
         "standings": [
           {
             "finishTimeBits": "40eab81392aef095",
@@ -3621,32 +3621,32 @@
             "rank": 1
           },
           {
-            "finishTimeBits": "40eb067843d5ebd6",
+            "finishTimeBits": "40eb0670b522ce8e",
             "playerId": "1762",
             "rank": 2
           },
           {
-            "finishTimeBits": "40eb483302c0d095",
+            "finishTimeBits": "40eb487366eb7571",
             "playerId": "925",
             "rank": 3
           },
           {
-            "finishTimeBits": "40eb4e3887edb94a",
+            "finishTimeBits": "40eb4e158d11d763",
             "playerId": "855",
             "rank": 4
           },
           {
-            "finishTimeBits": "40eb88996acc4082",
+            "finishTimeBits": "40eb88993c4a91da",
             "playerId": "1253",
             "rank": 5
           },
           {
-            "finishTimeBits": "40ebdff9b8fad770",
+            "finishTimeBits": "40ebe03ff6cb758c",
             "playerId": "1512",
             "rank": 6
           }
         ],
-        "stateChainSha256": "1cc9056fb48dd8a730cc2966e8af00f8bec8bb40725e9670f57c7b1817b599af"
+        "stateChainSha256": "207dd615097bb1f94664ad8b56aeddbe93b5fc261b1bbc31b4da4dae7e156fbc"
       },
       "id": "full-0047",
       "line": "{\"raceId\":\"872\",\"seed\":\"1d12492a9514c01312824098680033cf81d0cfddde8e529671fd3ea73146e446\",\"tickRate\":60,\"players\":[{\"playerId\":\"855\",\"name\":\"tab\\there 0\"},{\"playerId\":\"1762\",\"name\":\"ZZ Top 1\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-21\\\",\\\"body\\\":\\\"body-6\\\"}\"},{\"playerId\":\"1512\",\"name\":\"Quack 2\"},{\"playerId\":\"1253\",\"name\":\"back\\\\slash 3\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-13\\\",\\\"body\\\":\\\"body-20\\\"}\"},{\"playerId\":\"580\",\"name\":\"Nguyễn Văn A 4\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-24\\\",\\\"body\\\":\\\"body-27\\\"}\"},{\"playerId\":\"925\",\"name\":\"李雷 5\"},{\"playerId\":\"1157\",\"name\":\"Vịt Ma 👻\",\"isGhost\":true}],\"loadouts\":[{\"playerId\":\"1762\",\"itemIds\":[\"NITRO\",\"HOMING_ROCKET\"],\"source\":\"AUTO\"},{\"playerId\":\"1512\",\"itemIds\":[],\"source\":\"AUTO\"},{\"playerId\":\"580\",\"itemIds\":[\"PADDLE_BURST\",\"SHOCK_ABSORBER\"],\"source\":\"PLAYER\"},{\"playerId\":\"925\",\"itemIds\":[\"HOMING_ROCKET\",\"SHOCK_ABSORBER\"],\"source\":\"PLAYER\"},{\"playerId\":\"1157\",\"itemIds\":[],\"source\":\"AUTO\"}],\"chaosConfig\":{\"type\":\"BOUNTY_HUNT\",\"targetPlayerId\":\"925\"},\"pickupConfig\":{\"enabled\":false}}",
@@ -3769,49 +3769,49 @@
     {
       "about": "BOUNTY_HUNT, 8 ducks, ghosts",
       "default": {
-        "eventCount": 387,
-        "eventsSha256": "0afb2f2471c79672349509774c62df7671bc7c4757dc1c3ade568d5a56bb8128",
-        "finalTick": 3525,
+        "eventCount": 445,
+        "eventsSha256": "ed9ceb55c20a57b0c3dc726697dea71d415b178240b4e21727046920c6363939",
+        "finalTick": 3492,
         "finished": true,
-        "motionSha256": "065b5bb00bb9f8d33e0dd99e73d21841e6bd16c25313b5cd2bea6bcc9dbfd305",
+        "motionSha256": "e4d604fac51b412afd3f4db451dfe9be458c1693c00d51c8fc1eefaa02b67afe",
         "standings": [
           {
-            "finishTimeBits": "40eb0372d48dc2b9",
-            "playerId": "1009",
+            "finishTimeBits": "40eb15b80af5b380",
+            "playerId": "208",
             "rank": 1
           },
           {
-            "finishTimeBits": "40eb3404e3bdf58b",
-            "playerId": "208",
+            "finishTimeBits": "40ebb1876e77d45d",
+            "playerId": "983",
             "rank": 2
           },
           {
-            "finishTimeBits": "40eb840813149d8e",
-            "playerId": "983",
+            "finishTimeBits": "40ebb5d3d5ca971a",
+            "playerId": "433",
             "rank": 3
           },
           {
-            "finishTimeBits": "40eba733a6c1d999",
-            "playerId": "1528",
+            "finishTimeBits": "40ebb9f76a0d2cec",
+            "playerId": "1009",
             "rank": 4
           },
           {
-            "finishTimeBits": "40ebbcece61233a7",
-            "playerId": "433",
+            "finishTimeBits": "40ec1724f6985865",
+            "playerId": "924",
             "rank": 5
           },
           {
-            "finishTimeBits": "40ebc4a43755dd46",
+            "finishTimeBits": "40ec577ce8d5a300",
             "playerId": "412",
             "rank": 6
           },
           {
-            "finishTimeBits": "40ecaf43b00b823f",
-            "playerId": "924",
+            "finishTimeBits": "40ec69802289b2da",
+            "playerId": "1528",
             "rank": 7
           }
         ],
-        "stateChainSha256": "1b9990c5fdeda00d58dfacbf6e1f350ed3fa157a6eba8477d736bf85920ed0cf"
+        "stateChainSha256": "82093ba1260f38f0385b5a31dede67ece3de8d507fe4d69aee09c665565aedf8"
       },
       "id": "full-0055",
       "line": "{\"raceId\":\"1525\",\"seed\":\"c580a9b55978fdb47e4403600ecfb6b010cfdba7fb5b2be7ccf00e082b43f0b0\",\"players\":[{\"playerId\":\"1528\",\"name\":\"Minh 0\"},{\"playerId\":\"412\",\"name\":\"Ünïcödé 1\"},{\"playerId\":\"983\",\"name\":\"O'Brien 2\"},{\"playerId\":\"1009\",\"name\":\"Vịt Bầu 3\"},{\"playerId\":\"1597\",\"name\":\"Vịt Ma 👻\",\"isGhost\":true},{\"playerId\":\"208\",\"name\":\"O'Brien 5\"},{\"playerId\":\"924\",\"name\":\"ZZ Top 6\"},{\"playerId\":\"433\",\"name\":\"a 7\"}],\"loadouts\":[{\"playerId\":\"412\",\"itemIds\":[\"BANANA\",\"DRAFT_FIN\"],\"source\":\"PLAYER\"},{\"playerId\":\"983\",\"itemIds\":[\"HOMING_ROCKET\"],\"source\":\"PLAYER\"},{\"playerId\":\"1009\",\"itemIds\":[\"HOMING_ROCKET\"],\"source\":\"PLAYER\"},{\"playerId\":\"1597\",\"itemIds\":[\"NITRO\"],\"source\":\"AUTO\"},{\"playerId\":\"924\",\"itemIds\":[],\"source\":\"PLAYER\"},{\"playerId\":\"433\",\"itemIds\":[\"DRAFT_FIN\",\"NITRO\"],\"source\":\"AUTO\"}],\"chaosConfig\":{\"type\":\"BOUNTY_HUNT\",\"targetPlayerId\":\"1009\"},\"pickupConfig\":{\"enabled\":true,\"positionAwareLoot\":true,\"spawnMultiplier\":2.9609955937889533839069144960376434028148651123046875,\"regularPickupCap\":3,\"manualItemsEnabled\":false,\"autoItemsEnabled\":true,\"forceItem\":\"BANANA\"}}",
@@ -3959,34 +3959,34 @@
     {
       "about": "NORMAL, 6 ducks, ghosts, engine 1.2.0, 1 manual inputs",
       "default": {
-        "eventCount": 211,
-        "eventsSha256": "2baa4fdce3db5380085b56b2fe1f59208a5a14407fd681e0e0d377d8ab9019ac",
-        "finalTick": 3389,
+        "eventCount": 229,
+        "eventsSha256": "78289da17c20a3c3b2c1a453abcbcfbac483324fd33e99df1224b0ba905eabd4",
+        "finalTick": 3395,
         "finished": true,
-        "motionSha256": "27be19a1202c316c3d9f3c803e5337c582febe75f1573ce488285df419200c3a",
+        "motionSha256": "f331ad2a0df88883898d0bc18a0a31fa46d7a3896ff110627490f464e456ccc5",
         "standings": [
           {
-            "finishTimeBits": "40ea8ef92a602b53",
-            "playerId": "bXrH8",
+            "finishTimeBits": "40ea1c53511b0568",
+            "playerId": "py_Gb",
             "rank": 1
           },
           {
-            "finishTimeBits": "40eb708f3caf515f",
-            "playerId": "29kTA5AM",
+            "finishTimeBits": "40eb2b8401caca49",
+            "playerId": "O1",
             "rank": 2
           },
           {
-            "finishTimeBits": "40eb78857ffa5508",
-            "playerId": "py_Gb",
+            "finishTimeBits": "40eb74d5593fe2df",
+            "playerId": "bXrH8",
             "rank": 3
           },
           {
-            "finishTimeBits": "40eb926d5c6d6409",
-            "playerId": "O1",
+            "finishTimeBits": "40eb7eaa2f11eff0",
+            "playerId": "29kTA5AM",
             "rank": 4
           }
         ],
-        "stateChainSha256": "42a38c6b700fbaf436d6479cd5768c0bc4b12979275fc23484880d6468ae8667"
+        "stateChainSha256": "d9d03ce1a3377ba21b9e1caba5c2912a93ff1a8cd4a1449a1817135348cd3408"
       },
       "id": "items-0033",
       "line": "{\"raceId\":\"4685\",\"seed\":\"a5306cdfa9f4a0a4817a1d452d1f0ebbdb82635fa390220729bded5b80350cd5\",\"protocolVersion\":\"1.0.0\",\"engineVersion\":\"1.2.0\",\"balanceVersion\":\"S3.15\",\"trackVersion\":\"river-01-v2\",\"pickupSpawnVersion\":\"pickups-v1\",\"wildItemBalanceVersion\":\"wild-items-v6\",\"hazardBalanceVersion\":\"hazards-v1\",\"players\":[{\"playerId\":\"jWN0PI13d-4\",\"name\":\"Vịt Ma 👻\",\"isGhost\":true},{\"playerId\":\"29kTA5AM\",\"name\":\"back\\\\slash 1\"},{\"playerId\":\"bXrH8\",\"name\":\"Đức Anh 2\",\"cosmeticKey\":\"{\\\"hat\\\":\\\"hat-30\\\",\\\"body\\\":\\\"body-18\\\"}\"},{\"playerId\":\"HBIfVKou4Tp\",\"name\":\"Vịt Ma 👻\",\"isGhost\":true},{\"playerId\":\"py_Gb\",\"name\":\"Trần Thị Bích Ngọc 4\"},{\"playerId\":\"O1\",\"name\":\"Quack 5\"}],\"loadouts\":[{\"playerId\":\"jWN0PI13d-4\",\"itemIds\":[\"DRAFT_FIN\",\"HOMING_ROCKET\"],\"source\":\"PLAYER\"},{\"playerId\":\"29kTA5AM\",\"itemIds\":[\"DRAFT_FIN\",\"BANANA\"],\"source\":\"PLAYER\"},{\"playerId\":\"bXrH8\",\"itemIds\":[\"QUACK_HORN\",\"DRAFT_FIN\"],\"source\":\"AUTO\"},{\"playerId\":\"HBIfVKou4Tp\",\"itemIds\":[\"PADDLE_BURST\",\"BUBBLE_SHIELD\"],\"source\":\"PLAYER\"},{\"playerId\":\"py_Gb\",\"itemIds\":[\"PADDLE_BURST\",\"FEATHER\"],\"source\":\"PLAYER\"},{\"playerId\":\"O1\",\"itemIds\":[\"SHOCK_ABSORBER\",\"PADDLE_BURST\"],\"source\":\"PLAYER\"}],\"chaosConfig\":{\"type\":\"NORMAL\",\"targetPlayerId\":null},\"pickupConfig\":{\"enabled\":true,\"goldenBoxProbability\":0.11313450026878025,\"positionAwareLoot\":true,\"chaosBoxEnabled\":true,\"autoItemsEnabled\":false},\"oracleManualInputs\":[{\"raceId\":\"4685\",\"playerId\":\"jWN0PI13d-4\",\"wildItemInstanceId\":\"wild:4685:box:pickup-zone-1:z1-a1:jWN0PI13d-4\",\"action\":\"USE\",\"clientActionId\":\"gvKSHmP4CjiixI0t00njIBWz\",\"authoritativeTick\":1}]}",
@@ -4809,19 +4809,19 @@
     {
       "about": "NORMAL, 2 ducks, ghosts, 8 manual inputs",
       "default": {
-        "eventCount": 62,
-        "eventsSha256": "3ddabb6ed571586d48ae5f5a6f784cc0040c4a105713c1b31949ae28c38a389c",
-        "finalTick": 3279,
+        "eventCount": 65,
+        "eventsSha256": "e539733a14fa8eba12d0913ccab2e66a2220bfcf04a0a1c97e8a31d6a5cc5847",
+        "finalTick": 3280,
         "finished": true,
-        "motionSha256": "427013a1f601b4194c7171969a9828104a7d8ce52638f72ef83229570cd40c5b",
+        "motionSha256": "f83ccf7e5872ef3dd39241775f200598ec675fba2a4b28978b774075878524eb",
         "standings": [
           {
-            "finishTimeBits": "40eaaba1ea761041",
+            "finishTimeBits": "40eaad6da02d17d7",
             "playerId": "854",
             "rank": 1
           }
         ],
-        "stateChainSha256": "e79c0e5ea4706baf804dee022a4337d1fdca1849808f8b96cf5687d2b6ad4963"
+        "stateChainSha256": "30ba06966e58bd520b7ed366cf1cabf70104fa68075d89a8b51dc6df17f6e272"
       },
       "id": "items-0001",
       "line": "{\"raceId\":\"2054\",\"seed\":\"9324211be2d3ecb39eb601fe4db37e431b04d0db55244162d4d79a4b075fb0c1\",\"tickRate\":60,\"players\":[{\"playerId\":\"1782\",\"name\":\"Vịt Ma 👻\",\"isGhost\":true},{\"playerId\":\"854\",\"name\":\"Minh 1\"}],\"loadouts\":[{\"playerId\":\"1782\",\"itemIds\":[\"BANANA\",\"NITRO\"],\"source\":\"PLAYER\"},{\"playerId\":\"854\",\"itemIds\":[\"QUACK_HORN\",\"NITRO\"],\"source\":\"AUTO\"}],\"chaosConfig\":{\"type\":\"NORMAL\",\"targetPlayerId\":null},\"itemTuning\":{\"nitroSpeedMultiplier\":1.1400863002384622468810e0,\"rocketSlowMultiplier\":0.11614666587402558,\"bananaSlowMultiplier\":0.7500000000000001},\"pickupConfig\":{\"enabled\":true,\"goldenBoxEnabled\":false,\"positionAwareLoot\":true,\"spawnMultiplier\":0.3333333333333333,\"regularPickupCap\":2,\"autoItemsEnabled\":true,\"chaosBoxEnabled\":false},\"oracleManualInputs\":[{\"raceId\":\"2054\",\"playerId\":\"854\",\"wildItemInstanceId\":\"wild:2054:gold:pickup-zone-2:z2-a4:854\",\"action\":\"USE\",\"clientActionId\":\"bO-Jcy:GYbLGXZt0rJaS\",\"authoritativeTick\":1501},{\"raceId\":\"2054\",\"playerId\":\"854\",\"wildItemInstanceId\":\"wild:2054:box:pickup-zone-1:z1-a4:854\",\"action\":\"USE\",\"clientActionId\":\"K3bdgKRpu1\",\"authoritativeTick\":1056},{\"raceId\":\"2054\",\"playerId\":\"854\",\"wildItemInstanceId\":\"wild:2054:box:pickup-zone-4:z4-a5:854\",\"action\":\"USE\",\"clientActionId\":\"SN-xjhY36Pvvk4lWa:\",\"authoritativeTick\":2793},{\"raceId\":\"2054\",\"playerId\":\"854\",\"wildItemInstanceId\":\"wild:2054:box:pickup-zone-2:z2-a1:854\",\"action\":\"USE\",\"clientActionId\":\"qzE7nYMVT81KRYqPVS2aqhq\",\"authoritativeTick\":1800},{\"raceId\":\"2054\",\"playerId\":\"854\",\"wildItemInstanceId\":\"wild:2054:box:pickup-zone-1:z1-a3:854\",\"action\":\"USE\",\"clientActionId\":\"8Lm9zYhLEZ\",\"authoritativeTick\":892},{\"raceId\":\"2054\",\"playerId\":\"1782\",\"wildItemInstanceId\":\"wild:2054:gold:pickup-zone-1:z1-a1:1782\",\"action\":\"USE\",\"clientActionId\":\"FFLjIl2deyHU24dagpR\",\"authoritativeTick\":1103},{\"raceId\":\"2054\",\"playerId\":\"854\",\"wildItemInstanceId\":\"wild:2054:box:pickup-zone-1:z1-a5:854\",\"action\":\"USE\",\"clientActionId\":\"T4A0EFLkjsKt3VOQymVedcC\",\"authoritativeTick\":970},{\"raceId\":\"2054\",\"playerId\":\"1782\",\"wildItemInstanceId\":\"wild:2054:box:pickup-zone-4:z4-a4:1782\",\"action\":\"USE\",\"clientActionId\":\"uCgLyKq0LZzkz2\",\"authoritativeTick\":970}]}",

@@ -22,6 +22,11 @@
 //!   TS). It is cleared on every snapshot rebuild and, when it already holds
 //!   more than 512 entries, right before an insert.
 //!
+//! **F5 (S3.16):** ghost ducks are left out of the ranking (they never
+//! appear in the standings the real Chaos rule sees), so a ghost can no
+//! longer push a real duck into or out of the projected loser set. Under
+//! `ts-compat` they are ranked like any duck, as in S3.15.
+//!
 //! `Math.exp` (`:107,131`) goes through [`EngineMath::exp`].
 
 use alloc::collections::BTreeMap;
@@ -117,6 +122,9 @@ pub struct ChaosUtility {
     pub target_player_id: Option<PlayerId>,
     /// `prepared.groups`.
     pub groups: Vec<Vec<PlayerId>>,
+    /// F5: ghost ids, left out of the ranking (always empty under
+    /// `ts-compat`).
+    ghosts: Vec<PlayerId>,
     /// The ranking memo (`private snapshot`).
     snapshot: Option<RankingSnapshot>,
     /// F4: the exact inputs of `snapshot` (rank, progress bits, finished).
@@ -165,10 +173,20 @@ impl ChaosUtility {
             mode: chaos.chaos_type,
             target_player_id: chaos.target_player_id.clone(),
             groups: chaos.groups.clone(),
+            ghosts: Vec::new(),
             snapshot: None,
             snapshot_key: Vec::new(),
             outcome_cache: BTreeMap::new(),
         }
+    }
+
+    /// F5: leaves `ghosts` out of every ranking. A no-op under `ts-compat`.
+    #[must_use]
+    pub fn without_ghosts(mut self, ghosts: &[PlayerId]) -> Self {
+        if !crate::TS_COMPAT {
+            self.ghosts = ghosts.to_vec();
+        }
+        self
     }
 
     /// `get chaosMode`.
@@ -221,7 +239,10 @@ impl ChaosUtility {
                     .map(|duck| (duck.current_rank, duck.progress.to_bits(), duck.finished)),
             );
         }
-        let mut sorted: Vec<&DuckPhysicsState> = ducks.iter().collect();
+        let mut sorted: Vec<&DuckPhysicsState> = ducks
+            .iter()
+            .filter(|duck| !self.ghosts.contains(&duck.player_id))
+            .collect();
         v8_sort_by(&mut sorted, |left, right| {
             // `left.currentRank - right.currentRank || right.progress -
             // left.progress || left.playerId.localeCompare(right.playerId)`
