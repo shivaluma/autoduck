@@ -1,3 +1,6 @@
+# Local run of the production image (Rust server + Vite SPA). The database must already exist in the
+# volume: the server refuses a missing or empty DB (set AUTODUCK_ALLOW_EMPTY_DB=1, then `autoduck seed`,
+# for a fresh one). Production runs on Dokploy with replicas 1 and stop-first updates (plan D21).
 services:
   autoduck:
     build: .
@@ -5,15 +8,11 @@ services:
       - "3000:3000"
     environment:
       - DATABASE_URL=file:/app/data/autoduck.db
-      - NODE_ENV=production
       - RACE_SECRET_KEY=${RACE_SECRET_KEY}
-      - R2_ACCOUNT_ID=${R2_ACCOUNT_ID}
-      - R2_BUCKET_NAME=${R2_BUCKET_NAME}
-      - R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID}
-      - R2_SECRET_ACCESS_KEY=${R2_SECRET_ACCESS_KEY}
-      - R2_PUBLIC_URL=${R2_PUBLIC_URL}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
     volumes:
       - autoduck-data:/app/data
+    stop_grace_period: 150s
     restart: unless-stopped
 
 volumes:

@@ -1,23 +1,29 @@
-node_modules
-.next
+# Build context for ./Dockerfile (Rust server + Vite SPA). Keep it small: no build output,
+# no dependencies, no databases, no secrets.
 .git
-.gitignore
-*.md
-# Keeps Next from reading src/pages as Pages Router pages (see pages/README.md).
-!pages/README.md
-tmp/
-prisma/dev.db
-prisma/dev.db-journal
-prisma/backups/
-backups/
-**/pre-migrate-*.db*
-prisma/generated/
+node_modules
+**/node_modules
+.next
+target
+dist
+.cache
+tmp
+.playwright-mcp
+crates/race-wasm/pkg
+prisma/generated
+prisma/backups
+backups
+**/*.db
+**/*.db-journal
+**/*.db-wal
+**/*.db-shm
 .env*
 .DS_Store
 *.tsbuildinfo
-next-env.d.ts
 .pnpm-build-approvals.json
-.playwright-mcp/
-dist/
-target/
-.cache/
+docs
+# Only the replay-track manifest is read at runtime (boot step 10); balance outputs are docs.
+artifacts/*
+!artifacts/replay-tracks
+artifacts/replay-tracks/*
+!artifacts/replay-tracks/manifest.json

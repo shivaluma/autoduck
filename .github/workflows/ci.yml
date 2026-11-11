@@ -14,11 +14,10 @@ permissions:
   contents: read
 
 env:
-  # Matches the Node in the runtime image (node:24.14.1-bookworm-slim, see Dockerfile).
+  # Matches the Node of the Dockerfile's web stage (node:24.14.1-bookworm-slim).
   NODE_VERSION: '24.14.1'
   PNPM_VERSION: '11.22.0'
   COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
-  NEXT_TELEMETRY_DISABLED: '1'
 
 # TODO(plan step 0.4): add the `track-format` job (replay-track encode/decode fixtures).
 
@@ -73,13 +72,12 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec prisma generate
       - run: pnpm lint
-      # wasm + tsc + vite build (the SPA), then the Next build that still serves app/api (plan Phase 4).
+      # wasm + tsc + vite build (the SPA; the Rust server serves the API, rust.yml).
       - run: pnpm build
       # After the build: tests/wasm-engine.test.ts loads the WASM package it produced.
       - run: pnpm test
       - name: Client bundle (no node:crypto; home and rules load no engine, Phaser or WASM)
         run: pnpm check:bundle
-      - run: pnpm build:api:next
       - run: pnpm cosmetics:validate
 
       # Plan 0.8 / D14 / D19: the Rust server embeds these generated files; TS stays the source of truth.
@@ -88,9 +86,9 @@ jobs:
           pnpm cosmetics:export-catalog --check
           pnpm db:export-migration-ids --check
 
-      # The oracle dumpers only read TS modules; their fixtures live on the rewrite branches. This makes
-      # sure they still run against main's TS (outputs go to the runner's temp dir, not the repo).
-      - name: Oracle fixture dumpers run against main's TS
+      # The oracle dumpers only read TS modules (kept until Phase 9). This makes sure they still run
+      # (outputs go to the runner's temp dir, not the repo).
+      - name: Oracle fixture dumpers run against the TS oracle
         run: |
           node --import tsx scripts/oracle/dump-cosmetic-fixtures.ts "$RUNNER_TEMP/cosmetics.json.gz"
           node --no-use-std-math-pow --import tsx scripts/oracle/dump-meta-fixtures.ts --out "$RUNNER_TEMP/meta-parity.json.gz"
@@ -159,14 +157,15 @@ jobs:
           echo "client-boundary: clean"
 
   docker:
-    name: docker (build, size, push on main)
+    name: docker (Rust server + SPA image: build, boot, size, push on main)
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # A cold release build of the server and the wasm engine.
+    timeout-minutes: 75
     permissions:
       contents: read
       packages: write
     env:
-      IMAGE: ghcr.io/shivaluma/autoduck:ts-${{ github.sha }}
+      IMAGE: ghcr.io/shivaluma/autoduck:rust-${{ github.sha }}
     steps:
       - uses: actions/checkout@v4
 
@@ -181,6 +180,29 @@ jobs:
           tags: ${{ env.IMAGE }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # The image refuses a missing DB (and never creates one), then boots on a scratch DB with the
+      # baseline schema and answers /api/health and the SPA.
+      - name: Boot smoke test
+        run: |
+          data="$RUNNER_TEMP/data"; mkdir -p "$data"
+          if docker run --rm -v "$data:/app/data" "$IMAGE"; then
+            echo "::error::the image booted without a database"; exit 1
+          fi
+          test ! -e "$data/autoduck.db"
+          docker run --rm -i -v "$data:/app/data" --entrypoint sqlite3 "$IMAGE" /app/data/autoduck.db \
+            < crates/server/migrations/0001_baseline.sql
+          docker run -d --name smoke -p 3000:3000 -v "$data:/app/data" \
+            -e AUTODUCK_ENV=dev -e AUTODUCK_ALLOW_EMPTY_DB=1 "$IMAGE"
+          for _ in $(seq 1 60); do
+            curl -fsS http://127.0.0.1:3000/api/health && break
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:3000/api/health
+          curl -fsS http://127.0.0.1:3000/season-3 | grep -q '<div id="root">'
+          docker stop smoke
+          docker logs smoke 2>&1 | tail -40
+          docker rm smoke
 
       - name: Report image size
         run: |
