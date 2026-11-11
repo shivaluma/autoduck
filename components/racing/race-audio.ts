@@ -50,13 +50,44 @@ const CUE_TUNING: Record<SoundCue, { frequency: number; endFrequency: number; du
   FINISH: { frequency: 640, endFrequency: 960, duration: 0.36, type: 'triangle', volume: 0.05 },
 }
 
+const MUSIC_VOLUME = 0.22
+const MUSIC_MUTED_KEY = 'autoduck:race-music-muted'
+
 export class RaceAudioSystem {
   private context: AudioContext | null = null
   private lastPlayedAt = new Map<SoundCue, number>()
+  private music: HTMLAudioElement | null = null
+
+  /** `musicUrl`: the race's looping background track (see `race-music.ts`); omitted means no music. */
+  constructor(private readonly musicUrl?: string) {}
 
   async unlock() {
+    // Start the music before any await so it still counts as part of the user's tap (Safari).
+    this.startMusic()
     this.context ??= new AudioContext()
     if (this.context.state === 'suspended') await this.context.resume()
+  }
+
+  /** The viewer's music mute, remembered across races in this browser. */
+  get musicMuted(): boolean {
+    try {
+      return localStorage.getItem(MUSIC_MUTED_KEY) === '1'
+    } catch {
+      return false
+    }
+  }
+
+  /** Flips the music mute and returns the new state. Sound effects are unaffected. */
+  toggleMusic(): boolean {
+    const muted = !this.musicMuted
+    try {
+      localStorage.setItem(MUSIC_MUTED_KEY, muted ? '1' : '0')
+    } catch {
+      // Storage blocked: the toggle still applies to this race.
+    }
+    if (muted) this.music?.pause()
+    else this.startMusic(true)
+    return muted
   }
 
   countdown(start = false) {
@@ -71,6 +102,24 @@ export class RaceAudioSystem {
   close() {
     void this.context?.close()
     this.context = null
+    if (this.music) {
+      this.music.pause()
+      this.music.removeAttribute('src')
+      this.music.load()
+      this.music = null
+    }
+  }
+
+  private startMusic(force = false) {
+    if (!this.musicUrl || typeof Audio === 'undefined' || (!force && this.musicMuted)) return
+    if (!this.music) {
+      this.music = new Audio(this.musicUrl)
+      this.music.loop = true
+      this.music.volume = MUSIC_VOLUME
+    }
+    void this.music.play().catch(() => {
+      // Autoplay refused or the file failed to load: the race just stays silent.
+    })
   }
 
   private play(cue: SoundCue) {
