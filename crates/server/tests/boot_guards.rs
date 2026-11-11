@@ -460,3 +460,48 @@ async fn test_rng_build_refuses_production() {
     assert_eq!(output.status.code(), Some(1), "{stderr}");
     assert!(stderr.contains("`test-rng` feature"), "{stderr}");
 }
+
+#[tokio::test]
+async fn replay_import_check_is_read_only() {
+    // Boot step 10: manifest races are sorted into present / missing / not in this DB, and the
+    // check writes nothing.
+    let dir = tempfile::tempdir().unwrap();
+    let db = dir.path().join("autoduck.db");
+    let mut conn = create_db(&db).await;
+    let now = autoduck_server::db::DbTime::now();
+    for id in [1_i64, 2] {
+        sqlx::query(
+            r#"INSERT INTO "Race" ("id", "status", "isTest", "engineState", "engineVersion", "createdAt")
+               VALUES (?, 'finished', 0, 'RESOLVED', '1.2.0', ?)"#,
+        )
+        .bind(id)
+        .bind(now)
+        .execute(&mut conn)
+        .await
+        .unwrap();
+    }
+    sqlx::query(
+        r#"INSERT INTO "RaceReplayTrack" ("raceId", "format", "source", "fidelity", "engineImpl", "engineVersion",
+                  "balanceVersion", "trackVersion", "tickRate", "tickCount", "createdAt")
+           VALUES (1, 'dtrk/1', 'IMPORTED', 'VERIFIED_DIGEST', 'ts', '1.2.0', 'S3.15', 'river-01-v2', 60, 100, ?)"#,
+    )
+    .bind(now)
+    .execute(&mut conn)
+    .await
+    .unwrap();
+    let before = common::sha256_file(&db);
+    let ids = [1_i64, 2, 3].into_iter().collect();
+    let report = boot::replay_import::check(&mut conn, &ids).await.unwrap();
+    assert_eq!(
+        report,
+        boot::replay_import::ImportCheck {
+            manifest: 3,
+            present: 1,
+            missing: vec![2],
+            not_in_db: 1,
+        }
+    );
+    boot::replay_import::run(&mut conn, &dir.path().join("no-manifest.json")).await;
+    conn.close().await.unwrap();
+    assert_eq!(common::sha256_file(&db), before);
+}

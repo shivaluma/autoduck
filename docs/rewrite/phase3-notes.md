@@ -99,7 +99,7 @@ with `--features test-rng`, run with `AUTODUCK_ENV=dev` and the same seed and JW
    newest 10, so a crash loop on a corrupt file never rotates the good backups out.
 8. **Schema verifier** (D14, compat mode). See "Verifier calibration".
 9. **Required TS migration ids**: a missing id is fatal, or only a warning in dev.
-10. **`ensure_imported`**: logged only. The TS image owns replay imports until cutover.
+10. **`ensure_imported`**: read-only check of `artifacts/replay-tracks/manifest.json` against `RaceReplayTrack` (cutover); logs present / missing / not-in-DB, never writes, never fatal.
 11. **Crash recovery** (D22): only `Race` rows in `pending`/`running` with engine major ≥ 2 are
     touched (none exist yet). TS-era stuck rows are listed and never modified.
 12. **Bind**: `HOST:PORT` (default `0.0.0.0:3000`).

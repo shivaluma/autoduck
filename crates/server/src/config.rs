@@ -76,6 +76,9 @@ pub struct Config {
     /// Where Google's signing keys are fetched. Always Google's URL outside dev;
     /// `AUTODUCK_GOOGLE_JWKS_URL` overrides it in dev only (tests serve a local JWKS).
     pub google_jwks_url: String,
+    /// `artifacts/replay-tracks/manifest.json` (boot step 10); `AUTODUCK_REPLAY_MANIFEST`
+    /// overrides it.
+    pub replay_manifest: PathBuf,
 }
 
 /// `"<set>"` / `"<empty>"` instead of a secret's value.
@@ -104,6 +107,7 @@ impl std::fmt::Debug for Config {
             race_secret_key,
             google_audiences,
             google_jwks_url,
+            replay_manifest,
         } = self;
         f.debug_struct("Config")
             .field("env", env)
@@ -119,6 +123,7 @@ impl std::fmt::Debug for Config {
             .field("race_secret_key", &redacted(race_secret_key))
             .field("google_audiences", google_audiences)
             .field("google_jwks_url", google_jwks_url)
+            .field("replay_manifest", replay_manifest)
             .finish()
     }
 }
@@ -230,6 +235,9 @@ impl Config {
                 Some(url) if env == AppEnv::Dev => url.trim().to_owned(),
                 _ => crate::auth::google::GOOGLE_JWKS_URL.to_owned(),
             },
+            replay_manifest: get("AUTODUCK_REPLAY_MANIFEST")
+                .map(|value| cwd.join(value.trim()))
+                .unwrap_or_else(|| cwd.join("artifacts/replay-tracks/manifest.json")),
             db_path,
         })
     }

@@ -9,7 +9,7 @@
 //! 7. `integrity_check`, fatal — [`guards::check_integrity`]; then prune old backups.
 //! 8. Schema verifier (D14) — [`crate::db::schema`].
 //! 9. Required TS migration ids — [`crate::db::migrations`].
-//! 10. `ensure_imported` — the TS `ensure-imported` step owns replay imports until cutover.
+//! 10. `ensure_imported` — [`replay_import`]: read-only check of the replay-track manifest.
 //! 11. Crash recovery (D22) — [`recovery`].
 //! 12. Bind HTTP — the caller ([`crate::cli`]).
 
@@ -17,6 +17,7 @@ pub mod backup;
 pub mod guards;
 pub mod lock;
 pub mod recovery;
+pub mod replay_import;
 
 use crate::config::{AppEnv, Config, SchemaMode};
 use crate::db::migrations::{self, PONR_MARKER_ID};
@@ -143,11 +144,11 @@ pub async fn run_db_guards(
     } else {
         tracing::info!(count = applied.len(), "required TS migrations present");
     }
-    drop(reader);
 
-    // 10. ensure_imported: until cutover, the TS image imports replay tracks on every boot
-    // (scripts/replay-tracks/ensure-imported.ts); Rust takes over in the cutover PR.
-    tracing::info!("replay import: owned by the TS ensure-imported step until cutover");
+    // 10. ensure_imported: read-only, never fatal (the TS image imported every manifest race
+    // before the cutover).
+    replay_import::run(&mut reader, &config.replay_manifest).await;
+    drop(reader);
 
     // 11. Crash recovery.
     let recovery = recovery::recover(db).await?;
